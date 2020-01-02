@@ -40,6 +40,9 @@ private:
     constexpr bool getStatusFlag(Flags flag);
     constexpr void setStatusFlag(Flags flag, bool value);
     
+    uint16_t getProgramCounter();
+    void incrementProgramCounter();
+    
     void fetchOpcode();
     
     void immediate_0();
@@ -64,16 +67,22 @@ private:
     static const uint8_t _instrPipelineStartIndexes[256];
     int _instrPipelineStartIndex;
     uint8_t _pipelineStep;
-    uint8_t _opcode;
-    uint8_t _adl;
-    uint8_t _adh;
-    uint8_t _bal;
-    uint8_t _bah;
-    uint8_t _data;
-    uint8_t _alu;   // TODO: alu register ?
+    
+    uint8_t _inputDataLatch;
+    uint8_t _predecode;
+    uint8_t _instruction;
+    uint8_t _dataOutput;
+    uint8_t _aInput;
+    uint8_t _bInput;
+    uint8_t _adderHold;
+    uint8_t _addressBusLow;
+    uint8_t _addressBusHigh;
+    //uint8_t _bal;
+    //uint8_t _bah;
     
     // Registers
-    uint16_t _programCounter;   // TODO: séparer en 2 pour les relative ?
+    uint8_t _programCounterLow;
+    uint8_t _programCounterHigh;
     uint8_t _stackPointer;
     uint8_t _accumulator;
     uint8_t _xIndex;

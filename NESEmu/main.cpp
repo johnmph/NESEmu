@@ -43,6 +43,14 @@ void setFlag(uint8_t &status, Flags flag, bool value) {
     status |= value << static_cast<uint8_t>(flag);
 }
 
+uint8_t _programCounterLow = 0xFE;
+uint8_t _programCounterHigh = 0;
+
+void test() {
+    ++_programCounterLow;
+    _programCounterHigh += (_programCounterLow == 0);
+}
+
 int main(int argc, const char * argv[]) {
     // insert code here...
     
@@ -51,6 +59,9 @@ int main(int argc, const char * argv[]) {
     disableFlags(status, { Flags::Carry, Flags::Overflow });
     setFlag(status, Flags::Carry, true);
     setFlag(status, Flags::Overflow, false);
+    
+    test();
+    test();
     
     //uint8_t mask = getFlagsMask({ Flags::Carry, Flags::Overflow });
     
