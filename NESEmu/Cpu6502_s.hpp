@@ -9,31 +9,59 @@
 #ifndef Cpu6502_s_hpp
 #define Cpu6502_s_hpp
 
+
+template <class TBus>
+const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineFuncs[256] = {
+    &Cpu6502::implied, &Cpu6502::clv,                                                                // Test implied
+    &Cpu6502::immediate, &Cpu6502::lda,                                                              // Test immediate read
+    &Cpu6502::absolute0, &Cpu6502::absolute1, &Cpu6502::absoluteLoad, &Cpu6502::lda,                 // Test absolute read
+    &Cpu6502::absolute0, &Cpu6502::absolute1, &Cpu6502::staAbsolute, &Cpu6502::finishInstruction,    // Test absolute write
+    &Cpu6502::zeroPage0, &Cpu6502::zeroPageLoad, &Cpu6502::lda,                                      // Test zero page read
+    &Cpu6502::zeroPage0, &Cpu6502::staZeroPage, &Cpu6502::finishInstruction,                         // Test zero page write
+    &Cpu6502::relative, &Cpu6502::bcs, &Cpu6502::relativeBranch0, &Cpu6502::relativeBranch1,         // Test relative branch    // TODO: a tester apres quand fini alu
+    &Cpu6502::absoluteIndexed0, &Cpu6502::absoluteIndexedX1, &Cpu6502::absoluteIndexedLoad0, &Cpu6502::absoluteIndexedLoad1, &Cpu6502::lda,                 // Test absolute indexed X read
+    &Cpu6502::absoluteIndexed0, &Cpu6502::absoluteIndexedY1, &Cpu6502::staAbsoluteIndexed, &Cpu6502::absoluteIndexedStore1, &Cpu6502::finishInstruction,  // Test absolute indexed Y write
+};
+
+template <class TBus>
+const uint8_t Cpu6502<TBus>::_instrPipelineStartIndexes[256] = { 0, 2, 4, 8, 12, 15, 18, 22, 27, 32 };
+
 //TODO: peut etre plutot avoir dans chaque instruction la liste de sous-instruction (avec if (_pipelineStep == 0) ...)
 template <class TBus>
 void Cpu6502<TBus>::clv() {
     clearStatusFlags({ Flags::Overflow });
     
-    implied();
+    finishInstruction();
 }
 
 template <class TBus>
 void Cpu6502<TBus>::lda() {
     _accumulator = _inputDataLatch;
     
-    clearStatusFlags({ Flags::Zero, Flags::Negative });
+    clearStatusFlags({ Flags::Zero, Flags::Negative }); // TODO: il parait que les flags ne sont pas mis a jour dans le meme cycle!! a voir
     setStatusFlag(Flags::Zero, _accumulator == 0);
     setStatusFlag(Flags::Negative, _accumulator & 0x80);
     
-    notImplied();
+    finishInstruction();
 }
 
 template <class TBus>
 void Cpu6502<TBus>::staAbsolute() {
     sta();
-    absolute_store();
-    _pipelineStep = 0;  //TODO: ici ou dans absolute_store?? (si tous apres absolute_store, le mettre dedans)
-}
+    absoluteStore();
+}// TODO: + finishInstruction mais dans le step d'apres
+
+template <class TBus>
+void Cpu6502<TBus>::staZeroPage() {
+    sta();
+    zeroPageStore();
+}// TODO: + finishInstruction mais dans le step d'apres
+
+template <class TBus>
+void Cpu6502<TBus>::staAbsoluteIndexed() {
+    sta();
+    absoluteIndexedStore0();
+}// TODO: + absoluteIndexedStore1 et finishInstruction mais dans le step d'apres
 
 template <class TBus>
 void Cpu6502<TBus>::sta() {
@@ -42,34 +70,50 @@ void Cpu6502<TBus>::sta() {
 
 template <class TBus>
 void Cpu6502<TBus>::bcs() {
-    relative_0();
+    branch(getStatusFlag(Flags::Carry) == true);
+}
+
+template <class TBus>
+void Cpu6502<TBus>::aluPerformSum(bool decimalEnable, bool carryIn) {//TODO: terminer
+    _adderHold = _aInput + _bInput + carryIn;
     
-    if (getStatusFlag(Flags::Carry) == true) {
-        relative_branch_0();
+    _aluOverflow = _adderHold & 0x80;
+    _aluCarry = false;
+    _aluHalfCarry = false;
+}
+
+template <class TBus>
+void Cpu6502<TBus>::branch(bool condition) {
+    // Calculate addition of programCounterLow and offset
+    _aInput = _programCounterLow;
+    _bInput = _inputDataLatch;
+    aluPerformSum(false, false);
+    //_adderHold = _programCounterLow + static_cast<int8_t>(_bInput); //TODO: avoir un carry ici en utilisant l'alu pour faire cette addition
+    
+    if (condition == true) {
+        // Branch is taken, this data will not be used
+        fetchData();
         return;
     }
     
-    implied();
+    // Branch is not taken, read next instruction
+    finishInstruction();
 }
 
 
+template <class TBus>
+Cpu6502<TBus>::Cpu6502(TBus &bus) : _bus(bus) {
+}
 
 template <class TBus>
 void Cpu6502<TBus>::clock() {
-    // Fetch a new instruction
-    if (_pipelineStep == 0) {
-        fetchOpcode();
-    }
     // Decode current instruction
-    else if (_pipelineStep == 1) {
+    if (_pipelineStep == 0) {
         decodeOpcode();
-        _instrPipelineStartIndex = _instrPipelineStartIndexes[_instruction];
-    }
-    // Execute instruction current step
-    else {
-        _instrPipelineFuncs[_instrPipelineStartIndex + (_pipelineStep - 2)]();
     }
     
+    // Execute current stage
+    (*this.*_instrPipelineFuncs[_instrPipelineStartIndex + _pipelineStep])();
     ++_pipelineStep;
 }
 
@@ -82,8 +126,18 @@ void Cpu6502<TBus>::irq(bool high) {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::reset(bool high) {
-    //TBus::read();
+void Cpu6502<TBus>::reset(bool high) {  // TODO: a changer, pour tests
+    _programCounterLow = 0;
+    _programCounterHigh = 0;
+    
+    _stackPointer = 0;
+    _accumulator = 0;
+    _xIndex = 1;
+    _yIndex = 2;
+    _statusFlags = 0;
+    
+    fetchOpcode();
+    _pipelineStep = 0;
 }
 
 template <class TBus>
@@ -137,57 +191,76 @@ void Cpu6502<TBus>::incrementProgramCounter() {
 
 template <class TBus>
 void Cpu6502<TBus>::readDataBus(uint8_t low, uint8_t high) {
-    _inputDataLatch = TBus::read((high << 8) | low);
+    _inputDataLatch = _bus.read((high << 8) | low);
     _predecode = _inputDataLatch;
 }
 
 template <class TBus>
 void Cpu6502<TBus>::writeDataBus(uint8_t low, uint8_t high) {
-    TBus::write((high << 8) | low, _dataOutput);
+    _bus.write((high << 8) | low, _dataOutput);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::fetchOpcode() {
+void Cpu6502<TBus>::fetchData() {
     readDataBus(_programCounterLow, _programCounterHigh);
     incrementProgramCounter();
 }
 
 template <class TBus>
+void Cpu6502<TBus>::fetchOpcode() {
+    fetchData();
+    _pipelineStep = -1;
+}
+
+template <class TBus>
 void Cpu6502<TBus>::decodeOpcode() {
     _instruction = _predecode;  // TODO: voir avec interruption ici (BRK)
-    
+    _instrPipelineStartIndex = _instrPipelineStartIndexes[_instruction];
+}
+
+
+template <class TBus>
+void Cpu6502<TBus>::finishInstruction() {
     fetchOpcode();
 }
 
 
 template <class TBus>
 void Cpu6502<TBus>::implied() {
-    _pipelineStep = 1;
-    clock();
+    // In implied addressing mode, there is a unused read which doesn't increment PC
+    readDataBus(_programCounterLow, _programCounterHigh);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::notImplied() {
-    _pipelineStep = 0;
-    clock();
+void Cpu6502<TBus>::immediate() {
+    // Read one data and increment PC
+    fetchData();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absolute_0() {
+void Cpu6502<TBus>::absolute0() {
+    // Read low byte of address and increment PC
+    fetchData();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::absolute1() {
+    // Store low byte of address in addressBusLow
     _addressBusLow = _inputDataLatch;
     
-    fetchOpcode();
+    // Read high byte of address and increment PC
+    fetchData();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absolute_load() {
+void Cpu6502<TBus>::absoluteLoad() {
     _addressBusHigh = _inputDataLatch;
     
     readDataBus(_addressBusLow, _addressBusHigh);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absolute_store() {
+void Cpu6502<TBus>::absoluteStore() {
     _addressBusHigh = _inputDataLatch;
     
     writeDataBus(_addressBusLow, _addressBusHigh);
@@ -195,14 +268,20 @@ void Cpu6502<TBus>::absolute_store() {
 
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPage_load() {
+void Cpu6502<TBus>::zeroPage0() {
+    // Read low byte of address and increment PC
+    fetchData();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::zeroPageLoad() {
     _addressBusLow = _inputDataLatch;
     
     readDataBus(_addressBusLow, 0);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPage_store() {
+void Cpu6502<TBus>::zeroPageStore() {
     _addressBusLow = _inputDataLatch;
     
     writeDataBus(_addressBusLow, 0);
@@ -210,98 +289,109 @@ void Cpu6502<TBus>::zeroPage_store() {
 
 
 template <class TBus>
-void Cpu6502<TBus>::relative_0() {
-    _bInput = _inputDataLatch;
-    _adderHold = _programCounterLow + static_cast<int8_t>(_bInput); //TODO: avoir un carry ici en utilisant l'alu pour faire cette addition
-    
-    //fetchOpcode();  // TODO: si branch non pris, il faudra appeler implied dans l'instruction de branchement pour passer directement au decodeOpcode
+void Cpu6502<TBus>::relative() {
+    // Read offset and increment PC
+    fetchData();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::relative_branch_0() {//TODO: a voir
+void Cpu6502<TBus>::relativeBranch0() {    // TODO: a voir
     _programCounterLow = _adderHold;
     
-    fetchOpcode();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::relative_branch_1() {    // TODO: a voir
-    if () { // Tester le carry ici
-        if () {// Tester le sign ici
+    if (_aluCarry == true) {
+        if (false) {// TODO: Tester le sign ici
             --_programCounterHigh;
         }
         else {
             ++_programCounterHigh;
         }
         
-        fetchOpcode();
+        // There is a page boundary cross, this data will not be used (because its not the good address), we don't increment PC
+        readDataBus(_programCounterLow, _programCounterHigh);
         return;
     }
     
-    decodeOpcode();
-}
-
-
-template <class TBus>
-void Cpu6502<TBus>::absoluteIndexed_0() {
-    immediate_0();
-    _bal = _data;
+    // There is no page boundary cross, so it's the correct data, we can fetch the instruction
+    fetchOpcode();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absoluteIndexed_1(uint8_t index) {
-    immediate_0();
-    _bah = _data;
+void Cpu6502<TBus>::relativeBranch1() {    // TODO: a voir
+    fetchOpcode();
+}
+
+
+
+template <class TBus>
+void Cpu6502<TBus>::absoluteIndexed0() {
+    // Read low byte of address and increment PC
+    fetchData();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::absoluteIndexed1(uint8_t index) {
+    // Store low byte of address in addressBusLow
+    _addressBusLow = _inputDataLatch;
     
-    _bal += index;  // TODO: a la place d'avoir ca et la ligne d'en dessous, appeler un adc generique (ainsi je simule vraiment la réalité et j'ai tous les flags)
-    setStatusFlag(Flags::Carry, _bal < index);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::absoluteIndexedX_1() {
-    absoluteIndexed_1(_xIndex);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::absoluteIndexedY_1() {
-    absoluteIndexed_1(_yIndex);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::absoluteIndexed_load_0() {
-    _data = TBus::read((_bah << 8) | _bal);
+    // Read high byte of address and increment PC
+    fetchData();
     
-    // If we need to correct bah
-    if (getStatusFlag(Flags::Carry) == true) {
-        ++_bah;
+    _aInput = _addressBusLow;
+    _bInput = index;
+    aluPerformSum(false, false);
+}
+
+template <class TBus>
+void Cpu6502<TBus>::absoluteIndexedX1() {
+    absoluteIndexed1(_xIndex);
+}
+
+template <class TBus>
+void Cpu6502<TBus>::absoluteIndexedY1() {
+    absoluteIndexed1(_yIndex);
+}
+
+template <class TBus>
+void Cpu6502<TBus>::absoluteIndexedLoad0() {
+    _addressBusLow = _adderHold;
+    _addressBusHigh = _inputDataLatch;
+    
+    readDataBus(_addressBusLow, _addressBusHigh);
+    
+    // If we need to correct addressBusHigh
+    if (_aluCarry == true) {
+        ++_addressBusHigh;
         return;
     }
     
-    // No need of extra step because we already have the correct data (bah was correct)
+    // No need of extra step because we already have the correct data (addressBusHigh was correct)
     ++_pipelineStep;
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absoluteIndexed_load_1() {
-    _data = TBus::read((_bah << 8) | _bal);
+void Cpu6502<TBus>::absoluteIndexedLoad1() {
+    readDataBus(_addressBusLow, _addressBusHigh);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absoluteIndexed_store_0() {
-    _data = TBus::read((_bah << 8) | _bal);
+void Cpu6502<TBus>::absoluteIndexedStore0() {
+    _addressBusLow = _adderHold;
+    _addressBusHigh = _inputDataLatch;
     
-    // If we need to correct bah
-    if (getStatusFlag(Flags::Carry) == true) {
-        ++_bah;
+    readDataBus(_addressBusLow, _addressBusHigh);
+    
+    // If we need to correct addressBusHigh
+    if (_aluCarry == true) {
+        ++_addressBusHigh;
     }
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absoluteIndexed_store_1() {
-    TBus::write((_bah << 8) | _bal, _data);
+void Cpu6502<TBus>::absoluteIndexedStore1() {
+    writeDataBus(_addressBusLow, _addressBusHigh);
 }
 
-
+/*
 template <class TBus>
 void Cpu6502<TBus>::zeroPageIndexed_0() {
     absoluteIndexed_0();
@@ -420,7 +510,7 @@ void Cpu6502<TBus>::zeroPageIndirectPostIndexed_store_0() {
 template <class TBus>
 void Cpu6502<TBus>::zeroPageIndirectPostIndexed_store_1() {
     TBus::write((_adh << 8) | _adl, _data);
-}
+}*/
 
 
 

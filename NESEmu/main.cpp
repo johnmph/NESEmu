@@ -7,65 +7,82 @@
 //
 
 #include <iostream>
+#include <array>
 #include "Cpu6502.hpp"
 
 
-enum class Flags {
-    Carry,
-    Zero,
-    InterruptDisable,
-    DecimalMode,
-    Break,
-    Unused,
-    Overflow,
-    Negative
-};
-
-constexpr uint8_t getEnableFlagsMask(std::initializer_list<Flags> const &flags) {
-    uint8_t mask = 0x0;
-    
-    for (auto const &flag : flags) {
-        mask |= 1 << static_cast<uint8_t>(flag);
+struct Bus {
+    uint8_t read(uint16_t address) {
+        return _memory[address];
     }
     
-    return mask;
-}
-
-constexpr uint8_t getDisableFlagsMask(std::initializer_list<Flags> const &flags) {
-    return ~getEnableFlagsMask(flags);
-}
-
-constexpr void disableFlags(uint8_t &status, std::initializer_list<Flags> const &flags) {
-    status &= getDisableFlagsMask(flags);
-}
-
-void setFlag(uint8_t &status, Flags flag, bool value) {
-    status |= value << static_cast<uint8_t>(flag);
-}
-
-uint8_t _programCounterLow = 0xFE;
-uint8_t _programCounterHigh = 0;
-
-void test() {
-    ++_programCounterLow;
-    _programCounterHigh += (_programCounterLow == 0);
-}
+    void write(uint16_t address, uint8_t data) {
+        _memory[address] = data;
+    }
+    
+//private:
+    std::array<uint8_t, 1024 * 32> _memory;
+};
 
 int main(int argc, const char * argv[]) {
-    // insert code here...
+    Bus bus;
+    Cpu6502<Bus> cpu(bus);
+    
+    int pc = 0;
+    bus._memory[pc++] = 0;      // CLV
+    bus._memory[pc++] = 1;      // LDA $80
+    bus._memory[pc++] = 0x80;
+    bus._memory[pc++] = 2;      // LDA $0123 (0x90)
+    bus._memory[pc++] = 0x23;
+    bus._memory[pc++] = 0x01;
+    bus._memory[pc++] = 3;      // STA $0124 (0x90)
+    bus._memory[pc++] = 0x24;
+    bus._memory[pc++] = 0x01;
+    bus._memory[pc++] = 4;      // LDA $40 (0x22)
+    bus._memory[pc++] = 0x40;
+    bus._memory[pc++] = 5;      // STA $41 (0x22)
+    bus._memory[pc++] = 0x41;
+    bus._memory[pc++] = 7;      // LDA $1234, X
+    bus._memory[pc++] = 0x34;
+    bus._memory[pc++] = 0x12;
+    bus._memory[pc++] = 8;      // STA $1235; Y
+    bus._memory[pc++] = 0x35;
+    bus._memory[pc++] = 0x12;
     
     
-    uint8_t status = 10;
-    disableFlags(status, { Flags::Carry, Flags::Overflow });
-    setFlag(status, Flags::Carry, true);
-    setFlag(status, Flags::Overflow, false);
+    bus._memory[0x0040] = 0x22;
+    bus._memory[0x0123] = 0x90;
+    bus._memory[0x1235] = 0xAB;
+    bus._memory[0x1237] = 0x0;
     
-    test();
-    test();
-    
-    //uint8_t mask = getFlagsMask({ Flags::Carry, Flags::Overflow });
-    
-    //std::cout << c << "\n";
+    cpu.reset(true);
+    cpu.clock();
+    cpu.clock();
+    cpu.clock();        // LDA $80
+    cpu.clock();
+    cpu.clock();        // LDA $0123
+    cpu.clock();
+    cpu.clock();
+    cpu.clock();
+    cpu.clock();        // STA $0124
+    cpu.clock();
+    cpu.clock();
+    cpu.clock();
+    cpu.clock();        // LDA $40
+    cpu.clock();
+    cpu.clock();
+    cpu.clock();        // STA $41
+    cpu.clock();
+    cpu.clock();
+    cpu.clock();        // LDA $1234, X
+    cpu.clock();
+    cpu.clock();
+    cpu.clock();
+    cpu.clock();        // STA $1235, Y
+    cpu.clock();
+    cpu.clock();
+    cpu.clock();
+    cpu.clock();
     
     return 0;
 }
