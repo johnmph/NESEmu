@@ -22,8 +22,16 @@ struct Cpu6502 {
     void irq(bool high);
     void reset(bool high);
     
+    uint16_t getProgramCounter();   // TODO: pour debugging, mettre aussi d'autres getter (registers)
+    
 private:
     using InstructionPipeline = void (Cpu6502::*)();
+    
+    enum class Interrupts {
+        Nmi,
+        Reset,
+        IrqBrk
+    };
     
     enum class Flags {
         Carry,
@@ -42,7 +50,6 @@ private:
     constexpr bool getStatusFlag(Flags flag);
     constexpr void setStatusFlag(Flags flag, bool value);
     
-    //uint16_t getProgramCounter();
     void incrementProgramCounter();
     
     void readDataBus(uint8_t low, uint8_t high);
@@ -51,9 +58,16 @@ private:
     void fetchData();
     void fetchOpcode();
     void decodeOpcode();
+    void processInterrupt();
+    
     void finishInstruction();
     
+public:void aluInvertBInput();
     void aluPerformSum(bool decimalEnable, bool carryIn);
+    void aluPerformAnd();
+    void aluPerformOr();
+    void aluPerformEor();
+    void aluPerformShiftRight(bool carryIn);
     
     void implied();
     void immediate();
@@ -67,7 +81,6 @@ private:
     void relative();
     void relativeBranch0();
     void relativeBranch1();
-    
     void absoluteIndexed0();
     void absoluteIndexed1(uint8_t index);
     void absoluteIndexedX1();
@@ -77,17 +90,35 @@ private:
     void absoluteIndexedStore0();
     void absoluteIndexedStore1();
     
-    uint8_t zeroPageIndexed(uint8_t index);
-    uint8_t zeroPageIndexedX();
-    uint8_t zeroPageIndexedY();
-    uint16_t zeroPagePreIndexedIndirect();
-    uint16_t zeroPageIndirectPostIndexed();
+    void zeroPageIndexed0();
+    void zeroPageIndexed1(uint8_t index);
+    void zeroPageIndexedX1();
+    void zeroPageIndexedY1();
+    void zeroPageIndexedLoad();
+    void zeroPageIndexedStore();
+    
+    void zeroPagePreIndexedIndirect0();
+    void zeroPagePreIndexedIndirect1();
+    void zeroPagePreIndexedIndirect2();
+    void zeroPagePreIndexedIndirect3();
+    void zeroPagePreIndexedIndirectLoad();
+    void zeroPagePreIndexedIndirectStore();
+    
+    void zeroPageIndirectPostIndexed0();
+    void zeroPageIndirectPostIndexed1();
+    void zeroPageIndirectPostIndexed2();
+    void zeroPageIndirectPostIndexedLoad0();
+    void zeroPageIndirectPostIndexedLoad1();
+    void zeroPageIndirectPostIndexedStore0();
+    void zeroPageIndirectPostIndexedStore1();
+    
     
     void clv();
     void lda();
     void staAbsolute();
     void staZeroPage();
     void staAbsoluteIndexed();
+    void staZeroPageIndexed();
     void sta();
     void bcs();
     void branch(bool condition);
@@ -95,9 +126,10 @@ private:
     // Internal
     TBus &_bus;
     static const InstructionPipeline _instrPipelineFuncs[256];  // TODO: changer 256 par le vrai nombre
-    static const uint8_t _instrPipelineStartIndexes[256];
+    static const int _instrPipelineStartIndexes[256];
+    static const uint8_t _interruptVectors[3][2];
     int _instrPipelineStartIndex;
-    uint8_t _pipelineStep;
+    int _pipelineStep;
     
     uint8_t _inputDataLatch;
     uint8_t _predecode;
@@ -111,8 +143,6 @@ private:
     bool _aluHalfCarry;
     uint8_t _addressBusLow;
     uint8_t _addressBusHigh;
-    //uint8_t _bal;
-    //uint8_t _bah;
     
     // Registers
     uint8_t _programCounterLow;
@@ -124,8 +154,10 @@ private:
     uint8_t _statusFlags;
     
     bool _nmiLine;
+    bool _nmiRequested;
     bool _irqLine;
     bool _resetLine;
+    bool _resetRequested;
 };
 
 #include "Cpu6502_s.hpp"

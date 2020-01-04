@@ -28,6 +28,39 @@ int main(int argc, const char * argv[]) {
     Bus bus;
     Cpu6502<Bus> cpu(bus);
     
+    cpu._aInput = 0x50;
+    cpu._bInput = 0x10;
+    cpu.aluPerformSum(false, false);
+    
+    cpu._aInput = 0x50;
+    cpu._bInput = 0x50;
+    cpu.aluPerformSum(false, false);
+    
+    cpu._aInput = 0x50;
+    cpu._bInput = 0x90;
+    cpu.aluPerformSum(false, false);
+    
+    cpu._aInput = 0x50;
+    cpu._bInput = 0xd0;
+    cpu.aluPerformSum(false, false);
+    
+    cpu._aInput = 0xd0;
+    cpu._bInput = 0x10;
+    cpu.aluPerformSum(false, false);
+    
+    cpu._aInput = 0xd0;
+    cpu._bInput = 0x50;
+    cpu.aluPerformSum(false, false);
+    
+    cpu._aInput = 0xd0;
+    cpu._bInput = 0x90;
+    cpu.aluPerformSum(false, false);
+    
+    cpu._aInput = 0xd0;
+    cpu._bInput = 0xd0;
+    cpu.aluPerformSum(false, false);
+    
+    
     int pc = 0;
     bus._memory[pc++] = 0;      // CLV
     bus._memory[pc++] = 1;      // LDA $80
@@ -42,10 +75,10 @@ int main(int argc, const char * argv[]) {
     bus._memory[pc++] = 0x40;
     bus._memory[pc++] = 5;      // STA $41 (0x22)
     bus._memory[pc++] = 0x41;
-    bus._memory[pc++] = 7;      // LDA $1234, X
+    bus._memory[pc++] = 7;      // LDA $1234, X (0xFF)
     bus._memory[pc++] = 0x34;
     bus._memory[pc++] = 0x12;
-    bus._memory[pc++] = 8;      // STA $1235; Y
+    bus._memory[pc++] = 8;      // STA $1235; Y (2)
     bus._memory[pc++] = 0x35;
     bus._memory[pc++] = 0x12;
     
@@ -54,6 +87,7 @@ int main(int argc, const char * argv[]) {
     bus._memory[0x0123] = 0x90;
     bus._memory[0x1235] = 0xAB;
     bus._memory[0x1237] = 0x0;
+    bus._memory[0x1333] = 0xCA;
     
     cpu.reset(true);
     cpu.clock();
@@ -74,11 +108,11 @@ int main(int argc, const char * argv[]) {
     cpu.clock();        // STA $41
     cpu.clock();
     cpu.clock();
-    cpu.clock();        // LDA $1234, X
+    cpu.clock();        // LDA $1234, X (0xFF)
     cpu.clock();
     cpu.clock();
     cpu.clock();
-    cpu.clock();        // STA $1235, Y
+    cpu.clock();        // STA $1235, Y (2)
     cpu.clock();
     cpu.clock();
     cpu.clock();
