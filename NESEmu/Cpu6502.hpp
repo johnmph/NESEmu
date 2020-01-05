@@ -115,6 +115,8 @@ private:
     void zeroPageIndirectPostIndexedStore0();
     void zeroPageIndirectPostIndexedStore1();
     
+    void pushToStack(uint8_t data);
+    void pullFromStack();
     
     void clv();
     void lda();
@@ -131,13 +133,15 @@ private:
     void brk3();
     void brk4();
     void brk5();
+    void brk6();
     void startLow();
-    void startHigh0();
-    void startHigh1();
+    void startHigh0and1();
     void startHigh2();
-    void startHigh3and4();
+    void startHigh3();
+    void startHigh4();
     void startHigh5();
     void startHigh6();
+    void startHigh7();
     
     // Registers
     uint8_t _programCounterLow;
@@ -153,6 +157,7 @@ private:
     static const InstructionPipeline _instrPipelineFuncs[256];  // TODO: changer 256 par le vrai nombre
     static const int _instrPipelineStartIndexes[256];
     static const uint8_t _interruptVectors[3][2];
+    static const uint8_t _stackPageNumber;
     int _instrPipelineStartIndex;
     int _pipelineStep;
     
@@ -174,6 +179,7 @@ private:
     bool _nmiLinePrevious;
     bool _nmiRequested;
     bool _irqLine;
+    bool _irqRequested;
 };
 
 #include "Cpu6502_s.hpp"

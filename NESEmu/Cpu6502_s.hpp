@@ -24,8 +24,8 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     &Cpu6502::absoluteIndexed0, &Cpu6502::absoluteIndexedY1, &Cpu6502::staAbsoluteIndexed, &Cpu6502::absoluteIndexedStore1, &Cpu6502::finishInstruction,  // Test absolute indexed Y write
     &Cpu6502::zeroPageIndexed0, &Cpu6502::zeroPageIndexedX1, &Cpu6502::zeroPageIndexedLoad, &Cpu6502::lda, // Test zero page indexed X read
     &Cpu6502::zeroPageIndexed0, &Cpu6502::zeroPageIndexedY1, &Cpu6502::staZeroPageIndexed, &Cpu6502::finishInstruction, // Test zero page indexed Y write
-    &Cpu6502::brk0, &Cpu6502::brk1, &Cpu6502::brk2, &Cpu6502::brk3, &Cpu6502::brk4, &Cpu6502::brk5, &Cpu6502::finishInstruction,    // Brk
-    &Cpu6502::startLow, &Cpu6502::startHigh0, &Cpu6502::startHigh1, &Cpu6502::startHigh2, &Cpu6502::startHigh3and4, &Cpu6502::startHigh3and4, &Cpu6502::startHigh5, &Cpu6502::startHigh6, &Cpu6502::finishInstruction,                                                    // Start sequence
+    &Cpu6502::brk0, &Cpu6502::brk1, &Cpu6502::brk2, &Cpu6502::brk3, &Cpu6502::brk4, &Cpu6502::brk5, &Cpu6502::brk6,    // Brk
+    &Cpu6502::startLow, &Cpu6502::startHigh0and1, &Cpu6502::startHigh0and1, &Cpu6502::startHigh2, &Cpu6502::startHigh3, &Cpu6502::startHigh4, &Cpu6502::startHigh5, &Cpu6502::startHigh6, &Cpu6502::startHigh7,                             // Start sequence
 };
 
 template <class TBus>
@@ -37,6 +37,9 @@ const uint8_t Cpu6502<TBus>::_interruptVectors[3][2] = {
     0xFC, 0xFF,     // Reset (Higher priority)
     0xFE, 0xFF,     // IRQ, BRK (Lower priority)
 };
+
+template <class TBus>
+const uint8_t Cpu6502<TBus>::_stackPageNumber = 0x1;
 
 //TODO: peut etre plutot avoir dans chaque instruction la liste de sous-instruction (avec if (_pipelineStep == 0) ...)
 template <class TBus>
@@ -99,103 +102,121 @@ void Cpu6502<TBus>::brk0() {    // TODO: voir si ca fait vraiment ca parce que j
 
 template <class TBus>
 void Cpu6502<TBus>::brk1() {
-    // Sauver programCounterHigh dans memoire a stackPointer
-    // Decrementer stackPointer
+    pushToStack(_programCounterHigh);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::brk2() {
-    // Sauver programCounterLow dans memoire a stackPointer
-    // Decrementer stackPointer
+    pushToStack(_programCounterLow);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::brk3() {
-    // Sauver Status flag dans memoire a stackPointer
-    // Decrementer stackPointer
+    pushToStack(_statusFlags | ((!(_nmiRequested | _irqRequested)) << Flags::Break));      // TODO: voir si c'est bon
 }
 
 template <class TBus>
 void Cpu6502<TBus>::brk4() {
+    // Disable interrupts
+    setStatusFlag(Flags::InterruptDisable, true);
+    
+    checkNmi();
+    
     // If Nmi requested
     if (_nmiRequested == true) {
-        _addressBusLow = _interruptVectors[static_cast<int>(Interrupts::Nmi)][0];
-        _addressBusHigh = _interruptVectors[static_cast<int>(Interrupts::Nmi)][1];
+        // Read low byte of address
+        readDataBus(_interruptVectors[static_cast<int>(Interrupts::Nmi)][0], _interruptVectors[static_cast<int>(Interrupts::Nmi)][1]);
     }
     // Irq / Brk
     else {
-        _addressBusLow = _interruptVectors[static_cast<int>(Interrupts::IrqBrk)][0];
-        _addressBusHigh = _interruptVectors[static_cast<int>(Interrupts::IrqBrk)][1];
+        // Read low byte of address
+        readDataBus(_interruptVectors[static_cast<int>(Interrupts::IrqBrk)][0], _interruptVectors[static_cast<int>(Interrupts::IrqBrk)][1]);
     }
-    
-    absoluteLoad();
-    _programCounterLow = _inputDataLatch;
 }
 
 template <class TBus>
 void Cpu6502<TBus>::brk5() {
-    // Disable interrupts
-    setStatusFlag(Flags::InterruptDisable, true);   // TODO: voir si ici ou dans brk4
+    // Store low byte of address to programCounterLow
+    _programCounterLow = _inputDataLatch;
     
-    ++_addressBusLow;
-    
-    absoluteLoad();
+    // If Nmi requested
+    if (_nmiRequested == true) {
+        // Read high byte of address
+        readDataBus(_interruptVectors[static_cast<int>(Interrupts::Nmi)][0] + 1, _interruptVectors[static_cast<int>(Interrupts::Nmi)][1]);
+    }
+    // Irq / Brk
+    else {
+        // Read high byte of address
+        readDataBus(_interruptVectors[static_cast<int>(Interrupts::IrqBrk)][0] + 1, _interruptVectors[static_cast<int>(Interrupts::IrqBrk)][1]);
+    }
+}
+
+template <class TBus>
+void Cpu6502<TBus>::brk6() {
+    // Store high byte of address to programCounterHigh
     _programCounterHigh = _inputDataLatch;
-}   // + un finishInstruction apres
+    
+    // TODO: voir si ok :
+    _nmiRequested = false;
+    _irqRequested = false;
+    
+    // Fetch instruction
+    finishInstruction();
+}
 
 
 template <class TBus>
 void Cpu6502<TBus>::startLow() {
-    absoluteLoad();
+    readDataBus(_programCounterLow, _programCounterHigh);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::startHigh0() {
-    absoluteLoad();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::startHigh1() {
-    ++_addressBusLow;
-    
-    absoluteLoad();
+void Cpu6502<TBus>::startHigh0and1() {
+    readDataBus(_programCounterLow, _programCounterHigh);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::startHigh2() {
-    _addressBusHigh = 1;
-    _addressBusLow = _stackPointer;
-    
-    absoluteLoad();
+    pushToStack(_programCounterHigh);   // TODO: durant le start, les write sont desactivé, ca fait donc un read
 }
 
 template <class TBus>
-void Cpu6502<TBus>::startHigh3and4() {
-    --_addressBusLow;
-    
-    absoluteLoad();
+void Cpu6502<TBus>::startHigh3() {
+    pushToStack(_programCounterLow);    // TODO: durant le start, les write sont desactivé, ca fait donc un read
+}
+
+template <class TBus>
+void Cpu6502<TBus>::startHigh4() {
+    pushToStack(_statusFlags);          // TODO: durant le start, les write sont desactivé, ca fait donc un read
 }
 
 template <class TBus>
 void Cpu6502<TBus>::startHigh5() {
-    _addressBusLow = _interruptVectors[static_cast<int>(Interrupts::Reset)][0];
-    _addressBusHigh = _interruptVectors[static_cast<int>(Interrupts::Reset)][1];
+    // Disable interrupts
+    setStatusFlag(Flags::InterruptDisable, true);
     
-    absoluteLoad();
-    
-    _programCounterLow = _inputDataLatch;
+    // Read low byte of address
+    readDataBus(_interruptVectors[static_cast<int>(Interrupts::Reset)][0], _interruptVectors[static_cast<int>(Interrupts::Reset)][1]);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::startHigh6() {
-    // Disable interrupts
-    setStatusFlag(Flags::InterruptDisable, true);
+    // Store low byte of address to programCounterLow
+    _programCounterLow = _inputDataLatch;
     
-    ++_addressBusLow;
-    
-    absoluteLoad();
+    // Read high byte of address
+    readDataBus(_interruptVectors[static_cast<int>(Interrupts::Reset)][0] + 1, _interruptVectors[static_cast<int>(Interrupts::Reset)][1]);
+}
+
+template <class TBus>
+void Cpu6502<TBus>::startHigh7() {/*
+    // Store high byte of address to programCounterHigh
     _programCounterHigh = _inputDataLatch;
-} // + un finishInstruction apres
+    
+    // Fetch instruction
+    finishInstruction();*/
+    brk6();
+}
 
 
 
@@ -272,7 +293,7 @@ void Cpu6502<TBus>::branch(bool condition) {
 
 
 template <class TBus>
-Cpu6502<TBus>::Cpu6502(TBus &bus) : _bus(bus), _resetLine(false), _nmiLine(true), _nmiLinePrevious(true), _nmiRequested(false), _irqLine(true) {
+Cpu6502<TBus>::Cpu6502(TBus &bus) : _bus(bus), _programCounterLow(0xFF), _programCounterHigh(0), _stackPointer(0), _accumulator(0xAA), _xIndex(0), _yIndex(0), _statusFlags(0x2), _resetLine(false), _nmiLine(true), _nmiLinePrevious(true), _nmiRequested(false), _irqLine(true), _irqRequested(false) {
 }
 
 template <class TBus>
@@ -297,7 +318,7 @@ void Cpu6502<TBus>::clock() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::reset(bool high) {  // TODO: voir pour le status flag si on le laisse ainsi ou si on le reset
+void Cpu6502<TBus>::reset(bool high) {  // TODO: voir pour le status flag si on le laisse ainsi ou si on le reset : normalement on le laisse ainsi
     // Save signal
     _resetLine = high;
 }
@@ -422,6 +443,7 @@ bool Cpu6502<TBus>::checkInterrupts() {
     
     // If Irq requested
     if ((getStatusFlag(Flags::InterruptDisable) == false) && (_irqLine == false)) {
+        _irqRequested = true;
         return true;
     }
     
@@ -450,51 +472,41 @@ template <class TBus>
 void Cpu6502<TBus>::absolute0() {
     // Read low byte of address and increment PC
     fetchData();
-    
-    // Store low byte of address in addressBusLow
-    _addressBusLow = _inputDataLatch;
 }
 
 template <class TBus>
 void Cpu6502<TBus>::absolute1() {
+    // Store low byte of address in addressBusLow
+    _addressBusLow = _inputDataLatch;
+    
     // Read high byte of address and increment PC
     fetchData();
-    
-    // Store high byte of address in addressBusHigh
-    _addressBusHigh = _inputDataLatch;
 }
 
 template <class TBus>
 void Cpu6502<TBus>::absoluteLoad() {
-    readDataBus(_addressBusLow, _addressBusHigh);
+    readDataBus(_addressBusLow, _inputDataLatch);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::absoluteStore() {
-    writeDataBus(_addressBusLow, _addressBusHigh);
+    writeDataBus(_addressBusLow, _inputDataLatch);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::zeroPage0() {
-    absolute0();
+    // Read low byte of address and increment PC
+    fetchData();
 }
 
 template <class TBus>
 void Cpu6502<TBus>::zeroPageLoad() {
-    // Reset addressBusHigh
-    _addressBusHigh = 0;   // TODO: voir si ok (si non, remettre les readDataBus et writeDataBus a la place des absoluteLoad et store en dessous :
-    
-    absoluteLoad();
-    //readDataBus(_addressBusLow, 0);
+    readDataBus(_inputDataLatch, 0);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::zeroPageStore() {
-    // Reset addressBusHigh
-    _addressBusHigh = 0;   // TODO: voir si ok (si non, remettre les readDataBus et writeDataBus a la place des absoluteLoad et store en dessous :
-    
-    absoluteStore();
-    //writeDataBus(_addressBusLow, 0);
+    writeDataBus(_inputDataLatch, 0);
 }
 
 template <class TBus>
@@ -509,6 +521,10 @@ void Cpu6502<TBus>::relativeBranch0() {    // TODO: a voir (surtout pour le test
     
     // bInput must be programCounterLow and aInput the offset
     if ((_bInput ^ _aInput) & (_bInput ^ _adderHold) & 0x80) {
+        // There is a page boundary cross, this data will not be used (because its not the good address), we don't increment PC
+        readDataBus(_programCounterLow, _programCounterHigh);
+        
+        // Correct programCounterHigh
         if (_bInput & 0x80) {
             ++_programCounterHigh;
         }
@@ -516,8 +532,6 @@ void Cpu6502<TBus>::relativeBranch0() {    // TODO: a voir (surtout pour le test
             --_programCounterHigh;
         }
         
-        // There is a page boundary cross, this data will not be used (because its not the good address), we don't increment PC
-        readDataBus(_programCounterLow, _programCounterHigh);
         return;
     }
     
@@ -558,46 +572,49 @@ void Cpu6502<TBus>::absoluteIndexedY1() {
 template <class TBus>
 void Cpu6502<TBus>::absoluteIndexedLoad0() {
     _addressBusLow = _adderHold;
-    absoluteLoad();
     
-    // If we need to correct addressBusHigh
+    // If we need to correct inputDataLatch
     if (_aluCarry == true) {
-        // Adding 1 with addressBusHigh using ALU (Add 0 with carry set like true 6502)
+        // Adding 1 with inputDataLatch using ALU (Add 0 with carry set like true 6502)
         _aInput = 0;
-        _bInput = _addressBusHigh;
+        _bInput = _inputDataLatch;
         aluPerformSum(false, true);
-
+        
+        // Load unused data (because address is incorrect)
+        absoluteLoad();
         return;
     }
     
-    // No need of extra step because we already have the correct data (addressBusHigh was correct)
+    // Load data
+    absoluteLoad();
+    
+    // No need of extra step because we already have the correct data (inputDataLatch was correct)
     ++_pipelineStep;
 }
 
 template <class TBus>
 void Cpu6502<TBus>::absoluteIndexedLoad1() {
-    _addressBusHigh = _adderHold;
-    absoluteLoad();
+    readDataBus(_addressBusLow, _adderHold);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::absoluteIndexedStore0() {
     _addressBusLow = _adderHold;
-    absoluteLoad();
     
-    // If we need to correct addressBusHigh
+    // If we need to correct inputDataLatch
     if (_aluCarry == true) {
-        // Adding 1 with addressBusHigh using ALU (Add 0 with carry set like true 6502)
+        // Adding 1 with inputDataLatch using ALU (Add 0 with carry set like true 6502)
         _aInput = 0;
-        _bInput = _addressBusHigh;
+        _bInput = _inputDataLatch;
         aluPerformSum(false, true);
     }
+    
+    absoluteLoad();
 }
 
 template <class TBus>
 void Cpu6502<TBus>::absoluteIndexedStore1() {
-    _addressBusHigh = _adderHold;
-    absoluteStore();
+    writeDataBus(_addressBusLow, _adderHold);
 }
 
 template <class TBus>
@@ -607,12 +624,12 @@ void Cpu6502<TBus>::zeroPageIndexed0() {
 
 template <class TBus>
 void Cpu6502<TBus>::zeroPageIndexed1(uint8_t index) {
-    zeroPageLoad();
-    
-    // Adding index with addressBusLow using ALU
+    // Adding index with inputDataLatch using ALU
     _aInput = index;
-    _bInput = _addressBusLow;
+    _bInput = _inputDataLatch;
     aluPerformSum(false, false);
+    
+    zeroPageLoad();
 }
 
 template <class TBus>
@@ -627,14 +644,12 @@ void Cpu6502<TBus>::zeroPageIndexedY1() {
 
 template <class TBus>
 void Cpu6502<TBus>::zeroPageIndexedLoad() {
-    _addressBusLow = _adderHold;
-    zeroPageLoad();
+    readDataBus(_adderHold, 0);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::zeroPageIndexedStore() {
-    _addressBusLow = _adderHold;
-    zeroPageStore();
+    writeDataBus(_adderHold, 0);
 }
 
 template <class TBus>
@@ -649,21 +664,22 @@ void Cpu6502<TBus>::zeroPagePreIndexedIndirect1() {
 
 template <class TBus>
 void Cpu6502<TBus>::zeroPagePreIndexedIndirect2() {
-    zeroPageIndexedLoad();
-    
-    // Adding 1 with addressBusLow using ALU (Add 0 with carry set like true 6502)
+    // Adding 1 with adderHold using ALU (Add 0 with carry set like true 6502)
     _aInput = 0;
-    _bInput = _addressBusLow;
+    _bInput = _adderHold;
     aluPerformSum(false, true);
     
-    _addressBusLow = _inputDataLatch;
+    // Read low byte of address
+    zeroPageIndexedLoad();
 }
 
 template <class TBus>
 void Cpu6502<TBus>::zeroPagePreIndexedIndirect3() {
-    readDataBus(_adderHold, 0);
+    // Store low byte of address in addressBusLow
+    _addressBusLow = _inputDataLatch;
     
-    _addressBusHigh = _inputDataLatch;
+    // Read high byte of address
+    zeroPageIndexedLoad();
 }
 
 template <class TBus>
@@ -683,17 +699,24 @@ void Cpu6502<TBus>::zeroPageIndirectPostIndexed0() {
 
 template <class TBus>
 void Cpu6502<TBus>::zeroPageIndirectPostIndexed1() {
-    zeroPagePreIndexedIndirect2();
+    // Adding 1 with inputDataLatch using ALU (Add 0 with carry set like true 6502)
+    _aInput = 0;
+    _bInput = _inputDataLatch;
+    aluPerformSum(false, true);
+    
+    // Read low byte of address
+    zeroPageLoad();
 }
 
 template <class TBus>
 void Cpu6502<TBus>::zeroPageIndirectPostIndexed2() {
-    zeroPagePreIndexedIndirect3();
-    
-    // Adding yIndex with addressBusLow using ALU
+    // Adding yIndex with inputDataLatch using ALU
     _aInput = _yIndex;
-    _bInput = _addressBusLow;
+    _bInput = _inputDataLatch;
     aluPerformSum(false, false);
+    
+    // Read high byte of address
+    zeroPageIndexedLoad();
 }
 
 template <class TBus>
@@ -714,6 +737,21 @@ void Cpu6502<TBus>::zeroPageIndirectPostIndexedStore0() {
 template <class TBus>
 void Cpu6502<TBus>::zeroPageIndirectPostIndexedStore1() {
     absoluteIndexedStore1();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::pushToStack(uint8_t data) {
+    _dataOutput = data;
+    writeDataBus(_stackPointer, _stackPageNumber);
+    
+    --_stackPointer;
+}
+
+template <class TBus>
+void Cpu6502<TBus>::pullFromStack() {
+    ++_stackPointer;
+    
+    readDataBus(_stackPointer, _stackPageNumber);
 }
 
 #endif /* Cpu6502_s_hpp */
