@@ -18,9 +18,10 @@ struct Cpu6502 {
     Cpu6502(TBus &bus);
     
     void clock();
+    
+    void reset(bool high);
     void nmi(bool high);
     void irq(bool high);
-    void reset(bool high);
     
     uint16_t getProgramCounter();   // TODO: pour debugging, mettre aussi d'autres getter (registers)
     
@@ -58,11 +59,13 @@ private:
     void fetchData();
     void fetchOpcode();
     void decodeOpcode();
-    void processInterrupt();
+    
+    void checkNmi();
+    bool checkInterrupts();
     
     void finishInstruction();
     
-public:void aluInvertBInput();
+    void aluInvertBInput();
     void aluPerformSum(bool decimalEnable, bool carryIn);
     void aluPerformAnd();
     void aluPerformOr();
@@ -122,27 +125,19 @@ public:void aluInvertBInput();
     void sta();
     void bcs();
     void branch(bool condition);
-    
-    // Internal
-    TBus &_bus;
-    static const InstructionPipeline _instrPipelineFuncs[256];  // TODO: changer 256 par le vrai nombre
-    static const int _instrPipelineStartIndexes[256];
-    static const uint8_t _interruptVectors[3][2];
-    int _instrPipelineStartIndex;
-    int _pipelineStep;
-    
-    uint8_t _inputDataLatch;
-    uint8_t _predecode;
-    uint8_t _instruction;
-    uint8_t _dataOutput;
-    uint8_t _aInput;
-    uint8_t _bInput;
-    uint8_t _adderHold;
-    bool _aluOverflow;
-    bool _aluCarry;
-    bool _aluHalfCarry;
-    uint8_t _addressBusLow;
-    uint8_t _addressBusHigh;
+    void brk0();
+    void brk1();
+    void brk2();
+    void brk3();
+    void brk4();
+    void brk5();
+    void startLow();
+    void startHigh0();
+    void startHigh1();
+    void startHigh2();
+    void startHigh3and4();
+    void startHigh5();
+    void startHigh6();
     
     // Registers
     uint8_t _programCounterLow;
@@ -153,11 +148,32 @@ public:void aluInvertBInput();
     uint8_t _yIndex;
     uint8_t _statusFlags;
     
+    // Internal
+    TBus &_bus;
+    static const InstructionPipeline _instrPipelineFuncs[256];  // TODO: changer 256 par le vrai nombre
+    static const int _instrPipelineStartIndexes[256];
+    static const uint8_t _interruptVectors[3][2];
+    int _instrPipelineStartIndex;
+    int _pipelineStep;
+    
+    uint8_t _predecode;
+    uint8_t _instruction;
+    uint8_t _addressBusLow;
+    uint8_t _addressBusHigh;
+    uint8_t _inputDataLatch;
+    uint8_t _dataOutput;
+    uint8_t _aInput;
+    uint8_t _bInput;
+    uint8_t _adderHold;
+    bool _aluOverflow;
+    bool _aluCarry;
+    bool _aluHalfCarry;
+    
+    bool _resetLine;
     bool _nmiLine;
+    bool _nmiLinePrevious;
     bool _nmiRequested;
     bool _irqLine;
-    bool _resetLine;
-    bool _resetRequested;
 };
 
 #include "Cpu6502_s.hpp"

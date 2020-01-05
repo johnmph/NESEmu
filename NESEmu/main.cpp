@@ -21,13 +21,13 @@ struct Bus {
     }
     
 //private:
-    std::array<uint8_t, 1024 * 32> _memory;
+    std::array<uint8_t, 1024 * 64> _memory;
 };
 
 int main(int argc, const char * argv[]) {
     Bus bus;
     Cpu6502<Bus> cpu(bus);
-    
+    /*
     cpu._aInput = 0x50;
     cpu._bInput = 0x10;
     cpu.aluPerformSum(false, false);
@@ -58,8 +58,11 @@ int main(int argc, const char * argv[]) {
     
     cpu._aInput = 0xd0;
     cpu._bInput = 0xd0;
-    cpu.aluPerformSum(false, false);
+    cpu.aluPerformSum(false, false);*/
     
+    
+    bus._memory[0xFFFC] = 0;
+    bus._memory[0xFFFD] = 0;
     
     int pc = 0;
     bus._memory[pc++] = 0;      // CLV
@@ -89,8 +92,24 @@ int main(int argc, const char * argv[]) {
     bus._memory[0x1237] = 0x0;
     bus._memory[0x1333] = 0xCA;
     
-    cpu.reset(true);
+    // Some clock to check reset loop
     cpu.clock();
+    cpu.clock();
+    cpu.clock();
+    
+    // Release reset to start cpu
+    cpu.reset(true);
+    
+    // Start sequence (7 cycles)
+    cpu.clock();
+    cpu.clock();
+    cpu.clock();
+    cpu.clock();
+    cpu.clock();
+    cpu.clock();
+    cpu.clock();
+    
+    cpu.clock();        // CLV
     cpu.clock();
     cpu.clock();        // LDA $80
     cpu.clock();
