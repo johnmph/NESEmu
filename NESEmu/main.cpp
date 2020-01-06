@@ -65,23 +65,23 @@ int main(int argc, const char * argv[]) {
     bus._memory[0xFFFD] = 0;
     
     int pc = 0;
-    bus._memory[pc++] = 0;      // CLV
-    bus._memory[pc++] = 1;      // LDA $80
+    bus._memory[pc++] = 1;      // CLV
+    bus._memory[pc++] = 2;      // LDA $80
     bus._memory[pc++] = 0x80;
-    bus._memory[pc++] = 2;      // LDA $0123 (0x90)
+    bus._memory[pc++] = 3;      // LDA $0123 (0x90)
     bus._memory[pc++] = 0x23;
     bus._memory[pc++] = 0x01;
-    bus._memory[pc++] = 3;      // STA $0124 (0x90)
+    bus._memory[pc++] = 4;      // STA $0124 (0x90)
     bus._memory[pc++] = 0x24;
     bus._memory[pc++] = 0x01;
-    bus._memory[pc++] = 4;      // LDA $40 (0x22)
+    bus._memory[pc++] = 5;      // LDA $40 (0x22)
     bus._memory[pc++] = 0x40;
-    bus._memory[pc++] = 5;      // STA $41 (0x22)
+    bus._memory[pc++] = 6;      // STA $41 (0x22)
     bus._memory[pc++] = 0x41;
-    bus._memory[pc++] = 7;      // LDA $1234, X (0xFF)
+    bus._memory[pc++] = 8;      // LDA $1234, X (0xFF)
     bus._memory[pc++] = 0x34;
     bus._memory[pc++] = 0x12;
-    bus._memory[pc++] = 8;      // STA $1235; Y (2)
+    bus._memory[pc++] = 9;      // STA $1235; Y (2)
     bus._memory[pc++] = 0x35;
     bus._memory[pc++] = 0x12;
     
@@ -100,7 +100,9 @@ int main(int argc, const char * argv[]) {
     // Release reset to start cpu
     cpu.reset(true);
     
-    // Start sequence (7 cycles)
+    // Start sequence (7 cycles + 2 cycles to read first opcode)
+    cpu.clock();
+    cpu.clock();
     cpu.clock();
     cpu.clock();
     cpu.clock();

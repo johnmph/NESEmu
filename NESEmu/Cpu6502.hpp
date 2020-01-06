@@ -62,6 +62,7 @@ private:
     
     void checkNmi();
     bool checkInterrupts();
+    int getCurrentInterruptVectorsIndex();
     
     void finishInstruction();
     
@@ -115,6 +116,7 @@ private:
     void zeroPageIndirectPostIndexedStore0();
     void zeroPageIndirectPostIndexedStore1();
     
+    void pushToStackReset(uint8_t data);
     void pushToStack(uint8_t data);
     void pullFromStack();
     
@@ -127,6 +129,9 @@ private:
     void sta();
     void bcs();
     void branch(bool condition);
+    
+    void startLow();
+    void startHigh();
     void brk0();
     void brk1();
     void brk2();
@@ -134,14 +139,6 @@ private:
     void brk4();
     void brk5();
     void brk6();
-    void startLow();
-    void startHigh0and1();
-    void startHigh2();
-    void startHigh3();
-    void startHigh4();
-    void startHigh5();
-    void startHigh6();
-    void startHigh7();
     
     // Registers
     uint8_t _programCounterLow;
@@ -160,6 +157,7 @@ private:
     static const uint8_t _stackPageNumber;
     int _instrPipelineStartIndex;
     int _pipelineStep;
+    int _interruptVectorsIndex;
     
     uint8_t _predecode;
     uint8_t _instruction;
@@ -175,6 +173,7 @@ private:
     bool _aluHalfCarry;
     
     bool _resetLine;
+    bool _resetRequested;
     bool _nmiLine;
     bool _nmiLinePrevious;
     bool _nmiRequested;

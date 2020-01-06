@@ -13,6 +13,8 @@
 // TODO: tester avec les read modify write instruction pour voir si ok
 template <class TBus>
 const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineFuncs[256] = {
+    &Cpu6502::startLow, &Cpu6502::startHigh,                                                         // Start sequence (continue with Brk)
+    &Cpu6502::brk0, &Cpu6502::brk1, &Cpu6502::brk2, &Cpu6502::brk3, &Cpu6502::brk4, &Cpu6502::brk5, &Cpu6502::brk6,    // Brk
     &Cpu6502::implied, &Cpu6502::clv,                                                                // Test implied
     &Cpu6502::immediate, &Cpu6502::lda,                                                              // Test immediate read
     &Cpu6502::absolute0, &Cpu6502::absolute1, &Cpu6502::absoluteLoad, &Cpu6502::lda,                 // Test absolute read
@@ -24,12 +26,28 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     &Cpu6502::absoluteIndexed0, &Cpu6502::absoluteIndexedY1, &Cpu6502::staAbsoluteIndexed, &Cpu6502::absoluteIndexedStore1, &Cpu6502::finishInstruction,  // Test absolute indexed Y write
     &Cpu6502::zeroPageIndexed0, &Cpu6502::zeroPageIndexedX1, &Cpu6502::zeroPageIndexedLoad, &Cpu6502::lda, // Test zero page indexed X read
     &Cpu6502::zeroPageIndexed0, &Cpu6502::zeroPageIndexedY1, &Cpu6502::staZeroPageIndexed, &Cpu6502::finishInstruction, // Test zero page indexed Y write
-    &Cpu6502::brk0, &Cpu6502::brk1, &Cpu6502::brk2, &Cpu6502::brk3, &Cpu6502::brk4, &Cpu6502::brk5, &Cpu6502::brk6,    // Brk
-    &Cpu6502::startLow, &Cpu6502::startHigh0and1, &Cpu6502::startHigh0and1, &Cpu6502::startHigh2, &Cpu6502::startHigh3, &Cpu6502::startHigh4, &Cpu6502::startHigh5, &Cpu6502::startHigh6, &Cpu6502::startHigh7,                             // Start sequence
 };
 
+// 256 opcodes
 template <class TBus>
-const int Cpu6502<TBus>::_instrPipelineStartIndexes[256] = { 0, 2, 4, 8, 12, 15, 18, 22, 27, 32, 36, 41, 48, 57 };
+const int Cpu6502<TBus>::_instrPipelineStartIndexes[256] = {
+    2, 9, 11, 13, 17, 20, 23, 27, 32, 37, 41, 46, 53, 62, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
 
 template <class TBus>
 const uint8_t Cpu6502<TBus>::_interruptVectors[3][2] = {
@@ -41,7 +59,7 @@ const uint8_t Cpu6502<TBus>::_interruptVectors[3][2] = {
 template <class TBus>
 const uint8_t Cpu6502<TBus>::_stackPageNumber = 0x1;
 
-//TODO: peut etre plutot avoir dans chaque instruction la liste de sous-instruction (avec if (_pipelineStep == 0) ...)
+
 template <class TBus>
 void Cpu6502<TBus>::clv() {
     clearStatusFlags({ Flags::Overflow });
@@ -53,7 +71,7 @@ template <class TBus>
 void Cpu6502<TBus>::lda() {
     _accumulator = _inputDataLatch;
     
-    clearStatusFlags({ Flags::Zero, Flags::Negative }); // TODO: il parait que les flags ne sont pas mis a jour dans le meme cycle!! a voir
+    clearStatusFlags({ Flags::Zero, Flags::Negative });
     setStatusFlag(Flags::Zero, _accumulator == 0);
     setStatusFlag(Flags::Negative, _accumulator & 0x80);
     
@@ -94,6 +112,22 @@ void Cpu6502<TBus>::bcs() {
     branch(getStatusFlag(Flags::Carry) == true);
 }
 
+
+template <class TBus>
+void Cpu6502<TBus>::startLow() {
+    readDataBus(_programCounterLow, _programCounterHigh);
+    
+    // If reset line stays low, continue this step
+    if (_resetLine == false) {
+        --_pipelineStep;
+    }
+}
+
+template <class TBus>
+void Cpu6502<TBus>::startHigh() {
+    readDataBus(_programCounterLow, _programCounterHigh);
+}
+
 template <class TBus>
 void Cpu6502<TBus>::brk0() {    // TODO: voir si ca fait vraiment ca parce que je vois pas pq
     // Read opcode without increment PC
@@ -102,17 +136,37 @@ void Cpu6502<TBus>::brk0() {    // TODO: voir si ca fait vraiment ca parce que j
 
 template <class TBus>
 void Cpu6502<TBus>::brk1() {
+    // In reset, write is disabled
+    if (_resetRequested == true) {
+        pushToStackReset(_programCounterHigh);
+        return;
+    }
+    
     pushToStack(_programCounterHigh);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::brk2() {
+    // In reset, write is disabled
+    if (_resetRequested == true) {
+        pushToStackReset(_programCounterLow);
+        return;
+    }
+    
     pushToStack(_programCounterLow);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::brk3() {
-    pushToStack(_statusFlags | ((!(_nmiRequested | _irqRequested)) << Flags::Break));      // TODO: voir si c'est bon
+    uint8_t data = _statusFlags | ((!(_nmiRequested | _irqRequested)) << static_cast<int>(Flags::Break));   // TODO: voir si c'est bon
+    
+    // In reset, write is disabled
+    if (_resetRequested == true) {
+        pushToStackReset(data);
+        return;
+    }
+    
+    pushToStack(data);
 }
 
 template <class TBus>
@@ -120,18 +174,11 @@ void Cpu6502<TBus>::brk4() {
     // Disable interrupts
     setStatusFlag(Flags::InterruptDisable, true);
     
-    checkNmi();
+    // Calculate interrupt vectors index
+    _interruptVectorsIndex = getCurrentInterruptVectorsIndex();
     
-    // If Nmi requested
-    if (_nmiRequested == true) {
-        // Read low byte of address
-        readDataBus(_interruptVectors[static_cast<int>(Interrupts::Nmi)][0], _interruptVectors[static_cast<int>(Interrupts::Nmi)][1]);
-    }
-    // Irq / Brk
-    else {
-        // Read low byte of address
-        readDataBus(_interruptVectors[static_cast<int>(Interrupts::IrqBrk)][0], _interruptVectors[static_cast<int>(Interrupts::IrqBrk)][1]);
-    }
+    // Read low byte of address
+    readDataBus(_interruptVectors[_interruptVectorsIndex][0], _interruptVectors[_interruptVectorsIndex][1]);
 }
 
 template <class TBus>
@@ -139,16 +186,8 @@ void Cpu6502<TBus>::brk5() {
     // Store low byte of address to programCounterLow
     _programCounterLow = _inputDataLatch;
     
-    // If Nmi requested
-    if (_nmiRequested == true) {
-        // Read high byte of address
-        readDataBus(_interruptVectors[static_cast<int>(Interrupts::Nmi)][0] + 1, _interruptVectors[static_cast<int>(Interrupts::Nmi)][1]);
-    }
-    // Irq / Brk
-    else {
-        // Read high byte of address
-        readDataBus(_interruptVectors[static_cast<int>(Interrupts::IrqBrk)][0] + 1, _interruptVectors[static_cast<int>(Interrupts::IrqBrk)][1]);
-    }
+    // Read high byte of address
+    readDataBus(_interruptVectors[_interruptVectorsIndex][0] + 1, _interruptVectors[_interruptVectorsIndex][1]);
 }
 
 template <class TBus>
@@ -156,68 +195,14 @@ void Cpu6502<TBus>::brk6() {
     // Store high byte of address to programCounterHigh
     _programCounterHigh = _inputDataLatch;
     
-    // TODO: voir si ok :
+    // TODO: voir si ok : (car il faut voir si c'est possible d'avoir la detection d'une interruption dans le stage du brk)
     _nmiRequested = false;
     _irqRequested = false;
+    _resetRequested = false;
     
     // Fetch instruction
     finishInstruction();
 }
-
-
-template <class TBus>
-void Cpu6502<TBus>::startLow() {
-    readDataBus(_programCounterLow, _programCounterHigh);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::startHigh0and1() {
-    readDataBus(_programCounterLow, _programCounterHigh);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::startHigh2() {
-    pushToStack(_programCounterHigh);   // TODO: durant le start, les write sont desactivé, ca fait donc un read
-}
-
-template <class TBus>
-void Cpu6502<TBus>::startHigh3() {
-    pushToStack(_programCounterLow);    // TODO: durant le start, les write sont desactivé, ca fait donc un read
-}
-
-template <class TBus>
-void Cpu6502<TBus>::startHigh4() {
-    pushToStack(_statusFlags);          // TODO: durant le start, les write sont desactivé, ca fait donc un read
-}
-
-template <class TBus>
-void Cpu6502<TBus>::startHigh5() {
-    // Disable interrupts
-    setStatusFlag(Flags::InterruptDisable, true);
-    
-    // Read low byte of address
-    readDataBus(_interruptVectors[static_cast<int>(Interrupts::Reset)][0], _interruptVectors[static_cast<int>(Interrupts::Reset)][1]);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::startHigh6() {
-    // Store low byte of address to programCounterLow
-    _programCounterLow = _inputDataLatch;
-    
-    // Read high byte of address
-    readDataBus(_interruptVectors[static_cast<int>(Interrupts::Reset)][0] + 1, _interruptVectors[static_cast<int>(Interrupts::Reset)][1]);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::startHigh7() {/*
-    // Store high byte of address to programCounterHigh
-    _programCounterHigh = _inputDataLatch;
-    
-    // Fetch instruction
-    finishInstruction();*/
-    brk6();
-}
-
 
 
 
@@ -293,23 +278,18 @@ void Cpu6502<TBus>::branch(bool condition) {
 
 
 template <class TBus>
-Cpu6502<TBus>::Cpu6502(TBus &bus) : _bus(bus), _programCounterLow(0xFF), _programCounterHigh(0), _stackPointer(0), _accumulator(0xAA), _xIndex(0), _yIndex(0), _statusFlags(0x2), _resetLine(false), _nmiLine(true), _nmiLinePrevious(true), _nmiRequested(false), _irqLine(true), _irqRequested(false) {
+Cpu6502<TBus>::Cpu6502(TBus &bus) : _bus(bus), _programCounterLow(0xFF), _programCounterHigh(0), _stackPointer(0), _accumulator(0xAA), _xIndex(0), _yIndex(0), _statusFlags(0x2), _resetRequested(false), _nmiLine(true), _nmiLinePrevious(true), _nmiRequested(false), _irqLine(true), _irqRequested(false) {
+    reset(false);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::clock() {
-    // If reset
-    if (_resetLine == false) {
-        _instrPipelineStartIndex = _instrPipelineStartIndexes[12];  // TODO: mettre l'opcode start index de la routine de reset (un opcode qui n'existe pas dans le 6502)
-        _pipelineStep = 0;
-    } else {
-        // Nmi is checked each clock
-        checkNmi();
-        
-        // Decode current instruction
-        if (_pipelineStep == 0) {
-            decodeOpcode();
-        }
+    // Nmi is checked each clock
+    checkNmi();
+    
+    // Decode current instruction
+    if (_pipelineStep == 0) {
+        decodeOpcode();
     }
     
     // Execute current stage
@@ -318,9 +298,17 @@ void Cpu6502<TBus>::clock() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::reset(bool high) {  // TODO: voir pour le status flag si on le laisse ainsi ou si on le reset : normalement on le laisse ainsi
+void Cpu6502<TBus>::reset(bool high) {  // TODO: voir pour les registres si on les laisse ainsi ou si on les reset : normalement on les laisse ainsi
     // Save signal
     _resetLine = high;
+    
+    // If reset
+    if ((_resetLine == false) && (_resetRequested == false)) {
+        // Trick to avoid calling decodeOpcode in next clock but execute start "opcode"
+        _instrPipelineStartIndex = -1;
+        _pipelineStep = 1;
+        _resetRequested = true;
+    }
 }
 
 template <class TBus>
@@ -375,6 +363,7 @@ constexpr bool Cpu6502<TBus>::getStatusFlag(Flags flag) {
 
 template <class TBus>
 constexpr void Cpu6502<TBus>::setStatusFlag(Flags flag, bool value) {
+    // Be careful, if value can be false, we need to call clearStatusFlags before (It's for multiple clear/set flags optimization by avoiding if statement)
     _statusFlags |= value << static_cast<uint8_t>(flag);
 }
 
@@ -448,6 +437,22 @@ bool Cpu6502<TBus>::checkInterrupts() {
     }
     
     return false;
+}
+
+template <class TBus>
+int Cpu6502<TBus>::getCurrentInterruptVectorsIndex() {
+    // If reset
+    if (_resetRequested == true) {
+        return static_cast<int>(Interrupts::Reset);
+    }
+    
+    // If nmi
+    if (_nmiRequested == true) {
+        return static_cast<int>(Interrupts::Nmi);
+    }
+    
+    // Irq/Brk
+    return static_cast<int>(Interrupts::IrqBrk);
 }
 
 template <class TBus>
@@ -737,6 +742,14 @@ void Cpu6502<TBus>::zeroPageIndirectPostIndexedStore0() {
 template <class TBus>
 void Cpu6502<TBus>::zeroPageIndirectPostIndexedStore1() {
     absoluteIndexedStore1();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::pushToStackReset(uint8_t data) {    // TODO: normalement c'est implementé via le signal R/W mais c'est trop bas niveau
+    _dataOutput = data;
+    readDataBus(_stackPointer, _stackPageNumber);
+    
+    --_stackPointer;
 }
 
 template <class TBus>
