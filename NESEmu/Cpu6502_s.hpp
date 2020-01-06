@@ -277,7 +277,7 @@ void Cpu6502<TBus>::absoluteStore() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPage0() {
+void Cpu6502<TBus>::zeroPage() {
     // Read low byte of address and increment PC
     fetchData();
 }
@@ -402,7 +402,7 @@ void Cpu6502<TBus>::absoluteIndexedStore1() {
 
 template <class TBus>
 void Cpu6502<TBus>::zeroPageIndexed0() {
-    zeroPage0();
+    zeroPage();
 }
 
 template <class TBus>
@@ -701,16 +701,11 @@ void Cpu6502<TBus>::brk6() {
 
 
 template <class TBus>
-void Cpu6502<TBus>::ora0() {
+void Cpu6502<TBus>::ora() {         // TODO: ca doit etre ainsi mais comment ca se fait qu'on ait directement accès au resultat de l'ALU ???
     _aInput = _accumulator;
     _bInput = _inputDataLatch;
     aluPerformOr();
     
-    // TODO: il faut rajouter le fetchOpcode du prochain opcode ici mais comment faire pour apres faire le or ???
-}
-
-template <class TBus>
-void Cpu6502<TBus>::ora1() {
     // Store ALU result in accumulator
     _accumulator = _adderHold;
     
@@ -721,6 +716,68 @@ void Cpu6502<TBus>::ora1() {
     
     finishInstruction();
 }
+
+template <class TBus>
+void Cpu6502<TBus>::asl0(uint8_t data) {
+    // ASL by adding same number to itself
+    _aInput = data;
+    _bInput = data;
+    aluPerformSum(false, false);
+    
+    implied();  // TODO: voir car pas dans tous les modes d'adressages, voir aussi les modes d'adressages car ils devront sauver leur adresse plutot que d'utiliser inputDataLatch, adderHold, ... car dans les operations on va les modifier !!! (+ implied charge a partir de l'adresse du ogram counter, dans les autres modes d'adressages, d'ou ca charge ? -> de la derniere adresse)
+}
+
+template <class TBus>
+void Cpu6502<TBus>::asl1(uint8_t &data) {
+    data = _adderHold;
+    
+    // Update status
+    clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Negative });
+    setStatusFlag(Flags::Carry, data);
+    setStatusFlag(Flags::Zero, (data == 0));
+    setStatusFlag(Flags::Negative, (data & 0x80));
+}
+
+template <class TBus>
+void Cpu6502<TBus>::aslAccumulator0() {
+    asl0(_accumulator);
+}
+
+template <class TBus>
+void Cpu6502<TBus>::aslAccumulator1() {
+    asl1(_accumulator);
+    finishInstruction();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::asl0() {
+    asl0(_inputDataLatch);
+}
+
+template <class TBus>
+void Cpu6502<TBus>::asl1ZeroPage() {
+    asl1(_dataOutput);
+    zeroPageStore();
+}// TODO: + finishInstruction mais dans le step d'apres
+
+template <class TBus>
+void Cpu6502<TBus>::asl1ZeroPageIndexed() {
+    asl1(_dataOutput);
+    zeroPageIndexedStore();
+}// TODO: + finishInstruction mais dans le step d'apres
+
+template <class TBus>
+void Cpu6502<TBus>::asl1Absolute() {
+    asl1(_dataOutput);
+    absoluteStore();
+}// TODO: + finishInstruction mais dans le step d'apres
+
+template <class TBus>
+void Cpu6502<TBus>::asl1AbsoluteIndexed() {
+    asl1(_dataOutput);
+    absoluteIndexedStore0();
+}// TODO: + absoluteIndexedStore1 et finishInstruction mais dans le step d'apres
+
 
 
 template <class TBus>

@@ -76,7 +76,7 @@ private:
     void absolute1();
     void absoluteLoad();
     void absoluteStore();
-    void zeroPage0();
+    void zeroPage();
     void zeroPageLoad();
     void zeroPageStore();
     void relative();
@@ -134,8 +134,14 @@ private:
     void brk5();
     void brk6();
     
-    void ora0();
-    void ora1();
+    void ora();
+    void asl0(uint8_t data);
+    void asl1(uint8_t &data);
+    void aslAccumulator0();
+    void aslAccumulator1();
+    void asl0();
+    void asl1ZeroPage();
+    void asl1ZeroPageIndexed();
     
     void clv();
     void lda();
