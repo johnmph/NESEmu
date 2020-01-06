@@ -24,6 +24,7 @@ struct Cpu6502 {
     void irq(bool high);
     
     uint16_t getProgramCounter();   // TODO: pour debugging, mettre aussi d'autres getter (registers)
+    uint16_t getAddressBus();
     
 private:
     using InstructionPipeline = void (Cpu6502::*)();
@@ -40,39 +41,35 @@ private:
         InterruptDisable,
         DecimalMode,
         Break,
-        Unused,
+        Unused,     // TODO: on dirait que unused est tjs a 1
         Overflow,
         Negative
     };
     
+    // Status
     static constexpr uint8_t getStatusFlagsEnableMask(std::initializer_list<Flags> const &flags);
     static constexpr uint8_t getStatusFlagsDisableMask(std::initializer_list<Flags> const &flags);
     constexpr void clearStatusFlags(std::initializer_list<Flags> const &flags);
     constexpr bool getStatusFlag(Flags flag);
     constexpr void setStatusFlag(Flags flag, bool value);
     
+    // Program flow
     void incrementProgramCounter();
-    
     void readDataBus(uint8_t low, uint8_t high);
     void writeDataBus(uint8_t low, uint8_t high);
-    
     void fetchData();
     void fetchOpcode();
     void decodeOpcode();
+    void finishInstruction();
+    void branch(bool condition);
     
+    // Interrupts
     void checkNmi();
+    void checkIrq();
     bool checkInterrupts();
     int getCurrentInterruptVectorsIndex();
     
-    void finishInstruction();
-    
-    void aluInvertBInput();
-    void aluPerformSum(bool decimalEnable, bool carryIn);
-    void aluPerformAnd();
-    void aluPerformOr();
-    void aluPerformEor();
-    void aluPerformShiftRight(bool carryIn);
-    
+    // Addressing modes
     void implied();
     void immediate();
     void absolute0();
@@ -93,21 +90,18 @@ private:
     void absoluteIndexedLoad1();
     void absoluteIndexedStore0();
     void absoluteIndexedStore1();
-    
     void zeroPageIndexed0();
     void zeroPageIndexed1(uint8_t index);
     void zeroPageIndexedX1();
     void zeroPageIndexedY1();
     void zeroPageIndexedLoad();
     void zeroPageIndexedStore();
-    
     void zeroPagePreIndexedIndirect0();
     void zeroPagePreIndexedIndirect1();
     void zeroPagePreIndexedIndirect2();
     void zeroPagePreIndexedIndirect3();
     void zeroPagePreIndexedIndirectLoad();
     void zeroPagePreIndexedIndirectStore();
-    
     void zeroPageIndirectPostIndexed0();
     void zeroPageIndirectPostIndexed1();
     void zeroPageIndirectPostIndexed2();
@@ -116,20 +110,20 @@ private:
     void zeroPageIndirectPostIndexedStore0();
     void zeroPageIndirectPostIndexedStore1();
     
+    // Stack
     void pushToStackReset(uint8_t data);
     void pushToStack(uint8_t data);
     void pullFromStack();
     
-    void clv();
-    void lda();
-    void staAbsolute();
-    void staZeroPage();
-    void staAbsoluteIndexed();
-    void staZeroPageIndexed();
-    void sta();
-    void bcs();
-    void branch(bool condition);
+    // ALU
+    void aluInvertBInput();
+    void aluPerformSum(bool decimalEnable, bool carryIn);
+    void aluPerformAnd();
+    void aluPerformOr();
+    void aluPerformEor();
+    void aluPerformShiftRight(bool carryIn);
     
+    // Instructions
     void startLow();
     void startHigh();
     void brk0();
@@ -139,6 +133,18 @@ private:
     void brk4();
     void brk5();
     void brk6();
+    
+    void ora0();
+    void ora1();
+    
+    void clv();
+    void lda();
+    void staAbsolute();
+    void staZeroPage();
+    void staAbsoluteIndexed();
+    void staZeroPageIndexed();
+    void sta();
+    void bcs();
     
     // Registers
     uint8_t _programCounterLow;
@@ -155,6 +161,7 @@ private:
     static const int _instrPipelineStartIndexes[256];
     static const uint8_t _interruptVectors[3][2];
     static const uint8_t _stackPageNumber;
+    
     int _instrPipelineStartIndex;
     int _pipelineStep;
     int _interruptVectorsIndex;
@@ -179,6 +186,7 @@ private:
     bool _nmiRequested;
     bool _irqLine;
     bool _irqRequested;
+    bool _interruptRequested;
 };
 
 #include "Cpu6502_s.hpp"

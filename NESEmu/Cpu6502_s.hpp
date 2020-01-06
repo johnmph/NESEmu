@@ -11,281 +11,21 @@
 
 // TODO: par apres, si assez rapide, decomposer en 2 phases de cycles (Ph0, Ph1, Ph2, RDY, R/W, Sync)
 // TODO: tester avec les read modify write instruction pour voir si ok
-template <class TBus>
-const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineFuncs[256] = {
-    &Cpu6502::startLow, &Cpu6502::startHigh,                                                         // Start sequence (continue with Brk)
-    &Cpu6502::brk0, &Cpu6502::brk1, &Cpu6502::brk2, &Cpu6502::brk3, &Cpu6502::brk4, &Cpu6502::brk5, &Cpu6502::brk6,    // Brk
-    &Cpu6502::implied, &Cpu6502::clv,                                                                // Test implied
-    &Cpu6502::immediate, &Cpu6502::lda,                                                              // Test immediate read
-    &Cpu6502::absolute0, &Cpu6502::absolute1, &Cpu6502::absoluteLoad, &Cpu6502::lda,                 // Test absolute read
-    &Cpu6502::absolute0, &Cpu6502::absolute1, &Cpu6502::staAbsolute, &Cpu6502::finishInstruction,    // Test absolute write
-    &Cpu6502::zeroPage0, &Cpu6502::zeroPageLoad, &Cpu6502::lda,                                      // Test zero page read
-    &Cpu6502::zeroPage0, &Cpu6502::staZeroPage, &Cpu6502::finishInstruction,                         // Test zero page write
-    &Cpu6502::relative, &Cpu6502::bcs, &Cpu6502::relativeBranch0, &Cpu6502::relativeBranch1,         // Test relative branch    // TODO: a tester apres quand fini alu
-    &Cpu6502::absoluteIndexed0, &Cpu6502::absoluteIndexedX1, &Cpu6502::absoluteIndexedLoad0, &Cpu6502::absoluteIndexedLoad1, &Cpu6502::lda,                 // Test absolute indexed X read
-    &Cpu6502::absoluteIndexed0, &Cpu6502::absoluteIndexedY1, &Cpu6502::staAbsoluteIndexed, &Cpu6502::absoluteIndexedStore1, &Cpu6502::finishInstruction,  // Test absolute indexed Y write
-    &Cpu6502::zeroPageIndexed0, &Cpu6502::zeroPageIndexedX1, &Cpu6502::zeroPageIndexedLoad, &Cpu6502::lda, // Test zero page indexed X read
-    &Cpu6502::zeroPageIndexed0, &Cpu6502::zeroPageIndexedY1, &Cpu6502::staZeroPageIndexed, &Cpu6502::finishInstruction, // Test zero page indexed Y write
-};
+#include "Cpu6502_s_data.hpp"
 
-// 256 opcodes
-template <class TBus>
-const int Cpu6502<TBus>::_instrPipelineStartIndexes[256] = {
-    2, 9, 11, 13, 17, 20, 23, 27, 32, 37, 41, 46, 53, 62, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
+
+// Public interface
 
 template <class TBus>
-const uint8_t Cpu6502<TBus>::_interruptVectors[3][2] = {
-    0xFA, 0xFF,     // NMI (Prior over IRQ/BRK but not Reset)
-    0xFC, 0xFF,     // Reset (Higher priority)
-    0xFE, 0xFF,     // IRQ, BRK (Lower priority)
-};
-
-template <class TBus>
-const uint8_t Cpu6502<TBus>::_stackPageNumber = 0x1;
-
-
-template <class TBus>
-void Cpu6502<TBus>::clv() {
-    clearStatusFlags({ Flags::Overflow });
-    
-    finishInstruction();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::lda() {
-    _accumulator = _inputDataLatch;
-    
-    clearStatusFlags({ Flags::Zero, Flags::Negative });
-    setStatusFlag(Flags::Zero, _accumulator == 0);
-    setStatusFlag(Flags::Negative, _accumulator & 0x80);
-    
-    finishInstruction();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::staAbsolute() {
-    sta();
-    absoluteStore();
-}// TODO: + finishInstruction mais dans le step d'apres
-
-template <class TBus>
-void Cpu6502<TBus>::staZeroPage() {
-    sta();
-    zeroPageStore();
-}// TODO: + finishInstruction mais dans le step d'apres
-
-template <class TBus>
-void Cpu6502<TBus>::staAbsoluteIndexed() {
-    sta();
-    absoluteIndexedStore0();
-}// TODO: + absoluteIndexedStore1 et finishInstruction mais dans le step d'apres
-
-template <class TBus>
-void Cpu6502<TBus>::staZeroPageIndexed() {
-    sta();
-    zeroPageIndexedStore();
-}// TODO: + finishInstruction mais dans le step d'apres
-
-template <class TBus>
-void Cpu6502<TBus>::sta() {
-    _dataOutput = _accumulator;
-}
-
-template <class TBus>
-void Cpu6502<TBus>::bcs() {
-    branch(getStatusFlag(Flags::Carry) == true);
-}
-
-
-template <class TBus>
-void Cpu6502<TBus>::startLow() {
-    readDataBus(_programCounterLow, _programCounterHigh);
-    
-    // If reset line stays low, continue this step
-    if (_resetLine == false) {
-        --_pipelineStep;
-    }
-}
-
-template <class TBus>
-void Cpu6502<TBus>::startHigh() {
-    readDataBus(_programCounterLow, _programCounterHigh);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::brk0() {    // TODO: voir si ca fait vraiment ca parce que je vois pas pq
-    // Read opcode without increment PC
-    readDataBus(_programCounterLow, _programCounterHigh);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::brk1() {
-    // In reset, write is disabled
-    if (_resetRequested == true) {
-        pushToStackReset(_programCounterHigh);
-        return;
-    }
-    
-    pushToStack(_programCounterHigh);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::brk2() {
-    // In reset, write is disabled
-    if (_resetRequested == true) {
-        pushToStackReset(_programCounterLow);
-        return;
-    }
-    
-    pushToStack(_programCounterLow);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::brk3() {
-    uint8_t data = _statusFlags | ((!(_nmiRequested | _irqRequested)) << static_cast<int>(Flags::Break));   // TODO: voir si c'est bon
-    
-    // In reset, write is disabled
-    if (_resetRequested == true) {
-        pushToStackReset(data);
-        return;
-    }
-    
-    pushToStack(data);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::brk4() {
-    // Disable interrupts
-    setStatusFlag(Flags::InterruptDisable, true);
-    
-    // Calculate interrupt vectors index
-    _interruptVectorsIndex = getCurrentInterruptVectorsIndex();
-    
-    // Read low byte of address
-    readDataBus(_interruptVectors[_interruptVectorsIndex][0], _interruptVectors[_interruptVectorsIndex][1]);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::brk5() {
-    // Store low byte of address to programCounterLow
-    _programCounterLow = _inputDataLatch;
-    
-    // Read high byte of address
-    readDataBus(_interruptVectors[_interruptVectorsIndex][0] + 1, _interruptVectors[_interruptVectorsIndex][1]);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::brk6() {
-    // Store high byte of address to programCounterHigh
-    _programCounterHigh = _inputDataLatch;
-    
-    // TODO: voir si ok : (car il faut voir si c'est possible d'avoir la detection d'une interruption dans le stage du brk)
-    _nmiRequested = false;
-    _irqRequested = false;
-    _resetRequested = false;
-    
-    // Fetch instruction
-    finishInstruction();
-}
-
-
-
-template <class TBus>
-void Cpu6502<TBus>::aluInvertBInput() {
-    _bInput = ~_bInput;
-}
-
-template <class TBus>
-void Cpu6502<TBus>::aluPerformSum(bool decimalEnable, bool carryIn) {//TODO: terminer (halfCarry, decimalEnable)
-    uint16_t add = _aInput + _bInput + carryIn;
-    _adderHold = static_cast<uint8_t>(add);
-    
-    _aluOverflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;
-    _aluCarry = add & 0x100;
-    _aluHalfCarry = false;  // TODO: voir ce que c'est et si c'est utilisé
-}
-
-template <class TBus>
-void Cpu6502<TBus>::aluPerformAnd() {//TODO: terminer
-    _adderHold = _aInput & _bInput;
-    
-    //_aluOverflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;
-    //_aluCarry = false;
-    //_aluHalfCarry = false;  // TODO: voir ce que c'est et si c'est utilisé
-}
-
-template <class TBus>
-void Cpu6502<TBus>::aluPerformOr() {//TODO: terminer
-    _adderHold = _aInput | _bInput;
-    
-    //_aluOverflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;
-    //_aluCarry = false;
-    //_aluHalfCarry = false;  // TODO: voir ce que c'est et si c'est utilisé
-}
-
-template <class TBus>
-void Cpu6502<TBus>::aluPerformEor() {//TODO: terminer
-    _adderHold = _aInput ^ _bInput;
-    
-    //_aluOverflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;
-    //_aluCarry = false;
-    //_aluHalfCarry = false;  // TODO: voir ce que c'est et si c'est utilisé
-}
-
-template <class TBus>
-void Cpu6502<TBus>::aluPerformShiftRight(bool carryIn) {//TODO: terminer
-    _adderHold = (_aInput >> 1) | (carryIn << 7);
-    
-    //_aluOverflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;  // TODO: voir ici et pour les autres aussi
-    _aluCarry = _aInput & 0x1;
-    //_aluHalfCarry = false;  // TODO: voir ce que c'est et si c'est utilisé
-}
-
-
-
-template <class TBus>
-void Cpu6502<TBus>::branch(bool condition) {
-    // Adding offset with programCounterLow using ALU
-    _aInput = _inputDataLatch;
-    _bInput = _programCounterLow;
-    aluPerformSum(false, false);
-    
-    if (condition == true) {
-        // Branch is taken, this data will not be used
-        fetchData();
-        return;
-    }
-    
-    // Branch is not taken, read next instruction
-    finishInstruction();
-}
-
-
-template <class TBus>
-Cpu6502<TBus>::Cpu6502(TBus &bus) : _bus(bus), _programCounterLow(0xFF), _programCounterHigh(0), _stackPointer(0), _accumulator(0xAA), _xIndex(0), _yIndex(0), _statusFlags(0x2), _resetRequested(false), _nmiLine(true), _nmiLinePrevious(true), _nmiRequested(false), _irqLine(true), _irqRequested(false) {
+Cpu6502<TBus>::Cpu6502(TBus &bus) : _bus(bus), _programCounterLow(0xFF), _programCounterHigh(0), _stackPointer(0), _accumulator(0xAA), _xIndex(0), _yIndex(0), _statusFlags(0x2), _resetRequested(false), _nmiLine(true), _nmiLinePrevious(true), _nmiRequested(false), _irqLine(true), _irqRequested(false), _interruptRequested(false) {
     reset(false);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::clock() {
-    // Nmi is checked each clock
+    // Interrupts are checked each clock
     checkNmi();
+    checkIrq();
     
     // Decode current instruction
     if (_pipelineStep == 0) {
@@ -298,7 +38,7 @@ void Cpu6502<TBus>::clock() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::reset(bool high) {  // TODO: voir pour les registres si on les laisse ainsi ou si on les reset : normalement on les laisse ainsi
+void Cpu6502<TBus>::reset(bool high) {  // TODO: voir pour les registres si on les laisse ainsi ou si on les reset : normalement on les laisse ainsi puisqu'un reset c'est juste un signal comme une interruption (mais a voir, on ne sait jamais)
     // Save signal
     _resetLine = high;
     
@@ -308,6 +48,7 @@ void Cpu6502<TBus>::reset(bool high) {  // TODO: voir pour les registres si on l
         _instrPipelineStartIndex = -1;
         _pipelineStep = 1;
         _resetRequested = true;
+        _interruptRequested = true; // TODO: voir si ok pour reset aussi
     }
 }
 
@@ -327,6 +68,13 @@ template <class TBus>
 uint16_t Cpu6502<TBus>::getProgramCounter() {
     return (_programCounterHigh << 8) | _programCounterLow;
 }
+
+template <class TBus>
+uint16_t Cpu6502<TBus>::getAddressBus() {
+    return (_addressBusHigh << 8) | _addressBusLow;
+}
+
+// Status
 
 template <class TBus>
 constexpr uint8_t Cpu6502<TBus>::getStatusFlagsEnableMask(std::initializer_list<Flags> const &flags) {
@@ -367,6 +115,8 @@ constexpr void Cpu6502<TBus>::setStatusFlag(Flags flag, bool value) {
     _statusFlags |= value << static_cast<uint8_t>(flag);
 }
 
+// Program flow
+
 template <class TBus>
 void Cpu6502<TBus>::incrementProgramCounter() {
     ++_programCounterLow;
@@ -376,7 +126,7 @@ void Cpu6502<TBus>::incrementProgramCounter() {
 template <class TBus>
 void Cpu6502<TBus>::readDataBus(uint8_t low, uint8_t high) {
     _inputDataLatch = _bus.read((high << 8) | low);
-    _predecode = _inputDataLatch;
+    _predecode = _inputDataLatch;   // TODO: voir si ok de deplacer ca dans fetchOpcode (apres le else fetchData())
 }
 
 template <class TBus>
@@ -399,6 +149,9 @@ void Cpu6502<TBus>::fetchOpcode() {
         
         // Brk
         _predecode = 0;
+        
+        // Save interrupt flag to know that an interrupt is occur (and not brk opcode)
+        _interruptRequested = true;
     } else {
         fetchData();
     }
@@ -413,6 +166,30 @@ void Cpu6502<TBus>::decodeOpcode() {
 }
 
 template <class TBus>
+void Cpu6502<TBus>::finishInstruction() {
+    fetchOpcode();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::branch(bool condition) {    // TODO: voir les interruptions avec les opcode de branchement (et voir aussi CLI SEI et PLP)
+    // Adding offset with programCounterLow using ALU
+    _aInput = _inputDataLatch;
+    _bInput = _programCounterLow;
+    aluPerformSum(false, false);
+    
+    if (condition == true) {
+        // Branch is taken, this data will not be used
+        fetchData();
+        return;
+    }
+    
+    // Branch is not taken, read next instruction
+    finishInstruction();
+}
+
+// Interrupts
+
+template <class TBus>
 void Cpu6502<TBus>::checkNmi() {
     // Nmi is requested if nmi line has transition from high to low
     if ((_nmiLinePrevious == true) && (_nmiLine == false)) {
@@ -424,6 +201,12 @@ void Cpu6502<TBus>::checkNmi() {
 }
 
 template <class TBus>
+void Cpu6502<TBus>::checkIrq() {
+    // Irq is requested if interrupts are not disabled and if irq line goes to low (and stay for one cycle)
+    _irqRequested = (getStatusFlag(Flags::InterruptDisable) == false) && (_irqLine == false);
+}
+
+template <class TBus>
 bool Cpu6502<TBus>::checkInterrupts() {
     // If Nmi requested
     if (_nmiRequested == true) {
@@ -431,8 +214,7 @@ bool Cpu6502<TBus>::checkInterrupts() {
     }
     
     // If Irq requested
-    if ((getStatusFlag(Flags::InterruptDisable) == false) && (_irqLine == false)) {
-        _irqRequested = true;
+    if (_irqRequested == true) {
         return true;
     }
     
@@ -455,11 +237,7 @@ int Cpu6502<TBus>::getCurrentInterruptVectorsIndex() {
     return static_cast<int>(Interrupts::IrqBrk);
 }
 
-template <class TBus>
-void Cpu6502<TBus>::finishInstruction() {
-    fetchOpcode();
-}
-
+// Addressing modes
 
 template <class TBus>
 void Cpu6502<TBus>::implied() {
@@ -744,6 +522,8 @@ void Cpu6502<TBus>::zeroPageIndirectPostIndexedStore1() {
     absoluteIndexedStore1();
 }
 
+// Stack
+
 template <class TBus>
 void Cpu6502<TBus>::pushToStackReset(uint8_t data) {    // TODO: normalement c'est implementé via le signal R/W mais c'est trop bas niveau
     _dataOutput = data;
@@ -766,5 +546,235 @@ void Cpu6502<TBus>::pullFromStack() {
     
     readDataBus(_stackPointer, _stackPageNumber);
 }
+
+// ALU
+
+template <class TBus>
+void Cpu6502<TBus>::aluInvertBInput() {
+    _bInput = ~_bInput;
+}
+
+template <class TBus>
+void Cpu6502<TBus>::aluPerformSum(bool decimalEnable, bool carryIn) {//TODO: terminer (halfCarry, decimalEnable)
+    uint16_t add = _aInput + _bInput + carryIn;
+    _adderHold = static_cast<uint8_t>(add);
+    
+    _aluOverflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;
+    _aluCarry = add & 0x100;
+    _aluHalfCarry = false;  // TODO: voir ce que c'est et si c'est utilisé
+}
+
+template <class TBus>
+void Cpu6502<TBus>::aluPerformAnd() {//TODO: terminer
+    _adderHold = _aInput & _bInput;
+    
+    //_aluOverflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;
+    //_aluCarry = false;
+    //_aluHalfCarry = false;  // TODO: voir ce que c'est et si c'est utilisé
+}
+
+template <class TBus>
+void Cpu6502<TBus>::aluPerformOr() {//TODO: terminer
+    _adderHold = _aInput | _bInput;
+    
+    //_aluOverflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;
+    //_aluCarry = false;
+    //_aluHalfCarry = false;  // TODO: voir ce que c'est et si c'est utilisé
+}
+
+template <class TBus>
+void Cpu6502<TBus>::aluPerformEor() {//TODO: terminer
+    _adderHold = _aInput ^ _bInput;
+    
+    //_aluOverflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;
+    //_aluCarry = false;
+    //_aluHalfCarry = false;  // TODO: voir ce que c'est et si c'est utilisé
+}
+
+template <class TBus>
+void Cpu6502<TBus>::aluPerformShiftRight(bool carryIn) {//TODO: terminer
+    _adderHold = (_aInput >> 1) | (carryIn << 7);
+    
+    //_aluOverflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;  // TODO: voir ici et pour les autres aussi
+    _aluCarry = _aInput & 0x1;
+    //_aluHalfCarry = false;  // TODO: voir ce que c'est et si c'est utilisé
+}
+
+// Instructions
+
+template <class TBus>
+void Cpu6502<TBus>::startLow() {
+    readDataBus(_programCounterLow, _programCounterHigh);
+    
+    // If reset line stays low, continue this step
+    if (_resetLine == false) {
+        --_pipelineStep;
+    }
+}
+
+template <class TBus>
+void Cpu6502<TBus>::startHigh() {
+    readDataBus(_programCounterLow, _programCounterHigh);
+}
+
+template <class TBus>
+void Cpu6502<TBus>::brk0() {    // TODO: a voir
+    // Read data without increment PC for reset, nmi and irq
+    if (_interruptRequested == true) {
+        readDataBus(_programCounterLow, _programCounterHigh);
+        return;
+    }
+    
+    // Read data and increment PC for brk
+    fetchData();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::brk1() {
+    // In reset, write is disabled
+    if (_resetRequested == true) {
+        pushToStackReset(_programCounterHigh);
+        return;
+    }
+    
+    pushToStack(_programCounterHigh);
+}
+
+template <class TBus>
+void Cpu6502<TBus>::brk2() {
+    // In reset, write is disabled
+    if (_resetRequested == true) {
+        pushToStackReset(_programCounterLow);
+        return;
+    }
+    
+    pushToStack(_programCounterLow);
+}
+
+template <class TBus>
+void Cpu6502<TBus>::brk3() {
+    uint8_t data = _statusFlags | ((!_interruptRequested) << static_cast<int>(Flags::Break));   // TODO: voir si c'est bon
+    
+    // In reset, write is disabled
+    if (_resetRequested == true) {
+        pushToStackReset(data);
+        return;
+    }
+    
+    pushToStack(data);
+}
+
+template <class TBus>
+void Cpu6502<TBus>::brk4() {
+    // Disable interrupts
+    setStatusFlag(Flags::InterruptDisable, true);
+    
+    // Calculate interrupt vectors index
+    _interruptVectorsIndex = getCurrentInterruptVectorsIndex();
+    
+    // Read low byte of address
+    readDataBus(_interruptVectors[_interruptVectorsIndex][0], _interruptVectors[_interruptVectorsIndex][1]);
+}
+
+template <class TBus>
+void Cpu6502<TBus>::brk5() {
+    // Store low byte of address to programCounterLow
+    _programCounterLow = _inputDataLatch;
+    
+    // Read high byte of address
+    readDataBus(_interruptVectors[_interruptVectorsIndex][0] + 1, _interruptVectors[_interruptVectorsIndex][1]);
+}
+
+template <class TBus>
+void Cpu6502<TBus>::brk6() {
+    // Store high byte of address to programCounterHigh
+    _programCounterHigh = _inputDataLatch;
+    
+    // TODO: voir si ok : (car il faut voir si c'est possible d'avoir la detection d'une interruption dans le stage du brk)
+    _nmiRequested = false;
+    _resetRequested = false;
+    _interruptRequested = false;
+    
+    // Fetch instruction
+    finishInstruction();
+}
+
+
+template <class TBus>
+void Cpu6502<TBus>::ora0() {
+    _aInput = _accumulator;
+    _bInput = _inputDataLatch;
+    aluPerformOr();
+    
+    // TODO: il faut rajouter le fetchOpcode du prochain opcode ici mais comment faire pour apres faire le or ???
+}
+
+template <class TBus>
+void Cpu6502<TBus>::ora1() {
+    // Store ALU result in accumulator
+    _accumulator = _adderHold;
+    
+    // Update status
+    clearStatusFlags({ Flags::Zero, Flags::Negative });     // TODO: par apres si beaucoup d'instructions utilisent ca, avoir une methode setZeroNegative(data)
+    setStatusFlag(Flags::Zero, (_accumulator == 0));
+    setStatusFlag(Flags::Negative, (_accumulator & 0x80));
+    
+    finishInstruction();
+}
+
+
+template <class TBus>
+void Cpu6502<TBus>::clv() {
+    clearStatusFlags({ Flags::Overflow });
+    
+    finishInstruction();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::lda() {
+    _accumulator = _inputDataLatch;
+    
+    clearStatusFlags({ Flags::Zero, Flags::Negative });
+    setStatusFlag(Flags::Zero, _accumulator == 0);
+    setStatusFlag(Flags::Negative, _accumulator & 0x80);
+    
+    finishInstruction();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::staAbsolute() {
+    sta();
+    absoluteStore();
+}// TODO: + finishInstruction mais dans le step d'apres
+
+template <class TBus>
+void Cpu6502<TBus>::staZeroPage() {
+    sta();
+    zeroPageStore();
+}// TODO: + finishInstruction mais dans le step d'apres
+
+template <class TBus>
+void Cpu6502<TBus>::staAbsoluteIndexed() {
+    sta();
+    absoluteIndexedStore0();
+}// TODO: + absoluteIndexedStore1 et finishInstruction mais dans le step d'apres
+
+template <class TBus>
+void Cpu6502<TBus>::staZeroPageIndexed() {
+    sta();
+    zeroPageIndexedStore();
+}// TODO: + finishInstruction mais dans le step d'apres
+
+template <class TBus>
+void Cpu6502<TBus>::sta() {
+    _dataOutput = _accumulator;
+}
+
+template <class TBus>
+void Cpu6502<TBus>::bcs() {
+    branch(getStatusFlag(Flags::Carry) == true);
+}
+
+
 
 #endif /* Cpu6502_s_hpp */

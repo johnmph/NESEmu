@@ -23,6 +23,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4D9807EE23C39A66007D1953 /* Cpu6502_s_data.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502_s_data.hpp; sourceTree = "<group>"; };
 		4DE643F123BAE2EC00CFFE4E /* NESEmu */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = NESEmu; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DE643F423BAE2EC00CFFE4E /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		4DE643FB23BAE5CE00CFFE4E /* Cpu6502.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502.hpp; sourceTree = "<group>"; };
@@ -61,6 +62,7 @@
 			children = (
 				4DE643FB23BAE5CE00CFFE4E /* Cpu6502.hpp */,
 				4DE643FC23BAF12400CFFE4E /* Cpu6502_s.hpp */,
+				4D9807EE23C39A66007D1953 /* Cpu6502_s_data.hpp */,
 				4DE643F423BAE2EC00CFFE4E /* main.cpp */,
 			);
 			path = NESEmu;
