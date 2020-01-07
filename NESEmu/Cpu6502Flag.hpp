@@ -12,44 +12,14 @@
 
 // CLC, CLD, CLI, CLV, SEC, SED, SEI
 
-void clearFlag(Flags flag) {
-    clearStatusFlags({ flag });
-    
-    finishInstruction();
-}
-
-void clc() {
-    clearFlag(Flags::Carry);
-}
-
-void cld() {
-    clearFlag(Flags::DecimalMode);
-}
-
-void cli() {
-    clearFlag(Flags::InterruptDisable);
-}
-
-void clv() {
-    clearFlag(Flags::Overflow);
-}
-
-void setFlag(Flags flag) {
-    setStatusFlag(flag, true);
-    
-    finishInstruction();
-}
-
-void sec() {
-    setFlag(Flags::Carry);
-}
-
-void sed() {
-    setFlag(Flags::DecimalMode);
-}
-
-void sei() {
-    setFlag(Flags::InterruptDisable);
-}
+void clearFlag(Flags flag);
+void clc();
+void cld();
+void cli();
+void clv();
+void setFlag(Flags flag);
+void sec();
+void sed();
+void sei();
 
 #endif /* Cpu6502Flag_hpp */

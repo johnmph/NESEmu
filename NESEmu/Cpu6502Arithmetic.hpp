@@ -12,4 +12,6 @@
 
 // ADC, SBC, CMP, CPX, CPY, BIT
 
+void bit();
+
 #endif /* Cpu6502Arithmetic_hpp */

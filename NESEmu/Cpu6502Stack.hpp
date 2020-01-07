@@ -12,34 +12,10 @@
 
 // PHA, PHP, PLA, PLP, TSX, TXS
 
-void pha0() {
-    pushToStack0(_accumulator);
-} // + implied avant
-
-void php0() {
-    pushToStack0(_statusFlags);
-}   // + implied avant
-
-void ph1() {
-    pushToStack1();
-    finishInstruction();
-}
-
-void pla() {
-    _accumulator = _inputDataLatch;
-    
-    // Update status
-    clearStatusFlags({ Flags::Zero, Flags::Negative });     // TODO: par apres si beaucoup d'instructions utilisent ca, avoir une methode setZeroNegative(data)
-    setStatusFlag(Flags::Zero, (_accumulator == 0));
-    setStatusFlag(Flags::Negative, (_accumulator & 0x80));
-    
-    finishInstruction();
-}   // +implied avant + pullFromStack0() + pullFromStack1() avant
-
-void plp() {
-    _statusFlags = _inputDataLatch;
-    
-    finishInstruction();
-}   // +implied avant + pullFromStack0() + pullFromStack1() avant
+void pha0();
+void php0();
+void ph1();
+void pla();
+void plp();
 
 #endif /* Cpu6502Stack_hpp */

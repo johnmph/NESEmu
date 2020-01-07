@@ -334,11 +334,4 @@ void Cpu6502<TBus>::aluPerformShiftRight(bool carryIn) {//TODO: terminer
     //_aluHalfCarry = false;  // TODO: voir ce que c'est et si c'est utilisé
 }
 
-// Instructions
-
-template <class TBus>
-void Cpu6502<TBus>::bit() {
-    
-}
-
 #endif /* Cpu6502_s_hpp */

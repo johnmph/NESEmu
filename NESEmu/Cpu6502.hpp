@@ -115,13 +115,14 @@ private:
     
     // Internal
     TBus &_bus;
-    static const InstructionPipeline _instrPipelineFuncs[1024];  // TODO: changer 256 par le vrai nombre
+    static const InstructionPipeline _instrPipelineFuncs[1024];
     static const int _instrPipelineStartIndexes[256];
     static const uint8_t _interruptVectors[3][2];
     static const uint8_t _stackPageNumber;
     
     int _instrPipelineStartIndex;
     int _pipelineStep;
+    InstructionPipeline _currentInstruction;
     int _interruptVectorsIndex;
     
     uint8_t _addressBusLow;
@@ -153,5 +154,18 @@ private:
 };
 
 #include "Cpu6502_s.hpp"
+
+#include "Cpu6502AddressingMode_s.hpp"
+
+#include "Cpu6502Arithmetic_s.hpp"
+#include "Cpu6502Branch_s.hpp"
+#include "Cpu6502Flag_s.hpp"
+#include "Cpu6502Flow_s.hpp"
+#include "Cpu6502Interrupt_s.hpp"
+#include "Cpu6502Logic_s.hpp"
+#include "Cpu6502Memory_s.hpp"
+#include "Cpu6502Register_s.hpp"
+#include "Cpu6502Stack_s.hpp"
+
 
 #endif /* Cpu6502_hpp */

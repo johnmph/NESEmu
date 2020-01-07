@@ -35,7 +35,7 @@
 template <class TBus>
 const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineFuncs[1024] = {
     // Start / Reset (No opcode, electronic line), this instruction continues with brk
-    &Cpu6502::startLow, &Cpu6502::startHigh,
+    &Cpu6502::reset0, &Cpu6502::reset1,
     // $00 -> Brk
     &Cpu6502::brk0, &Cpu6502::brk1, &Cpu6502::brk2, &Cpu6502::brk3, &Cpu6502::brk4, &Cpu6502::brk5, &Cpu6502::brk6,
     // $01 -> ORA ($az, X)
