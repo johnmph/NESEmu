@@ -65,23 +65,23 @@ int main(int argc, const char * argv[]) {
     bus._memory[0xFFFD] = 0;
     
     int pc = 0;
-    bus._memory[pc++] = 1;      // CLV
-    bus._memory[pc++] = 2;      // LDA $80
+    bus._memory[pc++] = 0xB8;   // CLV
+    bus._memory[pc++] = 0xA9;   // LDA #$80
     bus._memory[pc++] = 0x80;
-    bus._memory[pc++] = 3;      // LDA $0123 (0x90)
+    bus._memory[pc++] = 0xAD;   // LDA $0123 (0x90)
     bus._memory[pc++] = 0x23;
     bus._memory[pc++] = 0x01;
-    bus._memory[pc++] = 4;      // STA $0124 (0x90)
+    bus._memory[pc++] = 0x8D;   // STA $0124 (0x90)
     bus._memory[pc++] = 0x24;
     bus._memory[pc++] = 0x01;
-    bus._memory[pc++] = 5;      // LDA $40 (0x22)
+    bus._memory[pc++] = 0xA5;   // LDA $40 (0x22)
     bus._memory[pc++] = 0x40;
-    bus._memory[pc++] = 6;      // STA $41 (0x22)
+    bus._memory[pc++] = 0x85;   // STA $41 (0x22)
     bus._memory[pc++] = 0x41;
-    bus._memory[pc++] = 8;      // LDA $1234, X (0xFF)
+    bus._memory[pc++] = 0xBD;   // LDA $1234, X (0xFF)
     bus._memory[pc++] = 0x34;
     bus._memory[pc++] = 0x12;
-    bus._memory[pc++] = 9;      // STA $1235; Y (2)
+    bus._memory[pc++] = 0x99;   // STA $1235, Y (2)
     bus._memory[pc++] = 0x35;
     bus._memory[pc++] = 0x12;
     
