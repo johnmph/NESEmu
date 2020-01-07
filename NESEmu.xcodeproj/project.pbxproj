@@ -24,6 +24,16 @@
 
 /* Begin PBXFileReference section */
 		4D9807EE23C39A66007D1953 /* Cpu6502_s_data.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502_s_data.hpp; sourceTree = "<group>"; };
+		4D9807EF23C50190007D1953 /* Cpu6502AddressingMode.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502AddressingMode.hpp; sourceTree = "<group>"; };
+		4D9807F023C50448007D1953 /* Cpu6502Flag.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502Flag.hpp; sourceTree = "<group>"; };
+		4D9807F123C5051B007D1953 /* Cpu6502Branch.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502Branch.hpp; sourceTree = "<group>"; };
+		4D9807F223C5059D007D1953 /* Cpu6502Stack.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502Stack.hpp; sourceTree = "<group>"; };
+		4D9807F323C506A8007D1953 /* Cpu6502Memory.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502Memory.hpp; sourceTree = "<group>"; };
+		4D9807F423C5073E007D1953 /* Cpu6502Logic.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502Logic.hpp; sourceTree = "<group>"; };
+		4D9807F523C507B9007D1953 /* Cpu6502Arithmetic.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502Arithmetic.hpp; sourceTree = "<group>"; };
+		4D9807F623C5089D007D1953 /* Cpu6502Interrupt.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502Interrupt.hpp; sourceTree = "<group>"; };
+		4D9807F723C50EB3007D1953 /* Cpu6502Flow.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502Flow.hpp; sourceTree = "<group>"; };
+		4D9807F823C50F35007D1953 /* Cpu6502Register.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502Register.hpp; sourceTree = "<group>"; };
 		4DE643F123BAE2EC00CFFE4E /* NESEmu */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = NESEmu; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DE643F423BAE2EC00CFFE4E /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		4DE643FB23BAE5CE00CFFE4E /* Cpu6502.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502.hpp; sourceTree = "<group>"; };
@@ -63,6 +73,16 @@
 				4DE643FB23BAE5CE00CFFE4E /* Cpu6502.hpp */,
 				4DE643FC23BAF12400CFFE4E /* Cpu6502_s.hpp */,
 				4D9807EE23C39A66007D1953 /* Cpu6502_s_data.hpp */,
+				4D9807EF23C50190007D1953 /* Cpu6502AddressingMode.hpp */,
+				4D9807F523C507B9007D1953 /* Cpu6502Arithmetic.hpp */,
+				4D9807F123C5051B007D1953 /* Cpu6502Branch.hpp */,
+				4D9807F023C50448007D1953 /* Cpu6502Flag.hpp */,
+				4D9807F723C50EB3007D1953 /* Cpu6502Flow.hpp */,
+				4D9807F623C5089D007D1953 /* Cpu6502Interrupt.hpp */,
+				4D9807F423C5073E007D1953 /* Cpu6502Logic.hpp */,
+				4D9807F323C506A8007D1953 /* Cpu6502Memory.hpp */,
+				4D9807F823C50F35007D1953 /* Cpu6502Register.hpp */,
+				4D9807F223C5059D007D1953 /* Cpu6502Stack.hpp */,
 				4DE643F423BAE2EC00CFFE4E /* main.cpp */,
 			);
 			path = NESEmu;

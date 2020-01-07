@@ -76,47 +76,6 @@ private:
     bool checkInterrupts();
     int getCurrentInterruptVectorsIndex();
     
-    // Addressing modes
-    void implied();
-    void immediate();
-    void absolute0();
-    void absolute1();
-    void absoluteLoad();
-    void absoluteStore(uint8_t data);
-    void zeroPage();
-    void zeroPageLoad();
-    void zeroPageStore(uint8_t data);
-    void relative();
-    void relativeBranch0();
-    void relativeBranch1();
-    void absoluteIndexed0();
-    void absoluteIndexed1(uint8_t index);
-    void absoluteIndexedX1();
-    void absoluteIndexedY1();
-    void absoluteIndexedLoad0();
-    void absoluteIndexedLoad1();
-    void absoluteIndexedStore0();
-    void absoluteIndexedStore1(uint8_t data);
-    void zeroPageIndexed0();
-    void zeroPageIndexed1(uint8_t index);
-    void zeroPageIndexedX1();
-    void zeroPageIndexedY1();
-    void zeroPageIndexedLoad();
-    void zeroPageIndexedStore(uint8_t data);
-    void zeroPagePreIndexedIndirect0();
-    void zeroPagePreIndexedIndirect1();
-    void zeroPagePreIndexedIndirect2();
-    void zeroPagePreIndexedIndirect3();
-    void zeroPagePreIndexedIndirectLoad();
-    void zeroPagePreIndexedIndirectStore(uint8_t data);
-    void zeroPageIndirectPostIndexed0();
-    void zeroPageIndirectPostIndexed1();
-    void zeroPageIndirectPostIndexed2();
-    void zeroPageIndirectPostIndexedLoad0();
-    void zeroPageIndirectPostIndexedLoad1();
-    void zeroPageIndirectPostIndexedStore0();
-    void zeroPageIndirectPostIndexedStore1(uint8_t data);
-    
     // Stack
     void pushToStack0(uint8_t data);
     void pushToStack1();
@@ -131,60 +90,19 @@ private:
     void aluPerformEor();
     void aluPerformShiftRight(bool carryIn);
     
+    // Addressing modes
+    #include "Cpu6502AddressingMode.hpp"
+    
     // Instructions
-    void startLow();
-    void startHigh();
-    void brk0();
-    void brk1();
-    void brk2();
-    void brk3();
-    void brk4();
-    void brk5();
-    void brk6();
-    
-    void ora();
-    void and_();
-    void eor();
-    
-    void pha0();
-    void php0();
-    void ph1();
-    void pla();
-    void plp();
-    
-    void asl0(uint8_t data);
-    void asl1();
-    void aslAccumulator0();
-    void aslAccumulator1();
-    void asl0();
-    void asl1ZeroPage();
-    void asl1ZeroPageIndexed();
-    
-    void clearFlag(Flags flag);
-    void clc();
-    void cld();
-    void cli();
-    void clv();
-    void setFlag(Flags flag);
-    void sec();
-    void sed();
-    void sei();
-    
-    void lda();
-    void staAbsolute();
-    void staZeroPage();
-    void staAbsoluteIndexed();
-    void staZeroPageIndexed();
-    
-    void branch(bool condition);
-    void bpl();
-    void bmi();
-    void bvc();
-    void bvs();
-    void bcc();
-    void bcs();
-    void bne();
-    void beq();
+    #include "Cpu6502Arithmetic.hpp"
+    #include "Cpu6502Branch.hpp"
+    #include "Cpu6502Flag.hpp"
+    #include "Cpu6502Flow.hpp"
+    #include "Cpu6502Interrupt.hpp"
+    #include "Cpu6502Logic.hpp"
+    #include "Cpu6502Memory.hpp"
+    #include "Cpu6502Register.hpp"
+    #include "Cpu6502Stack.hpp"
     
     // Registers
     uint8_t _programCounterLow;
