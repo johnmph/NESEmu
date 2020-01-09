@@ -13,10 +13,12 @@
 
 struct Bus {
     uint8_t read(uint16_t address) {
+        std::cout << std::hex << "Read 0x" << static_cast<int>(_memory[address]) << " at 0x" << address << "\n";
         return _memory[address];
     }
     
     void write(uint16_t address, uint8_t data) {
+        std::cout << std::hex << "Write 0x" << static_cast<int>(data) << " at 0x" << address << "\n";
         _memory[address] = data;
     }
     
@@ -113,7 +115,7 @@ int main(int argc, const char * argv[]) {
     
     cpu.clock();        // CLV
     cpu.clock();
-    cpu.clock();        // LDA $80
+    cpu.clock();        // LDA #$80
     cpu.clock();
     cpu.clock();        // LDA $0123
     cpu.clock();

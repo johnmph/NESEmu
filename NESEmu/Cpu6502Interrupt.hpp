@@ -14,6 +14,7 @@
 
 void reset0();
 void reset1();
+
 void brk0();
 void brk1();
 void brk2();
@@ -21,5 +22,12 @@ void brk3();
 void brk4();
 void brk5();
 void brk6();
+
+void rti0();
+void rti1();
+void rti2();
+void rti3();
+void rti4();
+void rti5();
 
 #endif /* Cpu6502Interrupt_hpp */

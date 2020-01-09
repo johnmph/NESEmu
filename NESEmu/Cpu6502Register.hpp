@@ -10,6 +10,20 @@
 #define Cpu6502Register_hpp
 
 
-// TAX, TXA, TAY, TYA, DEX, INX, DEY, INY
+// TAX, TXA, TAY, TYA, TSX, TXS
+
+void transfert0(uint8_t source, uint8_t &destination);
+
+void tax0();
+
+void txa0();
+
+void tay0();
+
+void tya0();
+
+void tsx0();
+
+void txs0();
 
 #endif /* Cpu6502Register_hpp */

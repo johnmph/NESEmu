@@ -8,7 +8,7 @@
 
 #ifndef Cpu6502_s_data_hpp
 #define Cpu6502_s_data_hpp
-
+// TODO: finir les opcodes non officiels : https://www.pagetable.com/?p=39
 /*
  
  MODE           SYNTAX
@@ -33,451 +33,519 @@
  */
 
 template <class TBus>
-const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineFuncs[1024] = {
-    // Start / Reset (No opcode, electronic line), this instruction continues with brk
-    &Cpu6502::reset0, &Cpu6502::reset1,
+const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineFuncs[256] = {
     // $00 -> Brk
-    &Cpu6502::brk0, &Cpu6502::brk1, &Cpu6502::brk2, &Cpu6502::brk3, &Cpu6502::brk4, &Cpu6502::brk5, &Cpu6502::brk6,
+    &Cpu6502::brk0,
     // $01 -> ORA ($az, X)
-    &Cpu6502::zeroPagePreIndexedIndirect0, &Cpu6502::zeroPagePreIndexedIndirect1, &Cpu6502::zeroPagePreIndexedIndirect2, &Cpu6502::zeroPagePreIndexedIndirect3, &Cpu6502::zeroPagePreIndexedIndirectLoad, &Cpu6502::ora,
+    &Cpu6502::oraIndX0,
     // $02 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $03 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $04 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $05 -> ORA $az
-    &Cpu6502::zeroPage, &Cpu6502::zeroPageLoad, &Cpu6502::ora,
+    &Cpu6502::oraZp0,
     // $06 -> ASL $az
-    &Cpu6502::zeroPage, &Cpu6502::zeroPageLoad, &Cpu6502::asl0, &Cpu6502::asl1, &Cpu6502::finishInstruction,
+    &Cpu6502::aslZp0,
     // $07 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $08 -> PHP
-    &Cpu6502::implied, &Cpu6502::php0, &Cpu6502::ph1,
+    &Cpu6502::php0,
     // $09 -> ORA #$da
-    &Cpu6502::immediate, &Cpu6502::ora,
+    &Cpu6502::oraImm0,
     // $0A -> ASL (accumulator)
-    &Cpu6502::aslAccumulator0, &Cpu6502::aslAccumulator1,
+    &Cpu6502::aslImm0,
     // $0B -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $0C -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $0D -> ORA $ahal
-    &Cpu6502::absolute0, &Cpu6502::absolute1, &Cpu6502::absoluteLoad, &Cpu6502::ora,
+    &Cpu6502::oraAbs0,
     // $0E -> ASL $ahal
-    &Cpu6502::absolute0, &Cpu6502::absolute1, &Cpu6502::absoluteLoad, &Cpu6502::asl0, &Cpu6502::asl1, &Cpu6502::finishInstruction,
+    &Cpu6502::aslAbs0,
     // $0F -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $10 -> BPL $of
-    &Cpu6502::relative, &Cpu6502::bpl, &Cpu6502::relativeBranch0, &Cpu6502::relativeBranch1,
+    &Cpu6502::bpl0,
     // $11 -> ORA ($az), Y
-    &Cpu6502::zeroPageIndirectPostIndexed0, &Cpu6502::zeroPageIndirectPostIndexed1, &Cpu6502::zeroPageIndirectPostIndexed2, &Cpu6502::zeroPageIndirectPostIndexedLoad0, &Cpu6502::zeroPageIndirectPostIndexedLoad1, &Cpu6502::ora,
+    &Cpu6502::oraIndY0,
     // $12 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $13 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $14 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $15 -> ORA $az, X
-    &Cpu6502::zeroPageIndexed0, &Cpu6502::zeroPageIndexedX1, &Cpu6502::zeroPageIndexedLoad, &Cpu6502::ora,
+    &Cpu6502::oraZpX0,
     // $16 -> ASL $az, X
-    &Cpu6502::zeroPageIndexed0, &Cpu6502::zeroPageIndexedX1, &Cpu6502::zeroPageIndexedLoad, &Cpu6502::asl0, &Cpu6502::asl1, &Cpu6502::finishInstruction,
+    &Cpu6502::aslZpX0,
     // $17 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $18 -> CLC
-    &Cpu6502::implied, &Cpu6502::clc,
+    &Cpu6502::clc0,
     // $19 -> ORA $ahal, Y
-    &Cpu6502::absoluteIndexed0, &Cpu6502::absoluteIndexedY1, &Cpu6502::absoluteIndexedLoad0, &Cpu6502::absoluteIndexedLoad1, &Cpu6502::ora,
+    &Cpu6502::oraAbsY0,
     // $1A -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $1B -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $1C -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $1D -> ORA $ahal, X
-    &Cpu6502::absoluteIndexed0, &Cpu6502::absoluteIndexedX1, &Cpu6502::absoluteIndexedLoad0, &Cpu6502::absoluteIndexedLoad1, &Cpu6502::ora,
+    &Cpu6502::oraAbsX0,
     // $1E -> ASL $ahal, X
-    &Cpu6502::absoluteIndexed0, &Cpu6502::absoluteIndexedX1, &Cpu6502::absoluteIndexedLoad0, &Cpu6502::absoluteIndexedLoad1, &Cpu6502::asl0, &Cpu6502::asl1, &Cpu6502::finishInstruction,
+    &Cpu6502::aslAbsX0,
     // $1F -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $20 -> JSR
+    &Cpu6502::jsr0,
     // $21 -> AND ($az, X)
-    &Cpu6502::zeroPagePreIndexedIndirect0, &Cpu6502::zeroPagePreIndexedIndirect1, &Cpu6502::zeroPagePreIndexedIndirect2, &Cpu6502::zeroPagePreIndexedIndirect3, &Cpu6502::zeroPagePreIndexedIndirectLoad, &Cpu6502::and_,
+    &Cpu6502::andIndX0,
     // $22 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $23 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $24 -> BIT $az
+    &Cpu6502::bitZp0,
     // $25 -> AND $az
-    &Cpu6502::zeroPage, &Cpu6502::zeroPageLoad, &Cpu6502::and_,
+    &Cpu6502::andZp0,
     // $26 -> ROL $az
+    &Cpu6502::rolZp0,
     // $27 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $28 -> PLP
-    &Cpu6502::implied, &Cpu6502::pullFromStack0, &Cpu6502::pullFromStack1, &Cpu6502::plp,
+    &Cpu6502::plp0,
     // $29 -> AND #$da
-    &Cpu6502::immediate, &Cpu6502::and_,
+    &Cpu6502::andImm0,
     // $2A -> ROL (Accumulator)
+    &Cpu6502::rolImm0,
     // $2B -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $2C -> BIT $ahal
+    &Cpu6502::bitAbs0,
     // $2D -> AND $ahal
-    &Cpu6502::absolute0, &Cpu6502::absolute1, &Cpu6502::absoluteLoad, &Cpu6502::and_,
+    &Cpu6502::andAbs0,
     // $2E -> ROL $ahal
+    &Cpu6502::rolAbs0,
     // $2F -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $30 -> BMI $of
-    &Cpu6502::relative, &Cpu6502::bmi, &Cpu6502::relativeBranch0, &Cpu6502::relativeBranch1,
+    &Cpu6502::bmi0,
     // $31 -> AND ($az), Y
-    &Cpu6502::zeroPageIndirectPostIndexed0, &Cpu6502::zeroPageIndirectPostIndexed1, &Cpu6502::zeroPageIndirectPostIndexed2, &Cpu6502::zeroPageIndirectPostIndexedLoad0, &Cpu6502::zeroPageIndirectPostIndexedLoad1, &Cpu6502::and_,
+    &Cpu6502::andIndY0,
     // $32 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $33 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $34 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $35 -> AND $az, X
-    &Cpu6502::zeroPageIndexed0, &Cpu6502::zeroPageIndexedX1, &Cpu6502::zeroPageIndexedLoad, &Cpu6502::and_,
+    &Cpu6502::andZpX0,
     // $36 -> ROL $az, X
+    &Cpu6502::rolZpX0,
     // $37 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $38 -> SEC
-    &Cpu6502::implied, &Cpu6502::sec,
+    &Cpu6502::sec0,
     // $39 -> AND $ahal, Y
-    &Cpu6502::absoluteIndexed0, &Cpu6502::absoluteIndexedY1, &Cpu6502::absoluteIndexedLoad0, &Cpu6502::absoluteIndexedLoad1, &Cpu6502::and_,
+    &Cpu6502::andAbsY0,
     // $3A -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $3B -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $3C -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $3D -> AND $ahal, X
-    &Cpu6502::absoluteIndexed0, &Cpu6502::absoluteIndexedX1, &Cpu6502::absoluteIndexedLoad0, &Cpu6502::absoluteIndexedLoad1, &Cpu6502::and_,
+    &Cpu6502::andAbsX0,
     // $3E -> ROL $ahal, X
+    &Cpu6502::rolAbsX0,
     // $3F -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $40 -> RTI
+    &Cpu6502::rti0,
     // $41 -> EOR ($az, X)
-    &Cpu6502::zeroPagePreIndexedIndirect0, &Cpu6502::zeroPagePreIndexedIndirect1, &Cpu6502::zeroPagePreIndexedIndirect2, &Cpu6502::zeroPagePreIndexedIndirect3, &Cpu6502::zeroPagePreIndexedIndirectLoad, &Cpu6502::eor,
+    &Cpu6502::eorIndX0,
     // $42 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $43 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $44 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $45 -> EOR $az
-    &Cpu6502::zeroPage, &Cpu6502::zeroPageLoad, &Cpu6502::eor,
+    &Cpu6502::eorZp0,
     // $46 -> LSR $az
+    &Cpu6502::lsrZp0,
     // $47 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $48 -> PHA
-    &Cpu6502::implied, &Cpu6502::pha0, &Cpu6502::ph1,
+    &Cpu6502::pha0,
     // $49 -> EOR #$da
-    &Cpu6502::immediate, &Cpu6502::eor,
+    &Cpu6502::eorImm0,
     // $4A -> LSR (Accumulator)
+    &Cpu6502::lsrImm0,
     // $4B -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $4C -> JMP $ahal
+    &Cpu6502::jmpAbs0,
     // $4D -> EOR $ahal
-    &Cpu6502::absolute0, &Cpu6502::absolute1, &Cpu6502::absoluteLoad, &Cpu6502::eor,
+    &Cpu6502::eorAbs0,
     // $4E -> LSR $ahal
+    &Cpu6502::lsrAbs0,
     // $4F -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $50 -> BVC $of
-    &Cpu6502::relative, &Cpu6502::bvc, &Cpu6502::relativeBranch0, &Cpu6502::relativeBranch1,
+    &Cpu6502::bvc0,
     // $51 -> EOR ($az), Y
-    &Cpu6502::zeroPageIndirectPostIndexed0, &Cpu6502::zeroPageIndirectPostIndexed1, &Cpu6502::zeroPageIndirectPostIndexed2, &Cpu6502::zeroPageIndirectPostIndexedLoad0, &Cpu6502::zeroPageIndirectPostIndexedLoad1, &Cpu6502::eor,
+    &Cpu6502::eorIndY0,
     // $52 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $53 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $54 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $55 -> EOR $az, X
-    &Cpu6502::zeroPageIndexed0, &Cpu6502::zeroPageIndexedX1, &Cpu6502::zeroPageIndexedLoad, &Cpu6502::eor,
+    &Cpu6502::eorZpX0,
     // $56 -> LSR $az, X
+    &Cpu6502::lsrZpX0,
     // $57 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $58 -> CLI
-    &Cpu6502::implied, &Cpu6502::cli,
+    &Cpu6502::cli0,
     // $59 -> EOR $ahal, Y
-    &Cpu6502::absoluteIndexed0, &Cpu6502::absoluteIndexedY1, &Cpu6502::absoluteIndexedLoad0, &Cpu6502::absoluteIndexedLoad1, &Cpu6502::eor,
+    &Cpu6502::eorAbsY0,
     // $5A -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $5B -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $5C -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $5D -> EOR $ahal, X
-    &Cpu6502::absoluteIndexed0, &Cpu6502::absoluteIndexedX1, &Cpu6502::absoluteIndexedLoad0, &Cpu6502::absoluteIndexedLoad1, &Cpu6502::eor,
+    &Cpu6502::eorAbsX0,
     // $5E -> LSR $ahal, X
+    &Cpu6502::lsrAbsX0,
     // $5F -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $60 -> RTS
+    &Cpu6502::rts0,
     // $61 -> ADC ($az, X)
+    &Cpu6502::adcIndX0,
     // $62 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $63 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $64 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $65 -> ADC $az
+    &Cpu6502::adcZp0,
     // $66 -> ROR $az
+    &Cpu6502::rorZp0,
     // $67 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $68 -> PLA
-    &Cpu6502::implied, &Cpu6502::pullFromStack0, &Cpu6502::pullFromStack1, &Cpu6502::pla,
+    &Cpu6502::pla0,
     // $69 -> ADC #$da
+    &Cpu6502::adcImm0,
     // $6A -> ROR (Accumulator)
+    &Cpu6502::rorImm0,
     // $6B -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $6C -> JMP ($ahal)
+    &Cpu6502::jmpInd0,
     // $6D -> ADC $ahal
+    &Cpu6502::adcAbs0,
     // $6E -> ROR $ahal
+    &Cpu6502::rorAbs0,
     // $6F -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $70 -> BVS $of
-    &Cpu6502::relative, &Cpu6502::bvs, &Cpu6502::relativeBranch0, &Cpu6502::relativeBranch1,
+    &Cpu6502::bvs0,
     // $71 -> ADC ($az), Y
+    &Cpu6502::adcIndY0,
     // $72 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $73 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $74 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $75 -> ADC $az, X
+    &Cpu6502::adcZpX0,
     // $76 -> ROR $az, X
+    &Cpu6502::rorZpX0,
     // $77 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $78 -> SEI
-    &Cpu6502::implied, &Cpu6502::sei,
+    &Cpu6502::sei0,
     // $79 -> ADC $ahal, Y
+    &Cpu6502::adcAbsY0,
     // $7A -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $7B -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $7C -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $7D -> ADC $ahal, X
+    &Cpu6502::adcAbsX0,
     // $7E -> ROR $ahal, X
+    &Cpu6502::rorAbsX0,
     // $7F -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $80 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $81 -> STA ($az, X)
+    &Cpu6502::staIndX0,
     // $82 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $83 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $84 -> STY $az
+    &Cpu6502::styZp0,
     // $85 -> STA $az
-    &Cpu6502::zeroPage, &Cpu6502::staZeroPage, &Cpu6502::finishInstruction,
+    &Cpu6502::staZp0,
     // $86 -> STX $az
+    &Cpu6502::stxZp0,
     // $87 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $88 -> DEY
+    &Cpu6502::dey0,
     // $89 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $8A -> TXA
+    &Cpu6502::txa0,
     // $8B -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $8C -> STY $ahal
+    &Cpu6502::styAbs0,
     // $8D -> STA $ahal
-    &Cpu6502::absolute0, &Cpu6502::absolute1, &Cpu6502::staAbsolute, &Cpu6502::finishInstruction,
+    &Cpu6502::staAbs0,
     // $8E -> STX $ahal
+    &Cpu6502::stxAbs0,
     // $8F -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $90 -> BCC $of
-    &Cpu6502::relative, &Cpu6502::bcc, &Cpu6502::relativeBranch0, &Cpu6502::relativeBranch1,
+    &Cpu6502::bcc0,
     // $91 -> STA ($az), Y
+    &Cpu6502::staIndY0,
     // $92 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $93 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $94 -> STY $az, X
+    &Cpu6502::styZpX0,
     // $95 -> STA $az, X
-    &Cpu6502::zeroPageIndexed0, &Cpu6502::zeroPageIndexedX1, &Cpu6502::staZeroPageIndexed, &Cpu6502::finishInstruction,
+    &Cpu6502::staZpX0,
     // $96 -> STX $az, Y
+    &Cpu6502::stxZpY0,
     // $97 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $98 -> TYA
+    &Cpu6502::tya0,
     // $99 -> STA $ahal, Y
-    &Cpu6502::absoluteIndexed0, &Cpu6502::absoluteIndexedY1, &Cpu6502::absoluteIndexedStore0, &Cpu6502::staAbsoluteIndexed, &Cpu6502::finishInstruction,
+    &Cpu6502::staAbsY0,
     // $9A -> TXS
+    &Cpu6502::txs0,
     // $9B -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $9C -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $9D -> STA $ahal, X
-    &Cpu6502::absoluteIndexed0, &Cpu6502::absoluteIndexedX1, &Cpu6502::absoluteIndexedStore0, &Cpu6502::staAbsoluteIndexed, &Cpu6502::finishInstruction,
+    &Cpu6502::staAbsX0,
     // $9E -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $9F -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $A0 -> LDY #$da
+    &Cpu6502::ldyImm0,
     // $A1 -> LDA ($az, X)
+    &Cpu6502::ldaIndX0,
     // $A2 -> LDX #$da
+    &Cpu6502::ldxImm0,
     // $A3 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $A4 -> LDY $az
+    &Cpu6502::ldyZp0,
     // $A5 -> LDA $az
-    &Cpu6502::zeroPage, &Cpu6502::zeroPageLoad, &Cpu6502::lda,
+    &Cpu6502::ldaZp0,
     // $A6 -> LDX $az
+    &Cpu6502::ldxZp0,
     // $A7 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $A8 -> TAY
+    &Cpu6502::tay0,
     // $A9 -> LDA #$da
-    &Cpu6502::immediate, &Cpu6502::lda,
+    &Cpu6502::ldaImm0,
     // $AA -> TAX
+    &Cpu6502::tax0,
     // $AB -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $AC -> LDY $ahal
+    &Cpu6502::ldyAbs0,
     // $AD -> LDA $ahal
-    &Cpu6502::absolute0, &Cpu6502::absolute1, &Cpu6502::absoluteLoad, &Cpu6502::lda,
+    &Cpu6502::ldaAbs0,
     // $AE -> LDX $ahal
+    &Cpu6502::ldxAbs0,
     // $AF -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $B0 -> BCS $of
-    &Cpu6502::relative, &Cpu6502::bcs, &Cpu6502::relativeBranch0, &Cpu6502::relativeBranch1,
+    &Cpu6502::bcs0,
     // $B1 -> LDA ($az), Y
+    &Cpu6502::ldaIndY0,
     // $B2 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $B3 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $B4 -> LDY $az, X
+    &Cpu6502::ldyZpX0,
     // $B5 -> LDA $az, X
-    &Cpu6502::zeroPageIndexed0, &Cpu6502::zeroPageIndexedX1, &Cpu6502::zeroPageIndexedLoad, &Cpu6502::lda,
-    // $B6 -> LDX $az, X
+    &Cpu6502::ldaZpX0,
+    // $B6 -> LDX $az, Y
+    &Cpu6502::ldxZpY0,
     // $B7 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $B8 -> CLV
-    &Cpu6502::implied, &Cpu6502::clv,
+    &Cpu6502::clv0,
     // $B9 -> LDA $ahal, Y
-    &Cpu6502::absoluteIndexed0, &Cpu6502::absoluteIndexedY1, &Cpu6502::absoluteIndexedLoad0, &Cpu6502::absoluteIndexedLoad1, &Cpu6502::lda,
+    &Cpu6502::ldaAbsY0,
     // $BA -> TSX
+    &Cpu6502::tsx0,
     // $BB -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $BC -> LDY $ahal, X
+    &Cpu6502::ldyAbsX0,
     // $BD -> LDA $ahal, X
-    &Cpu6502::absoluteIndexed0, &Cpu6502::absoluteIndexedX1, &Cpu6502::absoluteIndexedLoad0, &Cpu6502::absoluteIndexedLoad1, &Cpu6502::lda,
-    // $BE -> LDX $ahal, X
+    &Cpu6502::ldaAbsX0,
+    // $BE -> LDX $ahal, Y
+    &Cpu6502::ldxAbsY0,
     // $BF -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $C0 -> CPY #$da
+    &Cpu6502::cpyImm0,
     // $C1 -> CMP ($az, X)
+    &Cpu6502::cmpIndX0,
     // $C2 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $C3 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $C4 -> CPY $az
+    &Cpu6502::cpyZp0,
     // $C5 -> CMP $az
+    &Cpu6502::cmpZp0,
     // $C6 -> DEC $az
+    &Cpu6502::decZp0,
     // $C7 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $C8 -> INY
+    &Cpu6502::iny0,
     // $C9 -> CMP #$da
+    &Cpu6502::cmpImm0,
     // $CA -> DEX
+    &Cpu6502::dex0,
     // $CB -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $CC -> CPY $ahal
+    &Cpu6502::cpyAbs0,
     // $CD -> CMP $ahal
+    &Cpu6502::cmpAbs0,
     // $CE -> DEC $ahal
+    &Cpu6502::decAbs0,
     // $CF -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $D0 -> BNE $of
-    &Cpu6502::relative, &Cpu6502::bne, &Cpu6502::relativeBranch0, &Cpu6502::relativeBranch1,
+    &Cpu6502::bne0,
     // $D1 -> CMP ($az), Y
+    &Cpu6502::cmpIndY0,
     // $D2 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $D3 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $D4 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $D5 -> CMP $az, X
+    &Cpu6502::cmpZpX0,
     // $D6 -> DEC $az, X
+    &Cpu6502::decZpX0,
     // $D7 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $D8 -> CLD
-    &Cpu6502::implied, &Cpu6502::cld,
+    &Cpu6502::cld0,
     // $D9 -> CMP $ahal, Y
+    &Cpu6502::cmpAbsY0,
     // $DA -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $DB -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $DC -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $DD -> CMP $ahal, X
+    &Cpu6502::cmpAbsX0,
     // $DE -> DEC $ahal, X
+    &Cpu6502::decAbsX0,
     // $DF -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $E0 -> CPX #$da
+    &Cpu6502::cpxImm0,
     // $E1 -> SBC ($az, X)
+    &Cpu6502::sbcIndX0,
     // $E2 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $E3 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $E4 -> CPX $az
+    &Cpu6502::cpxZp0,
     // $E5 -> SBC $az
+    &Cpu6502::sbcZp0,
     // $E6 -> INC $az
+    &Cpu6502::incZp0,
     // $E7 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $E8 -> INX
+    &Cpu6502::inx0,
     // $E9 -> SBC #$da
+    &Cpu6502::sbcImm0,
     // $EA -> NOP
+    &Cpu6502::nop0,
     // $EB -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $EC -> CPX $ahal
+    &Cpu6502::cpxAbs0,
     // $ED -> SBC $ahal
+    &Cpu6502::sbcAbs0,
     // $EE -> INC $ahal
+    &Cpu6502::incAbs0,
     // $EF -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $F0 -> BEQ $of
-    &Cpu6502::relative, &Cpu6502::beq, &Cpu6502::relativeBranch0, &Cpu6502::relativeBranch1,
+    &Cpu6502::beq0,
     // $F1 -> SBC ($az), Y
+    &Cpu6502::sbcIndY0,
     // $F2 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $F3 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $F4 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $F5 -> SBC $az, X
+    &Cpu6502::sbcZpX0,
     // $F6 -> INC $az, X
+    &Cpu6502::incZpX0,
     // $F7 -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $F8 -> SED
-    &Cpu6502::implied, &Cpu6502::sed,
+    &Cpu6502::sed0,
     // $F9 -> SBC $ahal, Y
+    &Cpu6502::sbcAbsY0,
     // $FA -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $FB -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $FC -> ?
-    &Cpu6502::finishInstruction,
+    &Cpu6502::fetchOpcode,
     // $FD -> SBC $ahal, X
+    &Cpu6502::sbcAbsX0,
     // $FE -> INC $ahal, X
+    &Cpu6502::incAbsX0,
     // $FF -> ?
-    &Cpu6502::finishInstruction
-};
-
-// 256 opcodes
-template <class TBus>
-const int Cpu6502<TBus>::_instrPipelineStartIndexes[256] = {
-    2, 9, 15, 16, 17, 18, 21, 26, 27, 29, 41, 46, 53, 62, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 159, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    &Cpu6502::fetchOpcode
 };
 
 template <class TBus>

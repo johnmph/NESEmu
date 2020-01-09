@@ -13,13 +13,28 @@
 // CLC, CLD, CLI, CLV, SEC, SED, SEI
 
 void clearFlag(Flags flag);
-void clc();
-void cld();
-void cli();
-void clv();
+
+void clc0();
+void clc1();
+
+void cld0();
+void cld1();
+
+void cli0();
+void cli1();
+
+void clv0();
+void clv1();
+
 void setFlag(Flags flag);
-void sec();
-void sed();
-void sei();
+
+void sec0();
+void sec1();
+
+void sed0();
+void sed1();
+
+void sei0();
+void sei1();
 
 #endif /* Cpu6502Flag_hpp */

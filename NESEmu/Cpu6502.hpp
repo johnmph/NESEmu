@@ -66,9 +66,9 @@ private:
     // Program flow
     void incrementProgramCounter();
     void fetchData();
+    void fetchOpcode(InstructionPipeline nextInstruction);
     void fetchOpcode();
     void decodeOpcode();
-    void finishInstruction();
     
     // Interrupts
     void checkNmi();
@@ -115,13 +115,10 @@ private:
     
     // Internal
     TBus &_bus;
-    static const InstructionPipeline _instrPipelineFuncs[1024];
-    static const int _instrPipelineStartIndexes[256];
+    static const InstructionPipeline _instrPipelineFuncs[256];
     static const uint8_t _interruptVectors[3][2];
     static const uint8_t _stackPageNumber;
     
-    int _instrPipelineStartIndex;
-    int _pipelineStep;
     InstructionPipeline _currentInstruction;
     int _interruptVectorsIndex;
     

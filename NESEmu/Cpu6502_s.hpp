@@ -27,14 +27,8 @@ void Cpu6502<TBus>::clock() {
     checkNmi();
     checkIrq();
     
-    // Decode current instruction
-    if (_pipelineStep == 0) {
-        decodeOpcode();
-    }
-    
     // Execute current stage
-    (this->*_instrPipelineFuncs[_instrPipelineStartIndex + _pipelineStep])();
-    ++_pipelineStep;
+    (this->*_currentInstruction)();
     
     // Each clock, there is a memory access
     fetchMemory();
@@ -47,9 +41,7 @@ void Cpu6502<TBus>::reset(bool high) {  // TODO: voir pour les registres si on l
     
     // If reset
     if ((_resetLine == false) && (_resetRequested == false)) {
-        // Trick to avoid calling decodeOpcode in next clock but execute start "opcode"
-        _instrPipelineStartIndex = -1;
-        _pipelineStep = 1;
+        _currentInstruction = &Cpu6502::reset0;
         _resetRequested = true;
         _interruptRequested = true; // TODO: voir si ok pour reset aussi
     }
@@ -170,9 +162,29 @@ void Cpu6502<TBus>::fetchData() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::fetchOpcode() {
+void Cpu6502<TBus>::fetchOpcode(InstructionPipeline nextInstruction) {
+    // Set next instruction
+    _currentInstruction = nextInstruction;
+    
     // If interrupt requested
-    if (checkInterrupts() == true) {    //TODO: voir si la gestion des interruptions ici ou dans decodeOpcode
+    if (checkInterrupts() == true) {    //TODO: voir si la gestion des interruptions ici ou dans decodeOpcode : DANS DECODEOPCODE obligé !!!
+        // Read opcode without increment PC
+        readDataBus(_programCounterLow, _programCounterHigh);   // TODO: voir si ok
+        
+        // Brk
+        _predecode = 0;
+        
+        // Save interrupt flag to know that an interrupt is occur (and not brk opcode)
+        _interruptRequested = true;
+    } else {
+        fetchData();
+    }
+}
+
+template <class TBus>
+void Cpu6502<TBus>::fetchOpcode() {/*
+    // If interrupt requested
+    if (checkInterrupts() == true) {    //TODO: voir si la gestion des interruptions ici ou dans decodeOpcode : DANS DECODEOPCODE obligé !!!
         // Read opcode without increment PC
         readDataBus(_programCounterLow, _programCounterHigh);   // TODO: voir si ok
         
@@ -185,18 +197,19 @@ void Cpu6502<TBus>::fetchOpcode() {
         fetchData();
     }
     
-    _pipelineStep = -1;
+    // Decode opcode on next step
+    _currentInstruction = &Cpu6502::decodeOpcode;*/
+    fetchOpcode(&Cpu6502::decodeOpcode);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::decodeOpcode() {
+    // Get current instruction from opcode
     _instruction = _predecode;
-    _instrPipelineStartIndex = _instrPipelineStartIndexes[_instruction];
-}
-
-template <class TBus>
-void Cpu6502<TBus>::finishInstruction() {
-    fetchOpcode();
+    _currentInstruction = _instrPipelineFuncs[_instruction];
+    
+    // Execute current instruction
+    (this->*_currentInstruction)();
 }
 
 // Interrupts
@@ -256,7 +269,7 @@ void Cpu6502<TBus>::pushToStack0(uint8_t data) {
     _dataOutput = data;
     writeDataBus(_stackPointer, _stackPageNumber, data);
     
-    // Removing 1 with inputDataLatch using ALU (Add 0xFF without carry set like true 6502)
+    // Removing 1 from inputDataLatch using ALU (Add 0xFF without carry set like true 6502)
     _aInput = 0xFF;
     _bInput = _stackPointer;
     aluPerformSum(false, false);
