@@ -106,7 +106,7 @@ void Cpu6502<TBus>::brk6() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::rti0() {
+void Cpu6502<TBus>::rti0() {    // TODO: a voir
     _currentInstruction = &Cpu6502::rti1;
     
     implied();
@@ -131,7 +131,7 @@ template <class TBus>
 void Cpu6502<TBus>::rti3() {
     _currentInstruction = &Cpu6502::rti4;
     
-    _statusFlags = _inputDataLatch;
+    _statusFlags = _inputDataLatch | (1 << static_cast<int>(Flags::UnusedHigh));
     
     pullFromStack1();
     pullFromStack0();

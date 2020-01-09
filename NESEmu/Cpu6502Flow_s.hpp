@@ -177,4 +177,9 @@ void Cpu6502<TBus>::rts4() {    // TODO: verifier
     fetchOpcode();
 }
 
+template <class TBus>
+void Cpu6502<TBus>::unofficial() {  // TODO: a retirer une fois tous les opcodes gérés
+    nop0();
+}
+
 #endif /* Cpu6502Flow_s_hpp */

@@ -395,11 +395,11 @@ void Cpu6502<TBus>::sbcIndY4() {
 
 template <class TBus>
 void Cpu6502<TBus>::cp0(uint8_t data) {
-    // Substracting data fetched to data with possible carry by inverting bInput
+    // Substracting data fetched to data to compare them
     _aInput = data;
     _bInput = _inputDataLatch;
     aluInvertBInput();
-    aluPerformSum(getStatusFlag(Flags::DecimalMode), getStatusFlag(Flags::Carry));
+    aluPerformSum(false, true);
     
     // Fetch next opcode during performing ALU
     fetchOpcode(&Cpu6502::cp1);

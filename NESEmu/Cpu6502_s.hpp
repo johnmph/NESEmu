@@ -10,14 +10,13 @@
 #define Cpu6502_s_hpp
 
 // TODO: par apres, si assez rapide, decomposer en 2 phases de cycles (Ph0, Ph1, Ph2, RDY, R/W, Sync)
-// TODO: par apres, peut etre a la place d'avoir _instruction, _instrPipelineStartIndex et _pipelineStep, avoir un _currentInstruction qui sera setté dans le decodeOpcode et a chaque fin d'instruction le setter sur l'instruction suivante (et surtout gérer les interruptions dans le decodeOpcode et pas le fetchOpcode ?)
 #include "Cpu6502_s_data.hpp"
 
 
 // Public interface
 
 template <class TBus>
-Cpu6502<TBus>::Cpu6502(TBus &bus) : _bus(bus), _programCounterLow(0xFF), _programCounterHigh(0), _stackPointer(0), _accumulator(0xAA), _xIndex(0), _yIndex(0), _statusFlags(0x2), _resetRequested(false), _nmiLine(true), _nmiLinePrevious(true), _nmiRequested(false), _irqLine(true), _irqRequested(false), _interruptRequested(false) {
+Cpu6502<TBus>::Cpu6502(TBus &bus) : _bus(bus), _programCounterLow(0xFF), _programCounterHigh(0), _stackPointer(0), _accumulator(0xAA), _xIndex(0), _yIndex(0), _statusFlags(0x20), _resetRequested(false), _nmiLine(true), _nmiLinePrevious(true), _nmiRequested(false), _irqLine(true), _irqRequested(false), _interruptRequested(false) {
     reset(false);
 }
 
@@ -67,6 +66,11 @@ uint16_t Cpu6502<TBus>::getProgramCounter() {
 template <class TBus>
 uint16_t Cpu6502<TBus>::getAddressBus() {
     return (_addressBusHigh << 8) | _addressBusLow;
+}
+
+template <class TBus>
+uint8_t Cpu6502<TBus>::getDataBus() {
+    return ((_readWrite == static_cast<bool>(ReadWrite::Read)) || (_resetRequested == true)) ? _inputDataLatch : _dataOutput;
 }
 
 // Status
@@ -182,23 +186,8 @@ void Cpu6502<TBus>::fetchOpcode(InstructionPipeline nextInstruction) {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::fetchOpcode() {/*
-    // If interrupt requested
-    if (checkInterrupts() == true) {    //TODO: voir si la gestion des interruptions ici ou dans decodeOpcode : DANS DECODEOPCODE obligé !!!
-        // Read opcode without increment PC
-        readDataBus(_programCounterLow, _programCounterHigh);   // TODO: voir si ok
-        
-        // Brk
-        _predecode = 0;
-        
-        // Save interrupt flag to know that an interrupt is occur (and not brk opcode)
-        _interruptRequested = true;
-    } else {
-        fetchData();
-    }
-    
-    // Decode opcode on next step
-    _currentInstruction = &Cpu6502::decodeOpcode;*/
+void Cpu6502<TBus>::fetchOpcode() {
+    // Fetch opcode then decode opcode (on the next cycle)
     fetchOpcode(&Cpu6502::decodeOpcode);
 }
 

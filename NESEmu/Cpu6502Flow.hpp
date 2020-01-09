@@ -38,4 +38,6 @@ void rts3();
 void rts4();
 void rts5();
 
+void unofficial();
+
 #endif /* Cpu6502Flow_hpp */

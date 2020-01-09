@@ -8,18 +8,20 @@
 
 #include <iostream>
 #include <array>
+#include <fstream>
+#include <chrono>
 #include "Cpu6502.hpp"
 
 
 struct Bus {
     uint8_t read(uint16_t address) {
-        std::cout << std::hex << "Read 0x" << static_cast<int>(_memory[address]) << " at 0x" << address << "\n";
-        return _memory[address];
+        //std::cout << std::hex << "Read 0x" << static_cast<int>(_memory[address & 0xBFFF]) << " at 0x" << address << "\n";
+        return _memory[address & 0xBFFF];
     }
     
     void write(uint16_t address, uint8_t data) {
-        std::cout << std::hex << "Write 0x" << static_cast<int>(data) << " at 0x" << address << "\n";
-        _memory[address] = data;
+        //std::cout << std::hex << "Write 0x" << static_cast<int>(data) << " at 0x" << address << "\n";
+        _memory[address & 0xBFFF] = data;
     }
     
 //private:
@@ -62,7 +64,7 @@ int main(int argc, const char * argv[]) {
     cpu._bInput = 0xd0;
     cpu.aluPerformSum(false, false);*/
     
-    
+    /*
     bus._memory[0xFFFC] = 0;
     bus._memory[0xFFFD] = 0;
     
@@ -139,7 +141,34 @@ int main(int argc, const char * argv[]) {
     cpu.clock();
     cpu.clock();
     cpu.clock();
-    cpu.clock();
+    cpu.clock();*/
+    
+    // Initialize with NOP
+    bus._memory.fill(0xEA);
+    
+    // Read test file
+    std::ifstream ifs("nestest.nes", std::ios::binary);
+    ifs.seekg(0x10);
+    ifs.read(reinterpret_cast<char *>(&bus._memory.data()[0x8000]), 0x4000);
+    
+    // Reset vector
+    bus.write(0xFFFC, 0x00);
+    bus.write(0xFFFD, 0xC0);
+    
+    // Release reset to start cpu
+    cpu.reset(true);
+    
+    // NTSC = 1789773 hz = 1sec / 1789773 = 0.0000005587 sec par cycle CPU
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    
+    for (int x = 0; x <= 1789773; ++x) {    // 26555
+        //std::cout << std::hex << (cpu.getProgramCounter() - 1) << " A:" << static_cast<int>(cpu._accumulator) << " X:" << static_cast<int>(cpu._xIndex) << " Y:" << static_cast<int>(cpu._yIndex) << " P:" << static_cast<int>(cpu._statusFlags) << " SP:" << static_cast<int>(cpu._stackPointer) << " Cycle: " << std::dec << x << "\n";
+        
+        cpu.clock();
+    }
+    
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    std::cout << "Time in milliseconds: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "\n";
     
     return 0;
 }

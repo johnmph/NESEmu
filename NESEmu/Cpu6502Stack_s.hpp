@@ -42,7 +42,7 @@ template <class TBus>
 void Cpu6502<TBus>::php1() {
     _currentInstruction = &Cpu6502::php2;
     
-    pushToStack0(_statusFlags);
+    pushToStack0(_statusFlags | (1 << static_cast<int>(Flags::Break))); // TODO: voir si ok
 }
 
 template <class TBus>
@@ -108,7 +108,7 @@ void Cpu6502<TBus>::plp2() {
 
 template <class TBus>
 void Cpu6502<TBus>::plp3() {
-    _statusFlags = _inputDataLatch;
+    _statusFlags = _inputDataLatch | (1 << static_cast<int>(Flags::UnusedHigh));
     
     fetchOpcode();
 }

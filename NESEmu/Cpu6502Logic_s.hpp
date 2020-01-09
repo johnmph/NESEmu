@@ -758,7 +758,7 @@ void Cpu6502<TBus>::aslAbsX3() {
 
 template <class TBus>
 void Cpu6502<TBus>::aslAbsX4() {
-    aslMemory0(&Cpu6502::aslAbsX4);
+    aslMemory0(&Cpu6502::aslAbsX5);
 }
 
 template <class TBus>
@@ -920,7 +920,7 @@ void Cpu6502<TBus>::lsrAbsX3() {
 
 template <class TBus>
 void Cpu6502<TBus>::lsrAbsX4() {
-    lsrMemory0(&Cpu6502::lsrAbsX4);
+    lsrMemory0(&Cpu6502::lsrAbsX5);
 }
 
 template <class TBus>
@@ -1083,7 +1083,7 @@ void Cpu6502<TBus>::rolAbsX3() {
 
 template <class TBus>
 void Cpu6502<TBus>::rolAbsX4() {
-    rolMemory0(&Cpu6502::rolAbsX4);
+    rolMemory0(&Cpu6502::rolAbsX5);
 }
 
 template <class TBus>
@@ -1245,7 +1245,7 @@ void Cpu6502<TBus>::rorAbsX3() {
 
 template <class TBus>
 void Cpu6502<TBus>::rorAbsX4() {
-    rorMemory0(&Cpu6502::rorAbsX4);
+    rorMemory0(&Cpu6502::rorAbsX5);
 }
 
 template <class TBus>

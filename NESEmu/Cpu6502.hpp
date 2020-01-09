@@ -25,8 +25,9 @@ struct Cpu6502 {
     
     uint16_t getProgramCounter();   // TODO: pour debugging, mettre aussi d'autres getter (registers)
     uint16_t getAddressBus();
+    uint8_t getDataBus();
     
-private:
+    //private://TODO: remettre apres les tests
     using InstructionPipeline = void (Cpu6502::*)();
     
     enum class Interrupts {
@@ -41,7 +42,7 @@ private:
         InterruptDisable,
         DecimalMode,
         Break,
-        Unused,     // TODO: on dirait que unused est tjs a 1
+        UnusedHigh,
         Overflow,
         Negative
     };

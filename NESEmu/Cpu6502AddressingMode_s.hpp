@@ -12,8 +12,8 @@
 
 template <class TBus>
 void Cpu6502<TBus>::implied() {
-    // In implied addressing mode, there is a unused read which doesn't increment PC
-    readDataBus(_programCounterLow, _programCounterHigh);//TODO: normalement on peut ne rien avoir car juste avant ca avait deja fait ca
+    // In implied addressing mode, there is a unused read which doesn't increment PC (but we need to do this to updat address bus with current PC incremented by last step)
+    readDataBus(_programCounterLow, _programCounterHigh);
 }
 
 template <class TBus>

@@ -39,17 +39,17 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $01 -> ORA ($az, X)
     &Cpu6502::oraIndX0,
     // $02 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $03 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $04 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $05 -> ORA $az
     &Cpu6502::oraZp0,
     // $06 -> ASL $az
     &Cpu6502::aslZp0,
     // $07 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $08 -> PHP
     &Cpu6502::php0,
     // $09 -> ORA #$da
@@ -57,55 +57,55 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $0A -> ASL (accumulator)
     &Cpu6502::aslImm0,
     // $0B -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $0C -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $0D -> ORA $ahal
     &Cpu6502::oraAbs0,
     // $0E -> ASL $ahal
     &Cpu6502::aslAbs0,
     // $0F -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $10 -> BPL $of
     &Cpu6502::bpl0,
     // $11 -> ORA ($az), Y
     &Cpu6502::oraIndY0,
     // $12 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $13 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $14 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $15 -> ORA $az, X
     &Cpu6502::oraZpX0,
     // $16 -> ASL $az, X
     &Cpu6502::aslZpX0,
     // $17 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $18 -> CLC
     &Cpu6502::clc0,
     // $19 -> ORA $ahal, Y
     &Cpu6502::oraAbsY0,
     // $1A -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $1B -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $1C -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $1D -> ORA $ahal, X
     &Cpu6502::oraAbsX0,
     // $1E -> ASL $ahal, X
     &Cpu6502::aslAbsX0,
     // $1F -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $20 -> JSR
     &Cpu6502::jsr0,
     // $21 -> AND ($az, X)
     &Cpu6502::andIndX0,
     // $22 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $23 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $24 -> BIT $az
     &Cpu6502::bitZp0,
     // $25 -> AND $az
@@ -113,7 +113,7 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $26 -> ROL $az
     &Cpu6502::rolZp0,
     // $27 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $28 -> PLP
     &Cpu6502::plp0,
     // $29 -> AND #$da
@@ -121,7 +121,7 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $2A -> ROL (Accumulator)
     &Cpu6502::rolImm0,
     // $2B -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $2C -> BIT $ahal
     &Cpu6502::bitAbs0,
     // $2D -> AND $ahal
@@ -129,55 +129,55 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $2E -> ROL $ahal
     &Cpu6502::rolAbs0,
     // $2F -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $30 -> BMI $of
     &Cpu6502::bmi0,
     // $31 -> AND ($az), Y
     &Cpu6502::andIndY0,
     // $32 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $33 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $34 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $35 -> AND $az, X
     &Cpu6502::andZpX0,
     // $36 -> ROL $az, X
     &Cpu6502::rolZpX0,
     // $37 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $38 -> SEC
     &Cpu6502::sec0,
     // $39 -> AND $ahal, Y
     &Cpu6502::andAbsY0,
     // $3A -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $3B -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $3C -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $3D -> AND $ahal, X
     &Cpu6502::andAbsX0,
     // $3E -> ROL $ahal, X
     &Cpu6502::rolAbsX0,
     // $3F -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $40 -> RTI
     &Cpu6502::rti0,
     // $41 -> EOR ($az, X)
     &Cpu6502::eorIndX0,
     // $42 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $43 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $44 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $45 -> EOR $az
     &Cpu6502::eorZp0,
     // $46 -> LSR $az
     &Cpu6502::lsrZp0,
     // $47 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $48 -> PHA
     &Cpu6502::pha0,
     // $49 -> EOR #$da
@@ -185,7 +185,7 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $4A -> LSR (Accumulator)
     &Cpu6502::lsrImm0,
     // $4B -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $4C -> JMP $ahal
     &Cpu6502::jmpAbs0,
     // $4D -> EOR $ahal
@@ -193,55 +193,55 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $4E -> LSR $ahal
     &Cpu6502::lsrAbs0,
     // $4F -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $50 -> BVC $of
     &Cpu6502::bvc0,
     // $51 -> EOR ($az), Y
     &Cpu6502::eorIndY0,
     // $52 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $53 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $54 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $55 -> EOR $az, X
     &Cpu6502::eorZpX0,
     // $56 -> LSR $az, X
     &Cpu6502::lsrZpX0,
     // $57 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $58 -> CLI
     &Cpu6502::cli0,
     // $59 -> EOR $ahal, Y
     &Cpu6502::eorAbsY0,
     // $5A -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $5B -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $5C -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $5D -> EOR $ahal, X
     &Cpu6502::eorAbsX0,
     // $5E -> LSR $ahal, X
     &Cpu6502::lsrAbsX0,
     // $5F -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $60 -> RTS
     &Cpu6502::rts0,
     // $61 -> ADC ($az, X)
     &Cpu6502::adcIndX0,
     // $62 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $63 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $64 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $65 -> ADC $az
     &Cpu6502::adcZp0,
     // $66 -> ROR $az
     &Cpu6502::rorZp0,
     // $67 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $68 -> PLA
     &Cpu6502::pla0,
     // $69 -> ADC #$da
@@ -249,7 +249,7 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $6A -> ROR (Accumulator)
     &Cpu6502::rorImm0,
     // $6B -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $6C -> JMP ($ahal)
     &Cpu6502::jmpInd0,
     // $6D -> ADC $ahal
@@ -257,47 +257,47 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $6E -> ROR $ahal
     &Cpu6502::rorAbs0,
     // $6F -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $70 -> BVS $of
     &Cpu6502::bvs0,
     // $71 -> ADC ($az), Y
     &Cpu6502::adcIndY0,
     // $72 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $73 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $74 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $75 -> ADC $az, X
     &Cpu6502::adcZpX0,
     // $76 -> ROR $az, X
     &Cpu6502::rorZpX0,
     // $77 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $78 -> SEI
     &Cpu6502::sei0,
     // $79 -> ADC $ahal, Y
     &Cpu6502::adcAbsY0,
     // $7A -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $7B -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $7C -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $7D -> ADC $ahal, X
     &Cpu6502::adcAbsX0,
     // $7E -> ROR $ahal, X
     &Cpu6502::rorAbsX0,
     // $7F -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $80 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $81 -> STA ($az, X)
     &Cpu6502::staIndX0,
     // $82 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $83 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $84 -> STY $az
     &Cpu6502::styZp0,
     // $85 -> STA $az
@@ -305,15 +305,15 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $86 -> STX $az
     &Cpu6502::stxZp0,
     // $87 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $88 -> DEY
     &Cpu6502::dey0,
     // $89 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $8A -> TXA
     &Cpu6502::txa0,
     // $8B -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $8C -> STY $ahal
     &Cpu6502::styAbs0,
     // $8D -> STA $ahal
@@ -321,15 +321,15 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $8E -> STX $ahal
     &Cpu6502::stxAbs0,
     // $8F -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $90 -> BCC $of
     &Cpu6502::bcc0,
     // $91 -> STA ($az), Y
     &Cpu6502::staIndY0,
     // $92 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $93 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $94 -> STY $az, X
     &Cpu6502::styZpX0,
     // $95 -> STA $az, X
@@ -337,7 +337,7 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $96 -> STX $az, Y
     &Cpu6502::stxZpY0,
     // $97 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $98 -> TYA
     &Cpu6502::tya0,
     // $99 -> STA $ahal, Y
@@ -345,15 +345,15 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $9A -> TXS
     &Cpu6502::txs0,
     // $9B -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $9C -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $9D -> STA $ahal, X
     &Cpu6502::staAbsX0,
     // $9E -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $9F -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $A0 -> LDY #$da
     &Cpu6502::ldyImm0,
     // $A1 -> LDA ($az, X)
@@ -361,7 +361,7 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $A2 -> LDX #$da
     &Cpu6502::ldxImm0,
     // $A3 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $A4 -> LDY $az
     &Cpu6502::ldyZp0,
     // $A5 -> LDA $az
@@ -369,7 +369,7 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $A6 -> LDX $az
     &Cpu6502::ldxZp0,
     // $A7 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $A8 -> TAY
     &Cpu6502::tay0,
     // $A9 -> LDA #$da
@@ -377,7 +377,7 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $AA -> TAX
     &Cpu6502::tax0,
     // $AB -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $AC -> LDY $ahal
     &Cpu6502::ldyAbs0,
     // $AD -> LDA $ahal
@@ -385,15 +385,15 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $AE -> LDX $ahal
     &Cpu6502::ldxAbs0,
     // $AF -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $B0 -> BCS $of
     &Cpu6502::bcs0,
     // $B1 -> LDA ($az), Y
     &Cpu6502::ldaIndY0,
     // $B2 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $B3 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $B4 -> LDY $az, X
     &Cpu6502::ldyZpX0,
     // $B5 -> LDA $az, X
@@ -401,7 +401,7 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $B6 -> LDX $az, Y
     &Cpu6502::ldxZpY0,
     // $B7 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $B8 -> CLV
     &Cpu6502::clv0,
     // $B9 -> LDA $ahal, Y
@@ -409,7 +409,7 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $BA -> TSX
     &Cpu6502::tsx0,
     // $BB -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $BC -> LDY $ahal, X
     &Cpu6502::ldyAbsX0,
     // $BD -> LDA $ahal, X
@@ -417,15 +417,15 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $BE -> LDX $ahal, Y
     &Cpu6502::ldxAbsY0,
     // $BF -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $C0 -> CPY #$da
     &Cpu6502::cpyImm0,
     // $C1 -> CMP ($az, X)
     &Cpu6502::cmpIndX0,
     // $C2 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $C3 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $C4 -> CPY $az
     &Cpu6502::cpyZp0,
     // $C5 -> CMP $az
@@ -433,7 +433,7 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $C6 -> DEC $az
     &Cpu6502::decZp0,
     // $C7 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $C8 -> INY
     &Cpu6502::iny0,
     // $C9 -> CMP #$da
@@ -441,7 +441,7 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $CA -> DEX
     &Cpu6502::dex0,
     // $CB -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $CC -> CPY $ahal
     &Cpu6502::cpyAbs0,
     // $CD -> CMP $ahal
@@ -449,47 +449,47 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $CE -> DEC $ahal
     &Cpu6502::decAbs0,
     // $CF -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $D0 -> BNE $of
     &Cpu6502::bne0,
     // $D1 -> CMP ($az), Y
     &Cpu6502::cmpIndY0,
     // $D2 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $D3 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $D4 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $D5 -> CMP $az, X
     &Cpu6502::cmpZpX0,
     // $D6 -> DEC $az, X
     &Cpu6502::decZpX0,
     // $D7 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $D8 -> CLD
     &Cpu6502::cld0,
     // $D9 -> CMP $ahal, Y
     &Cpu6502::cmpAbsY0,
     // $DA -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $DB -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $DC -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $DD -> CMP $ahal, X
     &Cpu6502::cmpAbsX0,
     // $DE -> DEC $ahal, X
     &Cpu6502::decAbsX0,
     // $DF -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $E0 -> CPX #$da
     &Cpu6502::cpxImm0,
     // $E1 -> SBC ($az, X)
     &Cpu6502::sbcIndX0,
     // $E2 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $E3 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $E4 -> CPX $az
     &Cpu6502::cpxZp0,
     // $E5 -> SBC $az
@@ -497,7 +497,7 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $E6 -> INC $az
     &Cpu6502::incZp0,
     // $E7 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $E8 -> INX
     &Cpu6502::inx0,
     // $E9 -> SBC #$da
@@ -505,7 +505,7 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $EA -> NOP
     &Cpu6502::nop0,
     // $EB -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $EC -> CPX $ahal
     &Cpu6502::cpxAbs0,
     // $ED -> SBC $ahal
@@ -513,39 +513,39 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     // $EE -> INC $ahal
     &Cpu6502::incAbs0,
     // $EF -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $F0 -> BEQ $of
     &Cpu6502::beq0,
     // $F1 -> SBC ($az), Y
     &Cpu6502::sbcIndY0,
     // $F2 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $F3 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $F4 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $F5 -> SBC $az, X
     &Cpu6502::sbcZpX0,
     // $F6 -> INC $az, X
     &Cpu6502::incZpX0,
     // $F7 -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $F8 -> SED
     &Cpu6502::sed0,
     // $F9 -> SBC $ahal, Y
     &Cpu6502::sbcAbsY0,
     // $FA -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $FB -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $FC -> ?
-    &Cpu6502::fetchOpcode,
+    &Cpu6502::unofficial,
     // $FD -> SBC $ahal, X
     &Cpu6502::sbcAbsX0,
     // $FE -> INC $ahal, X
     &Cpu6502::incAbsX0,
     // $FF -> ?
-    &Cpu6502::fetchOpcode
+    &Cpu6502::unofficial
 };
 
 template <class TBus>
