@@ -36,7 +36,6 @@ void rts1();
 void rts2();
 void rts3();
 void rts4();
-void rts5();
 
 void unofficial();
 

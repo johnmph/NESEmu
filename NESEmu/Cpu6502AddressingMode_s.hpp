@@ -12,7 +12,7 @@
 
 template <class TBus>
 void Cpu6502<TBus>::implied() {
-    // In implied addressing mode, there is a unused read which doesn't increment PC (but we need to do this to updat address bus with current PC incremented by last step)
+    // In implied addressing mode, there is a unused read which doesn't increment PC (but we need to do this to update address bus with current PC incremented by last step)
     readDataBus(_programCounterLow, _programCounterHigh);
 }
 
@@ -64,13 +64,34 @@ void Cpu6502<TBus>::zeroPageStore(uint8_t data) {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::relative() {
+void Cpu6502<TBus>::relative0() {
     // Read offset and increment PC
     fetchData();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::relativeBranch0() {    // TODO: a voir (surtout pour le test du ++PC et --PC)
+void Cpu6502<TBus>::relative1(bool condition) { // TODO: voir les interruptions avec les opcode de branchement
+    if (condition == true) {
+        // Adding offset with programCounterLow using ALU
+        _aInput = _inputDataLatch;
+        _bInput = _programCounterLow;
+        aluPerformSum(false, false);
+        
+        // Branch is taken, this data will not be used, we don't increment PC
+        readDataBus(_programCounterLow, _programCounterHigh);
+        
+        // Set next instruction
+        _currentInstruction = &Cpu6502::relativeBranch0;
+        
+        return;
+    }
+    
+    // Branch is not taken, fetch next opcode
+    fetchOpcode();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::relativeBranch0() {
     _programCounterLow = _adderHold;
     
     // bInput must be programCounterLow and aInput the offset
@@ -78,23 +99,30 @@ void Cpu6502<TBus>::relativeBranch0() {    // TODO: a voir (surtout pour le test
         // There is a page boundary cross, this data will not be used (because its not the good address), we don't increment PC
         readDataBus(_programCounterLow, _programCounterHigh);
         
-        // Correct programCounterHigh
-        if (_bInput & 0x80) {
-            ++_programCounterHigh;
-        }
-        else {
-            --_programCounterHigh;
-        }
+        // Correct PCH in next instruction
+        _currentInstruction = &Cpu6502::relativeBranch1;
         
         return;
     }
     
-    // There is no page boundary cross, so it's the correct data, we can fetch opcode
-    fetchOpcode();
+    // There is no page boundary cross, so it's the correct data, we can fetch opcode (but we don't use fetchOpcode because there is a bug? in taken branch instructions (without carry) that delay the possible interrupt execution after executing the next instruction
+    // See http://forum.6502.org/viewtopic.php?f=4&t=1634
+    // And http://forums.nesdev.com/viewtopic.php?t=6510
+    //fetchOpcode();
+    fetchData();                                // TODO: soit on fait ainsi mais alors si le signal d'interruption est arreté avant la fin de l'instruction suivante, l'interruption ne sera pas executée car pas détectée (seulement pour IRQ, le nmi est detecté), si ce n'est pas ainsi en reel, il faut aussi faire un checkInterrupt et setter le flag _interruptRequested ici
+    _currentInstruction = &Cpu6502::decodeOpcode;
 }
 
 template <class TBus>
 void Cpu6502<TBus>::relativeBranch1() {
+    // Correct programCounterHigh
+    if (_bInput & 0x80) {
+        ++_programCounterHigh;
+    }
+    else {
+        --_programCounterHigh;
+    }
+    
     fetchOpcode();
 }
 
@@ -125,22 +153,18 @@ void Cpu6502<TBus>::absoluteIndexedY1() {
 
 template <class TBus>
 void Cpu6502<TBus>::absoluteIndexedLoad0(InstructionPipeline nextInstruction) {
+    // If we don't need to correct inputDataLatch (address high), skip next instruction
+    if (_aluCarry == false) {
+        _currentInstruction = nextInstruction;
+    }
+    
     // Load data
     readDataBus(_adderHold, _inputDataLatch);
     
-    // If we need to correct inputDataLatch (address high)
-    if (_aluCarry == true) {
-        // Adding 1 with inputDataLatch using ALU (Add 0 with carry set like true 6502)
-        _aInput = 0;
-        _bInput = _inputDataLatch;
-        aluPerformSum(false, true);
-        
-        // Need the extra step to correct address high
-        return;
-    }
-    
-    // No need of extra step because we already have the correct data (inputDataLatch was correct)
-    _currentInstruction = nextInstruction;
+    // Adding 1 with inputDataLatch using ALU (Add 0 with carry set like true 6502) if necessary
+    _aInput = 0;
+    _bInput = _inputDataLatch;
+    aluPerformSum(false, _aluCarry);
 }
 
 template <class TBus>
@@ -153,13 +177,10 @@ void Cpu6502<TBus>::absoluteIndexedStore0() {
     // Load data
     readDataBus(_adderHold, _inputDataLatch);
     
-    // If we need to correct inputDataLatch
-    if (_aluCarry == true) {
-        // Adding 1 with inputDataLatch using ALU (Add 0 with carry set like true 6502)
-        _aInput = 0;
-        _bInput = _inputDataLatch;
-        aluPerformSum(false, true);
-    }
+    // Adding 1 with inputDataLatch using ALU (Add 0 with carry set like true 6502) if necessary
+    _aInput = 0;
+    _bInput = _inputDataLatch;
+    aluPerformSum(false, _aluCarry);
 }
 
 template <class TBus>

@@ -22,12 +22,12 @@ Cpu6502<TBus>::Cpu6502(TBus &bus) : _bus(bus), _programCounterLow(0xFF), _progra
 
 template <class TBus>
 void Cpu6502<TBus>::clock() {
-    // Interrupts are checked each clock
-    checkNmi();
-    checkIrq();
-    
     // Execute current stage
     (this->*_currentInstruction)();
+    
+    // Interrupts are checked each clock (second half of cycle)
+    checkNmi();
+    checkIrq();
     
     // Each clock, there is a memory access
     fetchMemory();
@@ -120,7 +120,7 @@ template <class TBus>
 void Cpu6502<TBus>::fetchMemory() {
     if ((_readWrite == static_cast<bool>(ReadWrite::Read)) || (_resetRequested == true)) {
         _inputDataLatch = _bus.read((_addressBusHigh << 8) | _addressBusLow);
-        _predecode = _inputDataLatch;   // TODO: voir si ok de deplacer ca dans fetchOpcode (apres le else fetchData())
+        _predecode = _inputDataLatch;
         
         return;
     }
@@ -171,18 +171,17 @@ void Cpu6502<TBus>::fetchOpcode(InstructionPipeline nextInstruction) {
     _currentInstruction = nextInstruction;
     
     // If interrupt requested
-    if (checkInterrupts() == true) {    //TODO: voir si la gestion des interruptions ici ou dans decodeOpcode : DANS DECODEOPCODE obligé !!!
+    if (checkInterrupts() == true) {
         // Read opcode without increment PC
         readDataBus(_programCounterLow, _programCounterHigh);   // TODO: voir si ok
         
-        // Brk
-        _predecode = 0;
-        
         // Save interrupt flag to know that an interrupt is occur (and not brk opcode)
         _interruptRequested = true;
-    } else {
-        fetchData();
+        
+        return;
     }
+    
+    fetchData();
 }
 
 template <class TBus>
@@ -193,8 +192,8 @@ void Cpu6502<TBus>::fetchOpcode() {
 
 template <class TBus>
 void Cpu6502<TBus>::decodeOpcode() {
-    // Get current instruction from opcode
-    _instruction = _predecode;
+    // Get current instruction from opcode (or BRK (0) if interrupt requested)
+    _instruction = (_interruptRequested == false) ? _predecode : 0;
     _currentInstruction = _instrPipelineFuncs[_instruction];
     
     // Execute current instruction

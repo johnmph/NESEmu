@@ -563,11 +563,11 @@ template <class TBus>
 void Cpu6502<TBus>::bit1() {
     // Don't save result, it's just to set the flags
     
-    // Update status
+    // Update status (Zero from result, Overflow and Negative from bInput)
     clearStatusFlags({ Flags::Zero, Flags::Overflow, Flags::Negative });     // TODO: par apres si beaucoup d'instructions utilisent ca, avoir une methode setZeroNegative(data)
     setStatusFlag(Flags::Zero, (_adderHold == 0));
-    setStatusFlag(Flags::Overflow, (_adderHold & 0x40));    // TODO: voir si ainsi
-    setStatusFlag(Flags::Negative, (_adderHold & 0x80));
+    setStatusFlag(Flags::Overflow, (_bInput & 0x40));
+    setStatusFlag(Flags::Negative, (_bInput & 0x80));
     
     // Execute instruction
     decodeOpcode();
@@ -612,8 +612,8 @@ void Cpu6502<TBus>::asl(uint8_t data) {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::aslMemory0(InstructionPipeline nextInstruction) {
-    _currentInstruction = nextInstruction;
+void Cpu6502<TBus>::aslMemory0() {
+    _currentInstruction = &Cpu6502::aslMemory1;
     asl(_inputDataLatch);
     
     // Write result back
@@ -662,18 +662,8 @@ void Cpu6502<TBus>::aslZp0() {
 
 template <class TBus>
 void Cpu6502<TBus>::aslZp1() {
-    _currentInstruction = &Cpu6502::aslZp2;
+    _currentInstruction = &Cpu6502::aslMemory0;
     zeroPageLoad();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::aslZp2() {
-    aslMemory0(&Cpu6502::aslZp3);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::aslZp3() {
-    aslMemory1();
 }
 
 template <class TBus>
@@ -690,18 +680,8 @@ void Cpu6502<TBus>::aslZpX1() {
 
 template <class TBus>
 void Cpu6502<TBus>::aslZpX2() {
-    _currentInstruction = &Cpu6502::aslZpX3;
+    _currentInstruction = &Cpu6502::aslMemory0;
     zeroPageIndexedLoad();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::aslZpX3() {
-    aslMemory0(&Cpu6502::aslZpX4);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::aslZpX4() {
-    aslMemory1();
 }
 
 template <class TBus>
@@ -718,18 +698,8 @@ void Cpu6502<TBus>::aslAbs1() {
 
 template <class TBus>
 void Cpu6502<TBus>::aslAbs2() {
-    _currentInstruction = &Cpu6502::aslAbs3;
+    _currentInstruction = &Cpu6502::aslMemory0;
     absoluteLoad();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::aslAbs3() {
-    aslMemory0(&Cpu6502::aslAbs4);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::aslAbs4() {
-    aslMemory1();
 }
 
 template <class TBus>
@@ -747,23 +717,13 @@ void Cpu6502<TBus>::aslAbsX1() {
 template <class TBus>
 void Cpu6502<TBus>::aslAbsX2() {
     _currentInstruction = &Cpu6502::aslAbsX3;
-    absoluteIndexedLoad0(&Cpu6502::aslAbsX4);
+    absoluteIndexedLoad0(&Cpu6502::aslAbsX3);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::aslAbsX3() {
-    _currentInstruction = &Cpu6502::aslAbsX4;
+    _currentInstruction = &Cpu6502::aslMemory0;
     absoluteIndexedLoad1();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::aslAbsX4() {
-    aslMemory0(&Cpu6502::aslAbsX5);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::aslAbsX5() {
-    aslMemory1();
 }
 
 template <class TBus>
@@ -774,8 +734,8 @@ void Cpu6502<TBus>::lsr(uint8_t data) {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::lsrMemory0(InstructionPipeline nextInstruction) {
-    _currentInstruction = nextInstruction;
+void Cpu6502<TBus>::lsrMemory0() {
+    _currentInstruction = &Cpu6502::lsrMemory1;
     lsr(_inputDataLatch);
     
     // Write result back
@@ -793,7 +753,7 @@ void Cpu6502<TBus>::lsrMemory1() {
     clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Negative });
     setStatusFlag(Flags::Carry, _aluCarry);
     setStatusFlag(Flags::Zero, (_adderHold == 0));
-    setStatusFlag(Flags::Negative, (_adderHold & 0x80));
+    //setStatusFlag(Flags::Negative, (_adderHold & 0x80));  // TODO: pas besoin car le bit ajouté a gauche est tjs 0
 }
 
 template <class TBus>
@@ -811,7 +771,7 @@ void Cpu6502<TBus>::lsrImm1() {
     clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Negative });
     setStatusFlag(Flags::Carry, _aluCarry);
     setStatusFlag(Flags::Zero, (_adderHold == 0));
-    setStatusFlag(Flags::Negative, (_adderHold & 0x80));
+    //setStatusFlag(Flags::Negative, (_adderHold & 0x80));  // TODO: pas besoin car le bit ajouté a gauche est tjs 0
     
     fetchOpcode();
 }
@@ -824,18 +784,8 @@ void Cpu6502<TBus>::lsrZp0() {
 
 template <class TBus>
 void Cpu6502<TBus>::lsrZp1() {
-    _currentInstruction = &Cpu6502::lsrZp2;
+    _currentInstruction = &Cpu6502::lsrMemory0;
     zeroPageLoad();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::lsrZp2() {
-    lsrMemory0(&Cpu6502::lsrZp3);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::lsrZp3() {
-    lsrMemory1();
 }
 
 template <class TBus>
@@ -852,18 +802,8 @@ void Cpu6502<TBus>::lsrZpX1() {
 
 template <class TBus>
 void Cpu6502<TBus>::lsrZpX2() {
-    _currentInstruction = &Cpu6502::lsrZpX3;
+    _currentInstruction = &Cpu6502::lsrMemory0;
     zeroPageIndexedLoad();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::lsrZpX3() {
-    lsrMemory0(&Cpu6502::lsrZpX4);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::lsrZpX4() {
-    lsrMemory1();
 }
 
 template <class TBus>
@@ -880,18 +820,8 @@ void Cpu6502<TBus>::lsrAbs1() {
 
 template <class TBus>
 void Cpu6502<TBus>::lsrAbs2() {
-    _currentInstruction = &Cpu6502::lsrAbs3;
+    _currentInstruction = &Cpu6502::lsrMemory0;
     absoluteLoad();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::lsrAbs3() {
-    lsrMemory0(&Cpu6502::lsrAbs4);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::lsrAbs4() {
-    lsrMemory1();
 }
 
 template <class TBus>
@@ -909,23 +839,13 @@ void Cpu6502<TBus>::lsrAbsX1() {
 template <class TBus>
 void Cpu6502<TBus>::lsrAbsX2() {
     _currentInstruction = &Cpu6502::lsrAbsX3;
-    absoluteIndexedLoad0(&Cpu6502::lsrAbsX4);
+    absoluteIndexedLoad0(&Cpu6502::lsrAbsX3);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::lsrAbsX3() {
-    _currentInstruction = &Cpu6502::lsrAbsX4;
+    _currentInstruction = &Cpu6502::lsrMemory0;
     absoluteIndexedLoad1();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::lsrAbsX4() {
-    lsrMemory0(&Cpu6502::lsrAbsX5);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::lsrAbsX5() {
-    lsrMemory1();
 }
 
 template <class TBus>
@@ -937,8 +857,8 @@ void Cpu6502<TBus>::rol(uint8_t data) {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::rolMemory0(InstructionPipeline nextInstruction) {
-    _currentInstruction = nextInstruction;
+void Cpu6502<TBus>::rolMemory0() {
+    _currentInstruction = &Cpu6502::rolMemory1;
     rol(_inputDataLatch);
     
     // Write result back
@@ -987,18 +907,8 @@ void Cpu6502<TBus>::rolZp0() {
 
 template <class TBus>
 void Cpu6502<TBus>::rolZp1() {
-    _currentInstruction = &Cpu6502::rolZp2;
+    _currentInstruction = &Cpu6502::rolMemory0;
     zeroPageLoad();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rolZp2() {
-    rolMemory0(&Cpu6502::rolZp3);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rolZp3() {
-    rolMemory1();
 }
 
 template <class TBus>
@@ -1015,18 +925,8 @@ void Cpu6502<TBus>::rolZpX1() {
 
 template <class TBus>
 void Cpu6502<TBus>::rolZpX2() {
-    _currentInstruction = &Cpu6502::rolZpX3;
+    _currentInstruction = &Cpu6502::rolMemory0;
     zeroPageIndexedLoad();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rolZpX3() {
-    rolMemory0(&Cpu6502::rolZpX4);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rolZpX4() {
-    rolMemory1();
 }
 
 template <class TBus>
@@ -1043,18 +943,8 @@ void Cpu6502<TBus>::rolAbs1() {
 
 template <class TBus>
 void Cpu6502<TBus>::rolAbs2() {
-    _currentInstruction = &Cpu6502::rolAbs3;
+    _currentInstruction = &Cpu6502::rolMemory0;
     absoluteLoad();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rolAbs3() {
-    rolMemory0(&Cpu6502::rolAbs4);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rolAbs4() {
-    rolMemory1();
 }
 
 template <class TBus>
@@ -1072,23 +962,13 @@ void Cpu6502<TBus>::rolAbsX1() {
 template <class TBus>
 void Cpu6502<TBus>::rolAbsX2() {
     _currentInstruction = &Cpu6502::rolAbsX3;
-    absoluteIndexedLoad0(&Cpu6502::rolAbsX4);
+    absoluteIndexedLoad0(&Cpu6502::rolAbsX3);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::rolAbsX3() {
-    _currentInstruction = &Cpu6502::rolAbsX4;
+    _currentInstruction = &Cpu6502::rolMemory0;
     absoluteIndexedLoad1();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rolAbsX4() {
-    rolMemory0(&Cpu6502::rolAbsX5);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rolAbsX5() {
-    rolMemory1();
 }
 
 template <class TBus>
@@ -1099,8 +979,8 @@ void Cpu6502<TBus>::ror(uint8_t data) {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::rorMemory0(InstructionPipeline nextInstruction) {
-    _currentInstruction = nextInstruction;
+void Cpu6502<TBus>::rorMemory0() {
+    _currentInstruction = &Cpu6502::rorMemory1;
     ror(_inputDataLatch);
     
     // Write result back
@@ -1149,18 +1029,8 @@ void Cpu6502<TBus>::rorZp0() {
 
 template <class TBus>
 void Cpu6502<TBus>::rorZp1() {
-    _currentInstruction = &Cpu6502::rorZp2;
+    _currentInstruction = &Cpu6502::rorMemory0;
     zeroPageLoad();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rorZp2() {
-    rorMemory0(&Cpu6502::rorZp3);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rorZp3() {
-    rorMemory1();
 }
 
 template <class TBus>
@@ -1177,18 +1047,8 @@ void Cpu6502<TBus>::rorZpX1() {
 
 template <class TBus>
 void Cpu6502<TBus>::rorZpX2() {
-    _currentInstruction = &Cpu6502::rorZpX3;
+    _currentInstruction = &Cpu6502::rorMemory0;
     zeroPageIndexedLoad();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rorZpX3() {
-    rorMemory0(&Cpu6502::rorZpX4);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rorZpX4() {
-    rorMemory1();
 }
 
 template <class TBus>
@@ -1205,18 +1065,8 @@ void Cpu6502<TBus>::rorAbs1() {
 
 template <class TBus>
 void Cpu6502<TBus>::rorAbs2() {
-    _currentInstruction = &Cpu6502::rorAbs3;
+    _currentInstruction = &Cpu6502::rorMemory0;
     absoluteLoad();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rorAbs3() {
-    rorMemory0(&Cpu6502::rorAbs4);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rorAbs4() {
-    rorMemory1();
 }
 
 template <class TBus>
@@ -1234,23 +1084,13 @@ void Cpu6502<TBus>::rorAbsX1() {
 template <class TBus>
 void Cpu6502<TBus>::rorAbsX2() {
     _currentInstruction = &Cpu6502::rorAbsX3;
-    absoluteIndexedLoad0(&Cpu6502::rorAbsX4);
+    absoluteIndexedLoad0(&Cpu6502::rorAbsX3);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::rorAbsX3() {
-    _currentInstruction = &Cpu6502::rorAbsX4;
+    _currentInstruction = &Cpu6502::rorMemory0;
     absoluteIndexedLoad1();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rorAbsX4() {
-    rorMemory0(&Cpu6502::rorAbsX5);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rorAbsX5() {
-    rorMemory1();
 }
 
 #endif /* Cpu6502Logic_s_hpp */

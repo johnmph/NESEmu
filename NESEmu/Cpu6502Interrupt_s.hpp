@@ -30,6 +30,7 @@ void Cpu6502<TBus>::brk0() {    // TODO: a voir
     // Read data without increment PC for reset, nmi and irq
     if (_interruptRequested == true) {
         readDataBus(_programCounterLow, _programCounterHigh);   // TODO: voir si vraiment nécessaire avec le nouveau systeme
+        
         return;
     }
     
@@ -60,7 +61,7 @@ void Cpu6502<TBus>::brk3() {
     
     // Finish stack operation and push Status to stack
     pushToStack1();
-    pushToStack0(_statusFlags | ((!_interruptRequested) << static_cast<int>(Flags::Break))); // TODO: voir si ok
+    pushToStack0(_statusFlags | ((_interruptRequested == false) << static_cast<int>(Flags::Break))); // TODO: voir si ok
 }
 
 template <class TBus>
@@ -131,7 +132,7 @@ template <class TBus>
 void Cpu6502<TBus>::rti3() {
     _currentInstruction = &Cpu6502::rti4;
     
-    _statusFlags = _inputDataLatch | (1 << static_cast<int>(Flags::UnusedHigh));
+    _statusFlags = (_inputDataLatch & getStatusFlagsDisableMask({ Flags::Break })) | (1 << static_cast<int>(Flags::UnusedHigh));  // TODO: voir si ok
     
     pullFromStack1();
     pullFromStack0();

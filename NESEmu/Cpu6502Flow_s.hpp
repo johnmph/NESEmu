@@ -139,7 +139,7 @@ void Cpu6502<TBus>::nop0() {
     _currentInstruction = &Cpu6502::fetchOpcode;
     implied();
 }
-
+/*
 template <class TBus>
 void Cpu6502<TBus>::rts0() {
     _currentInstruction = &Cpu6502::rts1;
@@ -175,6 +175,44 @@ template <class TBus>
 void Cpu6502<TBus>::rts4() {    // TODO: verifier
     incrementProgramCounter();
     fetchOpcode();
+}*/
+
+template <class TBus>
+void Cpu6502<TBus>::rts0() {
+    _currentInstruction = &Cpu6502::rts1;
+    
+    implied();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::rts1() {
+    _currentInstruction = &Cpu6502::rts2;
+    
+    pullFromStack0();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::rts2() {
+    _currentInstruction = &Cpu6502::rts3;
+    
+    pullFromStack1();
+    pullFromStack0();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::rts3() {
+    _currentInstruction = &Cpu6502::rts4;
+    
+    _programCounterLow = _inputDataLatch;
+    pullFromStack1();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::rts4() {
+    _currentInstruction = &Cpu6502::fetchOpcode;
+    
+    _programCounterHigh = _inputDataLatch;
+    fetchData();
 }
 
 template <class TBus>

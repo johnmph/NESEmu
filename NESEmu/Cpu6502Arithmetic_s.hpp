@@ -27,9 +27,10 @@ void Cpu6502<TBus>::adc1() {
     _accumulator = _adderHold;
     
     // Update status
-    clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Negative });
+    clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Overflow, Flags::Negative });
     setStatusFlag(Flags::Carry, _aluCarry);
     setStatusFlag(Flags::Zero, (_adderHold == 0));
+    setStatusFlag(Flags::Overflow, _aluOverflow);
     setStatusFlag(Flags::Negative, (_adderHold & 0x80));
     
     // Execute instruction
@@ -202,7 +203,7 @@ void Cpu6502<TBus>::adcIndY4() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::sbc0() {
+void Cpu6502<TBus>::sbc0() {    // TODO: c'est le meme que adc avec juste l'inversion de bInput, il faut essayer de combiner les 2 pour eviter la duplication de code
     // Substracting data to accumulator with possible carry by inverting bInput
     _aInput = _accumulator;
     _bInput = _inputDataLatch;
@@ -219,9 +220,10 @@ void Cpu6502<TBus>::sbc1() {
     _accumulator = _adderHold;
     
     // Update status
-    clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Negative });
+    clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Overflow, Flags::Negative });
     setStatusFlag(Flags::Carry, _aluCarry);
     setStatusFlag(Flags::Zero, (_adderHold == 0));
+    setStatusFlag(Flags::Overflow, _aluOverflow);
     setStatusFlag(Flags::Negative, (_adderHold & 0x80));
     
     // Execute instruction
@@ -632,7 +634,7 @@ void Cpu6502<TBus>::cpxAbs2() {
 
 template <class TBus>
 void Cpu6502<TBus>::cpy0() {
-    cp0(_xIndex);
+    cp0(_yIndex);
 }
 
 template <class TBus>
@@ -678,7 +680,7 @@ void Cpu6502<TBus>::dec0() {
     // Removing 1 from inputDataLatch using ALU (Add 0xFF without carry set like true 6502)
     _aInput = 0xFF;
     _bInput = _inputDataLatch;
-    aluPerformSum(false, true);
+    aluPerformSum(false, false);
     
     // Write result back
     //writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);//TODO: voir si mettre ca
@@ -760,7 +762,7 @@ void Cpu6502<TBus>::decAbsX1() {
 template <class TBus>
 void Cpu6502<TBus>::decAbsX2() {
     _currentInstruction = &Cpu6502::decAbsX3;
-    absoluteIndexedLoad0(&Cpu6502::dec0);
+    absoluteIndexedLoad0(&Cpu6502::decAbsX3);
 }
 
 template <class TBus>
@@ -858,7 +860,7 @@ void Cpu6502<TBus>::incAbsX1() {
 template <class TBus>
 void Cpu6502<TBus>::incAbsX2() {
     _currentInstruction = &Cpu6502::incAbsX3;
-    absoluteIndexedLoad0(&Cpu6502::inc0);
+    absoluteIndexedLoad0(&Cpu6502::incAbsX3);
 }
 
 template <class TBus>
@@ -874,7 +876,7 @@ void Cpu6502<TBus>::decrement0(InstructionPipeline nextInstruction, uint8_t data
     // Removing 1 from data using ALU (Add 0xFF without carry set like true 6502)
     _aInput = 0xFF;
     _bInput = data;
-    aluPerformSum(false, true);
+    aluPerformSum(false, false);
     
     // Write result back
     //writeDataBus(_addressBusLow, _addressBusHigh, data);//TODO: voir si mettre ca
@@ -919,8 +921,8 @@ template <class TBus>
 void Cpu6502<TBus>::increment0(InstructionPipeline nextInstruction, uint8_t data) {
     _currentInstruction = nextInstruction;
     
-    // Removing 1 from data using ALU (Add 0xFF without carry set like true 6502)
-    _aInput = 0xFF;
+    // Adding 1 with data using ALU (Add 0 with carry set like true 6502)
+    _aInput = 0x0;
     _bInput = data;
     aluPerformSum(false, true);
     

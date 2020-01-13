@@ -23,6 +23,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4D5DD38023CABF15003AE868 /* Cpu6502Undocumented.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502Undocumented.hpp; sourceTree = "<group>"; };
+		4D5DD38123CABF5D003AE868 /* Cpu6502Undocumented_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502Undocumented_s.hpp; sourceTree = "<group>"; };
 		4D9807EE23C39A66007D1953 /* Cpu6502_s_data.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502_s_data.hpp; sourceTree = "<group>"; };
 		4D9807EF23C50190007D1953 /* Cpu6502AddressingMode.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502AddressingMode.hpp; sourceTree = "<group>"; };
 		4D9807F023C50448007D1953 /* Cpu6502Flag.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502Flag.hpp; sourceTree = "<group>"; };
@@ -103,6 +105,8 @@
 				4D98080123C5163C007D1953 /* Cpu6502Register_s.hpp */,
 				4D9807F223C5059D007D1953 /* Cpu6502Stack.hpp */,
 				4D98080223C51651007D1953 /* Cpu6502Stack_s.hpp */,
+				4D5DD38023CABF15003AE868 /* Cpu6502Undocumented.hpp */,
+				4D5DD38123CABF5D003AE868 /* Cpu6502Undocumented_s.hpp */,
 				4DE643F423BAE2EC00CFFE4E /* main.cpp */,
 			);
 			path = NESEmu;

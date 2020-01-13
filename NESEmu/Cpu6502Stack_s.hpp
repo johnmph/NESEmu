@@ -108,7 +108,7 @@ void Cpu6502<TBus>::plp2() {
 
 template <class TBus>
 void Cpu6502<TBus>::plp3() {
-    _statusFlags = _inputDataLatch | (1 << static_cast<int>(Flags::UnusedHigh));
+    _statusFlags = (_inputDataLatch & getStatusFlagsDisableMask({ Flags::Break })) | (1 << static_cast<int>(Flags::UnusedHigh));  // TODO: voir si ok
     
     fetchOpcode();
 }

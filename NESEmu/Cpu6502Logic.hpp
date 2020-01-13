@@ -136,7 +136,7 @@ void bitAbs1();
 void bitAbs2();
 
 void asl(uint8_t data);
-void aslMemory0(InstructionPipeline nextInstruction);
+void aslMemory0();
 void aslMemory1();
 
 void aslImm0();
@@ -144,30 +144,22 @@ void aslImm1();
 
 void aslZp0();
 void aslZp1();
-void aslZp2();
-void aslZp3();
 
 void aslZpX0();
 void aslZpX1();
 void aslZpX2();
-void aslZpX3();
-void aslZpX4();
 
 void aslAbs0();
 void aslAbs1();
 void aslAbs2();
-void aslAbs3();
-void aslAbs4();
 
 void aslAbsX0();
 void aslAbsX1();
 void aslAbsX2();
 void aslAbsX3();
-void aslAbsX4();
-void aslAbsX5();
 
 void lsr(uint8_t data);
-void lsrMemory0(InstructionPipeline nextInstruction);
+void lsrMemory0();
 void lsrMemory1();
 
 void lsrImm0();
@@ -175,30 +167,22 @@ void lsrImm1();
 
 void lsrZp0();
 void lsrZp1();
-void lsrZp2();
-void lsrZp3();
 
 void lsrZpX0();
 void lsrZpX1();
 void lsrZpX2();
-void lsrZpX3();
-void lsrZpX4();
 
 void lsrAbs0();
 void lsrAbs1();
 void lsrAbs2();
-void lsrAbs3();
-void lsrAbs4();
 
 void lsrAbsX0();
 void lsrAbsX1();
 void lsrAbsX2();
 void lsrAbsX3();
-void lsrAbsX4();
-void lsrAbsX5();
 
 void rol(uint8_t data);
-void rolMemory0(InstructionPipeline nextInstruction);
+void rolMemory0();
 void rolMemory1();
 
 void rolImm0();
@@ -206,30 +190,22 @@ void rolImm1();
 
 void rolZp0();
 void rolZp1();
-void rolZp2();
-void rolZp3();
 
 void rolZpX0();
 void rolZpX1();
 void rolZpX2();
-void rolZpX3();
-void rolZpX4();
 
 void rolAbs0();
 void rolAbs1();
 void rolAbs2();
-void rolAbs3();
-void rolAbs4();
 
 void rolAbsX0();
 void rolAbsX1();
 void rolAbsX2();
 void rolAbsX3();
-void rolAbsX4();
-void rolAbsX5();
 
 void ror(uint8_t data);
-void rorMemory0(InstructionPipeline nextInstruction);
+void rorMemory0();
 void rorMemory1();
 
 void rorImm0();
@@ -237,26 +213,18 @@ void rorImm1();
 
 void rorZp0();
 void rorZp1();
-void rorZp2();
-void rorZp3();
 
 void rorZpX0();
 void rorZpX1();
 void rorZpX2();
-void rorZpX3();
-void rorZpX4();
 
 void rorAbs0();
 void rorAbs1();
 void rorAbs2();
-void rorAbs3();
-void rorAbs4();
 
 void rorAbsX0();
 void rorAbsX1();
 void rorAbsX2();
 void rorAbsX3();
-void rorAbsX4();
-void rorAbsX5();
 
 #endif /* Cpu6502Logic_hpp */

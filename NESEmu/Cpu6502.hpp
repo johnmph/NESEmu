@@ -104,6 +104,7 @@ struct Cpu6502 {
     #include "Cpu6502Memory.hpp"
     #include "Cpu6502Register.hpp"
     #include "Cpu6502Stack.hpp"
+    #include "Cpu6502Undocumented.hpp"
     
     // Registers
     uint8_t _programCounterLow;
@@ -164,6 +165,6 @@ struct Cpu6502 {
 #include "Cpu6502Memory_s.hpp"
 #include "Cpu6502Register_s.hpp"
 #include "Cpu6502Stack_s.hpp"
-
+#include "Cpu6502Undocumented_s.hpp"
 
 #endif /* Cpu6502_hpp */
