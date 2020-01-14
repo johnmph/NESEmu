@@ -638,6 +638,7 @@ template <class TBus>
 void Cpu6502<TBus>::aslImm0() {
     _currentInstruction = &Cpu6502::aslImm1;
     asl(_accumulator);
+    implied();
 }
 
 template <class TBus>
@@ -753,13 +754,14 @@ void Cpu6502<TBus>::lsrMemory1() {
     clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Negative });
     setStatusFlag(Flags::Carry, _aluCarry);
     setStatusFlag(Flags::Zero, (_adderHold == 0));
-    //setStatusFlag(Flags::Negative, (_adderHold & 0x80));  // TODO: pas besoin car le bit ajouté a gauche est tjs 0
+    // Negative flag will always be 0 because the left injected bit is 0
 }
 
 template <class TBus>
 void Cpu6502<TBus>::lsrImm0() {
     _currentInstruction = &Cpu6502::lsrImm1;
     lsr(_accumulator);
+    implied();
 }
 
 template <class TBus>
@@ -771,7 +773,7 @@ void Cpu6502<TBus>::lsrImm1() {
     clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Negative });
     setStatusFlag(Flags::Carry, _aluCarry);
     setStatusFlag(Flags::Zero, (_adderHold == 0));
-    //setStatusFlag(Flags::Negative, (_adderHold & 0x80));  // TODO: pas besoin car le bit ajouté a gauche est tjs 0
+    // Negative flag will always be 0 because the left injected bit is 0
     
     fetchOpcode();
 }
@@ -883,6 +885,7 @@ template <class TBus>
 void Cpu6502<TBus>::rolImm0() {
     _currentInstruction = &Cpu6502::rolImm1;
     rol(_accumulator);
+    implied();
 }
 
 template <class TBus>
@@ -1005,6 +1008,7 @@ template <class TBus>
 void Cpu6502<TBus>::rorImm0() {
     _currentInstruction = &Cpu6502::rorImm1;
     ror(_accumulator);
+    implied();
 }
 
 template <class TBus>

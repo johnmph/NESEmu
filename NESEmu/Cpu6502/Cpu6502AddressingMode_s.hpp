@@ -108,6 +108,7 @@ void Cpu6502<TBus>::relativeBranch0() {
     // There is no page boundary cross, so it's the correct data, we can fetch opcode (but we don't use fetchOpcode because there is a bug? in taken branch instructions (without carry) that delay the possible interrupt execution after executing the next instruction
     // See http://forum.6502.org/viewtopic.php?f=4&t=1634
     // And http://forums.nesdev.com/viewtopic.php?t=6510
+    // And http://wiki.nesdev.com/w/index.php/CPU_interrupts
     //fetchOpcode();
     fetchData();                                // TODO: soit on fait ainsi mais alors si le signal d'interruption est arreté avant la fin de l'instruction suivante, l'interruption ne sera pas executée car pas détectée (seulement pour IRQ, le nmi est detecté), si ce n'est pas ainsi en reel, il faut aussi faire un checkInterrupt et setter le flag _interruptRequested ici
     _currentInstruction = &Cpu6502::decodeOpcode;

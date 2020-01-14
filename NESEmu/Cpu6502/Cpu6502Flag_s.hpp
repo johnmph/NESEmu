@@ -12,7 +12,8 @@
 
 template <class TBus>
 void Cpu6502<TBus>::clearFlag(Flags flag) {
-    // Must be called before changing flag to delay possible interrupts after the next instruction (see http://wiki.nesdev.com/w/index.php/CPU_interrupts )
+    // Must be called before changing flag to delay possible interrupts after the next instruction
+    // See http://wiki.nesdev.com/w/index.php/CPU_interrupts
     fetchOpcode();
     
     clearStatusFlags({ flag });
@@ -64,7 +65,8 @@ void Cpu6502<TBus>::clv1() {
 
 template <class TBus>
 void Cpu6502<TBus>::setFlag(Flags flag) {
-    // Must be called before changing flag to delay possible interrupts after the next instruction (see http://wiki.nesdev.com/w/index.php/CPU_interrupts )
+    // Must be called before changing flag to delay possible interrupts after the next instruction
+    // See http://wiki.nesdev.com/w/index.php/CPU_interrupts
     fetchOpcode();
     
     setStatusFlag(flag, true);

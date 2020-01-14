@@ -14,7 +14,7 @@
  
  MODE           SYNTAX
  ---------------------
-                Implied
+ Implied        Instr
  Immediate      Instr #$da
  Relative       Instr $of
  Zero Page      Instr $az
@@ -30,6 +30,7 @@
  az = address on page zero
  ah = address high
  al = address low
+ *  = Unofficial instruction
  
  */
 
@@ -185,8 +186,8 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     &Cpu6502::eorImm0,
     // $4A -> LSR (Accumulator)
     &Cpu6502::lsrImm0,
-    // $4B -> ?
-    &Cpu6502::unofficial,
+    // $4B -> ALR* #$da
+    &Cpu6502::alrImm0,
     // $4C -> JMP $ahal
     &Cpu6502::jmpAbs0,
     // $4D -> EOR $ahal
@@ -425,16 +426,16 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     &Cpu6502::cmpIndX0,
     // $C2 -> NOP*
     &Cpu6502::nop0,
-    // $C3 -> DCP* ($az, X)
-    &Cpu6502::dcpIndX0,
+    // $C3 -> DCM* ($az, X)
+    &Cpu6502::dcmIndX0,
     // $C4 -> CPY $az
     &Cpu6502::cpyZp0,
     // $C5 -> CMP $az
     &Cpu6502::cmpZp0,
     // $C6 -> DEC $az
     &Cpu6502::decZp0,
-    // $C7 -> DCP* $az
-    &Cpu6502::dcpZp0,
+    // $C7 -> DCM* $az
+    &Cpu6502::dcmZp0,
     // $C8 -> INY
     &Cpu6502::iny0,
     // $C9 -> CMP #$da
@@ -449,40 +450,40 @@ const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineF
     &Cpu6502::cmpAbs0,
     // $CE -> DEC $ahal
     &Cpu6502::decAbs0,
-    // $CF -> DCP* $ahal
-    &Cpu6502::dcpAbs0,
+    // $CF -> DCM* $ahal
+    &Cpu6502::dcmAbs0,
     // $D0 -> BNE $of
     &Cpu6502::bne0,
     // $D1 -> CMP ($az), Y
     &Cpu6502::cmpIndY0,
     // $D2 -> KIL
     &Cpu6502::kil,
-    // $D3 -> DCP* ($az), Y
-    &Cpu6502::dcpIndY0,
+    // $D3 -> DCM* ($az), Y
+    &Cpu6502::dcmIndY0,
     // $D4 -> NOP* $az, X
     &Cpu6502::nopZpX0,
     // $D5 -> CMP $az, X
     &Cpu6502::cmpZpX0,
     // $D6 -> DEC $az, X
     &Cpu6502::decZpX0,
-    // $D7 -> DCP* $az, X
-    &Cpu6502::dcpZpX0,
+    // $D7 -> DCM* $az, X
+    &Cpu6502::dcmZpX0,
     // $D8 -> CLD
     &Cpu6502::cld0,
     // $D9 -> CMP $ahal, Y
     &Cpu6502::cmpAbsY0,
     // $DA -> NOP*
     &Cpu6502::nop0,
-    // $DB -> DCP* $ahal, Y
-    &Cpu6502::dcpAbsY0,
+    // $DB -> DCM* $ahal, Y
+    &Cpu6502::dcmAbsY0,
     // $DC -> NOP* $ahal, X
     &Cpu6502::nopAbsX0,
     // $DD -> CMP $ahal, X
     &Cpu6502::cmpAbsX0,
     // $DE -> DEC $ahal, X
     &Cpu6502::decAbsX0,
-    // $DF -> DCP* $ahal, X
-    &Cpu6502::dcpAbsX0,
+    // $DF -> DCM* $ahal, X
+    &Cpu6502::dcmAbsX0,
     // $E0 -> CPX #$da
     &Cpu6502::cpxImm0,
     // $E1 -> SBC ($az, X)

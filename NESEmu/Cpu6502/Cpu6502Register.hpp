@@ -15,15 +15,21 @@
 void transfert0(uint8_t source, uint8_t &destination);
 
 void tax0();
+void tax1();
 
 void txa0();
+void txa1();
 
 void tay0();
+void tay1();
 
 void tya0();
+void tya1();
 
 void tsx0();
+void tsx1();
 
 void txs0();
+void txs1();
 
 #endif /* Cpu6502Register_hpp */

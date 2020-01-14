@@ -11,7 +11,7 @@
 
 #include <cstdint>
 #include <initializer_list>
-
+// TODO: ecrire des unit tests, par instruction et via le log nestest
 
 template <class TBus>
 struct Cpu6502 {

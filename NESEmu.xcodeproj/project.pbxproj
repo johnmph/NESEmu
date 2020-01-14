@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4D1137F323CD3EEC0056AAAD /* NESEmuUnitTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D1137F223CD3EEC0056AAAD /* NESEmuUnitTest.mm */; };
+		4D1137FD23CD403E0056AAAD /* Cpu6502UnitTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D1137FC23CD403E0056AAAD /* Cpu6502UnitTest.mm */; };
 		4DE643F523BAE2EC00CFFE4E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE643F423BAE2EC00CFFE4E /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -23,6 +25,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4D1137F023CD3EEC0056AAAD /* NESEmuUnitTest.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NESEmuUnitTest.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D1137F223CD3EEC0056AAAD /* NESEmuUnitTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = NESEmuUnitTest.mm; sourceTree = "<group>"; };
+		4D1137F423CD3EEC0056AAAD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4D1137FC23CD403E0056AAAD /* Cpu6502UnitTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Cpu6502UnitTest.mm; sourceTree = "<group>"; };
 		4D5DD38023CABF15003AE868 /* Cpu6502Undocumented.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502Undocumented.hpp; sourceTree = "<group>"; };
 		4D5DD38123CABF5D003AE868 /* Cpu6502Undocumented_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502Undocumented_s.hpp; sourceTree = "<group>"; };
 		4D9807EE23C39A66007D1953 /* Cpu6502_s_data.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502_s_data.hpp; sourceTree = "<group>"; };
@@ -53,6 +59,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		4D1137ED23CD3EEC0056AAAD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4DE643EE23BAE2EC00CFFE4E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -63,23 +76,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		4DE643E823BAE2EC00CFFE4E = {
+		4D1137F123CD3EEC0056AAAD /* NESEmuUnitTest */ = {
 			isa = PBXGroup;
 			children = (
-				4DE643F323BAE2EC00CFFE4E /* NESEmu */,
-				4DE643F223BAE2EC00CFFE4E /* Products */,
+				4D1137F923CD3FA10056AAAD /* Cpu6502 */,
+				4D1137F223CD3EEC0056AAAD /* NESEmuUnitTest.mm */,
+				4D1137F423CD3EEC0056AAAD /* Info.plist */,
 			);
+			path = NESEmuUnitTest;
 			sourceTree = "<group>";
 		};
-		4DE643F223BAE2EC00CFFE4E /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				4DE643F123BAE2EC00CFFE4E /* NESEmu */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		4DE643F323BAE2EC00CFFE4E /* NESEmu */ = {
+		4D1137F823CD3F660056AAAD /* Cpu6502 */ = {
 			isa = PBXGroup;
 			children = (
 				4DE643FB23BAE5CE00CFFE4E /* Cpu6502.hpp */,
@@ -107,6 +114,40 @@
 				4D98080223C51651007D1953 /* Cpu6502Stack_s.hpp */,
 				4D5DD38023CABF15003AE868 /* Cpu6502Undocumented.hpp */,
 				4D5DD38123CABF5D003AE868 /* Cpu6502Undocumented_s.hpp */,
+			);
+			path = Cpu6502;
+			sourceTree = "<group>";
+		};
+		4D1137F923CD3FA10056AAAD /* Cpu6502 */ = {
+			isa = PBXGroup;
+			children = (
+				4D1137FC23CD403E0056AAAD /* Cpu6502UnitTest.mm */,
+			);
+			path = Cpu6502;
+			sourceTree = "<group>";
+		};
+		4DE643E823BAE2EC00CFFE4E = {
+			isa = PBXGroup;
+			children = (
+				4DE643F323BAE2EC00CFFE4E /* NESEmu */,
+				4D1137F123CD3EEC0056AAAD /* NESEmuUnitTest */,
+				4DE643F223BAE2EC00CFFE4E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		4DE643F223BAE2EC00CFFE4E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4DE643F123BAE2EC00CFFE4E /* NESEmu */,
+				4D1137F023CD3EEC0056AAAD /* NESEmuUnitTest.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4DE643F323BAE2EC00CFFE4E /* NESEmu */ = {
+			isa = PBXGroup;
+			children = (
+				4D1137F823CD3F660056AAAD /* Cpu6502 */,
 				4DE643F423BAE2EC00CFFE4E /* main.cpp */,
 			);
 			path = NESEmu;
@@ -115,6 +156,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		4D1137EF23CD3EEC0056AAAD /* NESEmuUnitTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4D1137F723CD3EEC0056AAAD /* Build configuration list for PBXNativeTarget "NESEmuUnitTest" */;
+			buildPhases = (
+				4D1137EC23CD3EEC0056AAAD /* Sources */,
+				4D1137ED23CD3EEC0056AAAD /* Frameworks */,
+				4D1137EE23CD3EEC0056AAAD /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NESEmuUnitTest;
+			productName = NESEmuUnitTest;
+			productReference = 4D1137F023CD3EEC0056AAAD /* NESEmuUnitTest.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		4DE643F023BAE2EC00CFFE4E /* NESEmu */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4DE643F823BAE2EC00CFFE4E /* Build configuration list for PBXNativeTarget "NESEmu" */;
@@ -141,6 +199,9 @@
 				LastUpgradeCheck = 1010;
 				ORGANIZATIONNAME = "Jonathan Baliko";
 				TargetAttributes = {
+					4D1137EF23CD3EEC0056AAAD = {
+						CreatedOnToolsVersion = 10.1;
+					};
 					4DE643F023BAE2EC00CFFE4E = {
 						CreatedOnToolsVersion = 10.1;
 					};
@@ -159,11 +220,31 @@
 			projectRoot = "";
 			targets = (
 				4DE643F023BAE2EC00CFFE4E /* NESEmu */,
+				4D1137EF23CD3EEC0056AAAD /* NESEmuUnitTest */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXResourcesBuildPhase section */
+		4D1137EE23CD3EEC0056AAAD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		4D1137EC23CD3EEC0056AAAD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4D1137F323CD3EEC0056AAAD /* NESEmuUnitTest.mm in Sources */,
+				4D1137FD23CD403E0056AAAD /* Cpu6502UnitTest.mm in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4DE643ED23BAE2EC00CFFE4E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -175,6 +256,42 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		4D1137F523CD3EEC0056AAAD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = N49JX257A6;
+				HEADER_SEARCH_PATHS = "\"${SRCROOT}/NESEmu\"";
+				INFOPLIST_FILE = NESEmuUnitTest/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = mphweb.NESEmuUnitTest;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		4D1137F623CD3EEC0056AAAD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = N49JX257A6;
+				HEADER_SEARCH_PATHS = "\"${SRCROOT}/NESEmu\"";
+				INFOPLIST_FILE = NESEmuUnitTest/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = mphweb.NESEmuUnitTest;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		4DE643F623BAE2EC00CFFE4E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -291,6 +408,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = N49JX257A6;
+				HEADER_SEARCH_PATHS = "\"${SRCROOT}/NESEmu\"";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -300,6 +418,7 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = N49JX257A6;
+				HEADER_SEARCH_PATHS = "\"${SRCROOT}/NESEmu\"";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -307,6 +426,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		4D1137F723CD3EEC0056AAAD /* Build configuration list for PBXNativeTarget "NESEmuUnitTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4D1137F523CD3EEC0056AAAD /* Debug */,
+				4D1137F623CD3EEC0056AAAD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		4DE643EC23BAE2EC00CFFE4E /* Build configuration list for PBXProject "NESEmu" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

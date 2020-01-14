@@ -10,7 +10,7 @@
 #include <array>
 #include <fstream>
 #include <chrono>
-#include "Cpu6502.hpp"
+#include "Cpu6502/Cpu6502.hpp"
 
 
 struct Bus {
@@ -242,7 +242,7 @@ int main(int argc, const char * argv[]) {
     for (int x = 0; x <= /*1789773*/26555; ++x) {
         cpu.clock();
         
-        std::cout << std::hex << cpu.getProgramCounter() << " A:" << static_cast<int>(cpu._accumulator) << " X:" << static_cast<int>(cpu._xIndex) << " Y:" << static_cast<int>(cpu._yIndex) << " P:" << static_cast<int>(cpu._statusFlags) << " SP:" << static_cast<int>(cpu._stackPointer) << " Cycle: " << std::dec << x << "\n";
+        std::cout << std::hex << cpu.getAddressBus() << " " << cpu.getProgramCounter() << " A:" << static_cast<int>(cpu._accumulator) << " X:" << static_cast<int>(cpu._xIndex) << " Y:" << static_cast<int>(cpu._yIndex) << " P:" << static_cast<int>(cpu._statusFlags) << " SP:" << static_cast<int>(cpu._stackPointer) << " Cycle: " << std::dec << x << "\n";
     }
     
     std::cout << std::hex << static_cast<int>(bus._memory[0x0002]) << ", " << static_cast<int>(bus._memory[0x0003]) << "\n";

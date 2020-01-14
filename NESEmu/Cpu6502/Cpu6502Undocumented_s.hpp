@@ -1000,8 +1000,8 @@ void Cpu6502<TBus>::laxIndY4() {
 // DCP
 
 template <class TBus>
-void Cpu6502<TBus>::dcp0() {
-    _currentInstruction = &Cpu6502::dcp1;
+void Cpu6502<TBus>::dcm0() {
+    _currentInstruction = &Cpu6502::dcm1;
     
     // Removing 1 from inputDataLatch using ALU (Add 0xFF without carry set like true 6502)
     _aInput = 0xFF;
@@ -1013,15 +1013,15 @@ void Cpu6502<TBus>::dcp0() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcp1() {
-    _currentInstruction = &Cpu6502::dcp2;
+void Cpu6502<TBus>::dcm1() {
+    _currentInstruction = &Cpu6502::dcm2;
     
     // Write result back
     writeDataBus(_addressBusLow, _addressBusHigh, _adderHold);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcp2() {
+void Cpu6502<TBus>::dcm2() {
     // Substracting data fetched to accumulator
     _aInput = _accumulator;
     _bInput = _adderHold;
@@ -1029,11 +1029,11 @@ void Cpu6502<TBus>::dcp2() {
     aluPerformSum(false, true);
     
     // Fetch next opcode during performing ALU
-    fetchOpcode(&Cpu6502::dcp3);
+    fetchOpcode(&Cpu6502::dcm3);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcp3() {
+void Cpu6502<TBus>::dcm3() {
     // Don't save result, it's just to set the flags
     
     // Update status
@@ -1047,158 +1047,158 @@ void Cpu6502<TBus>::dcp3() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpZp0() {
-    _currentInstruction = &Cpu6502::dcpZp1;
+void Cpu6502<TBus>::dcmZp0() {
+    _currentInstruction = &Cpu6502::dcmZp1;
     zeroPage();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpZp1() {
-    _currentInstruction = &Cpu6502::dcp0;
+void Cpu6502<TBus>::dcmZp1() {
+    _currentInstruction = &Cpu6502::dcm0;
     zeroPageLoad();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpZpX0() {
-    _currentInstruction = &Cpu6502::dcpZpX1;
+void Cpu6502<TBus>::dcmZpX0() {
+    _currentInstruction = &Cpu6502::dcmZpX1;
     zeroPageIndexed0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpZpX1() {
-    _currentInstruction = &Cpu6502::dcpZpX2;
+void Cpu6502<TBus>::dcmZpX1() {
+    _currentInstruction = &Cpu6502::dcmZpX2;
     zeroPageIndexedX1();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpZpX2() {
-    _currentInstruction = &Cpu6502::dcp0;
+void Cpu6502<TBus>::dcmZpX2() {
+    _currentInstruction = &Cpu6502::dcm0;
     zeroPageIndexedLoad();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpAbs0() {
-    _currentInstruction = &Cpu6502::dcpAbs1;
+void Cpu6502<TBus>::dcmAbs0() {
+    _currentInstruction = &Cpu6502::dcmAbs1;
     absolute0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpAbs1() {
-    _currentInstruction = &Cpu6502::dcpAbs2;
+void Cpu6502<TBus>::dcmAbs1() {
+    _currentInstruction = &Cpu6502::dcmAbs2;
     absolute1();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpAbs2() {
-    _currentInstruction = &Cpu6502::dcp0;
+void Cpu6502<TBus>::dcmAbs2() {
+    _currentInstruction = &Cpu6502::dcm0;
     absoluteLoad();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpAbsX0() {
-    _currentInstruction = &Cpu6502::dcpAbsX1;
+void Cpu6502<TBus>::dcmAbsX0() {
+    _currentInstruction = &Cpu6502::dcmAbsX1;
     absoluteIndexed0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpAbsX1() {
-    _currentInstruction = &Cpu6502::dcpAbsX2;
+void Cpu6502<TBus>::dcmAbsX1() {
+    _currentInstruction = &Cpu6502::dcmAbsX2;
     absoluteIndexedX1();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpAbsX2() {
-    _currentInstruction = &Cpu6502::dcpAbsX3;
-    absoluteIndexedLoad0(&Cpu6502::dcpAbsX3);
+void Cpu6502<TBus>::dcmAbsX2() {
+    _currentInstruction = &Cpu6502::dcmAbsX3;
+    absoluteIndexedLoad0(&Cpu6502::dcmAbsX3);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpAbsX3() {
-    _currentInstruction = &Cpu6502::dcp0;
+void Cpu6502<TBus>::dcmAbsX3() {
+    _currentInstruction = &Cpu6502::dcm0;
     absoluteIndexedLoad1();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpAbsY0() {
-    _currentInstruction = &Cpu6502::dcpAbsY1;
+void Cpu6502<TBus>::dcmAbsY0() {
+    _currentInstruction = &Cpu6502::dcmAbsY1;
     absoluteIndexed0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpAbsY1() {
-    _currentInstruction = &Cpu6502::dcpAbsY2;
+void Cpu6502<TBus>::dcmAbsY1() {
+    _currentInstruction = &Cpu6502::dcmAbsY2;
     absoluteIndexedY1();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpAbsY2() {
-    _currentInstruction = &Cpu6502::dcpAbsY3;
-    absoluteIndexedLoad0(&Cpu6502::dcpAbsY3);
+void Cpu6502<TBus>::dcmAbsY2() {
+    _currentInstruction = &Cpu6502::dcmAbsY3;
+    absoluteIndexedLoad0(&Cpu6502::dcmAbsY3);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpAbsY3() {
-    _currentInstruction = &Cpu6502::dcp0;
+void Cpu6502<TBus>::dcmAbsY3() {
+    _currentInstruction = &Cpu6502::dcm0;
     absoluteIndexedLoad1();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpIndX0() {
-    _currentInstruction = &Cpu6502::dcpIndX1;
+void Cpu6502<TBus>::dcmIndX0() {
+    _currentInstruction = &Cpu6502::dcmIndX1;
     zeroPagePreIndexedIndirect0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpIndX1() {
-    _currentInstruction = &Cpu6502::dcpIndX2;
+void Cpu6502<TBus>::dcmIndX1() {
+    _currentInstruction = &Cpu6502::dcmIndX2;
     zeroPagePreIndexedIndirect1();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpIndX2() {
-    _currentInstruction = &Cpu6502::dcpIndX3;
+void Cpu6502<TBus>::dcmIndX2() {
+    _currentInstruction = &Cpu6502::dcmIndX3;
     zeroPagePreIndexedIndirect2();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpIndX3() {
-    _currentInstruction = &Cpu6502::dcpIndX4;
+void Cpu6502<TBus>::dcmIndX3() {
+    _currentInstruction = &Cpu6502::dcmIndX4;
     zeroPagePreIndexedIndirect3();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpIndX4() {
-    _currentInstruction = &Cpu6502::dcp0;
+void Cpu6502<TBus>::dcmIndX4() {
+    _currentInstruction = &Cpu6502::dcm0;
     zeroPagePreIndexedIndirectLoad();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpIndY0() {
-    _currentInstruction = &Cpu6502::dcpIndY1;
+void Cpu6502<TBus>::dcmIndY0() {
+    _currentInstruction = &Cpu6502::dcmIndY1;
     zeroPageIndirectPostIndexed0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpIndY1() {
-    _currentInstruction = &Cpu6502::dcpIndY2;
+void Cpu6502<TBus>::dcmIndY1() {
+    _currentInstruction = &Cpu6502::dcmIndY2;
     zeroPageIndirectPostIndexed1();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpIndY2() {
-    _currentInstruction = &Cpu6502::dcpIndY3;
+void Cpu6502<TBus>::dcmIndY2() {
+    _currentInstruction = &Cpu6502::dcmIndY3;
     zeroPageIndirectPostIndexed2();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpIndY3() {
-    _currentInstruction = &Cpu6502::dcpIndY4;
-    zeroPageIndirectPostIndexedLoad0(&Cpu6502::dcpIndY4);
+void Cpu6502<TBus>::dcmIndY3() {
+    _currentInstruction = &Cpu6502::dcmIndY4;
+    zeroPageIndirectPostIndexedLoad0(&Cpu6502::dcmIndY4);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dcpIndY4() {
-    _currentInstruction = &Cpu6502::dcp0;
+void Cpu6502<TBus>::dcmIndY4() {
+    _currentInstruction = &Cpu6502::dcm0;
     zeroPageIndirectPostIndexedLoad1();
 }
 
@@ -1414,7 +1414,36 @@ void Cpu6502<TBus>::insIndY4() {
     zeroPageIndirectPostIndexedLoad1();
 }
 
-//
+// ALR
+
+template <class TBus>
+void Cpu6502<TBus>::alrImm0() {                 // TODO: voir si ok cette instruction complete
+    _currentInstruction = &Cpu6502::alrImm1;
+    immediate();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::alrImm1() {
+    _currentInstruction = &Cpu6502::fetchOpcode;
+    
+    // The AND is not performed by the ALU but by bus conflict which cause a low level to win (it is like an AND operation)
+    // See : https://wiki.nesdev.com/w/index.php/Bus_conflict
+    // And : https://wiki.nesdev.com/w/index.php/Programming_with_unofficial_opcodes
+    lsr(_accumulator & _inputDataLatch);
+    
+    // Write result back
+    _accumulator = _adderHold;
+    
+    // Update status
+    clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Negative });
+    setStatusFlag(Flags::Carry, _aluCarry);
+    setStatusFlag(Flags::Zero, (_adderHold == 0));
+    // Negative flag will always be 0 because the left injected bit is 0
+    
+    fetchOpcode();
+}
+
+// NOP
 
 template <class TBus>
 void Cpu6502<TBus>::nopImm0() {

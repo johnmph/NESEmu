@@ -8,7 +8,13 @@
 
 #ifndef Cpu6502Undocumented_hpp
 #define Cpu6502Undocumented_hpp
-// TODO: finir les opcodes non officiels : https://www.pagetable.com/?p=39
+
+
+// See https://www.pagetable.com/?p=39
+// And http://www.ffd2.com/fridge/docs/6502-NMOS.extra.opcodes
+// And https://wiki.nesdev.com/w/index.php/Programming_with_unofficial_opcodes
+// And http://visual6502.org/wiki/index.php?title=6502_Opcode_8B_%28XAA,_ANE%29
+// And https://wiki.nesdev.com/w/index.php/CPU_unofficial_opcodes
 
 // STP, SLO, RLA, SRE, SRE, RRA, SAX (AXS), XAA, AHX, TAS, SHY, SHX, LAS, DCP, ISC, SBC($EB), ALR, ANC, ARR, LAX, NOP (other addressing modes), KIL (Kill instruction, opcodes which jams the machine)
 
@@ -219,45 +225,45 @@ void laxIndY2();
 void laxIndY3();
 void laxIndY4();
 
-// DCP (DCM) = DEC + CMP
+// DCM (DCP) = DEC + CMP
 
-void dcp0();
-void dcp1();
-void dcp2();
-void dcp3();
+void dcm0();
+void dcm1();
+void dcm2();
+void dcm3();
 
-void dcpZp0();
-void dcpZp1();
+void dcmZp0();
+void dcmZp1();
 
-void dcpZpX0();
-void dcpZpX1();
-void dcpZpX2();
+void dcmZpX0();
+void dcmZpX1();
+void dcmZpX2();
 
-void dcpAbs0();
-void dcpAbs1();
-void dcpAbs2();
+void dcmAbs0();
+void dcmAbs1();
+void dcmAbs2();
 
-void dcpAbsX0();
-void dcpAbsX1();
-void dcpAbsX2();
-void dcpAbsX3();
+void dcmAbsX0();
+void dcmAbsX1();
+void dcmAbsX2();
+void dcmAbsX3();
 
-void dcpAbsY0();
-void dcpAbsY1();
-void dcpAbsY2();
-void dcpAbsY3();
+void dcmAbsY0();
+void dcmAbsY1();
+void dcmAbsY2();
+void dcmAbsY3();
 
-void dcpIndX0();
-void dcpIndX1();
-void dcpIndX2();
-void dcpIndX3();
-void dcpIndX4();
+void dcmIndX0();
+void dcmIndX1();
+void dcmIndX2();
+void dcmIndX3();
+void dcmIndX4();
 
-void dcpIndY0();
-void dcpIndY1();
-void dcpIndY2();
-void dcpIndY3();
-void dcpIndY4();
+void dcmIndY0();
+void dcmIndY1();
+void dcmIndY2();
+void dcmIndY3();
+void dcmIndY4();
 
 // INS (ISC) = INC + SBC
 
@@ -300,6 +306,9 @@ void insIndY3();
 void insIndY4();
 
 // ALR = AND + LSR
+
+void alrImm0();
+void alrImm1();
 
 // ARR = AND + ROR
 
