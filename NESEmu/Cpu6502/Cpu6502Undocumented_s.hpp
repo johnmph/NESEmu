@@ -29,10 +29,7 @@ void Cpu6502<TBus>::aso1() {
     writeDataBus(_addressBusLow, _addressBusHigh, _adderHold);
     
     // Update status
-    clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Negative });
-    setStatusFlag(Flags::Carry, _aluCarry);
-    setStatusFlag(Flags::Zero, (_adderHold == 0));
-    setStatusFlag(Flags::Negative, (_adderHold & 0x80));
+    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_adderHold);
 }
 
 template <class TBus>
@@ -220,10 +217,7 @@ void Cpu6502<TBus>::rla1() {
     writeDataBus(_addressBusLow, _addressBusHigh, _adderHold);
     
     // Update status
-    clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Negative });
-    setStatusFlag(Flags::Carry, _aluCarry);
-    setStatusFlag(Flags::Zero, (_adderHold == 0));
-    setStatusFlag(Flags::Negative, (_adderHold & 0x80));
+    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_adderHold);
 }
 
 template <class TBus>
@@ -411,10 +405,7 @@ void Cpu6502<TBus>::lse1() {
     writeDataBus(_addressBusLow, _addressBusHigh, _adderHold);
     
     // Update status
-    clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Negative });
-    setStatusFlag(Flags::Carry, _aluCarry);
-    setStatusFlag(Flags::Zero, (_adderHold == 0));
-    setStatusFlag(Flags::Negative, (_adderHold & 0x80));
+    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_adderHold);
 }
 
 template <class TBus>
@@ -602,10 +593,7 @@ void Cpu6502<TBus>::rra1() {
     writeDataBus(_addressBusLow, _addressBusHigh, _adderHold);
     
     // Update status
-    clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Negative });
-    setStatusFlag(Flags::Carry, _aluCarry);
-    setStatusFlag(Flags::Zero, (_adderHold == 0));
-    setStatusFlag(Flags::Negative, (_adderHold & 0x80));
+    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_adderHold);
 }
 
 template <class TBus>
@@ -613,10 +601,10 @@ void Cpu6502<TBus>::rra2() {
     // Adding data to accumulator with possible carry
     _aInput = _accumulator;
     _bInput = _adderHold;
-    aluPerformSum(getStatusFlag(Flags::DecimalMode), getStatusFlag(Flags::Carry));
+    aluPerformSum(_flagsHelper.get<Flag::DecimalMode>(), _flagsHelper.get<Flag::Carry>());
     
     // Fetch next opcode during performing ALU
-    fetchOpcode(&Cpu6502::adc1);
+    fetchOpcode(&Cpu6502::arithmetic1);
 }
 
 template <class TBus>
@@ -1037,13 +1025,10 @@ void Cpu6502<TBus>::dcm3() {
     // Don't save result, it's just to set the flags
     
     // Update status
-    clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Negative });
-    setStatusFlag(Flags::Carry, _aluCarry);
-    setStatusFlag(Flags::Zero, (_adderHold == 0));
-    setStatusFlag(Flags::Negative, (_adderHold & 0x80));
+    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_adderHold);
     
     // Execute instruction
-    decodeOpcode();
+    decodeOpcodeAndExecuteInstruction();
 }
 
 template <class TBus>
@@ -1225,9 +1210,7 @@ void Cpu6502<TBus>::ins1() {
     writeDataBus(_addressBusLow, _addressBusHigh, _adderHold);
     
     // Update status
-    clearStatusFlags({ Flags::Zero, Flags::Negative });
-    setStatusFlag(Flags::Zero, (_adderHold == 0));
-    setStatusFlag(Flags::Negative, (_adderHold & 0x80));
+    _flagsHelper.refresh<Flag::Zero, Flag::Negative>(_adderHold);
 }
 
 template <class TBus>
@@ -1236,7 +1219,7 @@ void Cpu6502<TBus>::ins2() {    // TODO: c'est le meme que adc avec juste l'inve
     _aInput = _accumulator;
     _bInput = _adderHold;
     aluInvertBInput();
-    aluPerformSum(getStatusFlag(Flags::DecimalMode), getStatusFlag(Flags::Carry));
+    aluPerformSum(_flagsHelper.get<Flag::DecimalMode>(), _flagsHelper.get<Flag::Carry>());
     
     // Fetch next opcode during performing ALU
     fetchOpcode(&Cpu6502::ins3);
@@ -1248,14 +1231,10 @@ void Cpu6502<TBus>::ins3() {
     _accumulator = _adderHold;
     
     // Update status
-    clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Overflow, Flags::Negative });
-    setStatusFlag(Flags::Carry, _aluCarry);
-    setStatusFlag(Flags::Zero, (_adderHold == 0));
-    setStatusFlag(Flags::Overflow, _aluOverflow);
-    setStatusFlag(Flags::Negative, (_adderHold & 0x80));
+    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Overflow, Flag::Negative>(_adderHold);
     
     // Execute instruction
-    decodeOpcode();
+    decodeOpcodeAndExecuteInstruction();
 }
 
 template <class TBus>
@@ -1435,11 +1414,9 @@ void Cpu6502<TBus>::alrImm1() {
     _accumulator = _adderHold;
     
     // Update status
-    clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Negative });
-    setStatusFlag(Flags::Carry, _aluCarry);
-    setStatusFlag(Flags::Zero, (_adderHold == 0));
-    // Negative flag will always be 0 because the left injected bit is 0
+    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_adderHold);
     
+    // Fetch opcode
     fetchOpcode();
 }
 

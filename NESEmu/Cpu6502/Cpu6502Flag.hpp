@@ -12,7 +12,8 @@
 
 // CLC, CLD, CLI, CLV, SEC, SED, SEI
 
-void clearFlag(Flags flag);
+template <Flag flag>
+void clearFlag();
 
 void clc0();
 void clc1();
@@ -26,7 +27,8 @@ void cli1();
 void clv0();
 void clv1();
 
-void setFlag(Flags flag);
+template <Flag flag>
+void setFlag();
 
 void sec0();
 void sec1();

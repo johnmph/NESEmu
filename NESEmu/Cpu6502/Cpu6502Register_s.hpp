@@ -15,10 +15,9 @@ void Cpu6502<TBus>::transfert0(uint8_t source, uint8_t &destination) {
     destination = source;
     
     // Update status
-    clearStatusFlags({ Flags::Zero, Flags::Negative });
-    setStatusFlag(Flags::Zero, (source == 0));
-    setStatusFlag(Flags::Negative, (source & 0x80));
+    _flagsHelper.refresh<Flag::Zero, Flag::Negative>(source);
     
+    // Fetch opcode
     fetchOpcode();
 }
 

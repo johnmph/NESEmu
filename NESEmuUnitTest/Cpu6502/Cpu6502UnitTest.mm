@@ -177,7 +177,7 @@ namespace {
         XCTAssertTrue(cpu6502.getAddressBus() == state.pc);         // We don't use PC because it can be incremented before testing it)
         XCTAssertTrue(cpu6502.getDataBus() == state.data[0]);
         
-        // There are some instructions which delay the result on the next cycle because they use the decodeOpcode cycle to write the result back, for these instructions, we need to process one extra cycle to have correct result
+        // There are some instructions which delay the result on the next cycle because they use the decodeOpcodeAndExecuteInstruction cycle to write the result back, for these instructions, we need to process one extra cycle to have correct result
         if ((cpu6502._accumulator != state.a) || (cpu6502._xIndex != state.x) || (cpu6502._yIndex != state.y) || (cpu6502._statusFlags != state.p) || (cpu6502._stackPointer != state.sp)) {
             cpu6502.clock();
             cycle += 1;

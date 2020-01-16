@@ -15,21 +15,21 @@
 
 struct Bus {
     uint8_t read(uint16_t address) {
-        std::cout << std::hex << "Read 0x" << static_cast<int>(_memory[address & 0xBFFF]) << " at 0x" << address << "\n";
+        //std::cout << std::hex << "Read 0x" << static_cast<int>(_memory[address & 0xBFFF]) << " at 0x" << address << "\n";
         return _memory[address & 0xBFFF];
     }
     
     void write(uint16_t address, uint8_t data) {
-        std::cout << std::hex << "Write 0x" << static_cast<int>(data) << " at 0x" << address << "\n";
+        //std::cout << std::hex << "Write 0x" << static_cast<int>(data) << " at 0x" << address << "\n";
         _memory[address & 0xBFFF] = data;
     }
     
 //private:
     std::array<uint8_t, 1024 * 64> _memory;
 };
-/*
+
+
 uint8_t _adderHold;
-uint8_t _programCounterLow, _programCounterHigh;
 uint8_t _aInput, _bInput;
 bool _aluOverflow, _aluCarry;
 
@@ -47,36 +47,17 @@ void aluPerformSum(bool decimalEnable, bool carryIn) {//TODO: terminer (halfCarr
 }
 
 
-void relativeBranch0() {    // TODO: a voir (surtout pour le test du ++PC et --PC)
-    _programCounterLow = _adderHold;
-    
-    // bInput must be programCounterLow and aInput the offset
-    if (_aluOverflow == false) { // if ((_bInput ^ _aInput) & (_bInput ^ _adderHold) & 0x80) {
-        // Correct programCounterHigh
-        if (_aluCarry == true) { // if (_bInput & 0x80) {
-            ++_programCounterHigh;
-        }
-        else {
-            --_programCounterHigh;
-        }
-    }
-}
-*/
 // + + No PCrossed -> true, false
 // + + PCrossed    -> false, true
 // + - No PCrossed -> true, true
 // + - PCrossed    -> false, false
 
-int main(int argc, const char * argv[]) {
-    /*_programCounterHigh = 0x1;
-    _programCounterLow = 0x82;
-    
-    // Adding offset with programCounterLow using ALU
-    _aInput = 0x70;
-    _bInput = _programCounterLow;
+int main(int argc, const char * argv[]) {/*
+    // Removing 1 from inputDataLatch using ALU (Add 0xFF without carry set like true 6502)
+    _aInput = 0x10;
+    _bInput = 0x0;
+    aluInvertBInput();
     aluPerformSum(false, false);
-    
-    relativeBranch0();
     
     return 0;
     */
@@ -239,17 +220,16 @@ int main(int argc, const char * argv[]) {
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     
     // TODO: check avec http://www.qmtpro.com/~nes/misc/nestest.log et http://www.qmtpro.com/~nes/misc/nestest.txt
-    for (int x = 0; x <= /*1789773*/26555; ++x) {
+    for (int x = 0; x <= 1789773/*26555*/; ++x) {
         cpu.clock();
         
-        std::cout << std::hex << cpu.getAddressBus() << " " << cpu.getProgramCounter() << " A:" << static_cast<int>(cpu._accumulator) << " X:" << static_cast<int>(cpu._xIndex) << " Y:" << static_cast<int>(cpu._yIndex) << " P:" << static_cast<int>(cpu._statusFlags) << " SP:" << static_cast<int>(cpu._stackPointer) << " Cycle: " << std::dec << x << "\n";
+        //std::cout << std::hex << cpu.getAddressBus() << " " << cpu.getProgramCounter() << " A:" << static_cast<int>(cpu._accumulator) << " X:" << static_cast<int>(cpu._xIndex) << " Y:" << static_cast<int>(cpu._yIndex) << " P:" << static_cast<int>(cpu._statusFlags) << " SP:" << static_cast<int>(cpu._stackPointer) << " Cycle: " << std::dec << x << "\n";
     }
     
-    std::cout << std::hex << static_cast<int>(bus._memory[0x0002]) << ", " << static_cast<int>(bus._memory[0x0003]) << "\n";
-    
+    /*
     std::ofstream ofs("memory.log", std::ios::binary);
     ofs.write(reinterpret_cast<char *>(bus._memory.data()), bus._memory.size());
-    ofs.close();
+    ofs.close();*/
     
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     std::cout << std::dec << "Time in milliseconds: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "\n";

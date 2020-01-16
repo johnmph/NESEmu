@@ -61,7 +61,7 @@ void Cpu6502<TBus>::brk3() {
     
     // Finish stack operation and push Status to stack
     pushToStack1();
-    pushToStack0(_statusFlags | ((_interruptRequested == false) << static_cast<int>(Flags::Break))); // TODO: voir si ok
+    pushToStack0(_statusFlags | ((_interruptRequested == false) << static_cast<int>(Flag::Break))); // TODO: voir si ok
 }
 
 template <class TBus>
@@ -72,7 +72,7 @@ void Cpu6502<TBus>::brk4() {
     pushToStack1();
     
     // Disable interrupts
-    setStatusFlag(Flags::InterruptDisable, true);
+    _flagsHelper.set<Flag::InterruptDisable>(true);
     
     // Calculate interrupt vectors index
     _interruptVectorsIndex = getCurrentInterruptVectorsIndex(); // TODO: peut etre plus besoin de ca car maintenant on a addressBusLow/High et on peut l'incrementer dans brk5
@@ -132,7 +132,7 @@ template <class TBus>
 void Cpu6502<TBus>::rti3() {
     _currentInstruction = &Cpu6502::rti4;
     
-    _statusFlags = (_inputDataLatch & getStatusFlagsDisableMask({ Flags::Break })) | (1 << static_cast<int>(Flags::UnusedHigh));  // TODO: voir si ok
+    _statusFlags = (_inputDataLatch & FlagsHelper::getDisableMask<Flag::Break>()) | (1 << static_cast<int>(Flag::UnusedHigh));
     
     pullFromStack1();
     pullFromStack0();

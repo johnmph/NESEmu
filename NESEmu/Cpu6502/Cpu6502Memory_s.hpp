@@ -14,10 +14,10 @@ template <class TBus>
 void Cpu6502<TBus>::ld0(uint8_t &data) {
     data = _inputDataLatch;
     
-    clearStatusFlags({ Flags::Zero, Flags::Negative });
-    setStatusFlag(Flags::Zero, data == 0);
-    setStatusFlag(Flags::Negative, data & 0x80);
+    // Update status
+    _flagsHelper.refresh<Flag::Zero, Flag::Negative>(data);
     
+    // Fetch opcode
     fetchOpcode();
 }
 

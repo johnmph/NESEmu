@@ -35,7 +35,7 @@
  */
 
 template <class TBus>
-const typename Cpu6502<TBus>::InstructionPipeline Cpu6502<TBus>::_instrPipelineFuncs[256] = {
+const typename Cpu6502<TBus>::OpcodeInstruction Cpu6502<TBus>::_opcodeInstructionFuncs[256] = {
     // $00 -> Brk
     &Cpu6502::brk0,
     // $01 -> ORA ($az, X)

@@ -14,10 +14,105 @@
 #include "Cpu6502_s_data.hpp"
 
 
+// Flags Helper
+
+FlagsHelper::FlagsHelper(uint8_t &value, bool &carry, bool &overflow) : _value(value), _carry(carry), _overflow(overflow) {
+}
+
+template <FlagsHelper::Flag ...flags>
+constexpr uint8_t FlagsHelper::getEnableMask() {
+    uint8_t data = 0;
+    
+    // Fold expression in C++11 (second line is to avoid warning on non used variable)
+    int fold[] = { (data |= (1 << static_cast<uint8_t>(flags)))... };
+    (void) fold;
+    
+    return data;
+    //return ((1 << static_cast<uint8_t>(flags)) | ...);    // Fold expression in C++17
+}
+
+template <FlagsHelper::Flag ...flags>
+constexpr uint8_t FlagsHelper::getDisableMask() {
+    return static_cast<uint8_t>(~getEnableMask<flags...>());
+}
+
+template <FlagsHelper::Flag ...flags>
+void FlagsHelper::clear() {
+    _value &= getDisableMask<flags...>();
+}
+
+template <FlagsHelper::Flag ...flags>
+bool FlagsHelper::get() {
+    return _value & getEnableMask<flags...>();
+}
+
+template <FlagsHelper::Flag flag>
+void FlagsHelper::set(bool enable) {
+    // Be careful, if enable can be false, we need to call clearStatusFlags before (It's for multiple clear/set flags optimization by avoiding if statement)
+    _value |= enable << static_cast<uint8_t>(flag);
+}
+
+template <>
+void FlagsHelper::refreshImpl<FlagsHelper::Flag::Negative>(uint8_t data) {
+    // Set if data is negative (MSB is 1)
+    set<Flag::Negative>(data & 0x80);
+}
+
+template <>
+void FlagsHelper::refreshImpl<FlagsHelper::Flag::Zero>(uint8_t data) {
+    // Set if data is zero
+    set<Flag::Zero>(data == 0);
+}
+
+template <>
+void FlagsHelper::refreshImpl<FlagsHelper::Flag::Carry>() {
+    // It's a copy of the ALU carry
+    set<Flag::Carry>(_carry);
+}
+
+template <>
+void FlagsHelper::refreshImpl<FlagsHelper::Flag::Overflow>() {
+    // It's a copy of the ALU overflow
+    set<Flag::Overflow>(_overflow);
+}
+/*
+template <>
+void FlagsHelper::refreshImpl<FlagsHelper::Flag::UnusedHigh>() {
+    // It is always set
+    set<Flag::UnusedHigh>(true);
+}*/
+
+template <FlagsHelper::Flag firstFlag, FlagsHelper::Flag secondFlag, FlagsHelper::Flag ...otherFlags, typename std::enable_if<(firstFlag == FlagsHelper::Flag::Negative) || (firstFlag == FlagsHelper::Flag::Zero), int>::type>
+void FlagsHelper::refreshImpl(uint8_t data) {
+    // Check first flag
+    refreshImpl<firstFlag>(data);
+    
+    // Recursively check remaining flags
+    refreshImpl<secondFlag, otherFlags...>(data);
+}
+
+template <FlagsHelper::Flag firstFlag, FlagsHelper::Flag secondFlag, FlagsHelper::Flag ...otherFlags, typename std::enable_if<(firstFlag != FlagsHelper::Flag::Negative) && (firstFlag != FlagsHelper::Flag::Zero), int>::type>
+void FlagsHelper::refreshImpl(uint8_t data) {
+    // Check first flag
+    refreshImpl<firstFlag>();
+    
+    // Recursively check remaining flags
+    refreshImpl<secondFlag, otherFlags...>(data);
+}
+
+template <FlagsHelper::Flag ...flags>
+void FlagsHelper::refresh(uint8_t data) {
+    // First clear flags bits
+    clear<flags...>();
+    
+    // Then check flags
+    refreshImpl<flags...>(data);
+}
+
 // Public interface
 
 template <class TBus>
-Cpu6502<TBus>::Cpu6502(TBus &bus) : _bus(bus), _programCounterLow(0xFF), _programCounterHigh(0), _stackPointer(0), _accumulator(0xAA), _xIndex(0), _yIndex(0), _statusFlags(0x20), _resetRequested(false), _nmiLine(true), _nmiLinePrevious(true), _nmiRequested(false), _irqLine(true), _irqRequested(false), _interruptRequested(false) {
+Cpu6502<TBus>::Cpu6502(TBus &bus) : _flagsHelper(_statusFlags, _aluCarry, _aluOverflow), _bus(bus), _programCounterLow(0xFF), _programCounterHigh(0), _stackPointer(0), _accumulator(0xAA), _xIndex(0), _yIndex(0), _statusFlags(0x20), _resetRequested(false), _nmiLine(true), _nmiLinePrevious(true), _nmiRequested(false), _irqLine(true), _irqRequested(false), _interruptRequested(false) {
     reset(false);
 }
 
@@ -35,7 +130,7 @@ void Cpu6502<TBus>::clock() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::reset(bool high) {  // TODO: voir pour les registres si on les laisse ainsi ou si on les reset : normalement on les laisse ainsi puisqu'un reset c'est juste un signal comme une interruption (mais a voir, on ne sait jamais)
+void Cpu6502<TBus>::reset(bool high) {  // TODO: voir pour les registres si on les laisse ainsi ou si on les reset : normalement on les laisse ainsi puisqu'un reset c'est juste un signal comme une interruption (mais a voir, on ne sait jamais) : peut etre avoir une methode power qui fait un hard reset et ce reset est le soft reset
     // Save signal
     _resetLine = high;
     
@@ -72,47 +167,6 @@ uint16_t Cpu6502<TBus>::getAddressBus() {
 template <class TBus>
 uint8_t Cpu6502<TBus>::getDataBus() {
     return ((_readWrite == static_cast<bool>(ReadWrite::Read)) || (_resetRequested == true)) ? _inputDataLatch : _dataOutput;
-}
-
-// Status
-
-template <class TBus>
-constexpr uint8_t Cpu6502<TBus>::getStatusFlagsEnableMask(std::initializer_list<Flags> const &flags) {
-    uint8_t mask = 0x0;
-    
-    for (auto const &flag : flags) {
-        mask |= 1 << static_cast<uint8_t>(flag);
-    }
-    
-    return mask;
-}
-
-template <class TBus>
-constexpr uint8_t Cpu6502<TBus>::getStatusFlagsDisableMask(std::initializer_list<Flags> const &flags) {
-    /*uint8_t mask = 0xFF;
-    
-    for (auto const &flag : flags) {
-        mask &= ~(1 << static_cast<uint8_t>(flag));
-    }
-    
-    return mask;*/
-    return ~getStatusFlagsEnableMask(flags);
-}
-
-template <class TBus>
-constexpr void Cpu6502<TBus>::clearStatusFlags(std::initializer_list<Flags> const &flags) {
-    _statusFlags &= getStatusFlagsDisableMask(flags);
-}
-
-template <class TBus>
-constexpr bool Cpu6502<TBus>::getStatusFlag(Flags flag) {
-    return _statusFlags & getStatusFlagsEnableMask({ flag });
-}
-
-template <class TBus>
-constexpr void Cpu6502<TBus>::setStatusFlag(Flags flag, bool value) {
-    // Be careful, if value can be false, we need to call clearStatusFlags before (It's for multiple clear/set flags optimization by avoiding if statement)
-    _statusFlags |= value << static_cast<uint8_t>(flag);
 }
 
 // Memory
@@ -167,7 +221,7 @@ void Cpu6502<TBus>::fetchData() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::fetchOpcode(InstructionPipeline nextInstruction) {
+void Cpu6502<TBus>::fetchOpcode(OpcodeInstruction nextInstruction) {
     // Set next instruction
     _currentInstruction = nextInstruction;
     
@@ -187,15 +241,15 @@ void Cpu6502<TBus>::fetchOpcode(InstructionPipeline nextInstruction) {
 
 template <class TBus>
 void Cpu6502<TBus>::fetchOpcode() {
-    // Fetch opcode then decode opcode (on the next cycle)
-    fetchOpcode(&Cpu6502::decodeOpcode);
+    // Fetch opcode then decode opcode and execute instruction on the next cycle
+    fetchOpcode(&Cpu6502::decodeOpcodeAndExecuteInstruction);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::decodeOpcode() {
+void Cpu6502<TBus>::decodeOpcodeAndExecuteInstruction() {
     // Get current instruction from opcode (or BRK (0) if interrupt requested)
     _instruction = (_interruptRequested == false) ? _predecode : 0;
-    _currentInstruction = _instrPipelineFuncs[_instruction];
+    _currentInstruction = _opcodeInstructionFuncs[_instruction];
     
     // Execute current instruction
     (this->*_currentInstruction)();
@@ -217,7 +271,7 @@ void Cpu6502<TBus>::checkNmi() {
 template <class TBus>
 void Cpu6502<TBus>::checkIrq() {
     // Irq is requested if interrupts are not disabled and if irq line goes to low (and stay for one cycle)
-    _irqRequested = (getStatusFlag(Flags::InterruptDisable) == false) && (_irqLine == false);
+    _irqRequested = (_flagsHelper.get<Flag::InterruptDisable>() == false) && (_irqLine == false);
 }
 
 template <class TBus>

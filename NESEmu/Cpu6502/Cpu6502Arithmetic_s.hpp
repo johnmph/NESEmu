@@ -11,30 +11,26 @@
 
 
 template <class TBus>
-void Cpu6502<TBus>::adc0() {
-    // Adding data to accumulator with possible carry
-    _aInput = _accumulator;
-    _bInput = _inputDataLatch;
-    aluPerformSum(getStatusFlag(Flags::DecimalMode), getStatusFlag(Flags::Carry));
-    
-    // Fetch next opcode during performing ALU
-    fetchOpcode(&Cpu6502::adc1);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::adc1() {
+void Cpu6502<TBus>::arithmetic1() {
     // Store ALU result in accumulator
     _accumulator = _adderHold;
     
     // Update status
-    clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Overflow, Flags::Negative });
-    setStatusFlag(Flags::Carry, _aluCarry);
-    setStatusFlag(Flags::Zero, (_adderHold == 0));
-    setStatusFlag(Flags::Overflow, _aluOverflow);
-    setStatusFlag(Flags::Negative, (_adderHold & 0x80));
+    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Overflow, Flag::Negative>(_adderHold);
     
     // Execute instruction
-    decodeOpcode();
+    decodeOpcodeAndExecuteInstruction();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::adc0() {
+    // Adding data to accumulator with possible carry
+    _aInput = _accumulator;
+    _bInput = _inputDataLatch;
+    aluPerformSum(_flagsHelper.get<Flag::DecimalMode>(), _flagsHelper.get<Flag::Carry>());
+    
+    // Fetch next opcode during performing ALU
+    fetchOpcode(&Cpu6502::arithmetic1);
 }
 
 template <class TBus>
@@ -203,31 +199,15 @@ void Cpu6502<TBus>::adcIndY4() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::sbc0() {    // TODO: c'est le meme que adc avec juste l'inversion de bInput, il faut essayer de combiner les 2 pour eviter la duplication de code
+void Cpu6502<TBus>::sbc0() {
     // Substracting data to accumulator with possible carry by inverting bInput
     _aInput = _accumulator;
     _bInput = _inputDataLatch;
     aluInvertBInput();
-    aluPerformSum(getStatusFlag(Flags::DecimalMode), getStatusFlag(Flags::Carry));
+    aluPerformSum(_flagsHelper.get<Flag::DecimalMode>(), _flagsHelper.get<Flag::Carry>());
     
     // Fetch next opcode during performing ALU
-    fetchOpcode(&Cpu6502::sbc1);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::sbc1() {
-    // Store ALU result in accumulator
-    _accumulator = _adderHold;
-    
-    // Update status
-    clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Overflow, Flags::Negative });
-    setStatusFlag(Flags::Carry, _aluCarry);
-    setStatusFlag(Flags::Zero, (_adderHold == 0));
-    setStatusFlag(Flags::Overflow, _aluOverflow);
-    setStatusFlag(Flags::Negative, (_adderHold & 0x80));
-    
-    // Execute instruction
-    decodeOpcode();
+    fetchOpcode(&Cpu6502::arithmetic1);
 }
 
 template <class TBus>
@@ -412,13 +392,10 @@ void Cpu6502<TBus>::cp1() {
     // Don't save result, it's just to set the flags
     
     // Update status
-    clearStatusFlags({ Flags::Carry, Flags::Zero, Flags::Negative });
-    setStatusFlag(Flags::Carry, _aluCarry);
-    setStatusFlag(Flags::Zero, (_adderHold == 0));
-    setStatusFlag(Flags::Negative, (_adderHold & 0x80));
+    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_adderHold);
     
     // Execute instruction
-    decodeOpcode();
+    decodeOpcodeAndExecuteInstruction();
 }
 
 template <class TBus>
@@ -677,7 +654,7 @@ template <class TBus>
 void Cpu6502<TBus>::dec0() {
     _currentInstruction = &Cpu6502::dec1;
     
-    // Removing 1 from inputDataLatch using ALU (Add 0xFF without carry set like true 6502)
+    // Removing 1 from data using ALU (Add 0xFF without carry set like true 6502, data is loaded on B register because it comes from DB signal)
     _aInput = 0xFF;
     _bInput = _inputDataLatch;
     aluPerformSum(false, false);
@@ -694,9 +671,7 @@ void Cpu6502<TBus>::dec1() {
     writeDataBus(_addressBusLow, _addressBusHigh, _adderHold);
     
     // Update status
-    clearStatusFlags({ Flags::Zero, Flags::Negative });
-    setStatusFlag(Flags::Zero, (_adderHold == 0));
-    setStatusFlag(Flags::Negative, (_adderHold & 0x80));
+    _flagsHelper.refresh<Flag::Zero, Flag::Negative>(_adderHold);
 }
 
 template <class TBus>
@@ -775,8 +750,8 @@ template <class TBus>
 void Cpu6502<TBus>::inc0() {
     _currentInstruction = &Cpu6502::inc1;
     
-    // Adding 1 with inputDataLatch using ALU (Add 0 with carry set like true 6502)
-    _aInput = 0;
+    // Adding 1 with inputDataLatch using ALU (Add 0 with carry set like true 6502, data is loaded on B register because it comes from DB signal)
+    _aInput = 0x0;
     _bInput = _inputDataLatch;
     aluPerformSum(false, true);
     
@@ -792,9 +767,7 @@ void Cpu6502<TBus>::inc1() {
     writeDataBus(_addressBusLow, _addressBusHigh, _adderHold);
     
     // Update status
-    clearStatusFlags({ Flags::Zero, Flags::Negative });
-    setStatusFlag(Flags::Zero, (_adderHold == 0));
-    setStatusFlag(Flags::Negative, (_adderHold & 0x80));
+    _flagsHelper.refresh<Flag::Zero, Flag::Negative>(_adderHold);
 }
 
 template <class TBus>
@@ -870,12 +843,12 @@ void Cpu6502<TBus>::incAbsX3() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::decrement0(InstructionPipeline nextInstruction, uint8_t data) {
+void Cpu6502<TBus>::decrement0(OpcodeInstruction nextInstruction, uint8_t data) {
     _currentInstruction = nextInstruction;
     
-    // Removing 1 from data using ALU (Add 0xFF without carry set like true 6502)
-    _aInput = 0xFF;
-    _bInput = data;
+    // Removing 1 from data using ALU (Add 0xFF without carry set like true 6502, data is loaded on A register because it comes from SB signal)
+    _aInput = data;
+    _bInput = 0xFF;
     aluPerformSum(false, false);
     
     // Write result back
@@ -890,10 +863,9 @@ void Cpu6502<TBus>::decrement1(uint8_t &data) {
     data = _adderHold;
     
     // Update status
-    clearStatusFlags({ Flags::Zero, Flags::Negative });
-    setStatusFlag(Flags::Zero, (_adderHold == 0));
-    setStatusFlag(Flags::Negative, (_adderHold & 0x80));
+    _flagsHelper.refresh<Flag::Zero, Flag::Negative>(_adderHold);
     
+    // Fetch opcode
     fetchOpcode();
 }
 
@@ -918,10 +890,10 @@ void Cpu6502<TBus>::dey1() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::increment0(InstructionPipeline nextInstruction, uint8_t data) {
+void Cpu6502<TBus>::increment0(OpcodeInstruction nextInstruction, uint8_t data) {
     _currentInstruction = nextInstruction;
     
-    // Adding 1 with data using ALU (Add 0 with carry set like true 6502)
+    // Adding 1 with data using ALU (Add 0 with carry set like true 6502, data is loaded on B register, it comes from SB/DB signal because only A register can be set to 0)
     _aInput = 0x0;
     _bInput = data;
     aluPerformSum(false, true);
@@ -938,10 +910,9 @@ void Cpu6502<TBus>::increment1(uint8_t &data) {
     data = _adderHold;
     
     // Update status
-    clearStatusFlags({ Flags::Zero, Flags::Negative });
-    setStatusFlag(Flags::Zero, (_adderHold == 0));
-    setStatusFlag(Flags::Negative, (_adderHold & 0x80));
+    _flagsHelper.refresh<Flag::Zero, Flag::Negative>(_adderHold);
     
+    // Fetch opcode
     fetchOpcode();
 }
 

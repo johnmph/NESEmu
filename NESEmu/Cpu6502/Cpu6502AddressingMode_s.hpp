@@ -111,7 +111,7 @@ void Cpu6502<TBus>::relativeBranch0() {
     // And http://wiki.nesdev.com/w/index.php/CPU_interrupts
     //fetchOpcode();
     fetchData();                                // TODO: soit on fait ainsi mais alors si le signal d'interruption est arreté avant la fin de l'instruction suivante, l'interruption ne sera pas executée car pas détectée (seulement pour IRQ, le nmi est detecté), si ce n'est pas ainsi en reel, il faut aussi faire un checkInterrupt et setter le flag _interruptRequested ici
-    _currentInstruction = &Cpu6502::decodeOpcode;
+    _currentInstruction = &Cpu6502::decodeOpcodeAndExecuteInstruction;
 }
 
 template <class TBus>
@@ -153,7 +153,7 @@ void Cpu6502<TBus>::absoluteIndexedY1() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absoluteIndexedLoad0(InstructionPipeline nextInstruction) {
+void Cpu6502<TBus>::absoluteIndexedLoad0(OpcodeInstruction nextInstruction) {
     // If we don't need to correct inputDataLatch (address high), skip next instruction
     if (_aluCarry == false) {
         _currentInstruction = nextInstruction;
@@ -292,7 +292,7 @@ void Cpu6502<TBus>::zeroPageIndirectPostIndexed2() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPageIndirectPostIndexedLoad0(InstructionPipeline nextInstruction) {
+void Cpu6502<TBus>::zeroPageIndirectPostIndexedLoad0(OpcodeInstruction nextInstruction) {
     absoluteIndexedLoad0(nextInstruction);
 }
 

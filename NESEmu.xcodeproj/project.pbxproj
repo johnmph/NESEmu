@@ -259,6 +259,7 @@
 		4D1137F523CD3EEC0056AAAD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = N49JX257A6;
@@ -277,6 +278,7 @@
 		4D1137F623CD3EEC0056AAAD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = N49JX257A6;
@@ -406,6 +408,7 @@
 		4DE643F923BAE2EC00CFFE4E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = N49JX257A6;
 				HEADER_SEARCH_PATHS = "\"${SRCROOT}/NESEmu\"";
@@ -416,6 +419,7 @@
 		4DE643FA23BAE2EC00CFFE4E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = N49JX257A6;
 				HEADER_SEARCH_PATHS = "\"${SRCROOT}/NESEmu\"";

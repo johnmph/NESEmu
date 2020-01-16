@@ -42,7 +42,7 @@ template <class TBus>
 void Cpu6502<TBus>::php1() {
     _currentInstruction = &Cpu6502::php2;
     
-    pushToStack0(_statusFlags | (1 << static_cast<int>(Flags::Break))); // TODO: voir si ok
+    pushToStack0(_statusFlags | (1 << static_cast<int>(Flag::Break))); // TODO: voir si ok
 }
 
 template <class TBus>
@@ -78,10 +78,9 @@ void Cpu6502<TBus>::pla3() {
     _accumulator = _inputDataLatch;
     
     // Update status
-    clearStatusFlags({ Flags::Zero, Flags::Negative });     // TODO: par apres si beaucoup d'instructions utilisent ca, avoir une methode setZeroNegative(data)
-    setStatusFlag(Flags::Zero, (_accumulator == 0));
-    setStatusFlag(Flags::Negative, (_accumulator & 0x80));
+    _flagsHelper.refresh<Flag::Zero, Flag::Negative>(_accumulator);
     
+    // Fetch opcode
     fetchOpcode();
 }
 
@@ -108,7 +107,7 @@ void Cpu6502<TBus>::plp2() {
 
 template <class TBus>
 void Cpu6502<TBus>::plp3() {
-    _statusFlags = (_inputDataLatch & getStatusFlagsDisableMask({ Flags::Break })) | (1 << static_cast<int>(Flags::UnusedHigh));  // TODO: voir si ok
+    _statusFlags = (_inputDataLatch & FlagsHelper::getDisableMask<Flag::Break>()) | (1 << static_cast<int>(Flag::UnusedHigh));
     
     fetchOpcode();
 }

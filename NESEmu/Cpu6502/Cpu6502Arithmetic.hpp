@@ -12,8 +12,9 @@
 
 // ADC, SBC, CMP, CPX, CPY, DEC, INC, DEX, DEY, INX, INY
 
+void arithmetic1();
+
 void adc0();
-void adc1();
 
 void adcImm0();
 
@@ -58,7 +59,6 @@ void adcIndY4();
 void adcIndY5();
 
 void sbc0();
-void sbc1();
 
 void sbcImm0();
 
@@ -213,7 +213,7 @@ void incAbsX1();
 void incAbsX2();
 void incAbsX3();
 
-void decrement0(InstructionPipeline nextInstruction, uint8_t data);
+void decrement0(OpcodeInstruction nextInstruction, uint8_t data);
 void decrement1(uint8_t &data);
 
 void dex0();
@@ -222,7 +222,7 @@ void dex1();
 void dey0();
 void dey1();
 
-void increment0(InstructionPipeline nextInstruction, uint8_t data);
+void increment0(OpcodeInstruction nextInstruction, uint8_t data);
 void increment1(uint8_t &data);
 
 void inx0();

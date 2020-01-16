@@ -13,8 +13,66 @@
 #include <initializer_list>
 // TODO: ecrire des unit tests, par instruction et via le log nestest
 
+
+// We can't put that inside Cpu6502 because Cpu6502 is a templated class and we specialize some methods here (Cannot specialize a member of an unspecialized template)
+struct FlagsHelper {
+    
+    enum class Flag {
+        Carry,
+        Zero,
+        InterruptDisable,
+        DecimalMode,
+        Break,
+        UnusedHigh,
+        Overflow,
+        Negative
+    };
+    
+    FlagsHelper(uint8_t &value, bool &carry, bool &overflow);
+    
+    template <Flag ...flags>
+    static constexpr uint8_t getEnableMask();
+    
+    template <Flag ...flags>
+    static constexpr uint8_t getDisableMask();
+    
+    template <Flag ...flags>
+    void clear();
+    
+    template <Flag ...flags>
+    bool get();
+    
+    template <Flag flag>
+    void set(bool enable);
+    
+    template <Flag flag>
+    void refreshImpl();
+    
+    template <Flag flag>
+    void refreshImpl(uint8_t data);
+    
+    // Specialization for flags which depends on a data
+    template <Flag firstFlag, Flag secondFlag, Flag ...otherFlags, typename std::enable_if<(firstFlag == FlagsHelper::Flag::Negative) || (firstFlag == FlagsHelper::Flag::Zero), int>::type = 0>
+    void refreshImpl(uint8_t data);
+    
+    // Specialization for flags which doesn't depend on a data, I don't know if this really optimize
+    template <Flag firstFlag, Flag secondFlag, Flag ...otherFlags, typename std::enable_if<(firstFlag != FlagsHelper::Flag::Negative) && (firstFlag != FlagsHelper::Flag::Zero), int>::type = 0>
+    void refreshImpl(uint8_t data);
+    
+    template <Flag ...flags>
+    void refresh(uint8_t data);
+    
+private:
+    uint8_t &_value;
+    bool &_carry;
+    bool &_overflow;
+};
+
 template <class TBus>
 struct Cpu6502 {
+    using Flag = FlagsHelper::Flag;
+    
+    
     Cpu6502(TBus &bus);
     
     void clock();
@@ -28,7 +86,7 @@ struct Cpu6502 {
     uint8_t getDataBus();
     
     //private://TODO: remettre apres les tests
-    using InstructionPipeline = void (Cpu6502::*)();
+    using OpcodeInstruction = void (Cpu6502::*)();
     
     enum class Interrupts {
         Nmi,
@@ -36,28 +94,10 @@ struct Cpu6502 {
         IrqBrk
     };
     
-    enum class Flags {
-        Carry,
-        Zero,
-        InterruptDisable,
-        DecimalMode,
-        Break,
-        UnusedHigh,
-        Overflow,
-        Negative
-    };
-    
     enum class ReadWrite : bool {
         Read = true,
         Write = false
     };
-    
-    // Status
-    static constexpr uint8_t getStatusFlagsEnableMask(std::initializer_list<Flags> const &flags);
-    static constexpr uint8_t getStatusFlagsDisableMask(std::initializer_list<Flags> const &flags);
-    constexpr void clearStatusFlags(std::initializer_list<Flags> const &flags);
-    constexpr bool getStatusFlag(Flags flag);
-    constexpr void setStatusFlag(Flags flag, bool value);
     
     // Memory
     void fetchMemory();
@@ -67,9 +107,9 @@ struct Cpu6502 {
     // Program flow
     void incrementProgramCounter();
     void fetchData();
-    void fetchOpcode(InstructionPipeline nextInstruction);
+    void fetchOpcode(OpcodeInstruction nextInstruction);
     void fetchOpcode();
-    void decodeOpcode();
+    void decodeOpcodeAndExecuteInstruction();
     
     // Interrupts
     void checkNmi();
@@ -116,12 +156,13 @@ struct Cpu6502 {
     uint8_t _statusFlags;
     
     // Internal
+    FlagsHelper _flagsHelper;
     TBus &_bus;
-    static const InstructionPipeline _instrPipelineFuncs[256];
+    static const OpcodeInstruction _opcodeInstructionFuncs[256];
     static const uint8_t _interruptVectors[3][2];
     static const uint8_t _stackPageNumber;
     
-    InstructionPipeline _currentInstruction;
+    OpcodeInstruction _currentInstruction;
     int _interruptVectorsIndex;
     
     uint8_t _addressBusLow;

@@ -18,7 +18,7 @@ void Cpu6502<TBus>::bpl0() {
 
 template <class TBus>
 void Cpu6502<TBus>::bpl1() {
-    relative1(getStatusFlag(Flags::Negative) == false);
+    relative1(_flagsHelper.get<Flag::Negative>() == false);
 }
 
 template <class TBus>
@@ -29,7 +29,7 @@ void Cpu6502<TBus>::bmi0() {
 
 template <class TBus>
 void Cpu6502<TBus>::bmi1() {
-    relative1(getStatusFlag(Flags::Negative) == true);
+    relative1(_flagsHelper.get<Flag::Negative>() == true);
 }
 
 template <class TBus>
@@ -40,7 +40,7 @@ void Cpu6502<TBus>::bvc0() {
 
 template <class TBus>
 void Cpu6502<TBus>::bvc1() {
-    relative1(getStatusFlag(Flags::Overflow) == false);
+    relative1(_flagsHelper.get<Flag::Overflow>() == false);
 }
 
 template <class TBus>
@@ -51,7 +51,7 @@ void Cpu6502<TBus>::bvs0() {
 
 template <class TBus>
 void Cpu6502<TBus>::bvs1() {
-    relative1(getStatusFlag(Flags::Overflow) == true);
+    relative1(_flagsHelper.get<Flag::Overflow>() == true);
 }
 
 template <class TBus>
@@ -62,7 +62,7 @@ void Cpu6502<TBus>::bcc0() {
 
 template <class TBus>
 void Cpu6502<TBus>::bcc1() {
-    relative1(getStatusFlag(Flags::Carry) == false);
+    relative1(_flagsHelper.get<Flag::Carry>() == false);
 }
 
 template <class TBus>
@@ -73,7 +73,7 @@ void Cpu6502<TBus>::bcs0() {
 
 template <class TBus>
 void Cpu6502<TBus>::bcs1() {
-    relative1(getStatusFlag(Flags::Carry) == true);
+    relative1(_flagsHelper.get<Flag::Carry>() == true);
 }
 
 template <class TBus>
@@ -84,7 +84,7 @@ void Cpu6502<TBus>::bne0() {
 
 template <class TBus>
 void Cpu6502<TBus>::bne1() {
-    relative1(getStatusFlag(Flags::Zero) == false);
+    relative1(_flagsHelper.get<Flag::Zero>() == false);
 }
 
 template <class TBus>
@@ -95,7 +95,7 @@ void Cpu6502<TBus>::beq0() {
 
 template <class TBus>
 void Cpu6502<TBus>::beq1() {
-    relative1(getStatusFlag(Flags::Zero) == true);
+    relative1(_flagsHelper.get<Flag::Zero>() == true);
 }
 
 #endif /* Cpu6502Branch_s_hpp */

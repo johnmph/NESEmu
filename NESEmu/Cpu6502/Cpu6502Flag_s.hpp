@@ -11,12 +11,13 @@
 
 
 template <class TBus>
-void Cpu6502<TBus>::clearFlag(Flags flag) {
+template <typename Cpu6502<TBus>::Flag flag>
+void Cpu6502<TBus>::clearFlag() {
     // Must be called before changing flag to delay possible interrupts after the next instruction
     // See http://wiki.nesdev.com/w/index.php/CPU_interrupts
     fetchOpcode();
     
-    clearStatusFlags({ flag });
+    _flagsHelper.clear<flag>();
 }
 
 template <class TBus>
@@ -27,7 +28,7 @@ void Cpu6502<TBus>::clc0() {
 
 template <class TBus>
 void Cpu6502<TBus>::clc1() {
-    clearFlag(Flags::Carry);
+    clearFlag<Flag::Carry>();
 }
 
 template <class TBus>
@@ -38,7 +39,7 @@ void Cpu6502<TBus>::cld0() {
 
 template <class TBus>
 void Cpu6502<TBus>::cld1() {
-    clearFlag(Flags::DecimalMode);
+    clearFlag<Flag::DecimalMode>();
 }
 
 template <class TBus>
@@ -49,7 +50,7 @@ void Cpu6502<TBus>::cli0() {
 
 template <class TBus>
 void Cpu6502<TBus>::cli1() {
-    clearFlag(Flags::InterruptDisable);
+    clearFlag<Flag::InterruptDisable>();
 }
 
 template <class TBus>
@@ -60,16 +61,17 @@ void Cpu6502<TBus>::clv0() {
 
 template <class TBus>
 void Cpu6502<TBus>::clv1() {
-    clearFlag(Flags::Overflow);
+    clearFlag<Flag::Overflow>();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::setFlag(Flags flag) {
+template <typename Cpu6502<TBus>::Flag flag>
+void Cpu6502<TBus>::setFlag() {
     // Must be called before changing flag to delay possible interrupts after the next instruction
     // See http://wiki.nesdev.com/w/index.php/CPU_interrupts
     fetchOpcode();
     
-    setStatusFlag(flag, true);
+    _flagsHelper.set<flag>(true);
 }
 
 template <class TBus>
@@ -80,7 +82,7 @@ void Cpu6502<TBus>::sec0() {
 
 template <class TBus>
 void Cpu6502<TBus>::sec1() {
-    setFlag(Flags::Carry);
+    setFlag<Flag::Carry>();
 }
 
 template <class TBus>
@@ -91,7 +93,7 @@ void Cpu6502<TBus>::sed0() {
 
 template <class TBus>
 void Cpu6502<TBus>::sed1() {
-    setFlag(Flags::DecimalMode);
+    setFlag<Flag::DecimalMode>();
 }
 
 template <class TBus>
@@ -102,7 +104,7 @@ void Cpu6502<TBus>::sei0() {
 
 template <class TBus>
 void Cpu6502<TBus>::sei1() {
-    setFlag(Flags::InterruptDisable);
+    setFlag<Flag::InterruptDisable>();
 }
 
 #endif /* Cpu6502Flag_s_hpp */
