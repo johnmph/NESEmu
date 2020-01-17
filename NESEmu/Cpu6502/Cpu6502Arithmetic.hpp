@@ -213,22 +213,26 @@ void incAbsX1();
 void incAbsX2();
 void incAbsX3();
 
-void decrement0(OpcodeInstruction nextInstruction, uint8_t data);
-void decrement1(uint8_t &data);
+void decrement1(OpcodeInstruction nextInstruction, uint8_t data);
+void decrement2(uint8_t &data);
 
 void dex0();
 void dex1();
+void dex2();
 
 void dey0();
 void dey1();
+void dey2();
 
-void increment0(OpcodeInstruction nextInstruction, uint8_t data);
-void increment1(uint8_t &data);
+void increment1(OpcodeInstruction nextInstruction, uint8_t data);
+void increment2(uint8_t &data);
 
 void inx0();
 void inx1();
+void inx2();
 
 void iny0();
 void iny1();
+void iny2();
 
 #endif /* Cpu6502Arithmetic_hpp */

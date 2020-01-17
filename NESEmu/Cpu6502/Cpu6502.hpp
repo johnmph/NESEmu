@@ -11,7 +11,6 @@
 
 #include <cstdint>
 #include <initializer_list>
-// TODO: ecrire des unit tests, par instruction et via le log nestest
 
 
 // We can't put that inside Cpu6502 because Cpu6502 is a templated class and we specialize some methods here (Cannot specialize a member of an unspecialized template)
@@ -106,6 +105,7 @@ struct Cpu6502 {
     
     // Program flow
     void incrementProgramCounter();
+    void updateProgramCounter();
     void fetchData();
     void fetchOpcode(OpcodeInstruction nextInstruction);
     void fetchOpcode();
@@ -118,6 +118,8 @@ struct Cpu6502 {
     int getCurrentInterruptVectorsIndex();
     
     // Stack
+    void startStackOperation();
+    void stopStackOperation();
     void pushToStack0(uint8_t data);
     void pushToStack1();
     void pullFromStack0();
@@ -171,8 +173,8 @@ struct Cpu6502 {
     uint8_t _dataOutput;
     bool _readWrite;
     
-    uint8_t _addressBusLowRegister;
-    uint8_t _addressBusHighRegister;
+    bool _programCounterNeedsIncrement;
+    
     uint8_t _predecode;
     uint8_t _instruction;
     

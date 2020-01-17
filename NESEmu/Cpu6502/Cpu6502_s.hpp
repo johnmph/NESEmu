@@ -9,7 +9,8 @@
 #ifndef Cpu6502_s_hpp
 #define Cpu6502_s_hpp
 
-// TODO: par apres, si assez rapide, decomposer en 2 phases de cycles (Ph0, Ph1, Ph2, RDY, R/W, Sync)
+// TODO: par apres, si assez rapide, decomposer en 2 phases de cycles (Ph0, Ph1, Ph2, RDY, R/W, Sync) : pas besoin car le cpu a besoin de ca car tout arrive en meme temps (les signaux electriques) mais ici on peut appeler des fonctions a la suite des autres dans le meme cycle et simuler ca
+// TODO: en vrai, le PC est incrementé (s'il le doit) au debut du cycle suivant et non a la fin du cycle en cours), on peut emuler ca en ayant un bool pcIncrement qu'on met true dans incrementPC et au debut de clock on fait PC += pcIncrement; (en gros, car il faut gérer le carry du pclow) : ok fait
 // TODO: pour une meilleure emulation des opcodes (surtout les undocumented), peut etre faire comme le vrai cpu et decomposer l'opcode en lignes actives/non actives pour activer certains circuits (appeler certaines fonctions) : https://www.pagetable.com/?p=39
 #include "Cpu6502_s_data.hpp"
 
@@ -112,12 +113,15 @@ void FlagsHelper::refresh(uint8_t data) {
 // Public interface
 
 template <class TBus>
-Cpu6502<TBus>::Cpu6502(TBus &bus) : _flagsHelper(_statusFlags, _aluCarry, _aluOverflow), _bus(bus), _programCounterLow(0xFF), _programCounterHigh(0), _stackPointer(0), _accumulator(0xAA), _xIndex(0), _yIndex(0), _statusFlags(0x20), _resetRequested(false), _nmiLine(true), _nmiLinePrevious(true), _nmiRequested(false), _irqLine(true), _irqRequested(false), _interruptRequested(false) {
+Cpu6502<TBus>::Cpu6502(TBus &bus) : _flagsHelper(_statusFlags, _aluCarry, _aluOverflow), _bus(bus), _programCounterLow(0xFF), _programCounterHigh(0), _stackPointer(0), _accumulator(0xAA), _xIndex(0), _yIndex(0), _statusFlags(0x20), _programCounterNeedsIncrement(false), _resetRequested(false), _nmiLine(true), _nmiLinePrevious(true), _nmiRequested(false), _irqLine(true), _irqRequested(false), _interruptRequested(false) {
     reset(false);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::clock() {
+    // Update PC
+    updateProgramCounter();
+    
     // Execute current stage
     (this->*_currentInstruction)();
     
@@ -210,8 +214,16 @@ void Cpu6502<TBus>::writeDataBus(uint8_t low, uint8_t high, uint8_t data) {
 
 template <class TBus>
 void Cpu6502<TBus>::incrementProgramCounter() {
-    ++_programCounterLow;
-    _programCounterHigh += (_programCounterLow == 0);
+    // In real 6502, PC is not increment in end of current cycle but in beginning of next cycle
+    _programCounterNeedsIncrement = true;
+}
+
+template <class TBus>
+void Cpu6502<TBus>::updateProgramCounter() {
+    _programCounterLow += _programCounterNeedsIncrement;
+    _programCounterHigh += ((_programCounterLow == 0) && (_programCounterNeedsIncrement == true));
+    
+    _programCounterNeedsIncrement = false;
 }
 
 template <class TBus>
@@ -308,33 +320,45 @@ int Cpu6502<TBus>::getCurrentInterruptVectorsIndex() {
 // Stack
 
 template <class TBus>
+void Cpu6502<TBus>::startStackOperation() {
+    _addressBusLow = _stackPointer;
+    _addressBusHigh = _stackPageNumber;
+}
+
+template <class TBus>
+void Cpu6502<TBus>::stopStackOperation() {
+    _stackPointer = _addressBusLow;
+}
+
+template <class TBus>
 void Cpu6502<TBus>::pushToStack0(uint8_t data) {
-    _dataOutput = data;
-    writeDataBus(_stackPointer, _stackPageNumber, data);
+    // Write to stack
+    writeDataBus(_addressBusLow, _addressBusHigh, data);
     
-    // Removing 1 from inputDataLatch using ALU (Add 0xFF without carry set like true 6502)
+    // Removing 1 from address low using ALU (Add 0xFF without carry set like true 6502)
     _aInput = 0xFF;
-    _bInput = _stackPointer;
+    _bInput = _addressBusLow;
     aluPerformSum(false, false);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::pushToStack1() {
-    _stackPointer = _adderHold;
+    _addressBusLow = _adderHold;
 }
 
 template <class TBus>
 void Cpu6502<TBus>::pullFromStack0() {
     // Adding 1 with stackPointer using ALU (Add 0 with carry set like true 6502)
     _aInput = 0x0;
-    _bInput = _stackPointer;
+    _bInput = _addressBusLow;
     aluPerformSum(false, true);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::pullFromStack1() {
-    _stackPointer = _adderHold;
-    readDataBus(_stackPointer, _stackPageNumber);
+    //_addressBusLow = _adderHold;
+    //readDataBus(_addressBusLow, _addressBusHigh);
+    readDataBus(_adderHold, _addressBusHigh);
 }
 
 // ALU
@@ -351,43 +375,30 @@ void Cpu6502<TBus>::aluPerformSum(bool decimalEnable, bool carryIn) {//TODO: ter
     
     _aluOverflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;
     _aluCarry = add & 0x100;
-    _aluHalfCarry = false;  // TODO: voir ce que c'est et si c'est utilisé
+    //_aluHalfCarry = ((_aInput & 0xF) + (_bInput & 0xF) + carryIn) & 0x10;  // TODO: voir ce que c'est et si c'est utilisé
 }
 
 template <class TBus>
-void Cpu6502<TBus>::aluPerformAnd() {//TODO: terminer
+void Cpu6502<TBus>::aluPerformAnd() {
     _adderHold = _aInput & _bInput;
-    
-    //_aluOverflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;
-    //_aluCarry = false;
-    //_aluHalfCarry = false;  // TODO: voir ce que c'est et si c'est utilisé
 }
 
 template <class TBus>
-void Cpu6502<TBus>::aluPerformOr() {//TODO: terminer
+void Cpu6502<TBus>::aluPerformOr() {
     _adderHold = _aInput | _bInput;
-    
-    //_aluOverflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;
-    //_aluCarry = false;
-    //_aluHalfCarry = false;  // TODO: voir ce que c'est et si c'est utilisé
 }
 
 template <class TBus>
-void Cpu6502<TBus>::aluPerformEor() {//TODO: terminer
+void Cpu6502<TBus>::aluPerformEor() {
     _adderHold = _aInput ^ _bInput;
-    
-    //_aluOverflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;
-    //_aluCarry = false;
-    //_aluHalfCarry = false;  // TODO: voir ce que c'est et si c'est utilisé
 }
 
 template <class TBus>
-void Cpu6502<TBus>::aluPerformShiftRight(bool carryIn) {//TODO: terminer
+void Cpu6502<TBus>::aluPerformShiftRight(bool carryIn) {
     _adderHold = (_aInput >> 1) | (carryIn << 7);
     
-    //_aluOverflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;  // TODO: voir ici et pour les autres aussi
+    // In real 6502, it's not _aluCarry signal which is set but it's the first bit of DB bus which is used
     _aluCarry = _aInput & 0x1;
-    //_aluHalfCarry = false;  // TODO: voir ce que c'est et si c'est utilisé
 }
 
 #endif /* Cpu6502_s_hpp */

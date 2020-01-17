@@ -17,8 +17,8 @@ void Cpu6502<TBus>::aso0() {
     _currentInstruction = &Cpu6502::aso1;
     asl(_inputDataLatch);
     
-    // Write result back
-    //writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);//TODO: voir si mettre ca
+    // Write read memory back (like true 6502)
+    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
 }
 
 template <class TBus>
@@ -198,15 +198,15 @@ void Cpu6502<TBus>::asoIndY4() {
     zeroPageIndirectPostIndexedLoad1();
 }
 
-// RLO
+// RLA
 
 template <class TBus>
 void Cpu6502<TBus>::rla0() {
     _currentInstruction = &Cpu6502::rla1;
     rol(_inputDataLatch);
     
-    // Write result back
-    //writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);//TODO: voir si mettre ca
+    // Write read memory back (like true 6502)
+    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
 }
 
 template <class TBus>
@@ -393,8 +393,8 @@ void Cpu6502<TBus>::lse0() {
     _currentInstruction = &Cpu6502::lse1;
     lsr(_inputDataLatch);
     
-    // Write result back
-    //writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);//TODO: voir si mettre ca
+    // Write read memory back (like true 6502)
+    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
 }
 
 template <class TBus>
@@ -581,8 +581,8 @@ void Cpu6502<TBus>::rra0() {
     _currentInstruction = &Cpu6502::rra1;
     ror(_inputDataLatch);
     
-    // Write result back
-    //writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);//TODO: voir si mettre ca
+    // Write read memory back (like true 6502)
+    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
 }
 
 template <class TBus>
@@ -762,7 +762,6 @@ void Cpu6502<TBus>::rraIndY4() {
     _currentInstruction = &Cpu6502::rra0;
     zeroPageIndirectPostIndexedLoad1();
 }
-
 
 // AXS
 
@@ -985,7 +984,7 @@ void Cpu6502<TBus>::laxIndY4() {
     zeroPageIndirectPostIndexedLoad1();
 }
 
-// DCP
+// DCM
 
 template <class TBus>
 void Cpu6502<TBus>::dcm0() {
@@ -996,8 +995,8 @@ void Cpu6502<TBus>::dcm0() {
     _bInput = _inputDataLatch;
     aluPerformSum(false, false);
     
-    // Write result back
-    //writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);//TODO: voir si mettre ca
+    // Write read memory back (like true 6502)
+    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
 }
 
 template <class TBus>
@@ -1198,8 +1197,8 @@ void Cpu6502<TBus>::ins0() {
     _bInput = _inputDataLatch;
     aluPerformSum(false, true);
     
-    // Write result back
-    //writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);//TODO: voir si mettre ca
+    // Write read memory back (like true 6502)
+    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
 }
 
 template <class TBus>

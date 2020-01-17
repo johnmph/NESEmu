@@ -27,7 +27,7 @@ void Cpu6502<TBus>::jmpAbs1() {
 template <class TBus>
 void Cpu6502<TBus>::jmpAbs2() {
     // Set program counter
-    _programCounterLow = _addressBusLowRegister;
+    _programCounterLow = _adderHold;
     _programCounterHigh = _inputDataLatch;
     
     fetchOpcode();
@@ -51,31 +51,29 @@ template <class TBus>
 void Cpu6502<TBus>::jmpInd2() {
     _currentInstruction = &Cpu6502::jmpInd3;
     
-    // Adding 1 with addressBusLowRegister using ALU (Add 0 with carry set like true 6502)
-    _aInput = 0;
-    _bInput = _addressBusLowRegister;
-    aluPerformSum(false, true);
-    
-    // Save loaded addressBusHigh
-    _addressBusHighRegister = _inputDataLatch;  // TODO: voir si ca ou bien on garde addressBusHigh mais dans ce cas a quoi sert ce registre ? (et il y a d'autres endroit ou j'ai fait ca en ne gardant que le addressBusHigh, doit etre consistent)
-    
+    // Read address low (need to be put before ALU operation below because it need adderHold before incrementation)
     absoluteLoad();
+    
+    // Adding 1 to address low using ALU (Add 0 with carry set like true 6502)
+    _aInput = 0;
+    _bInput = _adderHold;
+    aluPerformSum(false, true);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::jmpInd3() {
     _currentInstruction = &Cpu6502::jmpInd4;
     
-    // Save addressBusLow
-    //_addressBusLowRegister = _inputDataLatch;
+    // Load address low in PC
     _programCounterLow = _inputDataLatch;
     
-    // Read addressBusHigh
-    readDataBus(_adderHold, _addressBusHighRegister);
+    // Read address high
+    readDataBus(_adderHold, _addressBusHigh);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::jmpInd4() {
+    // Load address high in PC
     _programCounterHigh = _inputDataLatch;
     
     fetchOpcode();
@@ -93,10 +91,11 @@ template <class TBus>
 void Cpu6502<TBus>::jsr1() {
     _currentInstruction = &Cpu6502::jsr2;
     
-    // Store ADL
-    _addressBusLowRegister = _inputDataLatch;
+    // Start stack operation (read of current cycle will read stack memory)
+    startStackOperation();
     
-    // ???
+    // Store address low in stack pointer
+    _stackPointer = _inputDataLatch;
 }
 
 template <class TBus>
@@ -105,6 +104,11 @@ void Cpu6502<TBus>::jsr2() {
     
     // Push PCH to stack
     pushToStack0(_programCounterHigh);
+    
+    // Removing 1 from inputDataLatch using ALU (Add 0xFF without carry set like true 6502)
+    _aInput = 0xFF;
+    _bInput = _addressBusLow;
+    aluPerformSum(false, false);
 }
 
 template <class TBus>
@@ -120,16 +124,20 @@ template <class TBus>
 void Cpu6502<TBus>::jsr4() {
     _currentInstruction = &Cpu6502::jsr5;
     
-    // Finish stack operation
-    pushToStack1();
+    // Don't finish stack operation because stack pointer is used to store address low and addressBusLow is set with PC to fetch address high
     
+    // Read address high
     fetchData();
 }
 
 template <class TBus>
 void Cpu6502<TBus>::jsr5() {
-    _programCounterLow = _addressBusLowRegister;
+    // Set program counter (address low was stored in stackPointer and address high was fetched in last cycle)
+    _programCounterLow = _stackPointer;
     _programCounterHigh = _inputDataLatch;
+    
+    // Restore stack pointer
+    _stackPointer = _adderHold;
     
     fetchOpcode();
 }
@@ -139,43 +147,6 @@ void Cpu6502<TBus>::nop0() {
     _currentInstruction = &Cpu6502::fetchOpcode;
     implied();
 }
-/*
-template <class TBus>
-void Cpu6502<TBus>::rts0() {
-    _currentInstruction = &Cpu6502::rts1;
-    
-    pullFromStack0();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rts1() {
-    _currentInstruction = &Cpu6502::rts2;
-    
-    pullFromStack1();
-    pullFromStack0();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rts2() {
-    _currentInstruction = &Cpu6502::rts3;
-    
-    _programCounterLow = _inputDataLatch;
-    
-    pullFromStack1();
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rts3() {    // TODO: verifier car pas de read/write
-    _currentInstruction = &Cpu6502::rts4;
-    
-    _programCounterHigh = _inputDataLatch;
-}
-
-template <class TBus>
-void Cpu6502<TBus>::rts4() {    // TODO: verifier
-    incrementProgramCounter();
-    fetchOpcode();
-}*/
 
 template <class TBus>
 void Cpu6502<TBus>::rts0() {
@@ -187,6 +158,9 @@ void Cpu6502<TBus>::rts0() {
 template <class TBus>
 void Cpu6502<TBus>::rts1() {
     _currentInstruction = &Cpu6502::rts2;
+    
+    // Start stack operation (read of current cycle will read stack memory)
+    startStackOperation();
     
     pullFromStack0();
 }
@@ -204,7 +178,9 @@ void Cpu6502<TBus>::rts3() {
     _currentInstruction = &Cpu6502::rts4;
     
     _programCounterLow = _inputDataLatch;
+    
     pullFromStack1();
+    stopStackOperation();
 }
 
 template <class TBus>

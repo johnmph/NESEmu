@@ -659,8 +659,8 @@ void Cpu6502<TBus>::dec0() {
     _bInput = _inputDataLatch;
     aluPerformSum(false, false);
     
-    // Write result back
-    //writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);//TODO: voir si mettre ca
+    // Write read memory back (like true 6502)
+    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
 }
 
 template <class TBus>
@@ -755,8 +755,8 @@ void Cpu6502<TBus>::inc0() {
     _bInput = _inputDataLatch;
     aluPerformSum(false, true);
     
-    // Write result back
-    //writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);//TODO: voir si mettre ca
+    // Write read memory back (like true 6502)
+    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
 }
 
 template <class TBus>
@@ -843,98 +843,113 @@ void Cpu6502<TBus>::incAbsX3() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::decrement0(OpcodeInstruction nextInstruction, uint8_t data) {
-    _currentInstruction = nextInstruction;
-    
+void Cpu6502<TBus>::decrement1(OpcodeInstruction nextInstruction, uint8_t data) {
     // Removing 1 from data using ALU (Add 0xFF without carry set like true 6502, data is loaded on A register because it comes from SB signal)
     _aInput = data;
     _bInput = 0xFF;
     aluPerformSum(false, false);
     
-    // Write result back
-    //writeDataBus(_addressBusLow, _addressBusHigh, data);//TODO: voir si mettre ca
-    
-    implied();  // TODO: si on met la ligne du dessus, il faut retirer celle ci
+    // Fetch opcode during performing ALU
+    fetchOpcode(nextInstruction);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::decrement1(uint8_t &data) {
+void Cpu6502<TBus>::decrement2(uint8_t &data) {
     // Write result back
     data = _adderHold;
     
     // Update status
     _flagsHelper.refresh<Flag::Zero, Flag::Negative>(_adderHold);
     
-    // Fetch opcode
-    fetchOpcode();
+    // Execute instruction
+    decodeOpcodeAndExecuteInstruction();
 }
 
 template <class TBus>
 void Cpu6502<TBus>::dex0() {
-    decrement0(&Cpu6502::dex1, _xIndex);
+    _currentInstruction = &Cpu6502::dex1;
+    implied();
 }
 
 template <class TBus>
 void Cpu6502<TBus>::dex1() {
-    decrement1(_xIndex);
+    decrement1(&Cpu6502::dex2, _xIndex);
+}
+
+template <class TBus>
+void Cpu6502<TBus>::dex2() {
+    decrement2(_xIndex);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::dey0() {
-    decrement0(&Cpu6502::dey1, _yIndex);
+    _currentInstruction = &Cpu6502::dey1;
+    implied();
 }
 
 template <class TBus>
 void Cpu6502<TBus>::dey1() {
-    decrement1(_yIndex);
+    decrement1(&Cpu6502::dey2, _yIndex);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::increment0(OpcodeInstruction nextInstruction, uint8_t data) {
-    _currentInstruction = nextInstruction;
-    
+void Cpu6502<TBus>::dey2() {
+    decrement2(_yIndex);
+}
+
+template <class TBus>
+void Cpu6502<TBus>::increment1(OpcodeInstruction nextInstruction, uint8_t data) {
     // Adding 1 with data using ALU (Add 0 with carry set like true 6502, data is loaded on B register, it comes from SB/DB signal because only A register can be set to 0)
     _aInput = 0x0;
     _bInput = data;
     aluPerformSum(false, true);
     
-    // Write result back
-    //writeDataBus(_addressBusLow, _addressBusHigh, data);//TODO: voir si mettre ca
-    
-    implied();  // TODO: si on met la ligne du dessus, il faut retirer celle ci
+    // Fetch opcode during performing ALU
+    fetchOpcode(nextInstruction);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::increment1(uint8_t &data) {
+void Cpu6502<TBus>::increment2(uint8_t &data) {
     // Write result back
     data = _adderHold;
     
     // Update status
     _flagsHelper.refresh<Flag::Zero, Flag::Negative>(_adderHold);
     
-    // Fetch opcode
-    fetchOpcode();
+    // Execute instruction
+    decodeOpcodeAndExecuteInstruction();
 }
 
 template <class TBus>
 void Cpu6502<TBus>::inx0() {
-    increment0(&Cpu6502::inx1, _xIndex);
+    _currentInstruction = &Cpu6502::inx1;
+    implied();
 }
 
 template <class TBus>
 void Cpu6502<TBus>::inx1() {
-    increment1(_xIndex);
+    increment1(&Cpu6502::inx2, _xIndex);
+}
+
+template <class TBus>
+void Cpu6502<TBus>::inx2() {
+    increment2(_xIndex);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::iny0() {
-    increment0(&Cpu6502::iny1, _yIndex);
+    _currentInstruction = &Cpu6502::iny1;
+    implied();
 }
 
 template <class TBus>
 void Cpu6502<TBus>::iny1() {
-    increment1(_yIndex);
+    increment1(&Cpu6502::iny2, _yIndex);
 }
 
+template <class TBus>
+void Cpu6502<TBus>::iny2() {
+    increment2(_yIndex);
+}
 
 #endif /* Cpu6502Arithmetic_s_hpp */

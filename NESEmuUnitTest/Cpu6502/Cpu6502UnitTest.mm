@@ -13,7 +13,7 @@
 #include <string>
 #include "Cpu6502/Cpu6502.hpp"
 
-
+// TODO: ecrire des unit tests, par instruction et via le log nestest
 @interface Cpu6502UnitTest : XCTestCase
 
 @end
@@ -174,7 +174,7 @@ namespace {
         }
         
         // Check state with current Cpu state
-        XCTAssertTrue(cpu6502.getAddressBus() == state.pc);         // We don't use PC because it can be incremented before testing it)
+        XCTAssertTrue(cpu6502.getProgramCounter() == state.pc);
         XCTAssertTrue(cpu6502.getDataBus() == state.data[0]);
         
         // There are some instructions which delay the result on the next cycle because they use the decodeOpcodeAndExecuteInstruction cycle to write the result back, for these instructions, we need to process one extra cycle to have correct result

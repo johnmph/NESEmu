@@ -8,7 +8,7 @@
 
 #ifndef Cpu6502Logic_s_hpp
 #define Cpu6502Logic_s_hpp
-// TODO: voir pour les flags
+
 
 template <class TBus>
 void Cpu6502<TBus>::logic1() {
@@ -614,8 +614,8 @@ void Cpu6502<TBus>::aslMemory0() {
     _currentInstruction = &Cpu6502::aslMemory1;
     asl(_inputDataLatch);
     
-    // Write result back
-    //writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);//TODO: voir si mettre ca
+    // Write read memory back (like true 6502)
+    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
 }
 
 template <class TBus>
@@ -732,8 +732,8 @@ void Cpu6502<TBus>::lsrMemory0() {
     _currentInstruction = &Cpu6502::lsrMemory1;
     lsr(_inputDataLatch);
     
-    // Write result back
-    //writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);//TODO: voir si mettre ca
+    // Write read memory back (like true 6502)
+    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
 }
 
 template <class TBus>
@@ -851,8 +851,8 @@ void Cpu6502<TBus>::rolMemory0() {
     _currentInstruction = &Cpu6502::rolMemory1;
     rol(_inputDataLatch);
     
-    // Write result back
-    //writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);//TODO: voir si mettre ca
+    // Write read memory back (like true 6502)
+    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
 }
 
 template <class TBus>
@@ -968,8 +968,8 @@ void Cpu6502<TBus>::rorMemory0() {
     _currentInstruction = &Cpu6502::rorMemory1;
     ror(_inputDataLatch);
     
-    // Write result back
-    //writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);//TODO: voir si mettre ca
+    // Write read memory back (like true 6502)
+    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
 }
 
 template <class TBus>

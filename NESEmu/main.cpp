@@ -223,7 +223,7 @@ int main(int argc, const char * argv[]) {/*
     for (int x = 0; x <= 1789773/*26555*/; ++x) {
         cpu.clock();
         
-        //std::cout << std::hex << cpu.getAddressBus() << " " << cpu.getProgramCounter() << " A:" << static_cast<int>(cpu._accumulator) << " X:" << static_cast<int>(cpu._xIndex) << " Y:" << static_cast<int>(cpu._yIndex) << " P:" << static_cast<int>(cpu._statusFlags) << " SP:" << static_cast<int>(cpu._stackPointer) << " Cycle: " << std::dec << x << "\n";
+        //std::cout << std::hex << cpu.getAddressBus() << " " << cpu.getProgramCounter() << " A:" << static_cast<int>(cpu._accumulator) << " X:" << static_cast<int>(cpu._xIndex) << " Y:" << static_cast<int>(cpu._yIndex) << " P:" << static_cast<int>(cpu._statusFlags) << " SP:" << static_cast<int>(cpu._stackPointer) << " Cycle: " << std::dec << x - 1 << "\n";
     }
     
     /*

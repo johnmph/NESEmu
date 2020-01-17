@@ -29,22 +29,25 @@ void Cpu6502<TBus>::absolute0() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absolute1() {
+void Cpu6502<TBus>::absolute1() {/*
     // Read high byte of address and increment PC
     fetchData();
     
-    // Store low byte of address in addressBusLowRegister
-    _addressBusLowRegister = _inputDataLatch;
+    // 6502 uses the ALU to store temporary low byte of address (by adding 0 to it to keep its value in adderHold)
+    _aInput = 0;
+    _bInput = _inputDataLatch;
+    aluPerformSum(false, false);*/
+    absoluteIndexed1(0);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::absoluteLoad() {
-    readDataBus(_addressBusLowRegister, _inputDataLatch);
+    readDataBus(_adderHold, _inputDataLatch);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::absoluteStore(uint8_t data) {
-    writeDataBus(_addressBusLowRegister, _inputDataLatch, data);
+    writeDataBus(_adderHold, _inputDataLatch, data);
 }
 
 template <class TBus>
@@ -134,7 +137,8 @@ void Cpu6502<TBus>::absoluteIndexed0() {
 
 template <class TBus>
 void Cpu6502<TBus>::absoluteIndexed1(uint8_t index) {
-    absolute0();
+    // Read high byte of address and increment PC
+    fetchData();
     
     // Adding index with inputDataLatch using ALU
     _aInput = index;
@@ -250,8 +254,10 @@ void Cpu6502<TBus>::zeroPagePreIndexedIndirect3() {
     // Read high byte of address
     zeroPageIndexedLoad();
     
-    // Store low byte of address in addressBusLowRegister
-    _addressBusLowRegister = _inputDataLatch;
+    // 6502 uses the ALU to store temporary low byte of address (by adding 0 to it to keep its value in adderHold)
+    _aInput = 0;
+    _bInput = _inputDataLatch;
+    aluPerformSum(false, false);
 }
 
 template <class TBus>

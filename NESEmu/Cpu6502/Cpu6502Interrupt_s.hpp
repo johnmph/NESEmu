@@ -29,7 +29,7 @@ void Cpu6502<TBus>::brk0() {    // TODO: a voir
     
     // Read data without increment PC for reset, nmi and irq
     if (_interruptRequested == true) {
-        readDataBus(_programCounterLow, _programCounterHigh);   // TODO: voir si vraiment nécessaire avec le nouveau systeme
+        readDataBus(_programCounterLow, _programCounterHigh);
         
         return;
     }
@@ -43,6 +43,7 @@ void Cpu6502<TBus>::brk1() {
     _currentInstruction = &Cpu6502::brk2;
     
     // Push PCH to stack
+    startStackOperation();
     pushToStack0(_programCounterHigh);
 }
 
@@ -70,6 +71,7 @@ void Cpu6502<TBus>::brk4() {
     
     // Finish stack operation
     pushToStack1();
+    stopStackOperation();
     
     // Disable interrupts
     _flagsHelper.set<Flag::InterruptDisable>(true);
@@ -117,6 +119,8 @@ template <class TBus>
 void Cpu6502<TBus>::rti1() {
     _currentInstruction = &Cpu6502::rti2;
     
+    // Start stack operation (read of current cycle will read stack memory)
+    startStackOperation();
     pullFromStack0();
 }
 
@@ -145,6 +149,7 @@ void Cpu6502<TBus>::rti4() {
     _programCounterLow = _inputDataLatch;
     
     pullFromStack1();
+    stopStackOperation();
 }
 
 template <class TBus>
