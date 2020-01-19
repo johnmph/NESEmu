@@ -651,20 +651,23 @@ void Cpu6502<TBus>::cpyAbs2() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dec0() {
-    _currentInstruction = &Cpu6502::dec1;
-    
+void Cpu6502<TBus>::dec(uint8_t data) {
     // Removing 1 from data using ALU (Add 0xFF without carry set like true 6502, data is loaded on B register because it comes from DB signal)
     _aInput = 0xFF;
-    _bInput = _inputDataLatch;
+    _bInput = data;
     aluPerformSum(false, false);
-    
-    // Write read memory back (like true 6502)
-    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::dec1() {
+void Cpu6502<TBus>::inc(uint8_t data) {
+    // Adding 1 with inputDataLatch using ALU (Add 0 with carry set like true 6502, data is loaded on B register because it comes from DB signal)
+    _aInput = 0x0;
+    _bInput = data;
+    aluPerformSum(false, true);
+}
+
+template <class TBus>
+void Cpu6502<TBus>::incdecMemory1() {
     _currentInstruction = &Cpu6502::fetchOpcode;
     
     // Write result back
@@ -675,6 +678,16 @@ void Cpu6502<TBus>::dec1() {
 }
 
 template <class TBus>
+void Cpu6502<TBus>::decMemory0() {
+    _currentInstruction = &Cpu6502::incdecMemory1;
+    
+    dec(_inputDataLatch);
+    
+    // Write read memory back (like true 6502)
+    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
+}
+
+template <class TBus>
 void Cpu6502<TBus>::decZp0() {
     _currentInstruction = &Cpu6502::decZp1;
     zeroPage();
@@ -682,7 +695,7 @@ void Cpu6502<TBus>::decZp0() {
 
 template <class TBus>
 void Cpu6502<TBus>::decZp1() {
-    _currentInstruction = &Cpu6502::dec0;
+    _currentInstruction = &Cpu6502::decMemory0;
     zeroPageLoad();
 }
 
@@ -700,7 +713,7 @@ void Cpu6502<TBus>::decZpX1() {
 
 template <class TBus>
 void Cpu6502<TBus>::decZpX2() {
-    _currentInstruction = &Cpu6502::dec0;
+    _currentInstruction = &Cpu6502::decMemory0;
     zeroPageIndexedLoad();
 }
 
@@ -718,7 +731,7 @@ void Cpu6502<TBus>::decAbs1() {
 
 template <class TBus>
 void Cpu6502<TBus>::decAbs2() {
-    _currentInstruction = &Cpu6502::dec0;
+    _currentInstruction = &Cpu6502::decMemory0;
     absoluteLoad();
 }
 
@@ -742,32 +755,18 @@ void Cpu6502<TBus>::decAbsX2() {
 
 template <class TBus>
 void Cpu6502<TBus>::decAbsX3() {
-    _currentInstruction = &Cpu6502::dec0;
+    _currentInstruction = &Cpu6502::decMemory0;
     absoluteIndexedLoad1();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::inc0() {
-    _currentInstruction = &Cpu6502::inc1;
+void Cpu6502<TBus>::incMemory0() {
+    _currentInstruction = &Cpu6502::incdecMemory1;
     
-    // Adding 1 with inputDataLatch using ALU (Add 0 with carry set like true 6502, data is loaded on B register because it comes from DB signal)
-    _aInput = 0x0;
-    _bInput = _inputDataLatch;
-    aluPerformSum(false, true);
+    inc(_inputDataLatch);
     
     // Write read memory back (like true 6502)
     writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::inc1() {
-    _currentInstruction = &Cpu6502::fetchOpcode;
-    
-    // Write result back
-    writeDataBus(_addressBusLow, _addressBusHigh, _adderHold);
-    
-    // Update status
-    _flagsHelper.refresh<Flag::Zero, Flag::Negative>(_adderHold);
 }
 
 template <class TBus>
@@ -778,7 +777,7 @@ void Cpu6502<TBus>::incZp0() {
 
 template <class TBus>
 void Cpu6502<TBus>::incZp1() {
-    _currentInstruction = &Cpu6502::inc0;
+    _currentInstruction = &Cpu6502::incMemory0;
     zeroPageLoad();
 }
 
@@ -796,7 +795,7 @@ void Cpu6502<TBus>::incZpX1() {
 
 template <class TBus>
 void Cpu6502<TBus>::incZpX2() {
-    _currentInstruction = &Cpu6502::inc0;
+    _currentInstruction = &Cpu6502::incMemory0;
     zeroPageIndexedLoad();
 }
 
@@ -814,7 +813,7 @@ void Cpu6502<TBus>::incAbs1() {
 
 template <class TBus>
 void Cpu6502<TBus>::incAbs2() {
-    _currentInstruction = &Cpu6502::inc0;
+    _currentInstruction = &Cpu6502::incMemory0;
     absoluteLoad();
 }
 
@@ -838,23 +837,12 @@ void Cpu6502<TBus>::incAbsX2() {
 
 template <class TBus>
 void Cpu6502<TBus>::incAbsX3() {
-    _currentInstruction = &Cpu6502::inc0;
+    _currentInstruction = &Cpu6502::incMemory0;
     absoluteIndexedLoad1();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::decrement1(OpcodeInstruction nextInstruction, uint8_t data) {
-    // Removing 1 from data using ALU (Add 0xFF without carry set like true 6502, data is loaded on A register because it comes from SB signal)
-    _aInput = data;
-    _bInput = 0xFF;
-    aluPerformSum(false, false);
-    
-    // Fetch opcode during performing ALU
-    fetchOpcode(nextInstruction);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::decrement2(uint8_t &data) {
+void Cpu6502<TBus>::incdecRegister2(uint8_t &data) {
     // Write result back
     data = _adderHold;
     
@@ -863,6 +851,14 @@ void Cpu6502<TBus>::decrement2(uint8_t &data) {
     
     // Execute instruction
     decodeOpcodeAndExecuteInstruction();
+}
+
+template <class TBus>
+void Cpu6502<TBus>::decRegister1(OpcodeInstruction nextInstruction, uint8_t data) {
+    dec(data);
+    
+    // Fetch opcode during performing ALU
+    fetchOpcode(nextInstruction);
 }
 
 template <class TBus>
@@ -873,12 +869,12 @@ void Cpu6502<TBus>::dex0() {
 
 template <class TBus>
 void Cpu6502<TBus>::dex1() {
-    decrement1(&Cpu6502::dex2, _xIndex);
+    decRegister1(&Cpu6502::dex2, _xIndex);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::dex2() {
-    decrement2(_xIndex);
+    incdecRegister2(_xIndex);
 }
 
 template <class TBus>
@@ -889,35 +885,20 @@ void Cpu6502<TBus>::dey0() {
 
 template <class TBus>
 void Cpu6502<TBus>::dey1() {
-    decrement1(&Cpu6502::dey2, _yIndex);
+    decRegister1(&Cpu6502::dey2, _yIndex);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::dey2() {
-    decrement2(_yIndex);
+    incdecRegister2(_yIndex);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::increment1(OpcodeInstruction nextInstruction, uint8_t data) {
-    // Adding 1 with data using ALU (Add 0 with carry set like true 6502, data is loaded on B register, it comes from SB/DB signal because only A register can be set to 0)
-    _aInput = 0x0;
-    _bInput = data;
-    aluPerformSum(false, true);
+void Cpu6502<TBus>::incRegister1(OpcodeInstruction nextInstruction, uint8_t data) {
+    inc(data);
     
     // Fetch opcode during performing ALU
     fetchOpcode(nextInstruction);
-}
-
-template <class TBus>
-void Cpu6502<TBus>::increment2(uint8_t &data) {
-    // Write result back
-    data = _adderHold;
-    
-    // Update status
-    _flagsHelper.refresh<Flag::Zero, Flag::Negative>(_adderHold);
-    
-    // Execute instruction
-    decodeOpcodeAndExecuteInstruction();
 }
 
 template <class TBus>
@@ -928,12 +909,12 @@ void Cpu6502<TBus>::inx0() {
 
 template <class TBus>
 void Cpu6502<TBus>::inx1() {
-    increment1(&Cpu6502::inx2, _xIndex);
+    incRegister1(&Cpu6502::inx2, _xIndex);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::inx2() {
-    increment2(_xIndex);
+    incdecRegister2(_xIndex);
 }
 
 template <class TBus>
@@ -944,12 +925,12 @@ void Cpu6502<TBus>::iny0() {
 
 template <class TBus>
 void Cpu6502<TBus>::iny1() {
-    increment1(&Cpu6502::iny2, _yIndex);
+    incRegister1(&Cpu6502::iny2, _yIndex);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::iny2() {
-    increment2(_yIndex);
+    incdecRegister2(_yIndex);
 }
 
 #endif /* Cpu6502Arithmetic_s_hpp */

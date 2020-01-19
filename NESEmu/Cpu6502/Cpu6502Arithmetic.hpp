@@ -175,8 +175,12 @@ void cpyAbs1();
 void cpyAbs2();
 void cpyAbs3();
 
-void dec0();
-void dec1();
+void dec(uint8_t data);
+void inc(uint8_t data);
+
+void incdecMemory1();
+
+void decMemory0();
 
 void decZp0();
 void decZp1();
@@ -194,8 +198,7 @@ void decAbsX1();
 void decAbsX2();
 void decAbsX3();
 
-void inc0();
-void inc1();
+void incMemory0();
 
 void incZp0();
 void incZp1();
@@ -213,8 +216,9 @@ void incAbsX1();
 void incAbsX2();
 void incAbsX3();
 
-void decrement1(OpcodeInstruction nextInstruction, uint8_t data);
-void decrement2(uint8_t &data);
+void incdecRegister2(uint8_t &data);
+
+void decRegister1(OpcodeInstruction nextInstruction, uint8_t data);
 
 void dex0();
 void dex1();
@@ -224,8 +228,7 @@ void dey0();
 void dey1();
 void dey2();
 
-void increment1(OpcodeInstruction nextInstruction, uint8_t data);
-void increment2(uint8_t &data);
+void incRegister1(OpcodeInstruction nextInstruction, uint8_t data);
 
 void inx0();
 void inx1();

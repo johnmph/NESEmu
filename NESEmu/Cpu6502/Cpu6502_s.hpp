@@ -10,7 +10,6 @@
 #define Cpu6502_s_hpp
 
 // TODO: par apres, si assez rapide, decomposer en 2 phases de cycles (Ph0, Ph1, Ph2, RDY, R/W, Sync) : pas besoin car le cpu a besoin de ca car tout arrive en meme temps (les signaux electriques) mais ici on peut appeler des fonctions a la suite des autres dans le meme cycle et simuler ca
-// TODO: en vrai, le PC est incrementé (s'il le doit) au debut du cycle suivant et non a la fin du cycle en cours), on peut emuler ca en ayant un bool pcIncrement qu'on met true dans incrementPC et au debut de clock on fait PC += pcIncrement; (en gros, car il faut gérer le carry du pclow) : ok fait
 // TODO: pour une meilleure emulation des opcodes (surtout les undocumented), peut etre faire comme le vrai cpu et decomposer l'opcode en lignes actives/non actives pour activer certains circuits (appeler certaines fonctions) : https://www.pagetable.com/?p=39
 #include "Cpu6502_s_data.hpp"
 
@@ -122,6 +121,9 @@ void Cpu6502<TBus>::clock() {
     // Update PC
     updateProgramCounter();
     
+    // Initialize dataOutput to emulate possible bus conflict which cause a low level to win (it is like an AND operation)
+    //_dataOutput = 0xFF;
+    
     // Execute current stage
     (this->*_currentInstruction)();
     
@@ -203,7 +205,8 @@ void Cpu6502<TBus>::writeDataBus(uint8_t low, uint8_t high, uint8_t data) {
     _addressBusLow = low;
     _addressBusHigh = high;
     
-    // Write data bus
+    // Write data bus, emulate possible bus conflict which cause a low level to win (it is like an AND operation)
+    //_dataOutput &= data;
     _dataOutput = data;
     
     // Set R/W to write

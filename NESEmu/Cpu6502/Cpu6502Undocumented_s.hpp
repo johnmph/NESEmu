@@ -775,6 +775,8 @@ template <class TBus>
 void Cpu6502<TBus>::axsZp1() {
     _currentInstruction = &Cpu6502::fetchOpcode;
     zeroPageStore(_accumulator & _xIndex);
+    //staZp1();     // TODO: par apres voir pour ca (avec le dataOutput &=)
+    //stxZp1();
 }
 
 template <class TBus>
@@ -793,6 +795,9 @@ template <class TBus>
 void Cpu6502<TBus>::axsZpY2() {
     _currentInstruction = &Cpu6502::fetchOpcode;
     zeroPageIndexedStore(_accumulator & _xIndex);
+    // Need to be first because there is no zero page Y addressing mode for STA, so STX will correct the address
+    //staZpX2();       // TODO: par apres voir pour ca (avec le dataOutput &=)
+    //stxZpY2();
 }
 
 template <class TBus>
@@ -811,6 +816,8 @@ template <class TBus>
 void Cpu6502<TBus>::axsAbs2() {
     _currentInstruction = &Cpu6502::fetchOpcode;
     absoluteStore(_accumulator & _xIndex);
+    //staAbs2();         // TODO: par apres voir pour ca (avec le dataOutput &=)
+    //stxAbs2();
 }
 
 template <class TBus>
@@ -841,6 +848,9 @@ template <class TBus>
 void Cpu6502<TBus>::axsIndX4() {
     _currentInstruction = &Cpu6502::fetchOpcode;
     zeroPagePreIndexedIndirectStore(_accumulator & _xIndex);
+    // Need to be first because there is no indirect X addressing mode for STX, so STA will correct the address
+    //stxAbs2();             // TODO: par apres voir pour ca (avec le dataOutput &=)
+    //staIndX4();
 }
 
 // LAX
@@ -990,10 +1000,7 @@ template <class TBus>
 void Cpu6502<TBus>::dcm0() {
     _currentInstruction = &Cpu6502::dcm1;
     
-    // Removing 1 from inputDataLatch using ALU (Add 0xFF without carry set like true 6502)
-    _aInput = 0xFF;
-    _bInput = _inputDataLatch;
-    aluPerformSum(false, false);
+    dec(_inputDataLatch);
     
     // Write read memory back (like true 6502)
     writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
@@ -1192,10 +1199,7 @@ template <class TBus>
 void Cpu6502<TBus>::ins0() {
     _currentInstruction = &Cpu6502::ins1;
     
-    // Adding 1 with inputDataLatch using ALU (Add 0 with carry set like true 6502)
-    _aInput = 0;
-    _bInput = _inputDataLatch;
-    aluPerformSum(false, true);
+    inc(_inputDataLatch);
     
     // Write read memory back (like true 6502)
     writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);

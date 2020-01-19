@@ -24,7 +24,7 @@ void Cpu6502<TBus>::reset1() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::brk0() {    // TODO: a voir
+void Cpu6502<TBus>::brk0() {    // TODO: a voir pour interrupt
     _currentInstruction = &Cpu6502::brk1;
     
     // Read data without increment PC for reset, nmi and irq
@@ -73,9 +73,6 @@ void Cpu6502<TBus>::brk4() {
     pushToStack1();
     stopStackOperation();
     
-    // Disable interrupts
-    _flagsHelper.set<Flag::InterruptDisable>(true);
-    
     // Calculate interrupt vectors index
     _interruptVectorsIndex = getCurrentInterruptVectorsIndex(); // TODO: peut etre plus besoin de ca car maintenant on a addressBusLow/High et on peut l'incrementer dans brk5
     
@@ -87,8 +84,13 @@ template <class TBus>
 void Cpu6502<TBus>::brk5() {
     _currentInstruction = &Cpu6502::brk6;
     
-    // Store low byte of address to programCounterLow
-    _programCounterLow = _inputDataLatch;
+    // Disable interrupts
+    _flagsHelper.set<Flag::InterruptDisable>(true);
+    
+    // 6502 uses the ALU to store temporary low byte of address (by adding 0 to it to keep its value in adderHold)
+    _aInput = 0;
+    _bInput = _inputDataLatch;
+    aluPerformSum(false, false);
     
     // Read high byte of address
     readDataBus(_interruptVectors[_interruptVectorsIndex][0] + 1, _interruptVectors[_interruptVectorsIndex][1]);
@@ -96,7 +98,8 @@ void Cpu6502<TBus>::brk5() {
 
 template <class TBus>
 void Cpu6502<TBus>::brk6() {
-    // Store high byte of address to programCounterHigh
+    // Set PC
+    _programCounterLow = _adderHold;
     _programCounterHigh = _inputDataLatch;
     
     // TODO: voir si ok : (car il faut voir si c'est possible d'avoir la detection d'une interruption dans le stage du brk)
@@ -109,7 +112,7 @@ void Cpu6502<TBus>::brk6() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::rti0() {    // TODO: a voir
+void Cpu6502<TBus>::rti0() {
     _currentInstruction = &Cpu6502::rti1;
     
     implied();
@@ -146,14 +149,19 @@ template <class TBus>
 void Cpu6502<TBus>::rti4() {
     _currentInstruction = &Cpu6502::rti5;
     
-    _programCounterLow = _inputDataLatch;
-    
     pullFromStack1();
     stopStackOperation();
+    
+    // 6502 uses the ALU to store temporary low byte of address (by adding 0 to it to keep its value in adderHold)
+    _aInput = 0;
+    _bInput = _inputDataLatch;
+    aluPerformSum(false, false);
 }
 
 template <class TBus>
 void Cpu6502<TBus>::rti5() {
+    // Set PC
+    _programCounterLow = _adderHold;
     _programCounterHigh = _inputDataLatch;
     
     fetchOpcode();

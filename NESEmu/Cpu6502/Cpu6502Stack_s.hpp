@@ -45,7 +45,7 @@ void Cpu6502<TBus>::php1() {
     _currentInstruction = &Cpu6502::php2;
     
     startStackOperation();
-    pushToStack0(_statusFlags | (1 << static_cast<int>(Flag::Break))); // TODO: voir si ok
+    pushToStack0(_statusFlags | (1 << static_cast<int>(Flag::Break)));
 }
 
 template <class TBus>
