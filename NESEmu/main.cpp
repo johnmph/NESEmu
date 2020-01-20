@@ -10,7 +10,7 @@
 #include <array>
 #include <fstream>
 #include <chrono>
-#include "Cpu6502/Cpu6502.hpp"
+#include "Cpu6502/Chip.hpp"
 
 
 struct Bus {
@@ -62,7 +62,7 @@ int main(int argc, const char * argv[]) {/*
     return 0;
     */
     Bus bus;
-    Cpu6502<Bus> cpu(bus);
+    Cpu6502::Chip<Bus> cpu(bus);
     /*
     cpu._aInput = 0x50;
     cpu._bInput = 0x10;

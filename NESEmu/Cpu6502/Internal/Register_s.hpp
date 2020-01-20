@@ -1,17 +1,17 @@
 //
-//  Cpu6502Register_s.hpp
+//  Register_s.hpp
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 7/01/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef Cpu6502Register_s_hpp
-#define Cpu6502Register_s_hpp
+#ifndef Cpu6502_Internal_Register_s_hpp
+#define Cpu6502_Internal_Register_s_hpp
 
 
 template <class TBus>
-void Cpu6502<TBus>::transfert0(uint8_t source, uint8_t &destination) {
+void Chip<TBus>::transfert0(uint8_t source, uint8_t &destination) {
     destination = source;
     
     // Update status
@@ -22,68 +22,68 @@ void Cpu6502<TBus>::transfert0(uint8_t source, uint8_t &destination) {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::tax0() {
-    _currentInstruction = &Cpu6502::tax1;
+void Chip<TBus>::tax0() {
+    _currentInstruction = &Chip::tax1;
     implied();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::tax1() {
+void Chip<TBus>::tax1() {
     transfert0(_accumulator, _xIndex);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::txa0() {
-    _currentInstruction = &Cpu6502::txa1;
+void Chip<TBus>::txa0() {
+    _currentInstruction = &Chip::txa1;
     implied();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::txa1() {
+void Chip<TBus>::txa1() {
     transfert0(_xIndex, _accumulator);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::tay0() {
-    _currentInstruction = &Cpu6502::tay1;
+void Chip<TBus>::tay0() {
+    _currentInstruction = &Chip::tay1;
     implied();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::tay1() {
+void Chip<TBus>::tay1() {
     transfert0(_accumulator, _yIndex);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::tya0() {
-    _currentInstruction = &Cpu6502::tya1;
+void Chip<TBus>::tya0() {
+    _currentInstruction = &Chip::tya1;
     implied();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::tya1() {
+void Chip<TBus>::tya1() {
     transfert0(_yIndex, _accumulator);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::tsx0() {
-    _currentInstruction = &Cpu6502::tsx1;
+void Chip<TBus>::tsx0() {
+    _currentInstruction = &Chip::tsx1;
     implied();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::tsx1() {
+void Chip<TBus>::tsx1() {
     transfert0(_stackPointer, _xIndex);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::txs0() {
-    _currentInstruction = &Cpu6502::txs1;
+void Chip<TBus>::txs0() {
+    _currentInstruction = &Chip::txs1;
     implied();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::txs1() {
+void Chip<TBus>::txs1() {
     _stackPointer = _xIndex;
     
     // No flag changed during this instruction
@@ -91,4 +91,4 @@ void Cpu6502<TBus>::txs1() {
     fetchOpcode();
 }
 
-#endif /* Cpu6502Register_s_hpp */
+#endif /* Cpu6502_Internal_Register_s_hpp */

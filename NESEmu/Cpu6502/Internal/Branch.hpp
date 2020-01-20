@@ -1,13 +1,13 @@
 //
-//  Cpu6502Branch.hpp
+//  Branch.hpp
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 7/01/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef Cpu6502Branch_hpp
-#define Cpu6502Branch_hpp
+#ifndef Cpu6502_Internal_Branch_hpp
+#define Cpu6502_Internal_Branch_hpp
 
 
 // BPL, BMI, BVC, BVS, BCC, BCS, BNE, BEQ
@@ -36,4 +36,4 @@ void bne1();
 void beq0();
 void beq1();
 
-#endif /* Cpu6502Branch_hpp */
+#endif /* Cpu6502_Internal_Branch_hpp */

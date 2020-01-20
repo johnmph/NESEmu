@@ -1,13 +1,13 @@
 //
-//  Cpu6502Stack.hpp
+//  Stack.hpp
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 7/01/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef Cpu6502Stack_hpp
-#define Cpu6502Stack_hpp
+#ifndef Cpu6502_Internal_Stack_hpp
+#define Cpu6502_Internal_Stack_hpp
 
 
 // PHA, PHP, PLA, PLP
@@ -30,4 +30,4 @@ void plp1();
 void plp2();
 void plp3();
 
-#endif /* Cpu6502Stack_hpp */
+#endif /* Cpu6502_Internal_Stack_hpp */

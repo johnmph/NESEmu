@@ -1,13 +1,13 @@
 //
-//  Cpu6502Undocumented.hpp
+//  Undocumented.hpp
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 12/01/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef Cpu6502Undocumented_hpp
-#define Cpu6502Undocumented_hpp
+#ifndef Cpu6502_Internal_Undocumented_hpp
+#define Cpu6502_Internal_Undocumented_hpp
 
 
 // See https://www.pagetable.com/?p=39
@@ -355,4 +355,4 @@ void kil();
 // LAS = AND + TAX + TXS
 
 
-#endif /* Cpu6502Undocumented_hpp */
+#endif /* Cpu6502_Internal_Undocumented_hpp */

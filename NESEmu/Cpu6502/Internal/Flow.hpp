@@ -1,13 +1,13 @@
 //
-//  Cpu6502Flow.hpp
+//  Flow.hpp
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 7/01/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef Cpu6502Flow_hpp
-#define Cpu6502Flow_hpp
+#ifndef Cpu6502_Internal_Flow_hpp
+#define Cpu6502_Internal_Flow_hpp
 
 
 // JMP, JSR, NOP, RTS
@@ -39,4 +39,4 @@ void rts4();
 
 void unofficial();
 
-#endif /* Cpu6502Flow_hpp */
+#endif /* Cpu6502_Internal_Flow_hpp */

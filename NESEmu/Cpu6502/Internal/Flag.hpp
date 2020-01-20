@@ -1,13 +1,13 @@
 //
-//  Cpu6502Flag.hpp
+//  Flag.hpp
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 7/01/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef Cpu6502Flag_hpp
-#define Cpu6502Flag_hpp
+#ifndef Cpu6502_Internal_Flag_hpp
+#define Cpu6502_Internal_Flag_hpp
 
 
 // CLC, CLD, CLI, CLV, SEC, SED, SEI
@@ -39,4 +39,4 @@ void sed1();
 void sei0();
 void sei1();
 
-#endif /* Cpu6502Flag_hpp */
+#endif /* Cpu6502_Internal_Flag_hpp */

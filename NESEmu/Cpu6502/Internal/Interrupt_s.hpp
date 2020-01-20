@@ -1,31 +1,31 @@
 //
-//  Cpu6502Interrupt_s.hpp
+//  Interrupt_s.hpp
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 7/01/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef Cpu6502Interrupt_s_hpp
-#define Cpu6502Interrupt_s_hpp
+#ifndef Cpu6502_Internal_Interrupt_s_hpp
+#define Cpu6502_Internal_Interrupt_s_hpp
 
 
 template <class TBus>
-void Cpu6502<TBus>::reset0() {
+void Chip<TBus>::reset0() {
     // If reset line stays low, continue this step, else go to next step
     if (_resetLine == true) {
-        _currentInstruction = &Cpu6502::reset1;
+        _currentInstruction = &Chip::reset1;
     }
 }
 
 template <class TBus>
-void Cpu6502<TBus>::reset1() {
-    _currentInstruction = &Cpu6502::brk0;
+void Chip<TBus>::reset1() {
+    _currentInstruction = &Chip::brk0;
 }
 
 template <class TBus>
-void Cpu6502<TBus>::brk0() {    // TODO: a voir pour interrupt
-    _currentInstruction = &Cpu6502::brk1;
+void Chip<TBus>::brk0() {    // TODO: a voir pour interrupt
+    _currentInstruction = &Chip::brk1;
     
     // Read data without increment PC for reset, nmi and irq
     if (_interruptRequested == true) {
@@ -39,8 +39,8 @@ void Cpu6502<TBus>::brk0() {    // TODO: a voir pour interrupt
 }
 
 template <class TBus>
-void Cpu6502<TBus>::brk1() {
-    _currentInstruction = &Cpu6502::brk2;
+void Chip<TBus>::brk1() {
+    _currentInstruction = &Chip::brk2;
     
     // Push PCH to stack
     startStackOperation();
@@ -48,26 +48,26 @@ void Cpu6502<TBus>::brk1() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::brk2() {
-    _currentInstruction = &Cpu6502::brk3;
+void Chip<TBus>::brk2() {
+    _currentInstruction = &Chip::brk3;
     
-    // Finish stack operation and push PCL to stack
+    // Push PCL to stack
     pushToStack1();
     pushToStack0(_programCounterLow);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::brk3() {
-    _currentInstruction = &Cpu6502::brk4;
+void Chip<TBus>::brk3() {
+    _currentInstruction = &Chip::brk4;
     
-    // Finish stack operation and push Status to stack
+    // Push status flags to stack
     pushToStack1();
     pushToStack0(_statusFlags | ((_interruptRequested == false) << static_cast<int>(Flag::Break))); // TODO: voir si ok
 }
 
 template <class TBus>
-void Cpu6502<TBus>::brk4() {
-    _currentInstruction = &Cpu6502::brk5;
+void Chip<TBus>::brk4() {
+    _currentInstruction = &Chip::brk5;
     
     // Finish stack operation
     pushToStack1();
@@ -81,8 +81,8 @@ void Cpu6502<TBus>::brk4() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::brk5() {
-    _currentInstruction = &Cpu6502::brk6;
+void Chip<TBus>::brk5() {
+    _currentInstruction = &Chip::brk6;
     
     // Disable interrupts
     _flagsHelper.set<Flag::InterruptDisable>(true);
@@ -97,7 +97,7 @@ void Cpu6502<TBus>::brk5() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::brk6() {
+void Chip<TBus>::brk6() {
     // Set PC
     _programCounterLow = _adderHold;
     _programCounterHigh = _inputDataLatch;
@@ -112,15 +112,15 @@ void Cpu6502<TBus>::brk6() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::rti0() {
-    _currentInstruction = &Cpu6502::rti1;
+void Chip<TBus>::rti0() {
+    _currentInstruction = &Chip::rti1;
     
     implied();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::rti1() {
-    _currentInstruction = &Cpu6502::rti2;
+void Chip<TBus>::rti1() {
+    _currentInstruction = &Chip::rti2;
     
     // Start stack operation (read of current cycle will read stack memory)
     startStackOperation();
@@ -128,27 +128,31 @@ void Cpu6502<TBus>::rti1() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::rti2() {
-    _currentInstruction = &Cpu6502::rti3;
+void Chip<TBus>::rti2() {
+    _currentInstruction = &Chip::rti3;
     
+    // Pull status flag from stack
     pullFromStack1();
     pullFromStack0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::rti3() {
-    _currentInstruction = &Cpu6502::rti4;
+void Chip<TBus>::rti3() {
+    _currentInstruction = &Chip::rti4;
     
-    _statusFlags = (_inputDataLatch & FlagsHelper::getDisableMask<Flag::Break>()) | (1 << static_cast<int>(Flag::UnusedHigh));
+    // Set status flag
+    _statusFlags = (_inputDataLatch & _Detail::FlagsHelper::getDisableMask<Flag::Break>()) | (1 << static_cast<int>(Flag::UnusedHigh));
     
+    // Pull PCL from stack
     pullFromStack1();
     pullFromStack0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::rti4() {
-    _currentInstruction = &Cpu6502::rti5;
+void Chip<TBus>::rti4() {
+    _currentInstruction = &Chip::rti5;
     
+    // Pull PCH from stack and finish stack operation, need to put before ALU operation because adderHold holds stackPointer
     pullFromStack1();
     stopStackOperation();
     
@@ -159,7 +163,7 @@ void Cpu6502<TBus>::rti4() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::rti5() {
+void Chip<TBus>::rti5() {
     // Set PC
     _programCounterLow = _adderHold;
     _programCounterHigh = _inputDataLatch;
@@ -167,4 +171,4 @@ void Cpu6502<TBus>::rti5() {
     fetchOpcode();
 }
 
-#endif /* Cpu6502Interrupt_s_hpp */
+#endif /* Cpu6502_Internal_Interrupt_s_hpp */

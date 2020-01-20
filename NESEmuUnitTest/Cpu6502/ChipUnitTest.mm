@@ -1,5 +1,5 @@
 //
-//  Cpu6502UnitTest.m
+//  ChipUnitTest.mm
 //  NESEmuUnitTest
 //
 //  Created by Jonathan Baliko on 14/01/20.
@@ -11,14 +11,14 @@
 #include <array>
 #include <fstream>
 #include <string>
-#include "Cpu6502/Cpu6502.hpp"
+#include "Cpu6502/Chip.hpp"
 
 // TODO: ecrire des unit tests, par instruction et via le log nestest
-@interface Cpu6502UnitTest : XCTestCase
+@interface ChipUnitTest : XCTestCase
 
 @end
 
-@implementation Cpu6502UnitTest
+@implementation ChipUnitTest
 
 namespace {
     
@@ -111,7 +111,7 @@ namespace {
     
     
     Bus bus;
-    Cpu6502<Bus> cpu6502(bus);
+    Cpu6502::Chip<Bus> cpu6502(bus);
     
 }
 

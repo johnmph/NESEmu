@@ -1,13 +1,13 @@
 //
-//  Cpu6502AddressingMode.hpp
+//  AddressingMode.hpp
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 7/01/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef Cpu6502AddressingMode_hpp
-#define Cpu6502AddressingMode_hpp
+#ifndef Cpu6502_Internal_AddressingMode_hpp
+#define Cpu6502_Internal_AddressingMode_hpp
 
 
 void implied();
@@ -51,4 +51,4 @@ void zeroPageIndirectPostIndexedLoad1();
 void zeroPageIndirectPostIndexedStore0();
 void zeroPageIndirectPostIndexedStore1(uint8_t data);
 
-#endif /* Cpu6502AddressingMode_hpp */
+#endif /* Cpu6502_Internal_AddressingMode_hpp */

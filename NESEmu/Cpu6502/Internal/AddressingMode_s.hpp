@@ -1,35 +1,35 @@
 //
-//  Cpu6502AddressingMode_s.hpp
+//  AddressingMode_s.hpp
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 7/01/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef Cpu6502AddressingMode_s_hpp
-#define Cpu6502AddressingMode_s_hpp
+#ifndef Cpu6502_Internal_AddressingMode_s_hpp
+#define Cpu6502_Internal_AddressingMode_s_hpp
 
 
 template <class TBus>
-void Cpu6502<TBus>::implied() {
+void Chip<TBus>::implied() {
     // In implied addressing mode, there is a unused read which doesn't increment PC (but we need to do this to update address bus with current PC incremented by last step)
     readDataBus(_programCounterLow, _programCounterHigh);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::immediate() {
+void Chip<TBus>::immediate() {
     // Read one data and increment PC
     fetchData();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absolute0() {
+void Chip<TBus>::absolute0() {
     // Read low byte of address and increment PC
     fetchData();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absolute1() {/*
+void Chip<TBus>::absolute1() {/*
     // Read high byte of address and increment PC
     fetchData();
     
@@ -41,39 +41,39 @@ void Cpu6502<TBus>::absolute1() {/*
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absoluteLoad() {
+void Chip<TBus>::absoluteLoad() {
     readDataBus(_adderHold, _inputDataLatch);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absoluteStore(uint8_t data) {
+void Chip<TBus>::absoluteStore(uint8_t data) {
     writeDataBus(_adderHold, _inputDataLatch, data);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPage() {
+void Chip<TBus>::zeroPage() {
     // Read low byte of address and increment PC
     fetchData();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPageLoad() {
+void Chip<TBus>::zeroPageLoad() {
     readDataBus(_inputDataLatch, 0);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPageStore(uint8_t data) {
+void Chip<TBus>::zeroPageStore(uint8_t data) {
     writeDataBus(_inputDataLatch, 0, data);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::relative0() {
+void Chip<TBus>::relative0() {
     // Read offset and increment PC
     fetchData();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::relative1(bool condition) { // TODO: voir les interruptions avec les opcode de branchement
+void Chip<TBus>::relative1(bool condition) { // TODO: voir les interruptions avec les opcode de branchement
     if (condition == true) {
         // Adding offset with programCounterLow using ALU
         _aInput = _inputDataLatch;
@@ -84,7 +84,7 @@ void Cpu6502<TBus>::relative1(bool condition) { // TODO: voir les interruptions 
         readDataBus(_programCounterLow, _programCounterHigh);
         
         // Set next instruction
-        _currentInstruction = &Cpu6502::relativeBranch0;
+        _currentInstruction = &Chip::relativeBranch0;
         
         return;
     }
@@ -94,7 +94,7 @@ void Cpu6502<TBus>::relative1(bool condition) { // TODO: voir les interruptions 
 }
 
 template <class TBus>
-void Cpu6502<TBus>::relativeBranch0() {
+void Chip<TBus>::relativeBranch0() {
     _programCounterLow = _adderHold;
     
     // bInput must be programCounterLow and aInput the offset
@@ -103,7 +103,7 @@ void Cpu6502<TBus>::relativeBranch0() {
         readDataBus(_programCounterLow, _programCounterHigh);
         
         // Correct PCH in next instruction
-        _currentInstruction = &Cpu6502::relativeBranch1;
+        _currentInstruction = &Chip::relativeBranch1;
         
         return;
     }
@@ -114,11 +114,11 @@ void Cpu6502<TBus>::relativeBranch0() {
     // And http://wiki.nesdev.com/w/index.php/CPU_interrupts
     //fetchOpcode();
     fetchData();                                // TODO: soit on fait ainsi mais alors si le signal d'interruption est arreté avant la fin de l'instruction suivante, l'interruption ne sera pas executée car pas détectée (seulement pour IRQ, le nmi est detecté), si ce n'est pas ainsi en reel, il faut aussi faire un checkInterrupt et setter le flag _interruptRequested ici
-    _currentInstruction = &Cpu6502::decodeOpcodeAndExecuteInstruction;
+    _currentInstruction = &Chip::decodeOpcodeAndExecuteInstruction;
 }
 
 template <class TBus>
-void Cpu6502<TBus>::relativeBranch1() {
+void Chip<TBus>::relativeBranch1() {
     // Correct programCounterHigh
     if (_bInput & 0x80) {
         ++_programCounterHigh;
@@ -131,12 +131,12 @@ void Cpu6502<TBus>::relativeBranch1() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absoluteIndexed0() {
+void Chip<TBus>::absoluteIndexed0() {
     absolute0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absoluteIndexed1(uint8_t index) {
+void Chip<TBus>::absoluteIndexed1(uint8_t index) {
     // Read high byte of address and increment PC
     fetchData();
     
@@ -147,17 +147,17 @@ void Cpu6502<TBus>::absoluteIndexed1(uint8_t index) {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absoluteIndexedX1() {
+void Chip<TBus>::absoluteIndexedX1() {
     absoluteIndexed1(_xIndex);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absoluteIndexedY1() {
+void Chip<TBus>::absoluteIndexedY1() {
     absoluteIndexed1(_yIndex);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absoluteIndexedLoad0(OpcodeInstruction nextInstruction) {
+void Chip<TBus>::absoluteIndexedLoad0(OpcodeInstruction nextInstruction) {
     // If we don't need to correct inputDataLatch (address high), skip next instruction
     if (_aluCarry == false) {
         _currentInstruction = nextInstruction;
@@ -173,12 +173,12 @@ void Cpu6502<TBus>::absoluteIndexedLoad0(OpcodeInstruction nextInstruction) {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absoluteIndexedLoad1() {
+void Chip<TBus>::absoluteIndexedLoad1() {
     readDataBus(_addressBusLow, _adderHold);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absoluteIndexedStore0() {
+void Chip<TBus>::absoluteIndexedStore0() {
     // Load data
     readDataBus(_adderHold, _inputDataLatch);
     
@@ -189,17 +189,17 @@ void Cpu6502<TBus>::absoluteIndexedStore0() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::absoluteIndexedStore1(uint8_t data) {
+void Chip<TBus>::absoluteIndexedStore1(uint8_t data) {
     writeDataBus(_addressBusLow, _adderHold, data);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPageIndexed0() {
+void Chip<TBus>::zeroPageIndexed0() {
     zeroPage();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPageIndexed1(uint8_t index) {
+void Chip<TBus>::zeroPageIndexed1(uint8_t index) {
     zeroPageLoad();
     
     // Adding index with inputDataLatch using ALU
@@ -209,37 +209,37 @@ void Cpu6502<TBus>::zeroPageIndexed1(uint8_t index) {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPageIndexedX1() {
+void Chip<TBus>::zeroPageIndexedX1() {
     zeroPageIndexed1(_xIndex);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPageIndexedY1() {
+void Chip<TBus>::zeroPageIndexedY1() {
     zeroPageIndexed1(_yIndex);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPageIndexedLoad() {
+void Chip<TBus>::zeroPageIndexedLoad() {
     readDataBus(_adderHold, 0);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPageIndexedStore(uint8_t data) {
+void Chip<TBus>::zeroPageIndexedStore(uint8_t data) {
     writeDataBus(_adderHold, 0, data);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPagePreIndexedIndirect0() {
+void Chip<TBus>::zeroPagePreIndexedIndirect0() {
     zeroPageIndexed0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPagePreIndexedIndirect1() {
+void Chip<TBus>::zeroPagePreIndexedIndirect1() {
     zeroPageIndexedX1();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPagePreIndexedIndirect2() {
+void Chip<TBus>::zeroPagePreIndexedIndirect2() {
     // Read low byte of address
     zeroPageIndexedLoad();
     
@@ -250,7 +250,7 @@ void Cpu6502<TBus>::zeroPagePreIndexedIndirect2() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPagePreIndexedIndirect3() {
+void Chip<TBus>::zeroPagePreIndexedIndirect3() {
     // Read high byte of address
     zeroPageIndexedLoad();
     
@@ -261,22 +261,22 @@ void Cpu6502<TBus>::zeroPagePreIndexedIndirect3() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPagePreIndexedIndirectLoad() {
+void Chip<TBus>::zeroPagePreIndexedIndirectLoad() {
     absoluteLoad();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPagePreIndexedIndirectStore(uint8_t data) {
+void Chip<TBus>::zeroPagePreIndexedIndirectStore(uint8_t data) {
     absoluteStore(data);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPageIndirectPostIndexed0() {
+void Chip<TBus>::zeroPageIndirectPostIndexed0() {
     zeroPageIndexed0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPageIndirectPostIndexed1() {
+void Chip<TBus>::zeroPageIndirectPostIndexed1() {
     // Read low byte of address
     zeroPageLoad();
     
@@ -287,7 +287,7 @@ void Cpu6502<TBus>::zeroPageIndirectPostIndexed1() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPageIndirectPostIndexed2() {
+void Chip<TBus>::zeroPageIndirectPostIndexed2() {
     // Read high byte of address
     zeroPageIndexedLoad();
     
@@ -298,23 +298,23 @@ void Cpu6502<TBus>::zeroPageIndirectPostIndexed2() {
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPageIndirectPostIndexedLoad0(OpcodeInstruction nextInstruction) {
+void Chip<TBus>::zeroPageIndirectPostIndexedLoad0(OpcodeInstruction nextInstruction) {
     absoluteIndexedLoad0(nextInstruction);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPageIndirectPostIndexedLoad1() {
+void Chip<TBus>::zeroPageIndirectPostIndexedLoad1() {
     absoluteIndexedLoad1();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPageIndirectPostIndexedStore0() {
+void Chip<TBus>::zeroPageIndirectPostIndexedStore0() {
     absoluteIndexedStore0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::zeroPageIndirectPostIndexedStore1(uint8_t data) {
+void Chip<TBus>::zeroPageIndirectPostIndexedStore1(uint8_t data) {
     absoluteIndexedStore1(data);
 }
 
-#endif /* Cpu6502AddressingMode_s_hpp */
+#endif /* Cpu6502_Internal_AddressingMode_s_hpp */

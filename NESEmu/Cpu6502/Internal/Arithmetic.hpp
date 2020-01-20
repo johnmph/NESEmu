@@ -1,13 +1,13 @@
 //
-//  Cpu6502Arithmetic.hpp
+//  Arithmetic.hpp
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 7/01/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef Cpu6502Arithmetic_hpp
-#define Cpu6502Arithmetic_hpp
+#ifndef Cpu6502_Internal_Arithmetic_hpp
+#define Cpu6502_Internal_Arithmetic_hpp
 
 
 // ADC, SBC, CMP, CPX, CPY, DEC, INC, DEX, DEY, INX, INY
@@ -238,4 +238,4 @@ void iny0();
 void iny1();
 void iny2();
 
-#endif /* Cpu6502Arithmetic_hpp */
+#endif /* Cpu6502_Internal_Arithmetic_hpp */

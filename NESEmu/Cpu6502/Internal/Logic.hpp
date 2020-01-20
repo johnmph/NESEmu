@@ -1,13 +1,13 @@
 //
-//  Cpu6502Logic.hpp
+//  Logic.hpp
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 7/01/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef Cpu6502Logic_hpp
-#define Cpu6502Logic_hpp
+#ifndef Cpu6502_Internal_Logic_hpp
+#define Cpu6502_Internal_Logic_hpp
 
 
 // AND, ASL, BIT, EOR, LSR, ORA, ROL, ROR
@@ -227,4 +227,4 @@ void rorAbsX1();
 void rorAbsX2();
 void rorAbsX3();
 
-#endif /* Cpu6502Logic_hpp */
+#endif /* Cpu6502_Internal_Logic_hpp */

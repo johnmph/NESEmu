@@ -1,13 +1,13 @@
 //
-//  Cpu6502_s_data.hpp
+//  Data.hpp
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 6/01/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef Cpu6502_s_data_hpp
-#define Cpu6502_s_data_hpp
+#ifndef Cpu6502_Internal_Data_hpp
+#define Cpu6502_Internal_Data_hpp
 
 
 /*
@@ -35,529 +35,529 @@
  */
 
 template <class TBus>
-const typename Cpu6502<TBus>::OpcodeInstruction Cpu6502<TBus>::_opcodeInstructionFuncs[256] = {
+const typename Chip<TBus>::OpcodeInstruction Chip<TBus>::_opcodeInstructionFuncs[256] = {
     // $00 -> Brk
-    &Cpu6502::brk0,
+    &Chip::brk0,
     // $01 -> ORA ($az, X)
-    &Cpu6502::oraIndX0,
+    &Chip::oraIndX0,
     // $02 -> KIL
-    &Cpu6502::kil,
+    &Chip::kil,
     // $03 -> ASO* ($az, X)
-    &Cpu6502::asoIndX0,
+    &Chip::asoIndX0,
     // $04 -> NOP* $az
-    &Cpu6502::nopZp0,
+    &Chip::nopZp0,
     // $05 -> ORA $az
-    &Cpu6502::oraZp0,
+    &Chip::oraZp0,
     // $06 -> ASL $az
-    &Cpu6502::aslZp0,
+    &Chip::aslZp0,
     // $07 -> ASO* $az
-    &Cpu6502::asoZp0,
+    &Chip::asoZp0,
     // $08 -> PHP
-    &Cpu6502::php0,
+    &Chip::php0,
     // $09 -> ORA #$da
-    &Cpu6502::oraImm0,
+    &Chip::oraImm0,
     // $0A -> ASL (accumulator)
-    &Cpu6502::aslImm0,
+    &Chip::aslImm0,
     // $0B -> ?
-    &Cpu6502::unofficial,
+    &Chip::unofficial,
     // $0C -> NOP* $ahal
-    &Cpu6502::nopAbs0,
+    &Chip::nopAbs0,
     // $0D -> ORA $ahal
-    &Cpu6502::oraAbs0,
+    &Chip::oraAbs0,
     // $0E -> ASL $ahal
-    &Cpu6502::aslAbs0,
+    &Chip::aslAbs0,
     // $0F -> ASO* $ahal
-    &Cpu6502::asoAbs0,
+    &Chip::asoAbs0,
     // $10 -> BPL $of
-    &Cpu6502::bpl0,
+    &Chip::bpl0,
     // $11 -> ORA ($az), Y
-    &Cpu6502::oraIndY0,
+    &Chip::oraIndY0,
     // $12 -> KIL
-    &Cpu6502::kil,
+    &Chip::kil,
     // $13 -> ASO* ($az), Y
-    &Cpu6502::asoIndY0,
+    &Chip::asoIndY0,
     // $14 -> NOP* $az, X
-    &Cpu6502::nopZpX0,
+    &Chip::nopZpX0,
     // $15 -> ORA $az, X
-    &Cpu6502::oraZpX0,
+    &Chip::oraZpX0,
     // $16 -> ASL $az, X
-    &Cpu6502::aslZpX0,
+    &Chip::aslZpX0,
     // $17 -> ASO* $az, X
-    &Cpu6502::asoZpX0,
+    &Chip::asoZpX0,
     // $18 -> CLC
-    &Cpu6502::clc0,
+    &Chip::clc0,
     // $19 -> ORA $ahal, Y
-    &Cpu6502::oraAbsY0,
+    &Chip::oraAbsY0,
     // $1A -> NOP*
-    &Cpu6502::nop0,
+    &Chip::nop0,
     // $1B -> ASO* $ahal, Y
-    &Cpu6502::asoAbsY0,
+    &Chip::asoAbsY0,
     // $1C -> NOP* $ahal, X
-    &Cpu6502::nopAbsX0,
+    &Chip::nopAbsX0,
     // $1D -> ORA $ahal, X
-    &Cpu6502::oraAbsX0,
+    &Chip::oraAbsX0,
     // $1E -> ASL $ahal, X
-    &Cpu6502::aslAbsX0,
+    &Chip::aslAbsX0,
     // $1F -> ASO* $ahal, X
-    &Cpu6502::asoAbsX0,
+    &Chip::asoAbsX0,
     // $20 -> JSR
-    &Cpu6502::jsr0,
+    &Chip::jsr0,
     // $21 -> AND ($az, X)
-    &Cpu6502::andIndX0,
+    &Chip::andIndX0,
     // $22 -> KIL
-    &Cpu6502::kil,
+    &Chip::kil,
     // $23 -> RLA* ($az, X)
-    &Cpu6502::rlaIndX0,
+    &Chip::rlaIndX0,
     // $24 -> BIT $az
-    &Cpu6502::bitZp0,
+    &Chip::bitZp0,
     // $25 -> AND $az
-    &Cpu6502::andZp0,
+    &Chip::andZp0,
     // $26 -> ROL $az
-    &Cpu6502::rolZp0,
+    &Chip::rolZp0,
     // $27 -> RLA* $az
-    &Cpu6502::rlaZp0,
+    &Chip::rlaZp0,
     // $28 -> PLP
-    &Cpu6502::plp0,
+    &Chip::plp0,
     // $29 -> AND #$da
-    &Cpu6502::andImm0,
+    &Chip::andImm0,
     // $2A -> ROL (Accumulator)
-    &Cpu6502::rolImm0,
+    &Chip::rolImm0,
     // $2B -> ?
-    &Cpu6502::unofficial,
+    &Chip::unofficial,
     // $2C -> BIT $ahal
-    &Cpu6502::bitAbs0,
+    &Chip::bitAbs0,
     // $2D -> AND $ahal
-    &Cpu6502::andAbs0,
+    &Chip::andAbs0,
     // $2E -> ROL $ahal
-    &Cpu6502::rolAbs0,
+    &Chip::rolAbs0,
     // $2F -> RLA* $ahal
-    &Cpu6502::rlaAbs0,
+    &Chip::rlaAbs0,
     // $30 -> BMI $of
-    &Cpu6502::bmi0,
+    &Chip::bmi0,
     // $31 -> AND ($az), Y
-    &Cpu6502::andIndY0,
+    &Chip::andIndY0,
     // $32 -> KIL
-    &Cpu6502::kil,
+    &Chip::kil,
     // $33 -> RLA* ($az), Y
-    &Cpu6502::rlaIndY0,
+    &Chip::rlaIndY0,
     // $34 -> NOP* $az, X
-    &Cpu6502::nopZpX0,
+    &Chip::nopZpX0,
     // $35 -> AND $az, X
-    &Cpu6502::andZpX0,
+    &Chip::andZpX0,
     // $36 -> ROL $az, X
-    &Cpu6502::rolZpX0,
+    &Chip::rolZpX0,
     // $37 -> RLA* $az, X
-    &Cpu6502::rlaZpX0,
+    &Chip::rlaZpX0,
     // $38 -> SEC
-    &Cpu6502::sec0,
+    &Chip::sec0,
     // $39 -> AND $ahal, Y
-    &Cpu6502::andAbsY0,
+    &Chip::andAbsY0,
     // $3A -> NOP*
-    &Cpu6502::nop0,
+    &Chip::nop0,
     // $3B -> RLA* $ahal, Y
-    &Cpu6502::rlaAbsY0,
+    &Chip::rlaAbsY0,
     // $3C -> NOP* $ahal, X
-    &Cpu6502::nopAbsX0,
+    &Chip::nopAbsX0,
     // $3D -> AND $ahal, X
-    &Cpu6502::andAbsX0,
+    &Chip::andAbsX0,
     // $3E -> ROL $ahal, X
-    &Cpu6502::rolAbsX0,
+    &Chip::rolAbsX0,
     // $3F -> RLA* $ahal, X
-    &Cpu6502::rlaAbsX0,
+    &Chip::rlaAbsX0,
     // $40 -> RTI
-    &Cpu6502::rti0,
+    &Chip::rti0,
     // $41 -> EOR ($az, X)
-    &Cpu6502::eorIndX0,
+    &Chip::eorIndX0,
     // $42 -> KIL
-    &Cpu6502::kil,
+    &Chip::kil,
     // $43 -> LSE* ($az, X)
-    &Cpu6502::lseIndX0,
+    &Chip::lseIndX0,
     // $44 -> NOP* $az
-    &Cpu6502::nopZp0,
+    &Chip::nopZp0,
     // $45 -> EOR $az
-    &Cpu6502::eorZp0,
+    &Chip::eorZp0,
     // $46 -> LSR $az
-    &Cpu6502::lsrZp0,
+    &Chip::lsrZp0,
     // $47 -> LSE* $az
-    &Cpu6502::lseZp0,
+    &Chip::lseZp0,
     // $48 -> PHA
-    &Cpu6502::pha0,
+    &Chip::pha0,
     // $49 -> EOR #$da
-    &Cpu6502::eorImm0,
+    &Chip::eorImm0,
     // $4A -> LSR (Accumulator)
-    &Cpu6502::lsrImm0,
+    &Chip::lsrImm0,
     // $4B -> ALR* #$da
-    &Cpu6502::alrImm0,
+    &Chip::alrImm0,
     // $4C -> JMP $ahal
-    &Cpu6502::jmpAbs0,
+    &Chip::jmpAbs0,
     // $4D -> EOR $ahal
-    &Cpu6502::eorAbs0,
+    &Chip::eorAbs0,
     // $4E -> LSR $ahal
-    &Cpu6502::lsrAbs0,
+    &Chip::lsrAbs0,
     // $4F -> LSE* $ahal
-    &Cpu6502::lseAbs0,
+    &Chip::lseAbs0,
     // $50 -> BVC $of
-    &Cpu6502::bvc0,
+    &Chip::bvc0,
     // $51 -> EOR ($az), Y
-    &Cpu6502::eorIndY0,
+    &Chip::eorIndY0,
     // $52 -> KIL
-    &Cpu6502::kil,
+    &Chip::kil,
     // $53 -> LSE* ($az), Y
-    &Cpu6502::lseIndY0,
+    &Chip::lseIndY0,
     // $54 -> NOP* $az, X
-    &Cpu6502::nopZpX0,
+    &Chip::nopZpX0,
     // $55 -> EOR $az, X
-    &Cpu6502::eorZpX0,
+    &Chip::eorZpX0,
     // $56 -> LSR $az, X
-    &Cpu6502::lsrZpX0,
+    &Chip::lsrZpX0,
     // $57 -> LSE* $az, X
-    &Cpu6502::lseZpX0,
+    &Chip::lseZpX0,
     // $58 -> CLI
-    &Cpu6502::cli0,
+    &Chip::cli0,
     // $59 -> EOR $ahal, Y
-    &Cpu6502::eorAbsY0,
+    &Chip::eorAbsY0,
     // $5A -> NOP*
-    &Cpu6502::nop0,
+    &Chip::nop0,
     // $5B -> LSE* $ahal, Y
-    &Cpu6502::lseAbsY0,
+    &Chip::lseAbsY0,
     // $5C -> NOP* $ahal, X
-    &Cpu6502::nopAbsX0,
+    &Chip::nopAbsX0,
     // $5D -> EOR $ahal, X
-    &Cpu6502::eorAbsX0,
+    &Chip::eorAbsX0,
     // $5E -> LSR $ahal, X
-    &Cpu6502::lsrAbsX0,
+    &Chip::lsrAbsX0,
     // $5F -> LSE* $ahal, X
-    &Cpu6502::lseAbsX0,
+    &Chip::lseAbsX0,
     // $60 -> RTS
-    &Cpu6502::rts0,
+    &Chip::rts0,
     // $61 -> ADC ($az, X)
-    &Cpu6502::adcIndX0,
+    &Chip::adcIndX0,
     // $62 -> KIL
-    &Cpu6502::kil,
+    &Chip::kil,
     // $63 -> RRA* ($az, X)
-    &Cpu6502::rraIndX0,
+    &Chip::rraIndX0,
     // $64 -> NOP* $az
-    &Cpu6502::nopZp0,
+    &Chip::nopZp0,
     // $65 -> ADC $az
-    &Cpu6502::adcZp0,
+    &Chip::adcZp0,
     // $66 -> ROR $az
-    &Cpu6502::rorZp0,
+    &Chip::rorZp0,
     // $67 -> RRA* $az
-    &Cpu6502::rraZp0,
+    &Chip::rraZp0,
     // $68 -> PLA
-    &Cpu6502::pla0,
+    &Chip::pla0,
     // $69 -> ADC #$da
-    &Cpu6502::adcImm0,
+    &Chip::adcImm0,
     // $6A -> ROR (Accumulator)
-    &Cpu6502::rorImm0,
+    &Chip::rorImm0,
     // $6B -> ?
-    &Cpu6502::unofficial,
+    &Chip::unofficial,
     // $6C -> JMP ($ahal)
-    &Cpu6502::jmpInd0,
+    &Chip::jmpInd0,
     // $6D -> ADC $ahal
-    &Cpu6502::adcAbs0,
+    &Chip::adcAbs0,
     // $6E -> ROR $ahal
-    &Cpu6502::rorAbs0,
+    &Chip::rorAbs0,
     // $6F -> RRA* $ahal
-    &Cpu6502::rraAbs0,
+    &Chip::rraAbs0,
     // $70 -> BVS $of
-    &Cpu6502::bvs0,
+    &Chip::bvs0,
     // $71 -> ADC ($az), Y
-    &Cpu6502::adcIndY0,
+    &Chip::adcIndY0,
     // $72 -> KIL
-    &Cpu6502::kil,
+    &Chip::kil,
     // $73 -> RRA* ($az), Y
-    &Cpu6502::rraIndY0,
+    &Chip::rraIndY0,
     // $74 -> NOP* $az, X
-    &Cpu6502::nopZpX0,
+    &Chip::nopZpX0,
     // $75 -> ADC $az, X
-    &Cpu6502::adcZpX0,
+    &Chip::adcZpX0,
     // $76 -> ROR $az, X
-    &Cpu6502::rorZpX0,
+    &Chip::rorZpX0,
     // $77 -> RRA* $az, X
-    &Cpu6502::rraZpX0,
+    &Chip::rraZpX0,
     // $78 -> SEI
-    &Cpu6502::sei0,
+    &Chip::sei0,
     // $79 -> ADC $ahal, Y
-    &Cpu6502::adcAbsY0,
+    &Chip::adcAbsY0,
     // $7A -> NOP*
-    &Cpu6502::nop0,
+    &Chip::nop0,
     // $7B -> RRA* $ahal, Y
-    &Cpu6502::rraAbsY0,
+    &Chip::rraAbsY0,
     // $7C -> NOP* $ahal, X
-    &Cpu6502::nopAbsX0,
+    &Chip::nopAbsX0,
     // $7D -> ADC $ahal, X
-    &Cpu6502::adcAbsX0,
+    &Chip::adcAbsX0,
     // $7E -> ROR $ahal, X
-    &Cpu6502::rorAbsX0,
+    &Chip::rorAbsX0,
     // $7F -> RRA* $ahal, X
-    &Cpu6502::rraAbsX0,
+    &Chip::rraAbsX0,
     // $80 -> NOP* #$da
-    &Cpu6502::nopImm0,
+    &Chip::nopImm0,
     // $81 -> STA ($az, X)
-    &Cpu6502::staIndX0,
+    &Chip::staIndX0,
     // $82 -> NOP*
-    &Cpu6502::nop0,
+    &Chip::nop0,
     // $83 -> AXS* ($az, X)
-    &Cpu6502::axsIndX0,
+    &Chip::axsIndX0,
     // $84 -> STY $az
-    &Cpu6502::styZp0,
+    &Chip::styZp0,
     // $85 -> STA $az
-    &Cpu6502::staZp0,
+    &Chip::staZp0,
     // $86 -> STX $az
-    &Cpu6502::stxZp0,
+    &Chip::stxZp0,
     // $87 -> AXS* $az
-    &Cpu6502::axsZp0,
+    &Chip::axsZp0,
     // $88 -> DEY
-    &Cpu6502::dey0,
+    &Chip::dey0,
     // $89 -> NOP*
-    &Cpu6502::nop0,
+    &Chip::nop0,
     // $8A -> TXA
-    &Cpu6502::txa0,
+    &Chip::txa0,
     // $8B -> ?
-    &Cpu6502::unofficial,
+    &Chip::unofficial,
     // $8C -> STY $ahal
-    &Cpu6502::styAbs0,
+    &Chip::styAbs0,
     // $8D -> STA $ahal
-    &Cpu6502::staAbs0,
+    &Chip::staAbs0,
     // $8E -> STX $ahal
-    &Cpu6502::stxAbs0,
+    &Chip::stxAbs0,
     // $8F -> AXS* $ahal
-    &Cpu6502::axsAbs0,
+    &Chip::axsAbs0,
     // $90 -> BCC $of
-    &Cpu6502::bcc0,
+    &Chip::bcc0,
     // $91 -> STA ($az), Y
-    &Cpu6502::staIndY0,
+    &Chip::staIndY0,
     // $92 -> KIL
-    &Cpu6502::kil,
+    &Chip::kil,
     // $93 -> ?
-    &Cpu6502::unofficial,
+    &Chip::unofficial,
     // $94 -> STY $az, X
-    &Cpu6502::styZpX0,
+    &Chip::styZpX0,
     // $95 -> STA $az, X
-    &Cpu6502::staZpX0,
+    &Chip::staZpX0,
     // $96 -> STX $az, Y
-    &Cpu6502::stxZpY0,
+    &Chip::stxZpY0,
     // $97 -> AXS* $az, Y
-    &Cpu6502::axsZpY0,
+    &Chip::axsZpY0,
     // $98 -> TYA
-    &Cpu6502::tya0,
+    &Chip::tya0,
     // $99 -> STA $ahal, Y
-    &Cpu6502::staAbsY0,
+    &Chip::staAbsY0,
     // $9A -> TXS
-    &Cpu6502::txs0,
+    &Chip::txs0,
     // $9B -> ?
-    &Cpu6502::unofficial,
+    &Chip::unofficial,
     // $9C -> ?
-    &Cpu6502::unofficial,
+    &Chip::unofficial,
     // $9D -> STA $ahal, X
-    &Cpu6502::staAbsX0,
+    &Chip::staAbsX0,
     // $9E -> ?
-    &Cpu6502::unofficial,
+    &Chip::unofficial,
     // $9F -> ?
-    &Cpu6502::unofficial,
+    &Chip::unofficial,
     // $A0 -> LDY #$da
-    &Cpu6502::ldyImm0,
+    &Chip::ldyImm0,
     // $A1 -> LDA ($az, X)
-    &Cpu6502::ldaIndX0,
+    &Chip::ldaIndX0,
     // $A2 -> LDX #$da
-    &Cpu6502::ldxImm0,
+    &Chip::ldxImm0,
     // $A3 -> LAX* ($az, X)
-    &Cpu6502::laxIndX0,
+    &Chip::laxIndX0,
     // $A4 -> LDY $az
-    &Cpu6502::ldyZp0,
+    &Chip::ldyZp0,
     // $A5 -> LDA $az
-    &Cpu6502::ldaZp0,
+    &Chip::ldaZp0,
     // $A6 -> LDX $az
-    &Cpu6502::ldxZp0,
+    &Chip::ldxZp0,
     // $A7 -> LAX* $az
-    &Cpu6502::laxZp0,
+    &Chip::laxZp0,
     // $A8 -> TAY
-    &Cpu6502::tay0,
+    &Chip::tay0,
     // $A9 -> LDA #$da
-    &Cpu6502::ldaImm0,
+    &Chip::ldaImm0,
     // $AA -> TAX
-    &Cpu6502::tax0,
+    &Chip::tax0,
     // $AB -> ?
-    &Cpu6502::unofficial,
+    &Chip::unofficial,
     // $AC -> LDY $ahal
-    &Cpu6502::ldyAbs0,
+    &Chip::ldyAbs0,
     // $AD -> LDA $ahal
-    &Cpu6502::ldaAbs0,
+    &Chip::ldaAbs0,
     // $AE -> LDX $ahal
-    &Cpu6502::ldxAbs0,
+    &Chip::ldxAbs0,
     // $AF -> LAX* $ahal
-    &Cpu6502::laxAbs0,
+    &Chip::laxAbs0,
     // $B0 -> BCS $of
-    &Cpu6502::bcs0,
+    &Chip::bcs0,
     // $B1 -> LDA ($az), Y
-    &Cpu6502::ldaIndY0,
+    &Chip::ldaIndY0,
     // $B2 -> KIL
-    &Cpu6502::kil,
+    &Chip::kil,
     // $B3 -> LAX ($zp), Y
-    &Cpu6502::laxIndY0,
+    &Chip::laxIndY0,
     // $B4 -> LDY $az, X
-    &Cpu6502::ldyZpX0,
+    &Chip::ldyZpX0,
     // $B5 -> LDA $az, X
-    &Cpu6502::ldaZpX0,
+    &Chip::ldaZpX0,
     // $B6 -> LDX $az, Y
-    &Cpu6502::ldxZpY0,
+    &Chip::ldxZpY0,
     // $B7 -> LAX* $az, Y
-    &Cpu6502::laxZpY0,
+    &Chip::laxZpY0,
     // $B8 -> CLV
-    &Cpu6502::clv0,
+    &Chip::clv0,
     // $B9 -> LDA $ahal, Y
-    &Cpu6502::ldaAbsY0,
+    &Chip::ldaAbsY0,
     // $BA -> TSX
-    &Cpu6502::tsx0,
+    &Chip::tsx0,
     // $BB -> ?
-    &Cpu6502::unofficial,
+    &Chip::unofficial,
     // $BC -> LDY $ahal, X
-    &Cpu6502::ldyAbsX0,
+    &Chip::ldyAbsX0,
     // $BD -> LDA $ahal, X
-    &Cpu6502::ldaAbsX0,
+    &Chip::ldaAbsX0,
     // $BE -> LDX $ahal, Y
-    &Cpu6502::ldxAbsY0,
+    &Chip::ldxAbsY0,
     // $BF -> LAX* $ahal, Y
-    &Cpu6502::laxAbsY0,
+    &Chip::laxAbsY0,
     // $C0 -> CPY #$da
-    &Cpu6502::cpyImm0,
+    &Chip::cpyImm0,
     // $C1 -> CMP ($az, X)
-    &Cpu6502::cmpIndX0,
+    &Chip::cmpIndX0,
     // $C2 -> NOP*
-    &Cpu6502::nop0,
+    &Chip::nop0,
     // $C3 -> DCM* ($az, X)
-    &Cpu6502::dcmIndX0,
+    &Chip::dcmIndX0,
     // $C4 -> CPY $az
-    &Cpu6502::cpyZp0,
+    &Chip::cpyZp0,
     // $C5 -> CMP $az
-    &Cpu6502::cmpZp0,
+    &Chip::cmpZp0,
     // $C6 -> DEC $az
-    &Cpu6502::decZp0,
+    &Chip::decZp0,
     // $C7 -> DCM* $az
-    &Cpu6502::dcmZp0,
+    &Chip::dcmZp0,
     // $C8 -> INY
-    &Cpu6502::iny0,
+    &Chip::iny0,
     // $C9 -> CMP #$da
-    &Cpu6502::cmpImm0,
+    &Chip::cmpImm0,
     // $CA -> DEX
-    &Cpu6502::dex0,
+    &Chip::dex0,
     // $CB -> ?
-    &Cpu6502::unofficial,
+    &Chip::unofficial,
     // $CC -> CPY $ahal
-    &Cpu6502::cpyAbs0,
+    &Chip::cpyAbs0,
     // $CD -> CMP $ahal
-    &Cpu6502::cmpAbs0,
+    &Chip::cmpAbs0,
     // $CE -> DEC $ahal
-    &Cpu6502::decAbs0,
+    &Chip::decAbs0,
     // $CF -> DCM* $ahal
-    &Cpu6502::dcmAbs0,
+    &Chip::dcmAbs0,
     // $D0 -> BNE $of
-    &Cpu6502::bne0,
+    &Chip::bne0,
     // $D1 -> CMP ($az), Y
-    &Cpu6502::cmpIndY0,
+    &Chip::cmpIndY0,
     // $D2 -> KIL
-    &Cpu6502::kil,
+    &Chip::kil,
     // $D3 -> DCM* ($az), Y
-    &Cpu6502::dcmIndY0,
+    &Chip::dcmIndY0,
     // $D4 -> NOP* $az, X
-    &Cpu6502::nopZpX0,
+    &Chip::nopZpX0,
     // $D5 -> CMP $az, X
-    &Cpu6502::cmpZpX0,
+    &Chip::cmpZpX0,
     // $D6 -> DEC $az, X
-    &Cpu6502::decZpX0,
+    &Chip::decZpX0,
     // $D7 -> DCM* $az, X
-    &Cpu6502::dcmZpX0,
+    &Chip::dcmZpX0,
     // $D8 -> CLD
-    &Cpu6502::cld0,
+    &Chip::cld0,
     // $D9 -> CMP $ahal, Y
-    &Cpu6502::cmpAbsY0,
+    &Chip::cmpAbsY0,
     // $DA -> NOP*
-    &Cpu6502::nop0,
+    &Chip::nop0,
     // $DB -> DCM* $ahal, Y
-    &Cpu6502::dcmAbsY0,
+    &Chip::dcmAbsY0,
     // $DC -> NOP* $ahal, X
-    &Cpu6502::nopAbsX0,
+    &Chip::nopAbsX0,
     // $DD -> CMP $ahal, X
-    &Cpu6502::cmpAbsX0,
+    &Chip::cmpAbsX0,
     // $DE -> DEC $ahal, X
-    &Cpu6502::decAbsX0,
+    &Chip::decAbsX0,
     // $DF -> DCM* $ahal, X
-    &Cpu6502::dcmAbsX0,
+    &Chip::dcmAbsX0,
     // $E0 -> CPX #$da
-    &Cpu6502::cpxImm0,
+    &Chip::cpxImm0,
     // $E1 -> SBC ($az, X)
-    &Cpu6502::sbcIndX0,
+    &Chip::sbcIndX0,
     // $E2 -> NOP*
-    &Cpu6502::nop0,
+    &Chip::nop0,
     // $E3 -> INS* ($az, X)
-    &Cpu6502::insIndX0,
+    &Chip::insIndX0,
     // $E4 -> CPX $az
-    &Cpu6502::cpxZp0,
+    &Chip::cpxZp0,
     // $E5 -> SBC $az
-    &Cpu6502::sbcZp0,
+    &Chip::sbcZp0,
     // $E6 -> INC $az
-    &Cpu6502::incZp0,
+    &Chip::incZp0,
     // $E7 -> INS* $az
-    &Cpu6502::insZp0,
+    &Chip::insZp0,
     // $E8 -> INX
-    &Cpu6502::inx0,
+    &Chip::inx0,
     // $E9 -> SBC #$da
-    &Cpu6502::sbcImm0,
+    &Chip::sbcImm0,
     // $EA -> NOP
-    &Cpu6502::nop0,
+    &Chip::nop0,
     // $EB -> SBC* #$da
-    &Cpu6502::sbcImm0,
+    &Chip::sbcImm0,
     // $EC -> CPX $ahal
-    &Cpu6502::cpxAbs0,
+    &Chip::cpxAbs0,
     // $ED -> SBC $ahal
-    &Cpu6502::sbcAbs0,
+    &Chip::sbcAbs0,
     // $EE -> INC $ahal
-    &Cpu6502::incAbs0,
+    &Chip::incAbs0,
     // $EF -> INS* $ahal
-    &Cpu6502::insAbs0,
+    &Chip::insAbs0,
     // $F0 -> BEQ $of
-    &Cpu6502::beq0,
+    &Chip::beq0,
     // $F1 -> SBC ($az), Y
-    &Cpu6502::sbcIndY0,
+    &Chip::sbcIndY0,
     // $F2 -> KIL
-    &Cpu6502::kil,
+    &Chip::kil,
     // $F3 -> INS* ($az), Y
-    &Cpu6502::insIndY0,
+    &Chip::insIndY0,
     // $F4 -> NOP* $az, X
-    &Cpu6502::nopZpX0,
+    &Chip::nopZpX0,
     // $F5 -> SBC $az, X
-    &Cpu6502::sbcZpX0,
+    &Chip::sbcZpX0,
     // $F6 -> INC $az, X
-    &Cpu6502::incZpX0,
+    &Chip::incZpX0,
     // $F7 -> INS* $az, X
-    &Cpu6502::insZpX0,
+    &Chip::insZpX0,
     // $F8 -> SED
-    &Cpu6502::sed0,
+    &Chip::sed0,
     // $F9 -> SBC $ahal, Y
-    &Cpu6502::sbcAbsY0,
+    &Chip::sbcAbsY0,
     // $FA -> NOP*
-    &Cpu6502::nop0,
+    &Chip::nop0,
     // $FB -> INS* $ahal, Y
-    &Cpu6502::insAbsY0,
+    &Chip::insAbsY0,
     // $FC -> NOP* $ahal, X
-    &Cpu6502::nopAbsX0,
+    &Chip::nopAbsX0,
     // $FD -> SBC $ahal, X
-    &Cpu6502::sbcAbsX0,
+    &Chip::sbcAbsX0,
     // $FE -> INC $ahal, X
-    &Cpu6502::incAbsX0,
+    &Chip::incAbsX0,
     // $FF -> INS* $ahal, X
-    &Cpu6502::insAbsX0
+    &Chip::insAbsX0
 };
 
 template <class TBus>
-const uint8_t Cpu6502<TBus>::_interruptVectors[3][2] = {
+const uint8_t Chip<TBus>::_interruptVectors[3][2] = {
     0xFA, 0xFF,     // NMI (Prior over IRQ/BRK but not Reset)
     0xFC, 0xFF,     // Reset (Higher priority)
     0xFE, 0xFF,     // IRQ, BRK (Lower priority)
 };
 
 template <class TBus>
-const uint8_t Cpu6502<TBus>::_stackPageNumber = 0x1;
+const uint8_t Chip<TBus>::_stackPageNumber = 0x1;
 
-#endif /* Cpu6502_s_data_hpp */
+#endif /* Cpu6502_Internal_Data_hpp */

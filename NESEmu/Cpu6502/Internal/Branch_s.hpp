@@ -1,101 +1,101 @@
 //
-//  Cpu6502Branch_s.hpp
+//  Branch_s.hpp
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 7/01/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef Cpu6502Branch_s_hpp
-#define Cpu6502Branch_s_hpp
+#ifndef Cpu6502_Internal_Branch_s_hpp
+#define Cpu6502_Internal_Branch_s_hpp
 
 
 template <class TBus>
-void Cpu6502<TBus>::bpl0() {
-    _currentInstruction = &Cpu6502::bpl1;
+void Chip<TBus>::bpl0() {
+    _currentInstruction = &Chip::bpl1;
     relative0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::bpl1() {
+void Chip<TBus>::bpl1() {
     relative1(_flagsHelper.get<Flag::Negative>() == false);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::bmi0() {
-    _currentInstruction = &Cpu6502::bmi1;
+void Chip<TBus>::bmi0() {
+    _currentInstruction = &Chip::bmi1;
     relative0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::bmi1() {
+void Chip<TBus>::bmi1() {
     relative1(_flagsHelper.get<Flag::Negative>() == true);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::bvc0() {
-    _currentInstruction = &Cpu6502::bvc1;
+void Chip<TBus>::bvc0() {
+    _currentInstruction = &Chip::bvc1;
     relative0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::bvc1() {
+void Chip<TBus>::bvc1() {
     relative1(_flagsHelper.get<Flag::Overflow>() == false);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::bvs0() {
-    _currentInstruction = &Cpu6502::bvs1;
+void Chip<TBus>::bvs0() {
+    _currentInstruction = &Chip::bvs1;
     relative0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::bvs1() {
+void Chip<TBus>::bvs1() {
     relative1(_flagsHelper.get<Flag::Overflow>() == true);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::bcc0() {
-    _currentInstruction = &Cpu6502::bcc1;
+void Chip<TBus>::bcc0() {
+    _currentInstruction = &Chip::bcc1;
     relative0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::bcc1() {
+void Chip<TBus>::bcc1() {
     relative1(_flagsHelper.get<Flag::Carry>() == false);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::bcs0() {
-    _currentInstruction = &Cpu6502::bcs1;
+void Chip<TBus>::bcs0() {
+    _currentInstruction = &Chip::bcs1;
     relative0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::bcs1() {
+void Chip<TBus>::bcs1() {
     relative1(_flagsHelper.get<Flag::Carry>() == true);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::bne0() {
-    _currentInstruction = &Cpu6502::bne1;
+void Chip<TBus>::bne0() {
+    _currentInstruction = &Chip::bne1;
     relative0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::bne1() {
+void Chip<TBus>::bne1() {
     relative1(_flagsHelper.get<Flag::Zero>() == false);
 }
 
 template <class TBus>
-void Cpu6502<TBus>::beq0() {
-    _currentInstruction = &Cpu6502::beq1;
+void Chip<TBus>::beq0() {
+    _currentInstruction = &Chip::beq1;
     relative0();
 }
 
 template <class TBus>
-void Cpu6502<TBus>::beq1() {
+void Chip<TBus>::beq1() {
     relative1(_flagsHelper.get<Flag::Zero>() == true);
 }
 
-#endif /* Cpu6502Branch_s_hpp */
+#endif /* Cpu6502_Internal_Branch_s_hpp */

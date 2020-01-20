@@ -1,13 +1,13 @@
 //
-//  Cpu6502Memory.hpp
+//  Memory.hpp
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 7/01/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef Cpu6502Memory_hpp
-#define Cpu6502Memory_hpp
+#ifndef Cpu6502_Internal_Memory_hpp
+#define Cpu6502_Internal_Memory_hpp
 
 
 // LDA, LDX, LDY, STA, STX, STY
@@ -146,4 +146,4 @@ void styAbs0();
 void styAbs1();
 void styAbs2();
 
-#endif /* Cpu6502Memory_hpp */
+#endif /* Cpu6502_Internal_Memory_hpp */
