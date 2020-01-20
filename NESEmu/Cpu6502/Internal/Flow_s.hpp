@@ -10,85 +10,83 @@
 #define Cpu6502_Internal_Flow_s_hpp
 
 
-template <class TBus>
-void Chip<TBus>::jmpAbs0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::jmpAbs0() {
     _currentInstruction = &Chip::jmpAbs1;
     
     absolute0();
 }
 
-template <class TBus>
-void Chip<TBus>::jmpAbs1() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::jmpAbs1() {
     _currentInstruction = &Chip::jmpAbs2;
     
     absolute1();
 }
 
-template <class TBus>
-void Chip<TBus>::jmpAbs2() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::jmpAbs2() {
     // Set program counter
-    _programCounterLow = _adderHold;
+    _programCounterLow = _alu.getAdderHold();
     _programCounterHigh = _inputDataLatch;
     
     fetchOpcode();
 }
 
-template <class TBus>
-void Chip<TBus>::jmpInd0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::jmpInd0() {
     _currentInstruction = &Chip::jmpInd1;
     
     absolute0();
 }
 
-template <class TBus>
-void Chip<TBus>::jmpInd1() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::jmpInd1() {
     _currentInstruction = &Chip::jmpInd2;
     
     absolute1();
 }
 
-template <class TBus>
-void Chip<TBus>::jmpInd2() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::jmpInd2() {
     _currentInstruction = &Chip::jmpInd3;
     
     // Read address low (need to be put before ALU operation below because it need adderHold before incrementation)
     absoluteLoad();
     
     // Adding 1 to address low using ALU (Add 0 with carry set like true 6502)
-    _aInput = 0;
-    _bInput = _adderHold;
-    aluPerformSum(false, true);
+    _alu.performSum<DecimalSupported, false>(0x0, _alu.getAdderHold(), false, true);
 }
 
-template <class TBus>
-void Chip<TBus>::jmpInd3() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::jmpInd3() {
     _currentInstruction = &Chip::jmpInd4;
     
     // Load address low in PC
     _programCounterLow = _inputDataLatch;
     
     // Read address high
-    readDataBus(_adderHold, _addressBusHigh);
+    readDataBus(_alu.getAdderHold(), _addressBusHigh);
 }
 
-template <class TBus>
-void Chip<TBus>::jmpInd4() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::jmpInd4() {
     // Load address high in PC
     _programCounterHigh = _inputDataLatch;
     
     fetchOpcode();
 }
 
-template <class TBus>
-void Chip<TBus>::jsr0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::jsr0() {
     _currentInstruction = &Chip::jsr1;
     
     // Fetch ADL
     fetchData();
 }
 
-template <class TBus>
-void Chip<TBus>::jsr1() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::jsr1() {
     _currentInstruction = &Chip::jsr2;
     
     // Start stack operation (read of current cycle will read stack memory)
@@ -98,21 +96,16 @@ void Chip<TBus>::jsr1() {
     _stackPointer = _inputDataLatch;
 }
 
-template <class TBus>
-void Chip<TBus>::jsr2() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::jsr2() {
     _currentInstruction = &Chip::jsr3;
     
     // Push PCH to stack
     pushToStack0(_programCounterHigh);
-    
-    // Removing 1 from inputDataLatch using ALU (Add 0xFF without carry set like true 6502)
-    _aInput = 0xFF;
-    _bInput = _addressBusLow;
-    aluPerformSum(false, false);
 }
 
-template <class TBus>
-void Chip<TBus>::jsr3() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::jsr3() {
     _currentInstruction = &Chip::jsr4;
     
     // Finish stack operation and push PCL to stack
@@ -120,8 +113,8 @@ void Chip<TBus>::jsr3() {
     pushToStack0(_programCounterLow);
 }
 
-template <class TBus>
-void Chip<TBus>::jsr4() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::jsr4() {
     _currentInstruction = &Chip::jsr5;
     
     // Don't finish stack operation because stack pointer is used to store address low and addressBusLow is set with PC to fetch address high
@@ -130,33 +123,33 @@ void Chip<TBus>::jsr4() {
     fetchData();
 }
 
-template <class TBus>
-void Chip<TBus>::jsr5() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::jsr5() {
     // Set program counter (address low was stored in stackPointer and address high was fetched in last cycle)
     _programCounterLow = _stackPointer;
     _programCounterHigh = _inputDataLatch;
     
     // Restore stack pointer
-    _stackPointer = _adderHold;
+    _stackPointer = _alu.getAdderHold();
     
     fetchOpcode();
 }
 
-template <class TBus>
-void Chip<TBus>::nop0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::nop0() {
     _currentInstruction = &Chip::fetchOpcode;
     implied();
 }
 
-template <class TBus>
-void Chip<TBus>::rts0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::rts0() {
     _currentInstruction = &Chip::rts1;
     
     implied();
 }
 
-template <class TBus>
-void Chip<TBus>::rts1() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::rts1() {
     _currentInstruction = &Chip::rts2;
     
     // Start stack operation (read of current cycle will read stack memory)
@@ -165,16 +158,16 @@ void Chip<TBus>::rts1() {
     pullFromStack0();
 }
 
-template <class TBus>
-void Chip<TBus>::rts2() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::rts2() {
     _currentInstruction = &Chip::rts3;
     
     pullFromStack1();
     pullFromStack0();
 }
 
-template <class TBus>
-void Chip<TBus>::rts3() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::rts3() {
     _currentInstruction = &Chip::rts4;
     
     _programCounterLow = _inputDataLatch;
@@ -183,16 +176,16 @@ void Chip<TBus>::rts3() {
     stopStackOperation();
 }
 
-template <class TBus>
-void Chip<TBus>::rts4() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::rts4() {
     _currentInstruction = &Chip::fetchOpcode;
     
     _programCounterHigh = _inputDataLatch;
     fetchData();
 }
 
-template <class TBus>
-void Chip<TBus>::unofficial() {  // TODO: a retirer une fois tous les opcodes gérés
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::unofficial() {  // TODO: a retirer une fois tous les opcodes gérés
     nop0();
 }
 

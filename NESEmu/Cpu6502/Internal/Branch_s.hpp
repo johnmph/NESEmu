@@ -10,91 +10,91 @@
 #define Cpu6502_Internal_Branch_s_hpp
 
 
-template <class TBus>
-void Chip<TBus>::bpl0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::bpl0() {
     _currentInstruction = &Chip::bpl1;
     relative0();
 }
 
-template <class TBus>
-void Chip<TBus>::bpl1() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::bpl1() {
     relative1(_flagsHelper.get<Flag::Negative>() == false);
 }
 
-template <class TBus>
-void Chip<TBus>::bmi0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::bmi0() {
     _currentInstruction = &Chip::bmi1;
     relative0();
 }
 
-template <class TBus>
-void Chip<TBus>::bmi1() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::bmi1() {
     relative1(_flagsHelper.get<Flag::Negative>() == true);
 }
 
-template <class TBus>
-void Chip<TBus>::bvc0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::bvc0() {
     _currentInstruction = &Chip::bvc1;
     relative0();
 }
 
-template <class TBus>
-void Chip<TBus>::bvc1() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::bvc1() {
     relative1(_flagsHelper.get<Flag::Overflow>() == false);
 }
 
-template <class TBus>
-void Chip<TBus>::bvs0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::bvs0() {
     _currentInstruction = &Chip::bvs1;
     relative0();
 }
 
-template <class TBus>
-void Chip<TBus>::bvs1() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::bvs1() {
     relative1(_flagsHelper.get<Flag::Overflow>() == true);
 }
 
-template <class TBus>
-void Chip<TBus>::bcc0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::bcc0() {
     _currentInstruction = &Chip::bcc1;
     relative0();
 }
 
-template <class TBus>
-void Chip<TBus>::bcc1() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::bcc1() {
     relative1(_flagsHelper.get<Flag::Carry>() == false);
 }
 
-template <class TBus>
-void Chip<TBus>::bcs0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::bcs0() {
     _currentInstruction = &Chip::bcs1;
     relative0();
 }
 
-template <class TBus>
-void Chip<TBus>::bcs1() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::bcs1() {
     relative1(_flagsHelper.get<Flag::Carry>() == true);
 }
 
-template <class TBus>
-void Chip<TBus>::bne0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::bne0() {
     _currentInstruction = &Chip::bne1;
     relative0();
 }
 
-template <class TBus>
-void Chip<TBus>::bne1() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::bne1() {
     relative1(_flagsHelper.get<Flag::Zero>() == false);
 }
 
-template <class TBus>
-void Chip<TBus>::beq0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::beq0() {
     _currentInstruction = &Chip::beq1;
     relative0();
 }
 
-template <class TBus>
-void Chip<TBus>::beq1() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::beq1() {
     relative1(_flagsHelper.get<Flag::Zero>() == true);
 }
 

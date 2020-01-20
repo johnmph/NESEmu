@@ -17,7 +17,34 @@ namespace Cpu6502 {
     
     namespace _Detail {
         
-        // We can't put that inside Cpu6502 because Cpu6502 is a templated class and we specialize some methods here (Cannot specialize a member of an unspecialized template)
+        struct Alu {
+            
+            uint8_t getAInput() const;
+            uint8_t getBInput() const;
+            uint8_t getAdderHold() const;
+            bool getOverflow() const;
+            bool getCarry() const;
+            bool getHalfCarry() const;
+            
+            template <bool DecimalSupported, bool SubstractMode>
+            void performSum(uint8_t aInput, uint8_t bInput, bool decimalEnable, bool carryIn);
+            void performAnd(uint8_t aInput, uint8_t bInput);
+            void performOr(uint8_t aInput, uint8_t bInput);
+            void performEor(uint8_t aInput, uint8_t bInput);
+            void performShiftRight(uint8_t aInput, bool carryIn);
+            
+        private:
+            void invertBInput();
+            
+            uint8_t _aInput;
+            uint8_t _bInput;
+            uint8_t _adderHold;
+            bool _overflow;
+            bool _carry;
+            bool _halfCarry;
+        };
+        
+        // We can't put that inside Chip because Chip is a templated class and we specialize some methods here (Cannot specialize a member of an unspecialized template)
         struct FlagsHelper {
             
             enum class Flag {
@@ -31,7 +58,7 @@ namespace Cpu6502 {
                 Negative
             };
             
-            FlagsHelper(uint8_t &value, bool &carry, bool &overflow);
+            FlagsHelper(uint8_t &value, Alu &alu);
             
             template <Flag ...flags>
             static constexpr uint8_t getEnableMask();
@@ -67,13 +94,12 @@ namespace Cpu6502 {
             
         private:
             uint8_t &_value;
-            bool &_carry;
-            bool &_overflow;
+            Alu &_alu;
         };
         
     }
     
-    template <class TBus>
+    template <class TBus, bool DecimalSupported = false>
     struct Chip {
         using Flag = _Detail::FlagsHelper::Flag;
         
@@ -131,14 +157,6 @@ namespace Cpu6502 {
         void pullFromStack0();
         void pullFromStack1();
         
-        // ALU
-        void aluInvertBInput(); //TODO: taper ca dans une classe a part dans le namespace _Detail ? avec la possibilité de choisir celui sans Decimal et celui avec Decimal (un bool en template parameter ?)
-        void aluPerformSum(bool decimalEnable, bool carryIn);
-        void aluPerformAnd();
-        void aluPerformOr();
-        void aluPerformEor();
-        void aluPerformShiftRight(bool carryIn);
-        
         // Addressing modes
         #include "Internal/AddressingMode.hpp"
         
@@ -184,12 +202,7 @@ namespace Cpu6502 {
         uint8_t _predecode;
         uint8_t _instruction;
         
-        uint8_t _aInput;
-        uint8_t _bInput;
-        uint8_t _adderHold;
-        bool _aluOverflow;
-        bool _aluCarry;
-        bool _aluHalfCarry;
+        _Detail::Alu _alu;
         
         bool _resetLine;
         bool _resetRequested;

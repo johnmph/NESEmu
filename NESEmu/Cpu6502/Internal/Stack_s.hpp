@@ -10,61 +10,61 @@
 #define Cpu6502_Internal_Stack_s_hpp
 
 
-template <class TBus>
-void Chip<TBus>::pha0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::pha0() {
     _currentInstruction = &Chip::pha1;
     
     implied();
 }
 
-template <class TBus>
-void Chip<TBus>::pha1() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::pha1() {
     _currentInstruction = &Chip::pha2;
     
     startStackOperation();
     pushToStack0(_accumulator);
 }
 
-template <class TBus>
-void Chip<TBus>::pha2() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::pha2() {
     pushToStack1();
     stopStackOperation();
     
     fetchOpcode();
 }
 
-template <class TBus>
-void Chip<TBus>::php0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::php0() {
     _currentInstruction = &Chip::php1;
     
     implied();
 }
 
-template <class TBus>
-void Chip<TBus>::php1() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::php1() {
     _currentInstruction = &Chip::php2;
     
     startStackOperation();
     pushToStack0(_statusFlags | (1 << static_cast<int>(Flag::Break)));
 }
 
-template <class TBus>
-void Chip<TBus>::php2() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::php2() {
     pushToStack1();
     stopStackOperation();
     
     fetchOpcode();
 }
 
-template <class TBus>
-void Chip<TBus>::pla0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::pla0() {
     _currentInstruction = &Chip::pla1;
     
     implied();
 }
 
-template <class TBus>
-void Chip<TBus>::pla1() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::pla1() {
     _currentInstruction = &Chip::pla2;
     
     // Start stack operation (read of current cycle will read stack memory)
@@ -72,16 +72,16 @@ void Chip<TBus>::pla1() {
     pullFromStack0();
 }
 
-template <class TBus>
-void Chip<TBus>::pla2() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::pla2() {
     _currentInstruction = &Chip::pla3;
     
     pullFromStack1();
     stopStackOperation();
 }
 
-template <class TBus>
-void Chip<TBus>::pla3() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::pla3() {
     _accumulator = _inputDataLatch;
     
     // Update status
@@ -91,15 +91,15 @@ void Chip<TBus>::pla3() {
     fetchOpcode();
 }
 
-template <class TBus>
-void Chip<TBus>::plp0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::plp0() {
     _currentInstruction = &Chip::plp1;
     
     implied();
 }
 
-template <class TBus>
-void Chip<TBus>::plp1() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::plp1() {
     _currentInstruction = &Chip::plp2;
     
     // Start stack operation (read of current cycle will read stack memory)
@@ -107,16 +107,16 @@ void Chip<TBus>::plp1() {
     pullFromStack0();
 }
 
-template <class TBus>
-void Chip<TBus>::plp2() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::plp2() {
     _currentInstruction = &Chip::plp3;
     
     pullFromStack1();
     stopStackOperation();
 }
 
-template <class TBus>
-void Chip<TBus>::plp3() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::plp3() {
     _statusFlags = (_inputDataLatch & _Detail::FlagsHelper::getDisableMask<Flag::Break>()) | (1 << static_cast<int>(Flag::UnusedHigh));
     
     fetchOpcode();

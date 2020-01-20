@@ -29,72 +29,9 @@ struct Bus {
 };
 
 
-uint8_t _adderHold;
-uint8_t _aInput, _bInput;
-bool _aluOverflow, _aluCarry;
-
-
-void aluInvertBInput() {
-    _bInput = ~_bInput;
-}
-
-void aluPerformSum(bool decimalEnable, bool carryIn) {//TODO: terminer (halfCarry, decimalEnable)
-    uint16_t add = _aInput + _bInput + carryIn;
-    _adderHold = static_cast<uint8_t>(add);
-    
-    _aluOverflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;
-    _aluCarry = add & 0x100;
-}
-
-
-// + + No PCrossed -> true, false
-// + + PCrossed    -> false, true
-// + - No PCrossed -> true, true
-// + - PCrossed    -> false, false
-
-int main(int argc, const char * argv[]) {/*
-    // Removing 1 from inputDataLatch using ALU (Add 0xFF without carry set like true 6502)
-    _aInput = 0x10;
-    _bInput = 0x0;
-    aluInvertBInput();
-    aluPerformSum(false, false);
-    
-    return 0;
-    */
+int main(int argc, const char * argv[]) {
     Bus bus;
     Cpu6502::Chip<Bus> cpu(bus);
-    /*
-    cpu._aInput = 0x50;
-    cpu._bInput = 0x10;
-    cpu.aluPerformSum(false, false);
-    
-    cpu._aInput = 0x50;
-    cpu._bInput = 0x50;
-    cpu.aluPerformSum(false, false);
-    
-    cpu._aInput = 0x50;
-    cpu._bInput = 0x90;
-    cpu.aluPerformSum(false, false);
-    
-    cpu._aInput = 0x50;
-    cpu._bInput = 0xd0;
-    cpu.aluPerformSum(false, false);
-    
-    cpu._aInput = 0xd0;
-    cpu._bInput = 0x10;
-    cpu.aluPerformSum(false, false);
-    
-    cpu._aInput = 0xd0;
-    cpu._bInput = 0x50;
-    cpu.aluPerformSum(false, false);
-    
-    cpu._aInput = 0xd0;
-    cpu._bInput = 0x90;
-    cpu.aluPerformSum(false, false);
-    
-    cpu._aInput = 0xd0;
-    cpu._bInput = 0xd0;
-    cpu.aluPerformSum(false, false);*/
     
     /*
     bus._memory[0xFFFC] = 0;

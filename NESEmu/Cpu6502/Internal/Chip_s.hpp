@@ -16,6 +16,26 @@
 
 namespace _Detail {
     
+    // Alu
+    
+    template <bool DecimalSupported, bool SubstractMode>
+    void Alu::performSum(uint8_t aInput, uint8_t bInput, bool decimalEnable, bool carryIn) {//TODO: terminer (halfCarry, decimalEnable)
+        _aInput = aInput;
+        _bInput = bInput;
+        
+        if constexpr (SubstractMode == true) {  // TODO: a cause de ca ca ne compile qu'en C++17, voir si moyen de s'en passer sans copier-coller le code
+            invertBInput();
+        }
+        
+        uint16_t add = _aInput + _bInput + carryIn;
+        _adderHold = static_cast<uint8_t>(add);
+        
+        _overflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;
+        _carry = add & 0x100;
+        //_halfCarry = ((_aInput & 0xF) + (_bInput & 0xF) + carryIn) & 0x10;  // TODO: voir ce que c'est et si c'est utilisé
+    }
+    
+    
     // Flags Helper
     
     template <FlagsHelper::Flag ...flags>
@@ -83,13 +103,13 @@ namespace _Detail {
 
 // Public interface
 
-template <class TBus>
-Chip<TBus>::Chip(TBus &bus) : _flagsHelper(_statusFlags, _aluCarry, _aluOverflow), _bus(bus), _programCounterLow(0xFF), _programCounterHigh(0), _stackPointer(0), _accumulator(0xAA), _xIndex(0), _yIndex(0), _statusFlags(0x20), _programCounterNeedsIncrement(false), _resetRequested(false), _nmiLine(true), _nmiLinePrevious(true), _nmiRequested(false), _irqLine(true), _irqRequested(false), _interruptRequested(false) {
+template <class TBus, bool DecimalSupported>
+Chip<TBus, DecimalSupported>::Chip(TBus &bus) : _flagsHelper(_statusFlags, _alu), _bus(bus), _programCounterLow(0xFF), _programCounterHigh(0), _stackPointer(0), _accumulator(0xAA), _xIndex(0), _yIndex(0), _statusFlags(0x20), _programCounterNeedsIncrement(false), _resetRequested(false), _nmiLine(true), _nmiLinePrevious(true), _nmiRequested(false), _irqLine(true), _irqRequested(false), _interruptRequested(false) {
     reset(false);
 }
 
-template <class TBus>
-void Chip<TBus>::clock() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::clock() {
     // Update PC
     updateProgramCounter();
     
@@ -107,8 +127,8 @@ void Chip<TBus>::clock() {
     fetchMemory();
 }
 
-template <class TBus>
-void Chip<TBus>::reset(bool high) {  // TODO: voir pour les registres si on les laisse ainsi ou si on les reset : normalement on les laisse ainsi puisqu'un reset c'est juste un signal comme une interruption (mais a voir, on ne sait jamais) : peut etre avoir une methode power qui fait un hard reset et ce reset est le soft reset
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::reset(bool high) {  // TODO: voir pour les registres si on les laisse ainsi ou si on les reset : normalement on les laisse ainsi puisqu'un reset c'est juste un signal comme une interruption (mais a voir, on ne sait jamais) : peut etre avoir une methode power qui fait un hard reset et ce reset est le soft reset
     // Save signal
     _resetLine = high;
     
@@ -120,37 +140,37 @@ void Chip<TBus>::reset(bool high) {  // TODO: voir pour les registres si on les 
     }
 }
 
-template <class TBus>
-void Chip<TBus>::nmi(bool high) {    // TODO: a terminer/tester (il parait qu'il faut 2 cycles pour que le signal low soit pris en compte, a voir)
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::nmi(bool high) {    // TODO: a terminer/tester (il parait qu'il faut 2 cycles pour que le signal low soit pris en compte, a voir)
     // Save signal
     _nmiLine = high;
 }
 
-template <class TBus>
-void Chip<TBus>::irq(bool high) {    // TODO: a tester
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::irq(bool high) {    // TODO: a tester
     // Save signal
     _irqLine = high;
 }
 
-template <class TBus>
-uint16_t Chip<TBus>::getProgramCounter() {
+template <class TBus, bool DecimalSupported>
+uint16_t Chip<TBus, DecimalSupported>::getProgramCounter() {
     return (_programCounterHigh << 8) | _programCounterLow;
 }
 
-template <class TBus>
-uint16_t Chip<TBus>::getAddressBus() {
+template <class TBus, bool DecimalSupported>
+uint16_t Chip<TBus, DecimalSupported>::getAddressBus() {
     return (_addressBusHigh << 8) | _addressBusLow;
 }
 
-template <class TBus>
-uint8_t Chip<TBus>::getDataBus() {
+template <class TBus, bool DecimalSupported>
+uint8_t Chip<TBus, DecimalSupported>::getDataBus() {
     return ((_readWrite == static_cast<bool>(ReadWrite::Read)) || (_resetRequested == true)) ? _inputDataLatch : _dataOutput;
 }
 
 // Memory
 
-template <class TBus>
-void Chip<TBus>::fetchMemory() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::fetchMemory() {
     if ((_readWrite == static_cast<bool>(ReadWrite::Read)) || (_resetRequested == true)) {
         _inputDataLatch = _bus.read((_addressBusHigh << 8) | _addressBusLow);
         _predecode = _inputDataLatch;
@@ -161,8 +181,8 @@ void Chip<TBus>::fetchMemory() {
     _bus.write((_addressBusHigh << 8) | _addressBusLow, _dataOutput);
 }
 
-template <class TBus>
-void Chip<TBus>::readDataBus(uint8_t low, uint8_t high) {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::readDataBus(uint8_t low, uint8_t high) {
     // Write address bus
     _addressBusLow = low;
     _addressBusHigh = high;
@@ -171,8 +191,8 @@ void Chip<TBus>::readDataBus(uint8_t low, uint8_t high) {
     _readWrite = static_cast<bool>(ReadWrite::Read);
 }
 
-template <class TBus>
-void Chip<TBus>::writeDataBus(uint8_t low, uint8_t high, uint8_t data) {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::writeDataBus(uint8_t low, uint8_t high, uint8_t data) {
     // Write address bus
     _addressBusLow = low;
     _addressBusHigh = high;
@@ -187,28 +207,28 @@ void Chip<TBus>::writeDataBus(uint8_t low, uint8_t high, uint8_t data) {
 
 // Program flow
 
-template <class TBus>
-void Chip<TBus>::incrementProgramCounter() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::incrementProgramCounter() {
     // In real 6502, PC is not increment in end of current cycle but in beginning of next cycle
     _programCounterNeedsIncrement = true;
 }
 
-template <class TBus>
-void Chip<TBus>::updateProgramCounter() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::updateProgramCounter() {
     _programCounterLow += _programCounterNeedsIncrement;
     _programCounterHigh += ((_programCounterLow == 0) && (_programCounterNeedsIncrement == true));
     
     _programCounterNeedsIncrement = false;
 }
 
-template <class TBus>
-void Chip<TBus>::fetchData() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::fetchData() {
     readDataBus(_programCounterLow, _programCounterHigh);
     incrementProgramCounter();
 }
 
-template <class TBus>
-void Chip<TBus>::fetchOpcode(OpcodeInstruction nextInstruction) {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::fetchOpcode(OpcodeInstruction nextInstruction) {
     // Set next instruction
     _currentInstruction = nextInstruction;
     
@@ -226,14 +246,14 @@ void Chip<TBus>::fetchOpcode(OpcodeInstruction nextInstruction) {
     fetchData();
 }
 
-template <class TBus>
-void Chip<TBus>::fetchOpcode() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::fetchOpcode() {
     // Fetch opcode then decode opcode and execute instruction on the next cycle
     fetchOpcode(&Chip::decodeOpcodeAndExecuteInstruction);
 }
 
-template <class TBus>
-void Chip<TBus>::decodeOpcodeAndExecuteInstruction() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::decodeOpcodeAndExecuteInstruction() {
     // Get current instruction from opcode (or BRK (0) if interrupt requested)
     _instruction = (_interruptRequested == false) ? _predecode : 0;
     _currentInstruction = _opcodeInstructionFuncs[_instruction];
@@ -244,8 +264,8 @@ void Chip<TBus>::decodeOpcodeAndExecuteInstruction() {
 
 // Interrupts
 
-template <class TBus>
-void Chip<TBus>::checkNmi() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::checkNmi() {
     // Nmi is requested if nmi line has transition from high to low
     if ((_nmiLinePrevious == true) && (_nmiLine == false)) {
         _nmiRequested = true;
@@ -255,14 +275,14 @@ void Chip<TBus>::checkNmi() {
     _nmiLinePrevious = _nmiLine;
 }
 
-template <class TBus>
-void Chip<TBus>::checkIrq() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::checkIrq() {
     // Irq is requested if interrupts are not disabled and if irq line goes to low (and stay for one cycle)
     _irqRequested = (_flagsHelper.get<Flag::InterruptDisable>() == false) && (_irqLine == false);
 }
 
-template <class TBus>
-bool Chip<TBus>::checkInterrupts() {
+template <class TBus, bool DecimalSupported>
+bool Chip<TBus, DecimalSupported>::checkInterrupts() {
     // If Nmi requested
     if (_nmiRequested == true) {
         return true;
@@ -276,8 +296,8 @@ bool Chip<TBus>::checkInterrupts() {
     return false;
 }
 
-template <class TBus>
-int Chip<TBus>::getCurrentInterruptVectorsIndex() {
+template <class TBus, bool DecimalSupported>
+int Chip<TBus, DecimalSupported>::getCurrentInterruptVectorsIndex() {
     // If reset
     if (_resetRequested == true) {
         return static_cast<int>(Interrupts::Reset);
@@ -294,84 +314,40 @@ int Chip<TBus>::getCurrentInterruptVectorsIndex() {
 
 // Stack
 
-template <class TBus>
-void Chip<TBus>::startStackOperation() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::startStackOperation() {
     _addressBusLow = _stackPointer;
     _addressBusHigh = _stackPageNumber;
 }
 
-template <class TBus>
-void Chip<TBus>::stopStackOperation() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::stopStackOperation() {
     _stackPointer = _addressBusLow;
 }
 
-template <class TBus>
-void Chip<TBus>::pushToStack0(uint8_t data) {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::pushToStack0(uint8_t data) {
     // Write to stack
     writeDataBus(_addressBusLow, _addressBusHigh, data);
     
     // Removing 1 from address low using ALU (Add 0xFF without carry set like true 6502)
-    _aInput = 0xFF;
-    _bInput = _addressBusLow;
-    aluPerformSum(false, false);
+    _alu.performSum<DecimalSupported, false>(0xFF, _addressBusLow, false, false);
 }
 
-template <class TBus>
-void Chip<TBus>::pushToStack1() {
-    _addressBusLow = _adderHold;
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::pushToStack1() {
+    _addressBusLow = _alu.getAdderHold();
 }
 
-template <class TBus>
-void Chip<TBus>::pullFromStack0() {
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::pullFromStack0() {
     // Adding 1 with stackPointer using ALU (Add 0 with carry set like true 6502)
-    _aInput = 0x0;
-    _bInput = _addressBusLow;
-    aluPerformSum(false, true);
+    _alu.performSum<DecimalSupported, false>(0x0, _addressBusLow, false, true);
 }
 
-template <class TBus>
-void Chip<TBus>::pullFromStack1() {
-    readDataBus(_adderHold, _addressBusHigh);
-}
-
-// ALU
-
-template <class TBus>
-void Chip<TBus>::aluInvertBInput() {
-    _bInput = ~_bInput;
-}
-
-template <class TBus>
-void Chip<TBus>::aluPerformSum(bool decimalEnable, bool carryIn) {//TODO: terminer (halfCarry, decimalEnable)
-    uint16_t add = _aInput + _bInput + carryIn;
-    _adderHold = static_cast<uint8_t>(add);
-    
-    _aluOverflow = (_aInput ^ _adderHold) & (_bInput ^ _adderHold) & 0x80;
-    _aluCarry = add & 0x100;
-    //_aluHalfCarry = ((_aInput & 0xF) + (_bInput & 0xF) + carryIn) & 0x10;  // TODO: voir ce que c'est et si c'est utilisé
-}
-
-template <class TBus>
-void Chip<TBus>::aluPerformAnd() {
-    _adderHold = _aInput & _bInput;
-}
-
-template <class TBus>
-void Chip<TBus>::aluPerformOr() {
-    _adderHold = _aInput | _bInput;
-}
-
-template <class TBus>
-void Chip<TBus>::aluPerformEor() {
-    _adderHold = _aInput ^ _bInput;
-}
-
-template <class TBus>
-void Chip<TBus>::aluPerformShiftRight(bool carryIn) {
-    _adderHold = (_aInput >> 1) | (carryIn << 7);
-    
-    // In real 6502, it's not _aluCarry signal which is set but it's the first bit of DB bus which is used
-    _aluCarry = _aInput & 0x1;
+template <class TBus, bool DecimalSupported>
+void Chip<TBus, DecimalSupported>::pullFromStack1() {
+    readDataBus(_alu.getAdderHold(), _addressBusHigh);
 }
 
 #endif /* Cpu6502_Internal_Chip_s_hpp */
