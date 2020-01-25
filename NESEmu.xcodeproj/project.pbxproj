@@ -34,6 +34,12 @@
 		4D11382A23D533E60056AAAD /* Chip.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Chip.cpp; sourceTree = "<group>"; };
 		4D5DD38023CABF15003AE868 /* Undocumented.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Undocumented.hpp; sourceTree = "<group>"; };
 		4D5DD38123CABF5D003AE868 /* Undocumented_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Undocumented_s.hpp; sourceTree = "<group>"; };
+		4D6B9C1A23D69424000889C3 /* Nes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Nes.hpp; sourceTree = "<group>"; };
+		4D6B9C1B23D69622000889C3 /* Nes_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Nes_s.hpp; sourceTree = "<group>"; };
+		4D6B9C1C23D6AC08000889C3 /* Ppu.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Ppu.hpp; sourceTree = "<group>"; };
+		4D6B9C1E23D92987000889C3 /* Ppu_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Ppu_s.hpp; sourceTree = "<group>"; };
+		4D6B9C1F23D92C32000889C3 /* Cpu.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu.hpp; sourceTree = "<group>"; };
+		4D6B9C2023D92D25000889C3 /* Cpu_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu_s.hpp; sourceTree = "<group>"; };
 		4D9807EE23C39A66007D1953 /* Data.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Data.hpp; sourceTree = "<group>"; };
 		4D9807EF23C50190007D1953 /* AddressingMode.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AddressingMode.hpp; sourceTree = "<group>"; };
 		4D9807F023C50448007D1953 /* Flag.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Flag.hpp; sourceTree = "<group>"; };
@@ -138,6 +144,19 @@
 			path = Internal;
 			sourceTree = "<group>";
 		};
+		4D6B9C1D23D8CE32000889C3 /* NESEmu */ = {
+			isa = PBXGroup;
+			children = (
+				4D6B9C1F23D92C32000889C3 /* Cpu.hpp */,
+				4D6B9C2023D92D25000889C3 /* Cpu_s.hpp */,
+				4D6B9C1C23D6AC08000889C3 /* Ppu.hpp */,
+				4D6B9C1E23D92987000889C3 /* Ppu_s.hpp */,
+				4D6B9C1A23D69424000889C3 /* Nes.hpp */,
+				4D6B9C1B23D69622000889C3 /* Nes_s.hpp */,
+			);
+			path = NESEmu;
+			sourceTree = "<group>";
+		};
 		4DE643E823BAE2EC00CFFE4E = {
 			isa = PBXGroup;
 			children = (
@@ -160,6 +179,7 @@
 			isa = PBXGroup;
 			children = (
 				4D1137F823CD3F660056AAAD /* Cpu6502 */,
+				4D6B9C1D23D8CE32000889C3 /* NESEmu */,
 				4DE643F423BAE2EC00CFFE4E /* main.cpp */,
 			);
 			path = NESEmu;

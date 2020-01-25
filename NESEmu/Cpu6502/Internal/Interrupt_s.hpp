@@ -10,21 +10,21 @@
 #define Cpu6502_Internal_Interrupt_s_hpp
 
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::reset0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::reset0() {
     // If reset line stays low, continue this step, else go to next step
     if (_resetLine == true) {
         _currentInstruction = &Chip::reset1;
     }
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::reset1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::reset1() {
     _currentInstruction = &Chip::brk0;
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::brk0() {    // TODO: a voir pour interrupt
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::brk0() {    // TODO: a voir pour interrupt
     _currentInstruction = &Chip::brk1;
     
     // Read data without increment PC for reset, nmi and irq
@@ -38,8 +38,8 @@ void Chip<TBus, DecimalSupported>::brk0() {    // TODO: a voir pour interrupt
     fetchData();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::brk1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::brk1() {
     _currentInstruction = &Chip::brk2;
     
     // Push PCH to stack
@@ -47,8 +47,8 @@ void Chip<TBus, DecimalSupported>::brk1() {
     pushToStack0(_programCounterHigh);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::brk2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::brk2() {
     _currentInstruction = &Chip::brk3;
     
     // Push PCL to stack
@@ -56,8 +56,8 @@ void Chip<TBus, DecimalSupported>::brk2() {
     pushToStack0(_programCounterLow);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::brk3() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::brk3() {
     _currentInstruction = &Chip::brk4;
     
     // Push status flags to stack
@@ -65,8 +65,8 @@ void Chip<TBus, DecimalSupported>::brk3() {
     pushToStack0(_statusFlags | ((_interruptRequested == false) << static_cast<int>(Flag::Break))); // TODO: voir si ok
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::brk4() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::brk4() {
     _currentInstruction = &Chip::brk5;
     
     // Finish stack operation
@@ -80,27 +80,28 @@ void Chip<TBus, DecimalSupported>::brk4() {
     readDataBus(_interruptVectors[_interruptVectorsIndex][0], _interruptVectors[_interruptVectorsIndex][1]);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::brk5() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::brk5() {
     _currentInstruction = &Chip::brk6;
     
     // Disable interrupts
     _flagsHelper.set<Flag::InterruptDisable>(true);
     
     // 6502 uses the ALU to store temporary low byte of address (by adding 0 to it to keep its value in adderHold)
-    _alu.performSum<DecimalSupported, false>(0x0, _inputDataLatch, false, false);
+    _alu.performSum<BDecimalSupported, false>(0x0, _inputDataLatch, false, false);
     
     // Read high byte of address
     readDataBus(_interruptVectors[_interruptVectorsIndex][0] + 1, _interruptVectors[_interruptVectorsIndex][1]);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::brk6() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::brk6() {
     // Set PC
     _programCounterLow = _alu.getAdderHold();
     _programCounterHigh = _inputDataLatch;
     
     // TODO: voir si ok : (car il faut voir si c'est possible d'avoir la detection d'une interruption dans le stage du brk)
+    _irqRequested = false;  // TODO: voir si ok : https://wiki.nesdev.com/w/index.php/CPU_interrupts
     _nmiRequested = false;
     _resetRequested = false;
     _interruptRequested = false;
@@ -109,15 +110,15 @@ void Chip<TBus, DecimalSupported>::brk6() {
     fetchOpcode();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::rti0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::rti0() {
     _currentInstruction = &Chip::rti1;
     
     implied();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::rti1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::rti1() {
     _currentInstruction = &Chip::rti2;
     
     // Start stack operation (read of current cycle will read stack memory)
@@ -125,8 +126,8 @@ void Chip<TBus, DecimalSupported>::rti1() {
     pullFromStack0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::rti2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::rti2() {
     _currentInstruction = &Chip::rti3;
     
     // Pull status flag from stack
@@ -134,8 +135,8 @@ void Chip<TBus, DecimalSupported>::rti2() {
     pullFromStack0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::rti3() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::rti3() {
     _currentInstruction = &Chip::rti4;
     
     // Set status flag
@@ -146,8 +147,8 @@ void Chip<TBus, DecimalSupported>::rti3() {
     pullFromStack0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::rti4() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::rti4() {
     _currentInstruction = &Chip::rti5;
     
     // Pull PCH from stack and finish stack operation, need to put before ALU operation because adderHold holds stackPointer
@@ -155,11 +156,11 @@ void Chip<TBus, DecimalSupported>::rti4() {
     stopStackOperation();
     
     // 6502 uses the ALU to store temporary low byte of address (by adding 0 to it to keep its value in adderHold)
-    _alu.performSum<DecimalSupported, false>(0x0, _inputDataLatch, false, false);
+    _alu.performSum<BDecimalSupported, false>(0x0, _inputDataLatch, false, false);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::rti5() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::rti5() {
     // Set PC
     _programCounterLow = _alu.getAdderHold();
     _programCounterHigh = _inputDataLatch;

@@ -111,7 +111,7 @@ namespace {
     
     
     Bus bus;
-    Cpu6502::Chip<Bus> cpu6502(bus);
+    Cpu6502::Chip<Bus> cpu6502(bus, 0xFF, 0x0, 0x0, 0x0, 0x0, 0x20);    // Nestest needs an accumator starting at 0, but by default it is set to 0xAA like visual6502 TODO: a voir pour les valeurs au demarrage et si toujours besoin d'un 2eme constructor
     
 }
 
@@ -151,10 +151,9 @@ namespace {
     // Release reset to start cpu
     cpu6502.reset(true);
     
-    // We need to sync with nestest.log by adding two first clocks to exit the reset state, we also reset the accumulator because it is loaded with 0xAA on startup like visual6502
+    // We need to sync with nestest.log by adding two first clocks to exit the reset state
     cpu6502.clock();
     cpu6502.clock();
-    cpu6502._accumulator = 0;
     
     // Open nestest Log
     std::ifstream ifsLog("nestest.log");
@@ -178,16 +177,16 @@ namespace {
         XCTAssertTrue(cpu6502.getDataBus() == state.data[0]);
         
         // There are some instructions which delay the result on the next cycle because they use the decodeOpcodeAndExecuteInstruction cycle to write the result back, for these instructions, we need to process one extra cycle to have correct result
-        if ((cpu6502._accumulator != state.a) || (cpu6502._xIndex != state.x) || (cpu6502._yIndex != state.y) || (cpu6502._statusFlags != state.p) || (cpu6502._stackPointer != state.sp)) {
+        if ((cpu6502.getAccumulator() != state.a) || (cpu6502.getXIndex() != state.x) || (cpu6502.getYIndex() != state.y) || (cpu6502.getStatusFlags() != state.p) || (cpu6502.getStackPointer() != state.sp)) {
             cpu6502.clock();
             cycle += 1;
         }
         
-        XCTAssertTrue(cpu6502._accumulator == state.a);
-        XCTAssertTrue(cpu6502._xIndex == state.x);
-        XCTAssertTrue(cpu6502._yIndex == state.y);
-        XCTAssertTrue(cpu6502._statusFlags == state.p);
-        XCTAssertTrue(cpu6502._stackPointer == state.sp);
+        XCTAssertTrue(cpu6502.getAccumulator() == state.a);
+        XCTAssertTrue(cpu6502.getXIndex() == state.x);
+        XCTAssertTrue(cpu6502.getYIndex() == state.y);
+        XCTAssertTrue(cpu6502.getStatusFlags() == state.p);
+        XCTAssertTrue(cpu6502.getStackPointer() == state.sp);
     }
     
     // Close file

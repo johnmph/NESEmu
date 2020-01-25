@@ -26,7 +26,7 @@ namespace Cpu6502 {
             bool getCarry() const;
             bool getHalfCarry() const;
             
-            template <bool DecimalSupported, bool SubstractMode>
+            template <bool BDecimalSupported, bool BSubstractMode>
             void performSum(uint8_t aInput, uint8_t bInput, bool decimalEnable, bool carryIn);
             void performAnd(uint8_t aInput, uint8_t bInput);
             void performOr(uint8_t aInput, uint8_t bInput);
@@ -35,6 +35,9 @@ namespace Cpu6502 {
             
         private:
             void invertBInput();
+            
+            template <bool BSubstractMode>
+            void performSubstractMode();
             
             uint8_t _aInput;
             uint8_t _bInput;
@@ -60,36 +63,36 @@ namespace Cpu6502 {
             
             FlagsHelper(uint8_t &value, Alu &alu);
             
-            template <Flag ...flags>
+            template <Flag ...EFlags>
             static constexpr uint8_t getEnableMask();
             
-            template <Flag ...flags>
+            template <Flag ...EFlags>
             static constexpr uint8_t getDisableMask();
             
-            template <Flag ...flags>
+            template <Flag ...EFlags>
             void clear();
             
-            template <Flag ...flags>
+            template <Flag ...EFlags>
             bool get();
             
-            template <Flag flag>
+            template <Flag EFlag>
             void set(bool enable);
             
-            template <Flag flag>
+            template <Flag EFlag>
             void refreshImpl();
             
-            template <Flag flag>
+            template <Flag EFlag>
             void refreshImpl(uint8_t data);
             
             // Specialization for flags which depends on a data
-            template <Flag firstFlag, Flag secondFlag, Flag ...otherFlags, typename std::enable_if<(firstFlag == FlagsHelper::Flag::Negative) || (firstFlag == FlagsHelper::Flag::Zero), int>::type = 0>
+            template <Flag EFirstFlag, Flag ESecondFlag, Flag ...EOtherFlags, typename std::enable_if<(EFirstFlag == FlagsHelper::Flag::Negative) || (EFirstFlag == FlagsHelper::Flag::Zero), int>::type = 0>
             void refreshImpl(uint8_t data);
             
             // Specialization for flags which doesn't depend on a data, I don't know if this really optimize
-            template <Flag firstFlag, Flag secondFlag, Flag ...otherFlags, typename std::enable_if<(firstFlag != FlagsHelper::Flag::Negative) && (firstFlag != FlagsHelper::Flag::Zero), int>::type = 0>
+            template <Flag EFirstFlag, Flag ESecondFlag, Flag ...EOtherFlags, typename std::enable_if<(EFirstFlag != FlagsHelper::Flag::Negative) && (EFirstFlag != FlagsHelper::Flag::Zero), int>::type = 0>
             void refreshImpl(uint8_t data);
             
-            template <Flag ...flags>
+            template <Flag ...EFlags>
             void refresh(uint8_t data);
             
         private:
@@ -99,35 +102,45 @@ namespace Cpu6502 {
         
     }
     
-    template <class TBus, bool DecimalSupported = false>
+    template <class TBus, bool BDecimalSupported = false>
     struct Chip {
         using Flag = _Detail::FlagsHelper::Flag;
         
+        enum class ReadWrite : bool {
+            Read = true,
+            Write = false
+        };
         
         Chip(TBus &bus);
+        Chip(TBus &bus, uint16_t programCounter, uint8_t stackPointer, uint8_t accumulator, uint8_t xIndex, uint8_t yIndex, uint8_t statusFlags);
         
         void clock();
+        void ready(bool high);
         
         void reset(bool high);
         void nmi(bool high);
         void irq(bool high);
         
-        uint16_t getProgramCounter();   // TODO: pour debugging, mettre aussi d'autres getter (registers)
-        uint16_t getAddressBus();
-        uint8_t getDataBus();
+        void setOverflow(bool high);
         
-        //private://TODO: remettre apres les tests
+        uint16_t getProgramCounter() const;
+        uint8_t getStackPointer() const;
+        uint8_t getAccumulator() const;
+        uint8_t getXIndex() const;
+        uint8_t getYIndex() const;
+        uint8_t getStatusFlags() const;
+        uint16_t getAddressBus() const;
+        uint8_t getDataBus() const;
+        bool getReadWriteSignal() const;    // TODO: voir si un get ou un appel de fonction pour notifier ?
+        bool getSyncSignal() const; // TODO: voir si un get ou un appel de fonction pour notifier ?
+        
+    private:
         using OpcodeInstruction = void (Chip::*)();
         
         enum class Interrupts {
             Nmi,
             Reset,
             IrqBrk
-        };
-        
-        enum class ReadWrite : bool {
-            Read = true,
-            Write = false
         };
         
         // Memory
@@ -148,6 +161,9 @@ namespace Cpu6502 {
         void checkIrq();
         bool checkInterrupts();
         int getCurrentInterruptVectorsIndex();
+        
+        // Overflow
+        void checkOverflowFlag();
         
         // Stack
         void startStackOperation();
@@ -179,7 +195,7 @@ namespace Cpu6502 {
         uint8_t _accumulator;
         uint8_t _xIndex;
         uint8_t _yIndex;
-        uint8_t _statusFlags;
+        uint8_t _statusFlags;   // TODO: pour eviter de faire les operations pour les flags, peut etre separer ce registre en bools flag et le reconstituer que la ou c'est necessaire
         
         // Internal
         _Detail::FlagsHelper _flagsHelper;
@@ -195,12 +211,16 @@ namespace Cpu6502 {
         uint8_t _addressBusHigh;
         uint8_t _inputDataLatch;
         uint8_t _dataOutput;
+        bool _readyLine;
+        bool _sync;
         bool _readWrite;
         
         bool _programCounterNeedsIncrement;
         
         uint8_t _predecode;
         uint8_t _instruction;
+        
+        bool _setOverflowLine;
         
         _Detail::Alu _alu;
         

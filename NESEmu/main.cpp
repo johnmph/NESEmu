@@ -11,6 +11,7 @@
 #include <fstream>
 #include <chrono>
 #include "Cpu6502/Chip.hpp"
+#include "Nes.hpp"
 
 
 struct Bus {
@@ -160,7 +161,7 @@ int main(int argc, const char * argv[]) {
     for (int x = 0; x <= 1789773/*26555*/; ++x) {
         cpu.clock();
         
-        //std::cout << std::hex << cpu.getAddressBus() << " " << cpu.getProgramCounter() << " A:" << static_cast<int>(cpu._accumulator) << " X:" << static_cast<int>(cpu._xIndex) << " Y:" << static_cast<int>(cpu._yIndex) << " P:" << static_cast<int>(cpu._statusFlags) << " SP:" << static_cast<int>(cpu._stackPointer) << " Cycle: " << std::dec << x - 1 << "\n";
+        //std::cout << std::hex << cpu.getAddressBus() << " " << cpu.getProgramCounter() << " A:" << static_cast<int>(cpu.getAccumulator()) << " X:" << static_cast<int>(cpu.getXIndex()) << " Y:" << static_cast<int>(cpu.getYIndex()) << " P:" << static_cast<int>(cpu.getStatusFlags()) << " SP:" << static_cast<int>(cpu.getStackPointer()) << " Cycle: " << std::dec << x - 1 << "\n";
     }
     
     /*
@@ -170,6 +171,10 @@ int main(int argc, const char * argv[]) {
     
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     std::cout << std::dec << "Time in milliseconds: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "\n";
+    
+    NESEmu::Nes<NESEmu::Model::Ntsc> nes;
+    
+    nes.clock();
     
     return 0;
 }

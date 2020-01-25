@@ -71,6 +71,11 @@ void Alu::invertBInput() {
     _bInput = ~_bInput;
 }
 
+template <>
+void Alu::performSubstractMode<true>() {
+    invertBInput();
+}
+
 
 // Flags Helper
 

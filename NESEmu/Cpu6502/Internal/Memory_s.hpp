@@ -10,8 +10,8 @@
 #define Cpu6502_Internal_Memory_s_hpp
 
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ld0(uint8_t &data) {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ld0(uint8_t &data) {
     data = _inputDataLatch;
     
     // Update status
@@ -21,587 +21,587 @@ void Chip<TBus, DecimalSupported>::ld0(uint8_t &data) {
     fetchOpcode();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::lda0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::lda0() {
     ld0(_accumulator);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaImm0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaImm0() {
     _currentInstruction = &Chip::lda0;
     immediate();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaZp0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaZp0() {
     _currentInstruction = &Chip::ldaZp1;
     zeroPage();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaZp1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaZp1() {
     _currentInstruction = &Chip::lda0;
     zeroPageLoad();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaZpX0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaZpX0() {
     _currentInstruction = &Chip::ldaZpX1;
     zeroPageIndexed0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaZpX1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaZpX1() {
     _currentInstruction = &Chip::ldaZpX2;
     zeroPageIndexedX1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaZpX2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaZpX2() {
     _currentInstruction = &Chip::lda0;
     zeroPageIndexedLoad();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaAbs0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaAbs0() {
     _currentInstruction = &Chip::ldaAbs1;
     absolute0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaAbs1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaAbs1() {
     _currentInstruction = &Chip::ldaAbs2;
     absolute1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaAbs2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaAbs2() {
     _currentInstruction = &Chip::lda0;
     absoluteLoad();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaAbsX0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaAbsX0() {
     _currentInstruction = &Chip::ldaAbsX1;
     absoluteIndexed0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaAbsX1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaAbsX1() {
     _currentInstruction = &Chip::ldaAbsX2;
     absoluteIndexedX1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaAbsX2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaAbsX2() {
     _currentInstruction = &Chip::ldaAbsX3;
     absoluteIndexedLoad0(&Chip::lda0);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaAbsX3() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaAbsX3() {
     _currentInstruction = &Chip::lda0;
     absoluteIndexedLoad1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaAbsY0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaAbsY0() {
     _currentInstruction = &Chip::ldaAbsY1;
     absoluteIndexed0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaAbsY1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaAbsY1() {
     _currentInstruction = &Chip::ldaAbsY2;
     absoluteIndexedY1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaAbsY2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaAbsY2() {
     _currentInstruction = &Chip::ldaAbsY3;
     absoluteIndexedLoad0(&Chip::lda0);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaAbsY3() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaAbsY3() {
     _currentInstruction = &Chip::lda0;
     absoluteIndexedLoad1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaIndX0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaIndX0() {
     _currentInstruction = &Chip::ldaIndX1;
     zeroPagePreIndexedIndirect0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaIndX1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaIndX1() {
     _currentInstruction = &Chip::ldaIndX2;
     zeroPagePreIndexedIndirect1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaIndX2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaIndX2() {
     _currentInstruction = &Chip::ldaIndX3;
     zeroPagePreIndexedIndirect2();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaIndX3() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaIndX3() {
     _currentInstruction = &Chip::ldaIndX4;
     zeroPagePreIndexedIndirect3();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaIndX4() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaIndX4() {
     _currentInstruction = &Chip::lda0;
     zeroPagePreIndexedIndirectLoad();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaIndY0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaIndY0() {
     _currentInstruction = &Chip::ldaIndY1;
     zeroPageIndirectPostIndexed0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaIndY1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaIndY1() {
     _currentInstruction = &Chip::ldaIndY2;
     zeroPageIndirectPostIndexed1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaIndY2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaIndY2() {
     _currentInstruction = &Chip::ldaIndY3;
     zeroPageIndirectPostIndexed2();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaIndY3() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaIndY3() {
     _currentInstruction = &Chip::ldaIndY4;
     zeroPageIndirectPostIndexedLoad0(&Chip::lda0);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldaIndY4() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldaIndY4() {
     _currentInstruction = &Chip::lda0;
     zeroPageIndirectPostIndexedLoad1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldx0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldx0() {
     ld0(_xIndex);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldxImm0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldxImm0() {
     _currentInstruction = &Chip::ldx0;
     immediate();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldxZp0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldxZp0() {
     _currentInstruction = &Chip::ldxZp1;
     zeroPage();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldxZp1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldxZp1() {
     _currentInstruction = &Chip::ldx0;
     zeroPageLoad();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldxZpY0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldxZpY0() {
     _currentInstruction = &Chip::ldxZpY1;
     zeroPageIndexed0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldxZpY1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldxZpY1() {
     _currentInstruction = &Chip::ldxZpY2;
     zeroPageIndexedY1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldxZpY2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldxZpY2() {
     _currentInstruction = &Chip::ldx0;
     zeroPageIndexedLoad();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldxAbs0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldxAbs0() {
     _currentInstruction = &Chip::ldxAbs1;
     absolute0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldxAbs1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldxAbs1() {
     _currentInstruction = &Chip::ldxAbs2;
     absolute1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldxAbs2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldxAbs2() {
     _currentInstruction = &Chip::ldx0;
     absoluteLoad();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldxAbsY0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldxAbsY0() {
     _currentInstruction = &Chip::ldxAbsY1;
     absoluteIndexed0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldxAbsY1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldxAbsY1() {
     _currentInstruction = &Chip::ldxAbsY2;
     absoluteIndexedY1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldxAbsY2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldxAbsY2() {
     _currentInstruction = &Chip::ldxAbsY3;
     absoluteIndexedLoad0(&Chip::ldx0);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldxAbsY3() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldxAbsY3() {
     _currentInstruction = &Chip::ldx0;
     absoluteIndexedLoad1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldy0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldy0() {
     ld0(_yIndex);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldyImm0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldyImm0() {
     _currentInstruction = &Chip::ldy0;
     immediate();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldyZp0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldyZp0() {
     _currentInstruction = &Chip::ldyZp1;
     zeroPage();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldyZp1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldyZp1() {
     _currentInstruction = &Chip::ldy0;
     zeroPageLoad();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldyZpX0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldyZpX0() {
     _currentInstruction = &Chip::ldyZpX1;
     zeroPageIndexed0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldyZpX1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldyZpX1() {
     _currentInstruction = &Chip::ldyZpX2;
     zeroPageIndexedX1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldyZpX2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldyZpX2() {
     _currentInstruction = &Chip::ldy0;
     zeroPageIndexedLoad();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldyAbs0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldyAbs0() {
     _currentInstruction = &Chip::ldyAbs1;
     absolute0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldyAbs1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldyAbs1() {
     _currentInstruction = &Chip::ldyAbs2;
     absolute1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldyAbs2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldyAbs2() {
     _currentInstruction = &Chip::ldy0;
     absoluteLoad();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldyAbsX0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldyAbsX0() {
     _currentInstruction = &Chip::ldyAbsX1;
     absoluteIndexed0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldyAbsX1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldyAbsX1() {
     _currentInstruction = &Chip::ldyAbsX2;
     absoluteIndexedX1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldyAbsX2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldyAbsX2() {
     _currentInstruction = &Chip::ldyAbsX3;
     absoluteIndexedLoad0(&Chip::ldy0);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::ldyAbsX3() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::ldyAbsX3() {
     _currentInstruction = &Chip::ldy0;
     absoluteIndexedLoad1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staZp0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staZp0() {
     _currentInstruction = &Chip::staZp1;
     zeroPage();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staZp1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staZp1() {
     _currentInstruction = &Chip::fetchOpcode;
     zeroPageStore(_accumulator);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staZpX0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staZpX0() {
     _currentInstruction = &Chip::staZpX1;
     zeroPageIndexed0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staZpX1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staZpX1() {
     _currentInstruction = &Chip::staZpX2;
     zeroPageIndexedX1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staZpX2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staZpX2() {
     _currentInstruction = &Chip::fetchOpcode;
     zeroPageIndexedStore(_accumulator);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staAbs0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staAbs0() {
     _currentInstruction = &Chip::staAbs1;
     absolute0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staAbs1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staAbs1() {
     _currentInstruction = &Chip::staAbs2;
     absolute1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staAbs2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staAbs2() {
     _currentInstruction = &Chip::fetchOpcode;
     absoluteStore(_accumulator);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staAbsX0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staAbsX0() {
     _currentInstruction = &Chip::staAbsX1;
     absoluteIndexed0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staAbsX1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staAbsX1() {
     _currentInstruction = &Chip::staAbsX2;
     absoluteIndexedX1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staAbsX2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staAbsX2() {
     _currentInstruction = &Chip::staAbsX3;
     absoluteIndexedStore0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staAbsX3() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staAbsX3() {
     _currentInstruction = &Chip::fetchOpcode;
     absoluteIndexedStore1(_accumulator);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staAbsY0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staAbsY0() {
     _currentInstruction = &Chip::staAbsY1;
     absoluteIndexed0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staAbsY1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staAbsY1() {
     _currentInstruction = &Chip::staAbsY2;
     absoluteIndexedY1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staAbsY2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staAbsY2() {
     _currentInstruction = &Chip::staAbsY3;
     absoluteIndexedStore0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staAbsY3() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staAbsY3() {
     _currentInstruction = &Chip::fetchOpcode;
     absoluteIndexedStore1(_accumulator);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staIndX0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staIndX0() {
     _currentInstruction = &Chip::staIndX1;
     zeroPagePreIndexedIndirect0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staIndX1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staIndX1() {
     _currentInstruction = &Chip::staIndX2;
     zeroPagePreIndexedIndirect1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staIndX2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staIndX2() {
     _currentInstruction = &Chip::staIndX3;
     zeroPagePreIndexedIndirect2();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staIndX3() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staIndX3() {
     _currentInstruction = &Chip::staIndX4;
     zeroPagePreIndexedIndirect3();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staIndX4() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staIndX4() {
     _currentInstruction = &Chip::fetchOpcode;
     zeroPagePreIndexedIndirectStore(_accumulator);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staIndY0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staIndY0() {
     _currentInstruction = &Chip::staIndY1;
     zeroPageIndirectPostIndexed0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staIndY1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staIndY1() {
     _currentInstruction = &Chip::staIndY2;
     zeroPageIndirectPostIndexed1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staIndY2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staIndY2() {
     _currentInstruction = &Chip::staIndY3;
     zeroPageIndirectPostIndexed2();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staIndY3() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staIndY3() {
     _currentInstruction = &Chip::staIndY4;
     zeroPageIndirectPostIndexedStore0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::staIndY4() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::staIndY4() {
     _currentInstruction = &Chip::fetchOpcode;
     zeroPageIndirectPostIndexedStore1(_accumulator);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::stxZp0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::stxZp0() {
     _currentInstruction = &Chip::stxZp1;
     zeroPage();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::stxZp1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::stxZp1() {
     _currentInstruction = &Chip::fetchOpcode;
     zeroPageStore(_xIndex);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::stxZpY0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::stxZpY0() {
     _currentInstruction = &Chip::stxZpY1;
     zeroPageIndexed0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::stxZpY1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::stxZpY1() {
     _currentInstruction = &Chip::stxZpY2;
     zeroPageIndexedY1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::stxZpY2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::stxZpY2() {
     _currentInstruction = &Chip::fetchOpcode;
     zeroPageIndexedStore(_xIndex);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::stxAbs0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::stxAbs0() {
     _currentInstruction = &Chip::stxAbs1;
     absolute0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::stxAbs1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::stxAbs1() {
     _currentInstruction = &Chip::stxAbs2;
     absolute1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::stxAbs2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::stxAbs2() {
     _currentInstruction = &Chip::fetchOpcode;
     absoluteStore(_xIndex);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::styZp0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::styZp0() {
     _currentInstruction = &Chip::styZp1;
     zeroPage();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::styZp1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::styZp1() {
     _currentInstruction = &Chip::fetchOpcode;
     zeroPageStore(_yIndex);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::styZpX0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::styZpX0() {
     _currentInstruction = &Chip::styZpX1;
     zeroPageIndexed0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::styZpX1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::styZpX1() {
     _currentInstruction = &Chip::styZpX2;
     zeroPageIndexedX1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::styZpX2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::styZpX2() {
     _currentInstruction = &Chip::fetchOpcode;
     zeroPageIndexedStore(_yIndex);
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::styAbs0() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::styAbs0() {
     _currentInstruction = &Chip::styAbs1;
     absolute0();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::styAbs1() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::styAbs1() {
     _currentInstruction = &Chip::styAbs2;
     absolute1();
 }
 
-template <class TBus, bool DecimalSupported>
-void Chip<TBus, DecimalSupported>::styAbs2() {
+template <class TBus, bool BDecimalSupported>
+void Chip<TBus, BDecimalSupported>::styAbs2() {
     _currentInstruction = &Chip::fetchOpcode;
     absoluteStore(_yIndex);
 }
