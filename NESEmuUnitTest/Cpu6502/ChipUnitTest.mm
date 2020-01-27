@@ -36,6 +36,39 @@ namespace {
         std::array<uint8_t, 1024 * 64> memory;
     };
     
+    struct Cpu6502InternalViewer {
+        
+        Cpu6502InternalViewer(Cpu6502::Chip<Bus, Cpu6502InternalViewer> const &cpu6502) : _cpu6502(cpu6502) {
+        }
+        
+        uint16_t getProgramCounter() const {
+            return (_cpu6502._programCounterHigh << 8) | _cpu6502._programCounterLow;
+        }
+        
+        uint8_t getStackPointer() const {
+            return _cpu6502._stackPointer;
+        }
+        
+        uint8_t getAccumulator() const {
+            return _cpu6502._accumulator;
+        }
+        
+        uint8_t getXIndex() const {
+            return _cpu6502._xIndex;
+        }
+        
+        uint8_t getYIndex() const {
+            return _cpu6502._yIndex;
+        }
+        
+        uint8_t getStatusFlags() const {
+            return _cpu6502._statusFlags;
+        }
+        
+    private:
+        Cpu6502::Chip<Bus, Cpu6502InternalViewer> const &_cpu6502;
+    };
+    
     struct State {
         uint16_t pc;
         uint8_t data[3];
@@ -111,7 +144,8 @@ namespace {
     
     
     Bus bus;
-    Cpu6502::Chip<Bus> cpu6502(bus, 0xFF, 0x0, 0x0, 0x0, 0x0, 0x20);    // Nestest needs an accumator starting at 0, but by default it is set to 0xAA like visual6502 TODO: a voir pour les valeurs au demarrage et si toujours besoin d'un 2eme constructor
+    Cpu6502::Chip<Bus, Cpu6502InternalViewer> cpu6502(bus, 0xFF, 0x0, 0x0, 0x0, 0x0, 0x20);    // Nestest needs an accumator starting at 0, but by default it is set to 0xAA like visual6502 TODO: a voir pour les valeurs au demarrage et si toujours besoin d'un 2eme constructor
+    Cpu6502InternalViewer cpu6502InternalViewer(cpu6502);
     
 }
 
@@ -173,20 +207,20 @@ namespace {
         }
         
         // Check state with current Cpu state
-        XCTAssertTrue(cpu6502.getProgramCounter() == state.pc);
+        XCTAssertTrue(cpu6502InternalViewer.getProgramCounter() == state.pc);
         XCTAssertTrue(cpu6502.getDataBus() == state.data[0]);
         
         // There are some instructions which delay the result on the next cycle because they use the decodeOpcodeAndExecuteInstruction cycle to write the result back, for these instructions, we need to process one extra cycle to have correct result
-        if ((cpu6502.getAccumulator() != state.a) || (cpu6502.getXIndex() != state.x) || (cpu6502.getYIndex() != state.y) || (cpu6502.getStatusFlags() != state.p) || (cpu6502.getStackPointer() != state.sp)) {
+        if ((cpu6502InternalViewer.getAccumulator() != state.a) || (cpu6502InternalViewer.getXIndex() != state.x) || (cpu6502InternalViewer.getYIndex() != state.y) || (cpu6502InternalViewer.getStatusFlags() != state.p) || (cpu6502InternalViewer.getStackPointer() != state.sp)) {
             cpu6502.clock();
             cycle += 1;
         }
         
-        XCTAssertTrue(cpu6502.getAccumulator() == state.a);
-        XCTAssertTrue(cpu6502.getXIndex() == state.x);
-        XCTAssertTrue(cpu6502.getYIndex() == state.y);
-        XCTAssertTrue(cpu6502.getStatusFlags() == state.p);
-        XCTAssertTrue(cpu6502.getStackPointer() == state.sp);
+        XCTAssertTrue(cpu6502InternalViewer.getAccumulator() == state.a);
+        XCTAssertTrue(cpu6502InternalViewer.getXIndex() == state.x);
+        XCTAssertTrue(cpu6502InternalViewer.getYIndex() == state.y);
+        XCTAssertTrue(cpu6502InternalViewer.getStatusFlags() == state.p);
+        XCTAssertTrue(cpu6502InternalViewer.getStackPointer() == state.sp);
     }
     
     // Close file

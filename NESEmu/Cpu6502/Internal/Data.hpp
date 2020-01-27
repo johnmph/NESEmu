@@ -34,8 +34,8 @@
  
  */
 
-template <class TBus, bool BDecimalSupported>
-const typename Chip<TBus, BDecimalSupported>::OpcodeInstruction Chip<TBus, BDecimalSupported>::_opcodeInstructionFuncs[256] = {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+const typename Chip<TBus, TInternalHardware, BDecimalSupported>::OpcodeInstruction Chip<TBus, TInternalHardware, BDecimalSupported>::_opcodeInstructionFuncs[256] = {
     // $00 -> Brk
     &Chip::brk0,
     // $01 -> ORA ($az, X)
@@ -550,14 +550,14 @@ const typename Chip<TBus, BDecimalSupported>::OpcodeInstruction Chip<TBus, BDeci
     &Chip::insAbsX0
 };
 
-template <class TBus, bool BDecimalSupported>
-const uint8_t Chip<TBus, BDecimalSupported>::_interruptVectors[3][2] = {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+const uint8_t Chip<TBus, TInternalHardware, BDecimalSupported>::_interruptVectors[3][2] = {
     0xFA, 0xFF,     // NMI (Prior over IRQ/BRK but not Reset)
     0xFC, 0xFF,     // Reset (Higher priority)
     0xFE, 0xFF,     // IRQ, BRK (Lower priority)
 };
 
-template <class TBus, bool BDecimalSupported>
-const uint8_t Chip<TBus, BDecimalSupported>::_stackPageNumber = 0x1;
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+const uint8_t Chip<TBus, TInternalHardware, BDecimalSupported>::_stackPageNumber = 0x1;
 
 #endif /* Cpu6502_Internal_Data_hpp */

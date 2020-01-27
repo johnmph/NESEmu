@@ -10,61 +10,61 @@
 #define Cpu6502_Internal_Stack_s_hpp
 
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::pha0() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::pha0() {
     _currentInstruction = &Chip::pha1;
     
     implied();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::pha1() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::pha1() {
     _currentInstruction = &Chip::pha2;
     
     startStackOperation();
     pushToStack0(_accumulator);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::pha2() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::pha2() {
     pushToStack1();
     stopStackOperation();
     
     fetchOpcode();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::php0() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::php0() {
     _currentInstruction = &Chip::php1;
     
     implied();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::php1() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::php1() {
     _currentInstruction = &Chip::php2;
     
     startStackOperation();
     pushToStack0(_statusFlags | (1 << static_cast<int>(Flag::Break)));
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::php2() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::php2() {
     pushToStack1();
     stopStackOperation();
     
     fetchOpcode();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::pla0() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::pla0() {
     _currentInstruction = &Chip::pla1;
     
     implied();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::pla1() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::pla1() {
     _currentInstruction = &Chip::pla2;
     
     // Start stack operation (read of current cycle will read stack memory)
@@ -72,16 +72,16 @@ void Chip<TBus, BDecimalSupported>::pla1() {
     pullFromStack0();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::pla2() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::pla2() {
     _currentInstruction = &Chip::pla3;
     
     pullFromStack1();
     stopStackOperation();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::pla3() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::pla3() {
     _accumulator = _inputDataLatch;
     
     // Update status
@@ -91,15 +91,15 @@ void Chip<TBus, BDecimalSupported>::pla3() {
     fetchOpcode();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::plp0() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::plp0() {
     _currentInstruction = &Chip::plp1;
     
     implied();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::plp1() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::plp1() {
     _currentInstruction = &Chip::plp2;
     
     // Start stack operation (read of current cycle will read stack memory)
@@ -107,16 +107,16 @@ void Chip<TBus, BDecimalSupported>::plp1() {
     pullFromStack0();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::plp2() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::plp2() {
     _currentInstruction = &Chip::plp3;
     
     pullFromStack1();
     stopStackOperation();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::plp3() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::plp3() {
     // Must be called before changing flag to delay possible interrupts after the next instruction
     // See http://wiki.nesdev.com/w/index.php/CPU_interrupts
     fetchOpcode();

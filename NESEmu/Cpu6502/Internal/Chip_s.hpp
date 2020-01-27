@@ -112,48 +112,29 @@ namespace _Detail {
 
 // Public interface
 
-template <class TBus, bool BDecimalSupported>
-Chip<TBus, BDecimalSupported>::Chip(TBus &bus) : Chip(bus, 0xFF, 0x0, 0xAA, 0x0, 0x0, 0x20) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+Chip<TBus, TInternalHardware, BDecimalSupported>::Chip(TBus &bus) : Chip(bus, 0xFF, 0x0, 0xAA, 0x0, 0x0, 0x20) {
 }
 
-template <class TBus, bool BDecimalSupported>
-Chip<TBus, BDecimalSupported>::Chip(TBus &bus, uint16_t programCounter, uint8_t stackPointer, uint8_t accumulator, uint8_t xIndex, uint8_t yIndex, uint8_t statusFlags) : _flagsHelper(_statusFlags, _alu), _bus(bus), _programCounterLow(programCounter & 0xFF), _programCounterHigh(programCounter >> 8), _stackPointer(stackPointer), _accumulator(accumulator), _xIndex(xIndex), _yIndex(yIndex), _statusFlags(statusFlags), _readyLine(true), _setOverflowLine(true), _programCounterNeedsIncrement(false), _resetRequested(false), _nmiLine(true), _nmiLinePrevious(true), _nmiRequested(false), _irqLine(true), _irqRequested(false), _interruptRequested(false) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+Chip<TBus, TInternalHardware, BDecimalSupported>::Chip(TBus &bus, uint16_t programCounter, uint8_t stackPointer, uint8_t accumulator, uint8_t xIndex, uint8_t yIndex, uint8_t statusFlags) : _flagsHelper(_statusFlags, _alu), _bus(bus), _programCounterLow(programCounter & 0xFF), _programCounterHigh(programCounter >> 8), _stackPointer(stackPointer), _accumulator(accumulator), _xIndex(xIndex), _yIndex(yIndex), _statusFlags(statusFlags), _readyLine(true), _readyWaitRequested(false), _setOverflowLine(true), _setOverflowLinePrevious(true),  _programCounterNeedsIncrement(false), _resetRequested(false), _nmiLine(true), _nmiLinePrevious(true), _nmiRequested(false), _irqLine(true), _irqRequested(false), _interruptRequested(false) {
     reset(false);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::clock() {
-    // Update PC
-    updateProgramCounter();
-    
-    // Initialize dataOutput to emulate possible bus conflict which cause a low level to win (it is like an AND operation)
-    //_dataOutput = 0xFF;
-    
-    // If rdy is low, wait before perform next read cycle
-    if ((_readyLine == true) || (_readWrite != static_cast<bool>(ReadWrite::Read))) {// TODO: voir si c'est bon ainsi (si on update le pc, si on checke les interrupts, si on check le set overflow) : normalement le ready bloque le phi2 (clock), voir sur le schema ce qu'il bloque
-        // Execute current stage
-        (this->*_currentInstruction)();
-    }
-    
-    // Interrupts are checked each clock (second half of cycle)
-    checkNmi(); // TODO: si entre les clocks il ne faut pas le mettre ici mais dans nmi
-    checkIrq();
-    
-    // Each clock, there is a memory access
-    fetchMemory();
-    
-    // Check for overflow flag
-    checkOverflowFlag();    // TODO: si pas seulement dans phi2 mais n'importe quand il faut le mettre dans setOverflow
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::clock() {
+    // Perform a clock without forcing execution
+    clock(false);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::ready(bool high) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::ready(bool high) {
     // Save signal
     _readyLine = high;
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::reset(bool high) {  // TODO: voir pour les registres si on les laisse ainsi ou si on les reset : normalement on les laisse ainsi puisqu'un reset c'est juste un signal comme une interruption (mais a voir, on ne sait jamais) : peut etre avoir une methode power qui fait un hard reset et ce reset est le soft reset
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::reset(bool high) {  // TODO: voir pour les registres si on les laisse ainsi ou si on les reset : normalement on les laisse ainsi puisqu'un reset c'est juste un signal comme une interruption (mais a voir, on ne sait jamais) : peut etre avoir une methode power qui fait un hard reset et ce reset est le soft reset
     // Save signal
     _resetLine = high;
     
@@ -165,78 +146,112 @@ void Chip<TBus, BDecimalSupported>::reset(bool high) {  // TODO: voir pour les r
     }
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::nmi(bool high) {    // TODO: a terminer/tester (il parait qu'il faut 2 cycles pour que le signal low soit pris en compte, a voir)
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::nmi(bool high) {    // TODO: a terminer/tester (il parait qu'il faut 2 cycles pour que le signal low soit pris en compte, a voir)
     // Save signal
     _nmiLine = high;
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::irq(bool high) {    // TODO: a tester
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::irq(bool high) {    // TODO: a tester
     // Save signal
     _irqLine = high;
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::setOverflow(bool high) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::setOverflow(bool high) {
     // Save signal
     _setOverflowLine = high;
 }
-
-template <class TBus, bool BDecimalSupported>
-uint16_t Chip<TBus, BDecimalSupported>::getProgramCounter() const {
+/*
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+uint16_t Chip<TBus, TInternalHardware, BDecimalSupported>::getProgramCounter() const {
     return (_programCounterHigh << 8) | _programCounterLow;
 }
 
-template <class TBus, bool BDecimalSupported>
-uint8_t Chip<TBus, BDecimalSupported>::getStackPointer() const {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+uint8_t Chip<TBus, TInternalHardware, BDecimalSupported>::getStackPointer() const {
     return _stackPointer;
 }
 
-template <class TBus, bool BDecimalSupported>
-uint8_t Chip<TBus, BDecimalSupported>::getAccumulator() const {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+uint8_t Chip<TBus, TInternalHardware, BDecimalSupported>::getAccumulator() const {
     return _accumulator;
 }
 
-template <class TBus, bool BDecimalSupported>
-uint8_t Chip<TBus, BDecimalSupported>::getXIndex() const {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+uint8_t Chip<TBus, TInternalHardware, BDecimalSupported>::getXIndex() const {
     return _xIndex;
 }
 
-template <class TBus, bool BDecimalSupported>
-uint8_t Chip<TBus, BDecimalSupported>::getYIndex() const {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+uint8_t Chip<TBus, TInternalHardware, BDecimalSupported>::getYIndex() const {
     return _yIndex;
 }
 
-template <class TBus, bool BDecimalSupported>
-uint8_t Chip<TBus, BDecimalSupported>::getStatusFlags() const {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+uint8_t Chip<TBus, TInternalHardware, BDecimalSupported>::getStatusFlags() const {
     return _statusFlags;
-}
+}*/
 
-template <class TBus, bool BDecimalSupported>
-uint16_t Chip<TBus, BDecimalSupported>::getAddressBus() const {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+uint16_t Chip<TBus, TInternalHardware, BDecimalSupported>::getAddressBus() const {
     return (_addressBusHigh << 8) | _addressBusLow;
 }
 
-template <class TBus, bool BDecimalSupported>
-uint8_t Chip<TBus, BDecimalSupported>::getDataBus() const {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+uint8_t Chip<TBus, TInternalHardware, BDecimalSupported>::getDataBus() const {
     return ((_readWrite == static_cast<bool>(ReadWrite::Read)) || (_resetRequested == true)) ? _inputDataLatch : _dataOutput;
 }
 
-template <class TBus, bool BDecimalSupported>
-bool Chip<TBus, BDecimalSupported>::getReadWriteSignal() const {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+bool Chip<TBus, TInternalHardware, BDecimalSupported>::getReadWriteSignal() const {
     return _readWrite;
 }
 
-template <class TBus, bool BDecimalSupported>
-bool Chip<TBus, BDecimalSupported>::getSyncSignal() const {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+bool Chip<TBus, TInternalHardware, BDecimalSupported>::getSyncSignal() const {
     return _sync;
+}
+
+// Clock
+
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::clock(bool forceExecute) {
+    // ** PHI1 **
+    
+    // Update PC
+    updateProgramCounter(); // TODO: voir si ici ou dans phi2 (et donc plus besoin de ca car simplement le mettre la ou on l'appelle
+    
+    // Check for overflow flag
+    checkOverflowFlag();
+    
+    // Initialize dataOutput to emulate possible bus conflict which cause a low level to win (it is like an AND operation)
+    //_dataOutput = 0xFF;
+    
+    // If rdy is low, wait before perform next read cycle unless we force execute
+    if (((_readyWaitRequested == false) || (_readWrite != static_cast<bool>(ReadWrite::Read))) || (forceExecute == true)) {
+        // Execute current stage
+        (this->*_currentInstruction)();
+    }
+    
+    // ** PHI2 **
+    
+    // Interrupts are checked each clock (second half of cycle)
+    checkNmi();
+    checkIrq();
+    
+    // Check ready line
+    checkReady();
+    
+    // Each clock, there is a memory access
+    fetchMemory();
 }
 
 // Memory
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::fetchMemory() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::fetchMemory() {
     if ((_readWrite == static_cast<bool>(ReadWrite::Read)) || (_resetRequested == true)) {
         _inputDataLatch = _bus.read((_addressBusHigh << 8) | _addressBusLow);
         _predecode = _inputDataLatch;
@@ -247,8 +262,8 @@ void Chip<TBus, BDecimalSupported>::fetchMemory() {
     _bus.write((_addressBusHigh << 8) | _addressBusLow, _dataOutput);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::readDataBus(uint8_t low, uint8_t high) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::readDataBus(uint8_t low, uint8_t high) {
     // Write address bus
     _addressBusLow = low;
     _addressBusHigh = high;
@@ -257,8 +272,8 @@ void Chip<TBus, BDecimalSupported>::readDataBus(uint8_t low, uint8_t high) {
     _readWrite = static_cast<bool>(ReadWrite::Read);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::writeDataBus(uint8_t low, uint8_t high, uint8_t data) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::writeDataBus(uint8_t low, uint8_t high, uint8_t data) {
     // Write address bus
     _addressBusLow = low;
     _addressBusHigh = high;
@@ -273,38 +288,41 @@ void Chip<TBus, BDecimalSupported>::writeDataBus(uint8_t low, uint8_t high, uint
 
 // Program flow
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::incrementProgramCounter() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::incrementProgramCounter() {
     // In real 6502, PC is not increment in end of current cycle but in beginning of next cycle
     _programCounterNeedsIncrement = true;
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::updateProgramCounter() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::updateProgramCounter() {
     _programCounterLow += _programCounterNeedsIncrement;
     _programCounterHigh += ((_programCounterLow == 0) && (_programCounterNeedsIncrement == true));
     
     _programCounterNeedsIncrement = false;
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::fetchData() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::fetchData() {
     readDataBus(_programCounterLow, _programCounterHigh);
     incrementProgramCounter();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::fetchOpcode(OpcodeInstruction nextInstruction) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::fetchOpcode(OpcodeInstruction nextInstruction) {
     // Set next instruction
     _currentInstruction = nextInstruction;
     
     // If interrupt requested
     if (checkInterrupts() == true) {
         // Read opcode without increment PC
-        readDataBus(_programCounterLow, _programCounterHigh);   // TODO: voir si ok
+        readDataBus(_programCounterLow, _programCounterHigh);
         
         // Save interrupt flag to know that an interrupt is occur (and not brk opcode)
         _interruptRequested = true;
+        
+        // Set sync high
+        _sync = true;   // TODO: voir si ici ou au debut de la methode, normalement c'est ici (si c'est au debut, pas besoin d'avoir les 2)
         
         return;
     }
@@ -312,21 +330,32 @@ void Chip<TBus, BDecimalSupported>::fetchOpcode(OpcodeInstruction nextInstructio
     fetchData();
     
     // Set sync high
-    _sync = true;   // TODO: voir si ici ou au debut de la methode, normalement c'est ici
+    _sync = true;   // TODO: voir si ici ou au debut de la methode, normalement c'est ici (si c'est au debut, pas besoin d'avoir les 2)
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::fetchOpcode() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::fetchOpcode() {
     // Fetch opcode then decode opcode and execute instruction on the next cycle
     fetchOpcode(&Chip::decodeOpcodeAndExecuteInstruction);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::decodeOpcodeAndExecuteInstruction() {
-    // If rdy is low, wait before perform next read cycle
-    /*if (_readyLine == false) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::fetchOpcodeAfterRdyLow() {
+    // Set next instruction
+    _currentInstruction = &Chip::decodeOpcodeAndExecuteInstruction;
+    
+    // Read opcode located at the address saved in address registers
+    readDataBus(_addressBusLow, _addressBusHigh);
+}
+
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::decodeOpcodeAndExecuteInstruction() {
+    // We need this because some instructions will perform actions in the decode step of the next instruction, so we need to let them perform actions even if RDY is low, but we can't decode next opcode because opcode is not ready for reading
+    if (_readyWaitRequested == true) {
+        // We can't use fetchOpcode here because fetch was already performed on the previous cycle, so the interrupts must not be checked again, just the data which is ready for reading
+        _currentInstruction = &Chip::fetchOpcodeAfterRdyLow;
         return;
-    }*/
+    }
     
     // Get current instruction from opcode (or BRK (0) if interrupt requested)
     _instruction = (_interruptRequested == false) ? _predecode : 0;
@@ -339,10 +368,32 @@ void Chip<TBus, BDecimalSupported>::decodeOpcodeAndExecuteInstruction() {
     _sync = false;   // TODO: voir si ici ou au debut de la methode, normalement c'est ici
 }
 
+// Overflow
+
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::checkOverflowFlag() {
+    // Set overflow is requested if setOverflow line has transition from high to low
+    if ((_setOverflowLinePrevious == true) && (_setOverflowLine == false)) {
+        // Enable overflow flag if setOverflow is low, otherwise does nothing
+        _flagsHelper.set<Flag::Overflow>(_setOverflowLine == false);
+    }
+    
+    // Save previous setOverflow signal
+    _setOverflowLinePrevious = _setOverflowLine;
+}
+
+// Ready
+
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::checkReady() {
+    // Enable overflow flag if setOverflow is low, otherwise does nothing
+    _readyWaitRequested = (_readyLine == false);
+}
+
 // Interrupts
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::checkNmi() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::checkNmi() {
     // Nmi is requested if nmi line has transition from high to low
     if ((_nmiLinePrevious == true) && (_nmiLine == false)) {
         _nmiRequested = true;
@@ -352,14 +403,14 @@ void Chip<TBus, BDecimalSupported>::checkNmi() {
     _nmiLinePrevious = _nmiLine;
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::checkIrq() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::checkIrq() {
     // Irq is requested if interrupts are not disabled and if irq line goes to low (and stay for one cycle)
     _irqRequested = (_flagsHelper.get<Flag::InterruptDisable>() == false) && (_irqLine == false);
 }
 
-template <class TBus, bool BDecimalSupported>
-bool Chip<TBus, BDecimalSupported>::checkInterrupts() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+bool Chip<TBus, TInternalHardware, BDecimalSupported>::checkInterrupts() {
     // If Nmi requested
     if (_nmiRequested == true) {
         return true;
@@ -373,8 +424,8 @@ bool Chip<TBus, BDecimalSupported>::checkInterrupts() {
     return false;
 }
 
-template <class TBus, bool BDecimalSupported>
-int Chip<TBus, BDecimalSupported>::getCurrentInterruptVectorsIndex() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+int Chip<TBus, TInternalHardware, BDecimalSupported>::getCurrentInterruptVectorsIndex() {
     // If reset
     if (_resetRequested == true) {
         return static_cast<int>(Interrupts::Reset);
@@ -389,29 +440,21 @@ int Chip<TBus, BDecimalSupported>::getCurrentInterruptVectorsIndex() {
     return static_cast<int>(Interrupts::IrqBrk);
 }
 
-// Overflow
-
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::checkOverflowFlag() {
-    // Enable overflow flag if setOverflow is low, otherwise does nothing
-    _flagsHelper.set<Flag::Overflow>(_setOverflowLine == false);
-}
-
 // Stack
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::startStackOperation() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::startStackOperation() {
     _addressBusLow = _stackPointer;
     _addressBusHigh = _stackPageNumber;
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::stopStackOperation() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::stopStackOperation() {
     _stackPointer = _addressBusLow;
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::pushToStack0(uint8_t data) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::pushToStack0(uint8_t data) {
     // Write to stack
     writeDataBus(_addressBusLow, _addressBusHigh, data);
     
@@ -419,19 +462,19 @@ void Chip<TBus, BDecimalSupported>::pushToStack0(uint8_t data) {
     _alu.performSum<BDecimalSupported, false>(0xFF, _addressBusLow, false, false);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::pushToStack1() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::pushToStack1() {
     _addressBusLow = _alu.getAdderHold();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::pullFromStack0() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::pullFromStack0() {
     // Adding 1 with stackPointer using ALU (Add 0 with carry set like true 6502)
     _alu.performSum<BDecimalSupported, false>(0x0, _addressBusLow, false, true);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::pullFromStack1() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::pullFromStack1() {
     readDataBus(_alu.getAdderHold(), _addressBusHigh);
 }
 

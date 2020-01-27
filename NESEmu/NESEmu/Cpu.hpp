@@ -34,22 +34,28 @@ namespace NESEmu { namespace Cpu {
         void nmi(bool high);
         void irq(bool high);
         
+        // TODO: exposer tous ce qu'il y a dans les pins
+        uint16_t getAddressBus() const;
         uint8_t getDataBus() const;
+        bool getReadWriteSignal() const;
         
     private:
         
         using Constants = Constants<EModel>;
         
         // Set Cpu as friend to keep data bus methods private
-        friend Cpu6502::Chip<Chip, false>;
+        friend Cpu6502::Chip<Chip, Chip, false>;
         
         // Memory
         uint8_t read(uint16_t address);
         void write(uint16_t address, uint8_t data);
         
+        // DMA
+        bool checkDma();
+        
         // Internal
         TBus &_bus;
-        Cpu6502::Chip<Chip, false> _cpu;
+        Cpu6502::Chip<Chip, Chip, false> _cpu;
         int _dmaCount;
         uint8_t _dmaAddress;
         bool _dmaToggle;

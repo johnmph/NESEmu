@@ -10,64 +10,64 @@
 #define Cpu6502_Internal_AddressingMode_s_hpp
 
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::implied() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::implied() {
     // In implied addressing mode, there is a unused read which doesn't increment PC (but we need to do this to update address bus with current PC incremented by last step)
     readDataBus(_programCounterLow, _programCounterHigh);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::immediate() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::immediate() {
     // Read one data and increment PC
     fetchData();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::absolute0() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::absolute0() {
     // Read low byte of address and increment PC
     fetchData();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::absolute1() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::absolute1() {
     // 6502 uses the ALU to store temporary low byte of address (by adding 0 to it to keep its value in adderHold)
     absoluteIndexed1(0x0);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::absoluteLoad() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::absoluteLoad() {
     readDataBus(_alu.getAdderHold(), _inputDataLatch);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::absoluteStore(uint8_t data) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::absoluteStore(uint8_t data) {
     writeDataBus(_alu.getAdderHold(), _inputDataLatch, data);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPage() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPage() {
     // Read low byte of address and increment PC
     fetchData();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPageLoad() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPageLoad() {
     readDataBus(_inputDataLatch, 0);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPageStore(uint8_t data) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPageStore(uint8_t data) {
     writeDataBus(_inputDataLatch, 0, data);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::relative0() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::relative0() {
     // Read offset and increment PC
     fetchData();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::relative1(bool condition) { // TODO: voir les interruptions avec les opcode de branchement
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::relative1(bool condition) { // TODO: voir les interruptions avec les opcode de branchement
     if (condition == true) {
         // Adding offset with programCounterLow using ALU
         _alu.performSum<BDecimalSupported, false>(_inputDataLatch, _programCounterLow, false, false);
@@ -85,8 +85,8 @@ void Chip<TBus, BDecimalSupported>::relative1(bool condition) { // TODO: voir le
     fetchOpcode();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::relativeBranch0() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::relativeBranch0() {
     _programCounterLow = _alu.getAdderHold();
     
     // bInput must be programCounterLow and aInput the offset
@@ -109,8 +109,8 @@ void Chip<TBus, BDecimalSupported>::relativeBranch0() {
     _currentInstruction = &Chip::decodeOpcodeAndExecuteInstruction;
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::relativeBranch1() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::relativeBranch1() {
     // Correct programCounterHigh
     if (_alu.getBInput() & 0x80) {
         ++_programCounterHigh;
@@ -122,13 +122,13 @@ void Chip<TBus, BDecimalSupported>::relativeBranch1() {
     fetchOpcode();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::absoluteIndexed0() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::absoluteIndexed0() {
     absolute0();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::absoluteIndexed1(uint8_t index) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::absoluteIndexed1(uint8_t index) {
     // Read high byte of address and increment PC
     fetchData();
     
@@ -136,18 +136,18 @@ void Chip<TBus, BDecimalSupported>::absoluteIndexed1(uint8_t index) {
     _alu.performSum<BDecimalSupported, false>(index, _inputDataLatch, false, false);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::absoluteIndexedX1() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::absoluteIndexedX1() {
     absoluteIndexed1(_xIndex);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::absoluteIndexedY1() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::absoluteIndexedY1() {
     absoluteIndexed1(_yIndex);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::absoluteIndexedLoad0(OpcodeInstruction nextInstruction) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::absoluteIndexedLoad0(OpcodeInstruction nextInstruction) {
     // If we don't need to correct inputDataLatch (address high), skip next instruction
     if (_alu.getCarry() == false) {
         _currentInstruction = nextInstruction;
@@ -160,13 +160,13 @@ void Chip<TBus, BDecimalSupported>::absoluteIndexedLoad0(OpcodeInstruction nextI
     _alu.performSum<BDecimalSupported, false>(0x0, _inputDataLatch, false, _alu.getCarry());
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::absoluteIndexedLoad1() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::absoluteIndexedLoad1() {
     readDataBus(_addressBusLow, _alu.getAdderHold());
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::absoluteIndexedStore0() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::absoluteIndexedStore0() {
     // Load data
     readDataBus(_alu.getAdderHold(), _inputDataLatch);
     
@@ -174,56 +174,56 @@ void Chip<TBus, BDecimalSupported>::absoluteIndexedStore0() {
     _alu.performSum<BDecimalSupported, false>(0x0, _inputDataLatch, false, _alu.getCarry());
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::absoluteIndexedStore1(uint8_t data) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::absoluteIndexedStore1(uint8_t data) {
     writeDataBus(_addressBusLow, _alu.getAdderHold(), data);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPageIndexed0() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPageIndexed0() {
     zeroPage();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPageIndexed1(uint8_t index) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPageIndexed1(uint8_t index) {
     zeroPageLoad();
     
     // Adding index with inputDataLatch using ALU
     _alu.performSum<BDecimalSupported, false>(index, _inputDataLatch, false, false);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPageIndexedX1() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPageIndexedX1() {
     zeroPageIndexed1(_xIndex);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPageIndexedY1() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPageIndexedY1() {
     zeroPageIndexed1(_yIndex);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPageIndexedLoad() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPageIndexedLoad() {
     readDataBus(_alu.getAdderHold(), 0);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPageIndexedStore(uint8_t data) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPageIndexedStore(uint8_t data) {
     writeDataBus(_alu.getAdderHold(), 0, data);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPagePreIndexedIndirect0() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPagePreIndexedIndirect0() {
     zeroPageIndexed0();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPagePreIndexedIndirect1() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPagePreIndexedIndirect1() {
     zeroPageIndexedX1();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPagePreIndexedIndirect2() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPagePreIndexedIndirect2() {
     // Read low byte of address
     zeroPageIndexedLoad();
     
@@ -231,8 +231,8 @@ void Chip<TBus, BDecimalSupported>::zeroPagePreIndexedIndirect2() {
     _alu.performSum<BDecimalSupported, false>(0x0, _alu.getAdderHold(), false, true);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPagePreIndexedIndirect3() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPagePreIndexedIndirect3() {
     // Read high byte of address
     zeroPageIndexedLoad();
     
@@ -240,23 +240,23 @@ void Chip<TBus, BDecimalSupported>::zeroPagePreIndexedIndirect3() {
     _alu.performSum<BDecimalSupported, false>(0x0, _inputDataLatch, false, false);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPagePreIndexedIndirectLoad() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPagePreIndexedIndirectLoad() {
     absoluteLoad();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPagePreIndexedIndirectStore(uint8_t data) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPagePreIndexedIndirectStore(uint8_t data) {
     absoluteStore(data);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPageIndirectPostIndexed0() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPageIndirectPostIndexed0() {
     zeroPageIndexed0();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPageIndirectPostIndexed1() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPageIndirectPostIndexed1() {
     // Read low byte of address
     zeroPageLoad();
     
@@ -264,8 +264,8 @@ void Chip<TBus, BDecimalSupported>::zeroPageIndirectPostIndexed1() {
     _alu.performSum<BDecimalSupported, false>(0x0, _inputDataLatch, false, true);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPageIndirectPostIndexed2() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPageIndirectPostIndexed2() {
     // Read high byte of address
     zeroPageIndexedLoad();
     
@@ -273,23 +273,23 @@ void Chip<TBus, BDecimalSupported>::zeroPageIndirectPostIndexed2() {
     _alu.performSum<BDecimalSupported, false>(_yIndex, _inputDataLatch, false, false);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPageIndirectPostIndexedLoad0(OpcodeInstruction nextInstruction) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPageIndirectPostIndexedLoad0(OpcodeInstruction nextInstruction) {
     absoluteIndexedLoad0(nextInstruction);
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPageIndirectPostIndexedLoad1() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPageIndirectPostIndexedLoad1() {
     absoluteIndexedLoad1();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPageIndirectPostIndexedStore0() {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPageIndirectPostIndexedStore0() {
     absoluteIndexedStore0();
 }
 
-template <class TBus, bool BDecimalSupported>
-void Chip<TBus, BDecimalSupported>::zeroPageIndirectPostIndexedStore1(uint8_t data) {
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::zeroPageIndirectPostIndexedStore1(uint8_t data) {
     absoluteIndexedStore1(data);
 }
 

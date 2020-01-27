@@ -102,7 +102,7 @@ namespace Cpu6502 {
         
     }
     
-    template <class TBus, bool BDecimalSupported = false>
+    template <class TBus, class TInternalHardware = std::nullptr_t, bool BDecimalSupported = false>
     struct Chip {
         using Flag = _Detail::FlagsHelper::Flag;
         
@@ -123,25 +123,32 @@ namespace Cpu6502 {
         
         void setOverflow(bool high);
         
-        uint16_t getProgramCounter() const;
-        uint8_t getStackPointer() const;
-        uint8_t getAccumulator() const;
-        uint8_t getXIndex() const;
-        uint8_t getYIndex() const;
-        uint8_t getStatusFlags() const;
+        //uint16_t getProgramCounter() const; // TODO: ne pas exposer ca mais seulement ce qu'il est possible d'avoir via les pins ? si oui alors pour verifier l'état interne, il suffit de passer un parametre TInternalHardware qui sera une classe qui aura acces a tous les members interne
+        //uint8_t getStackPointer() const;
+        //uint8_t getAccumulator() const;
+        //uint8_t getXIndex() const;
+        //uint8_t getYIndex() const;
+        //uint8_t getStatusFlags() const;
         uint16_t getAddressBus() const;
         uint8_t getDataBus() const;
-        bool getReadWriteSignal() const;    // TODO: voir si un get ou un appel de fonction pour notifier ?
-        bool getSyncSignal() const; // TODO: voir si un get ou un appel de fonction pour notifier ?
+        bool getReadWriteSignal() const;
+        bool getSyncSignal() const;
         
     private:
+        
         using OpcodeInstruction = void (Chip::*)();
+        
+        // Set TInternalHardware as friend to keep internal members private
+        friend TInternalHardware;
         
         enum class Interrupts {
             Nmi,
             Reset,
             IrqBrk
         };
+        
+        // Clock
+        void clock(bool forceExecute);
         
         // Memory
         void fetchMemory();
@@ -154,16 +161,20 @@ namespace Cpu6502 {
         void fetchData();
         void fetchOpcode(OpcodeInstruction nextInstruction);
         void fetchOpcode();
+        void fetchOpcodeAfterRdyLow();
         void decodeOpcodeAndExecuteInstruction();
+        
+        // Overflow
+        void checkOverflowFlag();
+        
+        // Ready
+        void checkReady();
         
         // Interrupts
         void checkNmi();
         void checkIrq();
         bool checkInterrupts();
         int getCurrentInterruptVectorsIndex();
-        
-        // Overflow
-        void checkOverflowFlag();
         
         // Stack
         void startStackOperation();
@@ -212,6 +223,7 @@ namespace Cpu6502 {
         uint8_t _inputDataLatch;
         uint8_t _dataOutput;
         bool _readyLine;
+        bool _readyWaitRequested;
         bool _sync;
         bool _readWrite;
         
@@ -221,6 +233,7 @@ namespace Cpu6502 {
         uint8_t _instruction;
         
         bool _setOverflowLine;
+        bool _setOverflowLinePrevious;
         
         _Detail::Alu _alu;
         
