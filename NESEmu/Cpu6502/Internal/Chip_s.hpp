@@ -9,7 +9,7 @@
 #ifndef Cpu6502_Internal_Chip_s_hpp
 #define Cpu6502_Internal_Chip_s_hpp
 
-// TODO: par apres, si assez rapide, decomposer en 2 phases de cycles (Ph0, Ph1, Ph2, RDY, R/W, Sync) : pas besoin car le cpu a besoin de ca car tout arrive en meme temps (les signaux electriques) mais ici on peut appeler des fonctions a la suite des autres dans le meme cycle et simuler ca : NON car les interruptions sont peut etre checkées a ph1 et ph2 !!!
+// TODO: par apres, si assez rapide, decomposer en 2 phases de cycles (Ph0, Ph1, Ph2, RDY, R/W, Sync) : pas besoin car le cpu a besoin de ca car tout arrive en meme temps (les signaux electriques) mais ici on peut appeler des fonctions a la suite des autres dans le meme cycle et simuler ca
 // TODO: pour une meilleure emulation des opcodes (surtout les undocumented), peut etre faire comme le vrai cpu et decomposer l'opcode en lignes actives/non actives pour activer certains circuits (appeler certaines fonctions) : https://www.pagetable.com/?p=39
 #include "Data.hpp"
 
@@ -147,7 +147,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::reset(bool high) {  // TO
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::nmi(bool high) {    // TODO: a terminer/tester (il parait qu'il faut 2 cycles pour que le signal low soit pris en compte, a voir)
+void Chip<TBus, TInternalHardware, BDecimalSupported>::nmi(bool high) {    // TODO: a terminer/tester (il parait qu'il faut 2 cycles pour que le signal low soit pris en compte, a voir) : surement 2 halfcycle donc ok
     // Save signal
     _nmiLine = high;
 }
@@ -221,7 +221,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::clock(bool forceExecute) 
     // ** PHI1 **
     
     // Update PC
-    updateProgramCounter(); // TODO: voir si ici ou dans phi2 (et donc plus besoin de ca car simplement le mettre la ou on l'appelle
+    updateProgramCounter();
     
     // Check for overflow flag
     checkOverflowFlag();
@@ -314,23 +314,19 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::fetchOpcode(OpcodeInstruc
     _currentInstruction = nextInstruction;
     
     // If interrupt requested
-    if (checkInterrupts() == true) {
+    if (checkInterrupts() == true) {    // TODO: le probleme est que ca doit etre fait un cycle avant je pense et pas pour tout (comme le branch), peut etre plutot avoir ici if (_interruptRequested == true) { et avoir checkInterrupts qui set _interruptRequested dans une autre methode qui est appelé au cycle précédent (checkInterrupt ne doit plus rien retourner et setter directement _interruptRequested dans la methode)
         // Read opcode without increment PC
         readDataBus(_programCounterLow, _programCounterHigh);
         
         // Save interrupt flag to know that an interrupt is occur (and not brk opcode)
         _interruptRequested = true;
-        
-        // Set sync high
-        _sync = true;   // TODO: voir si ici ou au debut de la methode, normalement c'est ici (si c'est au debut, pas besoin d'avoir les 2)
-        
-        return;
+    } else {
+        // Fetch opcode
+        fetchData();
     }
     
-    fetchData();
-    
     // Set sync high
-    _sync = true;   // TODO: voir si ici ou au debut de la methode, normalement c'est ici (si c'est au debut, pas besoin d'avoir les 2)
+    _sync = true;   // TODO: voir si ici ou au debut de la methode, normalement c'est ici
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>

@@ -85,13 +85,19 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::brk5() {
     _currentInstruction = &Chip::brk6;
     
     // Disable interrupts
-    _flagsHelper.set<Flag::InterruptDisable>(true); // TODO: a voir car dans le visual6502 on dirait que ca ne le fait pas !!! (dans un doc il dit que ca le fait quand ca fetch l'opcode (donc dans brk6 ?) http://archive.6502.org/books/mcs6500_family_hardware_manual.pdf page 38
+    _flagsHelper.set<Flag::InterruptDisable>(true);
     
     // 6502 uses the ALU to store temporary low byte of address (by adding 0 to it to keep its value in adderHold)
     _alu.performSum<BDecimalSupported, false>(0x0, _inputDataLatch, false, false);
     
     // Read high byte of address
     readDataBus(_interruptVectors[_interruptVectorsIndex][0] + 1, _interruptVectors[_interruptVectorsIndex][1]);
+    
+    // Reset interrupts requested flag, since here it can redetected interrupts
+    _irqRequested = false;  // TODO: voir si ok : https://wiki.nesdev.com/w/index.php/CPU_interrupts
+    _nmiRequested = false;
+    _resetRequested = false;
+    _interruptRequested = false;
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -100,14 +106,8 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::brk6() {
     _programCounterLow = _alu.getAdderHold();
     _programCounterHigh = _inputDataLatch;
     
-    // TODO: voir si ok : (car il faut voir si c'est possible d'avoir la detection d'une interruption dans le stage du brk)
-    _irqRequested = false;  // TODO: voir si ok : https://wiki.nesdev.com/w/index.php/CPU_interrupts
-    _nmiRequested = false;
-    _resetRequested = false;
-    _interruptRequested = false;
-    
     // Fetch next opcode
-    fetchOpcode();
+    fetchOpcode();  // TODO: voir car : The interrupt sequences themselves do not perform interrupt polling, meaning at least one instruction from the interrupt handler will execute before another interrupt is serviced.   https://wiki.nesdev.com/w/index.php/CPU_interrupts
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>

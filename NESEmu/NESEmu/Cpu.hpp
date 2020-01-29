@@ -33,11 +33,17 @@ namespace NESEmu { namespace Cpu {
         void reset(bool high);
         void nmi(bool high);
         void irq(bool high);
+        //void test(bool high);
         
         // TODO: exposer tous ce qu'il y a dans les pins
         uint16_t getAddressBus() const;
         uint8_t getDataBus() const;
+        //bool getAd1Signal() const;
+        //bool getAd2Signal() const;
         bool getReadWriteSignal() const;
+        //uint8_t getOutSignal() const;
+        //bool getOe1Signal() const;
+        //bool getOe2Signal() const;
         
     private:
         

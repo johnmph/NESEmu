@@ -41,6 +41,10 @@ namespace NESEmu { namespace Ppu {
         uint8_t read(uint16_t address);
         void write(uint16_t address, uint8_t data);
         
+        // Ext pins
+        void exts(uint8_t data);
+        uint8_t getExts() const;
+        
     private:
         
         using Constants = Constants<EModel>;
@@ -55,6 +59,19 @@ namespace NESEmu { namespace Ppu {
             uint8_t xPosition;
         };
         
+        void processVisibleFrameLine();
+        void processPostRenderLine();
+        void processVBlankLine();
+        void processPreRenderLine();
+        
+        void incrementPositionCounters();
+        
+        void fetchTilesData();
+        void evaluateSprites();
+        
+        void incrementXOnAddress();
+        void incrementYOnAddress();
+        
         void checkInterrupt();
         
         bool isRenderingEnabled() const;
@@ -63,15 +80,16 @@ namespace NESEmu { namespace Ppu {
         //std::vector<ObjectAttribute> _objectAttributeMemory;
         std::vector<uint8_t> _objectAttributeMemory;
         
+        // Second OAM (8 x 4 bytes of sprites informations)
+        std::vector<uint8_t> _secondObjectAttributeMemory;  // TODO: comme petit, voir si pas en stack plutot que dynamic
+        
+        // Palette indexes
+        std::vector<uint8_t> _paletteIndexMemory;   // TODO: comme petit, voir si pas en stack plutot que dynamic
+        
         // TODO: la nes a 2ko de VRAM mais le PPU n'y accede pas directement mais via un controlleur dans la cartouche, ce qu'il fait que la cartouche peut mapper les adresses VRAM sur d'autres mémoires donc ne pas mettre la vram ici
         // Registers
-        uint8_t _control;   // TODO: on utilise bcp plus souvent ces registres en tant que propriétés (les bits des registres) que les registres complet, donc surement les avoir ici en tant que propriétés et créer des methodes pour recuperer le registre complet
-        uint8_t _mask;
-        uint8_t _status;
         uint8_t _oamAddress;
-        uint8_t _scroll;
         uint16_t _address;
-        uint8_t _data;
         
         uint8_t _controlAddressIncrementPerCpuAccess;       // TODO: par apres reorganiser les variables pour l'alignement
         uint16_t _controlSpritePatternTableAddress;
@@ -100,17 +118,34 @@ namespace NESEmu { namespace Ppu {
         
         int _currentPixel;
         int _currentScanline;
+        bool _oddFrame;
         
         uint16_t _temporaryAddress;
         uint8_t _fineXScroll;
         bool _writeToggle;
+        
+        uint16_t _addressBus;
+        
+        uint8_t _ntByte;
+        uint8_t _atByte;
+        uint8_t _lowBGTileByte;
+        uint8_t _highBGTileByte;
+        
+        uint16_t _lowBGTileShiftRegister;
+        uint16_t _highBGTileShiftRegister;
+        
+        //uint8_t _ // 2 shift register de 8 bits pour les attributes, a voir
+        
+        uint8_t _clearSecondOAMReadOverwrite;
         
         // Dynamic latch due to capacitance of very long traces of data bus that run to various parts of the PPU
         // See https://wiki.nesdev.com/w/index.php/PPU_registers
         // And https://wiki.nesdev.com/w/index.php/Open_bus_behavior
         uint8_t _dataLatch; // TODO: emuler le decay aussi ? (apres une frame et depend du pattern)
         
-        // TODO: + voir The PPUDATA read buffer (post-fetch) aussi dans https://wiki.nesdev.com/w/index.php/PPU_registers
+        // Data read buffer
+        // See https://wiki.nesdev.com/w/index.php/PPU_registers#PPUDATA
+        uint8_t _dataReadBuffer;
     };
     
     #include "Ppu_s.hpp"

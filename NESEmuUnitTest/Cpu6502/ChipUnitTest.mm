@@ -226,6 +226,11 @@ namespace {
     // Close file
     ifsLog.close();
 }
+
+- (void)testVisual6502Results {
+    // TODO: ecrire pour tester via les fichiers de results du visual6502, parser l'url pour savoir les opcodes a mettre, quand mettre le nmi low et high, ... et parser les results et comparer si ok
+}
+
 /*
 - (void)testPerformanceExample {
     // This is an example of a performance test case.

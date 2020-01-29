@@ -67,7 +67,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::relative0() {
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::relative1(bool condition) { // TODO: voir les interruptions avec les opcode de branchement
+void Chip<TBus, TInternalHardware, BDecimalSupported>::relative1(bool condition) {
     if (condition == true) {
         // Adding offset with programCounterLow using ALU
         _alu.performSum<BDecimalSupported, false>(_inputDataLatch, _programCounterLow, false, false);
@@ -77,6 +77,13 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::relative1(bool condition)
         
         // Set next instruction
         _currentInstruction = &Chip::relativeBranch0;
+        
+        // There is a bug? which delay the possible nmi or cancel the possible irq execution by not checking here (just after this) the interrupts, it does not matter on page boundary cross because there is a extra step (relativeBranch0) which will check the interrupts correctly
+        // See http://forum.6502.org/viewtopic.php?f=4&t=1634
+        // And http://forums.nesdev.com/viewtopic.php?t=6510
+        // And http://wiki.nesdev.com/w/index.php/CPU_interrupts
+        _nmiRequestedSavedForBranchBug = _nmiRequested;
+        _irqRequestedSavedForBranchBug = _irqRequested;
         
         return;
     }
@@ -100,13 +107,28 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::relativeBranch0() {
         return;
     }
     
-    // There is no page boundary cross, so it's the correct data, we can fetch opcode (but we don't use fetchOpcode because there is a bug? in taken branch instructions (without carry) that delay the possible interrupt execution after executing the next instruction
-    // See http://forum.6502.org/viewtopic.php?f=4&t=1634
-    // And http://forums.nesdev.com/viewtopic.php?t=6510
-    // And http://wiki.nesdev.com/w/index.php/CPU_interrupts
-    //fetchOpcode();
-    fetchData();                                // TODO: soit on fait ainsi mais alors si le signal d'interruption est arreté avant la fin de l'instruction suivante, l'interruption ne sera pas executée car pas détectée (seulement pour IRQ, le nmi est detecté), si ce n'est pas ainsi en reel, il faut aussi faire un checkInterrupt et setter le flag _interruptRequested ici : normalement on s'en fout car le NMI est sauvé et l'IRQ de toutes facons doit etre actif au moment du fetchOpcode qui va detecter l'interruption
-    _currentInstruction = &Chip::decodeOpcodeAndExecuteInstruction;
+    // Handle the bug (see above in relative1)
+    if (_nmiRequested != _nmiRequestedSavedForBranchBug) {
+        // It can only be true here (because it is different from previous cycle and it can't be true -> false because interrupts are not processed between these cycles)
+        _nmiRequested = false;
+        
+        // Good address (no page boundary cross), fetch next opcode
+        fetchOpcode();
+        
+        // Restore nmi requested
+        _nmiRequested = true;
+        
+        return;
+    }
+    
+    // Handle the bug (see above in relative1)
+    if ((_irqRequested == true) && (_irqRequestedSavedForBranchBug == false)) {
+        // If IRQ requested in last step, forget it
+        _irqRequested = false;
+    }
+    
+    // Good address (no page boundary cross), fetch next opcode
+    fetchOpcode();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>

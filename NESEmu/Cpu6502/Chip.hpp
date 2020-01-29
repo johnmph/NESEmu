@@ -123,7 +123,7 @@ namespace Cpu6502 {
         
         void setOverflow(bool high);
         
-        //uint16_t getProgramCounter() const; // TODO: ne pas exposer ca mais seulement ce qu'il est possible d'avoir via les pins ? si oui alors pour verifier l'état interne, il suffit de passer un parametre TInternalHardware qui sera une classe qui aura acces a tous les members interne
+        //uint16_t getProgramCounter() const;
         //uint8_t getStackPointer() const;
         //uint8_t getAccumulator() const;
         //uint8_t getXIndex() const;
@@ -245,6 +245,9 @@ namespace Cpu6502 {
         bool _irqLine;
         bool _irqRequested;
         bool _interruptRequested;
+        
+        bool _nmiRequestedSavedForBranchBug;
+        bool _irqRequestedSavedForBranchBug;
     };
     
     #include "Internal/Chip_s.hpp"
