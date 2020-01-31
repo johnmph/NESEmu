@@ -92,12 +92,6 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::brk5() {
     
     // Read high byte of address
     readDataBus(_interruptVectors[_interruptVectorsIndex][0] + 1, _interruptVectors[_interruptVectorsIndex][1]);
-    
-    // Reset interrupts requested flag, since here it can redetected interrupts
-    _irqRequested = false;  // TODO: voir si ok : https://wiki.nesdev.com/w/index.php/CPU_interrupts
-    _nmiRequested = false;
-    _resetRequested = false;
-    _interruptRequested = false;
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -105,6 +99,12 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::brk6() {
     // Set PC
     _programCounterLow = _alu.getAdderHold();
     _programCounterHigh = _inputDataLatch;
+    
+    // Reset interrupts requested flag, since here it can redetected interrupts
+    _irqRequested = false;  // TODO: voir si ok : https://wiki.nesdev.com/w/index.php/CPU_interrupts
+    _nmiRequested = false;
+    _resetRequested = false;
+    _interruptRequested = false;
     
     // Fetch next opcode
     fetchOpcode();  // TODO: voir car : The interrupt sequences themselves do not perform interrupt polling, meaning at least one instruction from the interrupt handler will execute before another interrupt is serviced.   https://wiki.nesdev.com/w/index.php/CPU_interrupts

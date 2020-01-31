@@ -11,6 +11,8 @@
 
 // TODO: par apres, si assez rapide, decomposer en 2 phases de cycles (Ph0, Ph1, Ph2, RDY, R/W, Sync) : pas besoin car le cpu a besoin de ca car tout arrive en meme temps (les signaux electriques) mais ici on peut appeler des fonctions a la suite des autres dans le meme cycle et simuler ca
 // TODO: pour une meilleure emulation des opcodes (surtout les undocumented), peut etre faire comme le vrai cpu et decomposer l'opcode en lignes actives/non actives pour activer certains circuits (appeler certaines fonctions) : https://www.pagetable.com/?p=39
+// TODO: enlever le flag helper et tout le bordel lié aux flags et n'avoir que les signaux séparés et une methode qui les regroupe et qui prend en parametre le bool Break car on les manipule bien plus souvent séparés que regroupé (seulement php, plp)
+// TODO: on peut tester le reset signal avec visual6502 aussi (reset0 et reset1)
 #include "Data.hpp"
 
 
@@ -113,11 +115,46 @@ namespace _Detail {
 // Public interface
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
-Chip<TBus, TInternalHardware, BDecimalSupported>::Chip(TBus &bus) : Chip(bus, 0xFF, 0x0, 0xAA, 0x0, 0x0, 0x20) {
+Chip<TBus, TInternalHardware, BDecimalSupported>::Chip(TBus &bus) : _flagsHelper(_statusFlags, _alu), _bus(bus) {
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
-Chip<TBus, TInternalHardware, BDecimalSupported>::Chip(TBus &bus, uint16_t programCounter, uint8_t stackPointer, uint8_t accumulator, uint8_t xIndex, uint8_t yIndex, uint8_t statusFlags) : _flagsHelper(_statusFlags, _alu), _bus(bus), _programCounterLow(programCounter & 0xFF), _programCounterHigh(programCounter >> 8), _stackPointer(stackPointer), _accumulator(accumulator), _xIndex(xIndex), _yIndex(yIndex), _statusFlags(statusFlags), _readyLine(true), _readyWaitRequested(false), _setOverflowLine(true), _setOverflowLinePrevious(true),  _programCounterNeedsIncrement(false), _resetRequested(false), _nmiLine(true), _nmiLinePrevious(true), _nmiRequested(false), _irqLine(true), _irqRequested(false), _interruptRequested(false) {
+void Chip<TBus, TInternalHardware, BDecimalSupported>::powerUp(uint16_t programCounter, uint8_t stackPointer, uint8_t accumulator, uint8_t xIndex, uint8_t yIndex, uint8_t statusFlags) {
+    // Registers
+    _programCounterLow = programCounter & 0xFF;
+    _programCounterHigh = programCounter >> 8;
+    _stackPointer = stackPointer;
+    _accumulator = accumulator;
+    _xIndex = xIndex;
+    _yIndex = yIndex;
+    _statusFlags = statusFlags;
+    
+    // Internal
+    _addressBusLow = 0x0;
+    _addressBusHigh = 0x0;
+    _inputDataLatch = 0x0;
+    _dataOutput = 0x0;
+    
+    _readyLine = true;
+    _readyWaitRequested = false;
+    _sync = false;
+    _readWrite = true;
+    
+    _programCounterNeedsIncrement = false;
+    
+    _setOverflowLine = true;
+    _setOverflowLinePrevious = true;
+    
+    _resetLine = true;
+    _resetRequested = false;
+    _nmiLine = true;
+    _nmiLinePrevious = true;
+    _nmiRequested = false;
+    _irqLine = true;
+    _irqRequested = false;
+    _interruptRequested = false;
+    
+    
     reset(false);
 }
 
@@ -125,6 +162,12 @@ template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::clock() {
     // Perform a clock without forcing execution
     clock(false);
+}
+
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::clockPhi1() {
+    // Perform a clock phi1 without forcing execution
+    clockPhi1(false);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -214,11 +257,31 @@ bool Chip<TBus, TInternalHardware, BDecimalSupported>::getSyncSignal() const {
     return _sync;
 }
 
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+bool Chip<TBus, TInternalHardware, BDecimalSupported>::getM1Signal() const {
+    return (_phi2 == false);
+}
+
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+bool Chip<TBus, TInternalHardware, BDecimalSupported>::getM2Signal() const {
+    return (_phi2 == true);
+}
+
 // Clock
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::clock(bool forceExecute) {
     // ** PHI1 **
+    clockPhi1(forceExecute);
+    
+    // ** PHI2 **
+    clockPhi2();
+}
+
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::clockPhi1(bool forceExecute) {
+    // Start phi1
+    _phi2 = false;
     
     // Update PC
     updateProgramCounter();
@@ -234,8 +297,12 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::clock(bool forceExecute) 
         // Execute current stage
         (this->*_currentInstruction)();
     }
-    
-    // ** PHI2 **
+}
+
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::clockPhi2() {
+    // Start phi2
+    _phi2 = true;
     
     // Interrupts are checked each clock (second half of cycle)
     checkNmi();
@@ -407,6 +474,8 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::checkIrq() {
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 bool Chip<TBus, TInternalHardware, BDecimalSupported>::checkInterrupts() {
+    //_interruptRequested = (_nmiRequested == true) && (_irqRequested == true);
+    
     // If Nmi requested
     if (_nmiRequested == true) {
         return true;

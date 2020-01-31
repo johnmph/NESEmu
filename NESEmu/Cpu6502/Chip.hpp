@@ -112,9 +112,12 @@ namespace Cpu6502 {
         };
         
         Chip(TBus &bus);
-        Chip(TBus &bus, uint16_t programCounter, uint8_t stackPointer, uint8_t accumulator, uint8_t xIndex, uint8_t yIndex, uint8_t statusFlags);
+        
+        void powerUp(uint16_t programCounter = 0x00FF, uint8_t stackPointer = 0x0, uint8_t accumulator = 0xAA, uint8_t xIndex = 0x0, uint8_t yIndex = 0x0, uint8_t statusFlags = 0x22); // TODO: accumulator = 0xAA et Z flag est mis a 1 comme dans Visual6502, a voir
         
         void clock();
+        void clockPhi1();
+        void clockPhi2();
         void ready(bool high);
         
         void reset(bool high);
@@ -133,6 +136,8 @@ namespace Cpu6502 {
         uint8_t getDataBus() const;
         bool getReadWriteSignal() const;
         bool getSyncSignal() const;
+        bool getM1Signal() const;
+        bool getM2Signal() const;
         
     private:
         
@@ -149,6 +154,7 @@ namespace Cpu6502 {
         
         // Clock
         void clock(bool forceExecute);
+        void clockPhi1(bool forceExecute);
         
         // Memory
         void fetchMemory();
@@ -226,6 +232,7 @@ namespace Cpu6502 {
         bool _readyWaitRequested;
         bool _sync;
         bool _readWrite;
+        bool _phi2;
         
         bool _programCounterNeedsIncrement;
         

@@ -1,5 +1,5 @@
 //
-//  ChipUnitTest.mm
+//  ChipNestestUnitTest.mm
 //  NESEmuUnitTest
 //
 //  Created by Jonathan Baliko on 14/01/20.
@@ -13,12 +13,12 @@
 #include <string>
 #include "Cpu6502/Chip.hpp"
 
-// TODO: ecrire des unit tests, par instruction et via le log nestest
-@interface ChipUnitTest : XCTestCase
+// TODO: ecrire des unit tests aussi par instruction ?
+@interface ChipNestestUnitTest : XCTestCase
 
 @end
 
-@implementation ChipUnitTest
+@implementation ChipNestestUnitTest
 
 namespace {
     
@@ -144,7 +144,7 @@ namespace {
     
     
     Bus bus;
-    Cpu6502::Chip<Bus, Cpu6502InternalViewer> cpu6502(bus, 0xFF, 0x0, 0x0, 0x0, 0x0, 0x20);    // Nestest needs an accumator starting at 0, but by default it is set to 0xAA like visual6502 TODO: a voir pour les valeurs au demarrage et si toujours besoin d'un 2eme constructor
+    Cpu6502::Chip<Bus, Cpu6502InternalViewer> cpu6502(bus);
     Cpu6502InternalViewer cpu6502InternalViewer(cpu6502);
     
 }
@@ -154,6 +154,9 @@ namespace {
     
     // Initialize with NOP
     bus.memory.fill(0xEA);
+    
+    // Power up cpu (Nestest needs an accumulator starting at 0 and status flag without Z flag)
+    cpu6502.powerUp(0x00FF, 0x0, 0x0, 0x0, 0x0, 0x20);
 }
 
 - (void)tearDown {
@@ -161,10 +164,10 @@ namespace {
 }
 
 - (void)testNestestLog {
-    // nestest.nes and nestest.log must be in /private/tmp path
+    // By default nestest.nes and nestest.log must be in /private/tmp path, so a BUILD_DIR Other C flag is added to get the build dir
     
     // Open nestest ROM
-    std::ifstream ifsRom("nestest.nes", std::ios::binary);
+    std::ifstream ifsRom(std::string(BUILD_DIR) + "/UnitTestFiles/nestest.nes", std::ios::binary);
     
     // Check that file exists
     XCTAssertTrue(ifsRom.good());
@@ -190,7 +193,7 @@ namespace {
     cpu6502.clock();
     
     // Open nestest Log
-    std::ifstream ifsLog("nestest.log");
+    std::ifstream ifsLog(std::string(BUILD_DIR) + "/UnitTestFiles/nestest.log");
     
     // Check that file exists
     XCTAssertTrue(ifsLog.good());
@@ -225,10 +228,6 @@ namespace {
     
     // Close file
     ifsLog.close();
-}
-
-- (void)testVisual6502Results {
-    // TODO: ecrire pour tester via les fichiers de results du visual6502, parser l'url pour savoir les opcodes a mettre, quand mettre le nmi low et high, ... et parser les results et comparer si ok
 }
 
 /*
