@@ -12,13 +12,13 @@
 
 // PHA, PHP, PLA, PLP
 
+void push2();
+
 void pha0();
 void pha1();
-void pha2();
 
 void php0();
 void php1();
-void php2();
 
 void pla0();
 void pla1();

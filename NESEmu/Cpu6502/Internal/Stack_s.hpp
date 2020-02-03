@@ -11,56 +11,57 @@
 
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::pha0() {
-    _currentInstruction = &Chip::pha1;
-    
-    implied();
-}
-
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::pha1() {
-    _currentInstruction = &Chip::pha2;
-    
-    startStackOperation();
-    pushToStack0(_accumulator);
-}
-
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::pha2() {
+void Chip<TBus, TInternalHardware, BDecimalSupported>::push2() {
     pushToStack1();
     stopStackOperation();
     
     fetchOpcode();
+}
+
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::pha0() {
+    _currentInstruction = &Chip::pha1;
+    
+    // In implied addressing mode, there is a unused read which doesn't increment PC
+    readDataBus(_programCounterLow, _programCounterHigh);
+}
+
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::pha1() {
+    _currentInstruction = &Chip::push2;
+    
+    startStackOperation();
+    pushToStack0(_accumulator);
+    
+    // Check interrupts
+    checkInterrupts();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::php0() {
     _currentInstruction = &Chip::php1;
     
-    implied();
+    // In implied addressing mode, there is a unused read which doesn't increment PC
+    readDataBus(_programCounterLow, _programCounterHigh);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::php1() {
-    _currentInstruction = &Chip::php2;
+    _currentInstruction = &Chip::push2;
     
     startStackOperation();
     pushToStack0(_statusFlags | (1 << static_cast<int>(Flag::Break)));
-}
-
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::php2() {
-    pushToStack1();
-    stopStackOperation();
     
-    fetchOpcode();
+    // Check interrupts
+    checkInterrupts();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::pla0() {
     _currentInstruction = &Chip::pla1;
     
-    implied();
+    // In implied addressing mode, there is a unused read which doesn't increment PC
+    readDataBus(_programCounterLow, _programCounterHigh);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -78,6 +79,9 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::pla2() {
     
     pullFromStack1();
     stopStackOperation();
+    
+    // Check interrupts
+    checkInterrupts();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -95,7 +99,8 @@ template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::plp0() {
     _currentInstruction = &Chip::plp1;
     
-    implied();
+    // In implied addressing mode, there is a unused read which doesn't increment PC
+    readDataBus(_programCounterLow, _programCounterHigh);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -113,15 +118,16 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::plp2() {
     
     pullFromStack1();
     stopStackOperation();
+    
+    // Check interrupts
+    checkInterrupts();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::plp3() {
-    // Must be called before changing flag to delay possible interrupts after the next instruction
-    // See http://wiki.nesdev.com/w/index.php/CPU_interrupts
-    fetchOpcode();
-    
     _statusFlags = (_inputDataLatch & _Detail::FlagsHelper::getDisableMask<Flag::Break>()) | (1 << static_cast<int>(Flag::UnusedHigh));
+    
+    fetchOpcode();
 }
 
 #endif /* Cpu6502_Internal_Stack_s_hpp */

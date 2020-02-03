@@ -24,7 +24,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::reset1() {
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::brk0() {    // TODO: a voir pour interrupt
+void Chip<TBus, TInternalHardware, BDecimalSupported>::brk0() {
     _currentInstruction = &Chip::brk1;
     
     // Read data without increment PC for reset, nmi and irq
@@ -92,6 +92,13 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::brk5() {
     
     // Read high byte of address
     readDataBus(_interruptVectors[_interruptVectorsIndex][0] + 1, _interruptVectors[_interruptVectorsIndex][1]);
+    
+    // Reset interrupts requested flag, since here it can redetected interrupts but no checkInterrupts because interrupt sequences themselves do not perform interrupt polling
+    // See https://wiki.nesdev.com/w/index.php/CPU_interrupts
+    _irqRequested = false;
+    _nmiRequested = false;
+    _resetRequested = false;
+    _interruptRequested = false;
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -100,21 +107,16 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::brk6() {
     _programCounterLow = _alu.getAdderHold();
     _programCounterHigh = _inputDataLatch;
     
-    // Reset interrupts requested flag, since here it can redetected interrupts
-    _irqRequested = false;  // TODO: voir si ok : https://wiki.nesdev.com/w/index.php/CPU_interrupts
-    _nmiRequested = false;
-    _resetRequested = false;
-    _interruptRequested = false;
-    
     // Fetch next opcode
-    fetchOpcode();  // TODO: voir car : The interrupt sequences themselves do not perform interrupt polling, meaning at least one instruction from the interrupt handler will execute before another interrupt is serviced.   https://wiki.nesdev.com/w/index.php/CPU_interrupts
+    fetchOpcode();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::rti0() {
     _currentInstruction = &Chip::rti1;
     
-    implied();
+    // Even if it's a implied addressing mode, PC is incremented when reading memory
+    fetchData();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -157,6 +159,9 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::rti4() {
     
     // 6502 uses the ALU to store temporary low byte of address (by adding 0 to it to keep its value in adderHold)
     _alu.performSum<BDecimalSupported, false>(0x0, _inputDataLatch, false, false);
+    
+    // Check interrupts
+    checkInterrupts();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>

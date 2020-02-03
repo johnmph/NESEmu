@@ -46,7 +46,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::adcZp0() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::adcZp1() {
     _currentInstruction = &Chip::adc0;
-    zeroPageLoad();
+    zeroPageRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -64,7 +64,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::adcZpX1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::adcZpX2() {
     _currentInstruction = &Chip::adc0;
-    zeroPageIndexedLoad();
+    zeroPageIndexedRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -82,7 +82,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::adcAbs1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::adcAbs2() {
     _currentInstruction = &Chip::adc0;
-    absoluteLoad();
+    absoluteRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -99,15 +99,15 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::adcAbsX1() {
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::adcAbsX2() {
-    // It's important to have currentInstruction set before calling absoluteIndexLoad0 because it can modify it
+    // It's important to have currentInstruction set before calling absoluteIndexRead0 because it can modify it
     _currentInstruction = &Chip::adcAbsX3;
-    absoluteIndexedLoad0(&Chip::adc0);
+    absoluteIndexedRead0(&Chip::adc0);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::adcAbsX3() {
     _currentInstruction = &Chip::adc0;
-    absoluteIndexedLoad1();
+    absoluteIndexedRead1();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -124,15 +124,15 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::adcAbsY1() {
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::adcAbsY2() {
-    // It's important to have currentInstruction set before calling absoluteIndexLoad0 because it can modify it
+    // It's important to have currentInstruction set before calling absoluteIndexRead0 because it can modify it
     _currentInstruction = &Chip::adcAbsY3;
-    absoluteIndexedLoad0(&Chip::adc0);
+    absoluteIndexedRead0(&Chip::adc0);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::adcAbsY3() {
     _currentInstruction = &Chip::adc0;
-    absoluteIndexedLoad1();
+    absoluteIndexedRead1();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -162,7 +162,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::adcIndX3() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::adcIndX4() {
     _currentInstruction = &Chip::adc0;
-    zeroPagePreIndexedIndirectLoad();
+    zeroPagePreIndexedIndirectRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -185,15 +185,15 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::adcIndY2() {
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::adcIndY3() {
-    // It's important to have currentInstruction set before calling zeroPageIndirectPostIndexedLoad0 because it can modify it
+    // It's important to have currentInstruction set before calling zeroPageIndirectPostIndexedRead0 because it can modify it
     _currentInstruction = &Chip::adcIndY4;
-    zeroPageIndirectPostIndexedLoad0(&Chip::adc0);
+    zeroPageIndirectPostIndexedRead0(&Chip::adc0);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::adcIndY4() {
     _currentInstruction = &Chip::adc0;
-    zeroPageIndirectPostIndexedLoad1();
+    zeroPageIndirectPostIndexedRead1();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -220,7 +220,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::sbcZp0() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::sbcZp1() {
     _currentInstruction = &Chip::sbc0;
-    zeroPageLoad();
+    zeroPageRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -238,7 +238,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::sbcZpX1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::sbcZpX2() {
     _currentInstruction = &Chip::sbc0;
-    zeroPageIndexedLoad();
+    zeroPageIndexedRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -256,7 +256,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::sbcAbs1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::sbcAbs2() {
     _currentInstruction = &Chip::sbc0;
-    absoluteLoad();
+    absoluteRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -273,15 +273,15 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::sbcAbsX1() {
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::sbcAbsX2() {
-    // It's important to have currentInstruction set before calling absoluteIndexLoad0 because it can modify it
+    // It's important to have currentInstruction set before calling absoluteIndexRead0 because it can modify it
     _currentInstruction = &Chip::sbcAbsX3;
-    absoluteIndexedLoad0(&Chip::sbc0);
+    absoluteIndexedRead0(&Chip::sbc0);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::sbcAbsX3() {
     _currentInstruction = &Chip::sbc0;
-    absoluteIndexedLoad1();
+    absoluteIndexedRead1();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -298,15 +298,15 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::sbcAbsY1() {
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::sbcAbsY2() {
-    // It's important to have currentInstruction set before calling absoluteIndexLoad0 because it can modify it
+    // It's important to have currentInstruction set before calling absoluteIndexRead0 because it can modify it
     _currentInstruction = &Chip::sbcAbsY3;
-    absoluteIndexedLoad0(&Chip::sbc0);
+    absoluteIndexedRead0(&Chip::sbc0);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::sbcAbsY3() {
     _currentInstruction = &Chip::sbc0;
-    absoluteIndexedLoad1();
+    absoluteIndexedRead1();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -336,7 +336,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::sbcIndX3() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::sbcIndX4() {
     _currentInstruction = &Chip::sbc0;
-    zeroPagePreIndexedIndirectLoad();
+    zeroPagePreIndexedIndirectRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -359,15 +359,15 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::sbcIndY2() {
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::sbcIndY3() {
-    // It's important to have currentInstruction set before calling zeroPageIndirectPostIndexedLoad0 because it can modify it
+    // It's important to have currentInstruction set before calling zeroPageIndirectPostIndexedRead0 because it can modify it
     _currentInstruction = &Chip::sbcIndY4;
-    zeroPageIndirectPostIndexedLoad0(&Chip::sbc0);
+    zeroPageIndirectPostIndexedRead0(&Chip::sbc0);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::sbcIndY4() {
     _currentInstruction = &Chip::sbc0;
-    zeroPageIndirectPostIndexedLoad1();
+    zeroPageIndirectPostIndexedRead1();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -410,7 +410,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::cmpZp0() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::cmpZp1() {
     _currentInstruction = &Chip::cmp0;
-    zeroPageLoad();
+    zeroPageRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -428,7 +428,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::cmpZpX1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::cmpZpX2() {
     _currentInstruction = &Chip::cmp0;
-    zeroPageIndexedLoad();
+    zeroPageIndexedRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -446,7 +446,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::cmpAbs1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::cmpAbs2() {
     _currentInstruction = &Chip::cmp0;
-    absoluteLoad();
+    absoluteRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -463,15 +463,15 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::cmpAbsX1() {
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::cmpAbsX2() {
-    // It's important to have currentInstruction set before calling absoluteIndexLoad0 because it can modify it
+    // It's important to have currentInstruction set before calling absoluteIndexRead0 because it can modify it
     _currentInstruction = &Chip::cmpAbsX3;
-    absoluteIndexedLoad0(&Chip::cmp0);
+    absoluteIndexedRead0(&Chip::cmp0);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::cmpAbsX3() {
     _currentInstruction = &Chip::cmp0;
-    absoluteIndexedLoad1();
+    absoluteIndexedRead1();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -488,15 +488,15 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::cmpAbsY1() {
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::cmpAbsY2() {
-    // It's important to have currentInstruction set before calling absoluteIndexLoad0 because it can modify it
+    // It's important to have currentInstruction set before calling absoluteIndexRead0 because it can modify it
     _currentInstruction = &Chip::cmpAbsY3;
-    absoluteIndexedLoad0(&Chip::cmp0);
+    absoluteIndexedRead0(&Chip::cmp0);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::cmpAbsY3() {
     _currentInstruction = &Chip::cmp0;
-    absoluteIndexedLoad1();
+    absoluteIndexedRead1();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -526,7 +526,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::cmpIndX3() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::cmpIndX4() {
     _currentInstruction = &Chip::cmp0;
-    zeroPagePreIndexedIndirectLoad();
+    zeroPagePreIndexedIndirectRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -549,15 +549,15 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::cmpIndY2() {
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::cmpIndY3() {
-    // It's important to have currentInstruction set before calling zeroPageIndirectPostIndexedLoad0 because it can modify it
+    // It's important to have currentInstruction set before calling zeroPageIndirectPostIndexedRead0 because it can modify it
     _currentInstruction = &Chip::cmpIndY4;
-    zeroPageIndirectPostIndexedLoad0(&Chip::cmp0);
+    zeroPageIndirectPostIndexedRead0(&Chip::cmp0);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::cmpIndY4() {
     _currentInstruction = &Chip::cmp0;
-    zeroPageIndirectPostIndexedLoad1();
+    zeroPageIndirectPostIndexedRead1();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -580,7 +580,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::cpxZp0() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::cpxZp1() {
     _currentInstruction = &Chip::cpx0;
-    zeroPageLoad();
+    zeroPageRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -598,7 +598,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::cpxAbs1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::cpxAbs2() {
     _currentInstruction = &Chip::cpx0;
-    absoluteLoad();
+    absoluteRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -621,7 +621,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::cpyZp0() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::cpyZp1() {
     _currentInstruction = &Chip::cpy0;
-    zeroPageLoad();
+    zeroPageRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -639,7 +639,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::cpyAbs1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::cpyAbs2() {
     _currentInstruction = &Chip::cpy0;
-    absoluteLoad();
+    absoluteRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -656,10 +656,8 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::inc(uint8_t data) {
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::incdecMemory1() {
-    _currentInstruction = &Chip::fetchOpcode;
-    
     // Write result back
-    writeDataBus(_addressBusLow, _addressBusHigh, _alu.getAdderHold());
+    anyRMWWrite(_alu.getAdderHold());
     
     // Update status
     _flagsHelper.refresh<Flag::Zero, Flag::Negative>(_alu.getAdderHold());
@@ -667,12 +665,11 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::incdecMemory1() {
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::decMemory0() {
-    _currentInstruction = &Chip::incdecMemory1;
+    // Modify (just write non modified value back)
+    anyRMWModify(&Chip::incdecMemory1, _inputDataLatch);
     
+    // Decrement
     dec(_inputDataLatch);
-    
-    // Write read memory back (like true 6502)
-    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -684,7 +681,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::decZp0() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::decZp1() {
     _currentInstruction = &Chip::decMemory0;
-    zeroPageLoad();
+    zeroPageRMWRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -702,7 +699,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::decZpX1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::decZpX2() {
     _currentInstruction = &Chip::decMemory0;
-    zeroPageIndexedLoad();
+    zeroPageIndexedRMWRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -720,7 +717,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::decAbs1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::decAbs2() {
     _currentInstruction = &Chip::decMemory0;
-    absoluteLoad();
+    absoluteRMWRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -738,23 +735,22 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::decAbsX1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::decAbsX2() {
     _currentInstruction = &Chip::decAbsX3;
-    absoluteIndexedLoad0(&Chip::decAbsX3);
+    absoluteIndexedRMWRead0();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::decAbsX3() {
     _currentInstruction = &Chip::decMemory0;
-    absoluteIndexedLoad1();
+    absoluteIndexedRMWRead1();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::incMemory0() {
-    _currentInstruction = &Chip::incdecMemory1;
+    // Modify (just write non modified value back)
+    anyRMWModify(&Chip::incdecMemory1, _inputDataLatch);
     
+    // Increment
     inc(_inputDataLatch);
-    
-    // Write read memory back (like true 6502)
-    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -766,7 +762,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::incZp0() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::incZp1() {
     _currentInstruction = &Chip::incMemory0;
-    zeroPageLoad();
+    zeroPageRMWRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -784,7 +780,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::incZpX1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::incZpX2() {
     _currentInstruction = &Chip::incMemory0;
-    zeroPageIndexedLoad();
+    zeroPageIndexedRMWRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -802,7 +798,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::incAbs1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::incAbs2() {
     _currentInstruction = &Chip::incMemory0;
-    absoluteLoad();
+    absoluteRMWRead();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -820,13 +816,13 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::incAbsX1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::incAbsX2() {
     _currentInstruction = &Chip::incAbsX3;
-    absoluteIndexedLoad0(&Chip::incAbsX3);
+    absoluteIndexedRMWRead0();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::incAbsX3() {
     _currentInstruction = &Chip::incMemory0;
-    absoluteIndexedLoad1();
+    absoluteIndexedRMWRead1();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>

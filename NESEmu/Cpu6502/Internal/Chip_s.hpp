@@ -9,10 +9,18 @@
 #ifndef Cpu6502_Internal_Chip_s_hpp
 #define Cpu6502_Internal_Chip_s_hpp
 
-// TODO: par apres, si assez rapide, decomposer en 2 phases de cycles (Ph0, Ph1, Ph2, RDY, R/W, Sync) : pas besoin car le cpu a besoin de ca car tout arrive en meme temps (les signaux electriques) mais ici on peut appeler des fonctions a la suite des autres dans le meme cycle et simuler ca
 // TODO: pour une meilleure emulation des opcodes (surtout les undocumented), peut etre faire comme le vrai cpu et decomposer l'opcode en lignes actives/non actives pour activer certains circuits (appeler certaines fonctions) : https://www.pagetable.com/?p=39
 // TODO: enlever le flag helper et tout le bordel lié aux flags et n'avoir que les signaux séparés et une methode qui les regroupe et qui prend en parametre le bool Break car on les manipule bien plus souvent séparés que regroupé (seulement php, plp)
 // TODO: on peut tester le reset signal avec visual6502 aussi (reset0 et reset1)
+
+/*
+ 
+ A faire (pour le checkInterrupts) :
+ 
+ - Tester les undocumented (un normal et un rmw) !!! : reste ca a tester : DCM et ALR
+ 
+ */
+
 #include "Data.hpp"
 
 
@@ -142,8 +150,9 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::powerUp(uint16_t programC
     
     _programCounterNeedsIncrement = false;
     
-    _setOverflowLine = true;
-    _setOverflowLinePrevious = true;
+    _setOverflowLine = false;
+    _setOverflowLinePrevious = false;
+    _setOverflowRequested = false;
     
     _resetLine = true;
     _resetRequested = false;
@@ -177,7 +186,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::ready(bool high) {
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::reset(bool high) {  // TODO: voir pour les registres si on les laisse ainsi ou si on les reset : normalement on les laisse ainsi puisqu'un reset c'est juste un signal comme une interruption (mais a voir, on ne sait jamais) : peut etre avoir une methode power qui fait un hard reset et ce reset est le soft reset
+void Chip<TBus, TInternalHardware, BDecimalSupported>::reset(bool high) {// TODO: tester reset pour etre sur qu'il ne fait que ca et qu'il ne reset pas les registres
     // Save signal
     _resetLine = high;
     
@@ -190,13 +199,13 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::reset(bool high) {  // TO
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::nmi(bool high) {    // TODO: a terminer/tester (il parait qu'il faut 2 cycles pour que le signal low soit pris en compte, a voir) : surement 2 halfcycle donc ok
+void Chip<TBus, TInternalHardware, BDecimalSupported>::nmi(bool high) {
     // Save signal
     _nmiLine = high;
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::irq(bool high) {    // TODO: a tester
+void Chip<TBus, TInternalHardware, BDecimalSupported>::irq(bool high) {
     // Save signal
     _irqLine = high;
 }
@@ -244,7 +253,7 @@ uint16_t Chip<TBus, TInternalHardware, BDecimalSupported>::getAddressBus() const
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 uint8_t Chip<TBus, TInternalHardware, BDecimalSupported>::getDataBus() const {
-    return ((_readWrite == static_cast<bool>(ReadWrite::Read)) || (_resetRequested == true)) ? _inputDataLatch : _dataOutput;
+    return _dataBus;
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -286,6 +295,15 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::clockPhi1(bool forceExecu
     // Update PC
     updateProgramCounter();
     
+    // If setOverflow requested
+    if (_setOverflowRequested == true) {        // TODO: mettre ca dans une methode
+        // Enable overflow flag
+        _flagsHelper.set<Flag::Overflow>(true);
+        
+        // Reset setOverflow requested
+        _setOverflowRequested = false;
+    }
+    
     // Check for overflow flag
     checkOverflowFlag();
     
@@ -293,10 +311,13 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::clockPhi1(bool forceExecu
     //_dataOutput = 0xFF;
     
     // If rdy is low, wait before perform next read cycle unless we force execute
-    if (((_readyWaitRequested == false) || (_readWrite != static_cast<bool>(ReadWrite::Read))) || (forceExecute == true)) {
+    if ((_readyWaitRequested == false) || (_readWrite != static_cast<bool>(ReadWrite::Read)) || (forceExecute == true)) {
         // Execute current stage
         (this->*_currentInstruction)();
     }
+    
+    // Fetch memory for phi1
+    fetchMemoryPhi1();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -304,29 +325,42 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::clockPhi2() {
     // Start phi2
     _phi2 = true;
     
-    // Interrupts are checked each clock (second half of cycle)
+    // Check interrupts line
     checkNmi();
     checkIrq();
     
     // Check ready line
     checkReady();
     
-    // Each clock, there is a memory access
-    fetchMemory();
+    // Fetch memory for phi2
+    fetchMemoryPhi2();
 }
 
 // Memory
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::fetchMemory() {
+void Chip<TBus, TInternalHardware, BDecimalSupported>::fetchMemoryPhi1() {
+    // Read data on dataBus if it is in read mode else set dataBus with last read value
     if ((_readWrite == static_cast<bool>(ReadWrite::Read)) || (_resetRequested == true)) {
-        _inputDataLatch = _bus.read((_addressBusHigh << 8) | _addressBusLow);
+        _dataBus = _bus.read((_addressBusHigh << 8) | _addressBusLow);
+    } else {
+        _dataBus = _inputDataLatch;
+    }
+}
+
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::fetchMemoryPhi2() {
+    // dataBus is already filled with date since end of phi1, just put dataBus on internal registers
+    if ((_readWrite == static_cast<bool>(ReadWrite::Read)) || (_resetRequested == true)) {
+        _inputDataLatch = _dataBus;
         _predecode = _inputDataLatch;
         
         return;
     }
     
-    _bus.write((_addressBusHigh << 8) | _addressBusLow, _dataOutput);
+    // Write data to dataBus
+    _dataBus = _dataOutput;
+    _bus.write((_addressBusHigh << 8) | _addressBusLow, _dataBus);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -381,19 +415,16 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::fetchOpcode(OpcodeInstruc
     _currentInstruction = nextInstruction;
     
     // If interrupt requested
-    if (checkInterrupts() == true) {    // TODO: le probleme est que ca doit etre fait un cycle avant je pense et pas pour tout (comme le branch), peut etre plutot avoir ici if (_interruptRequested == true) { et avoir checkInterrupts qui set _interruptRequested dans une autre methode qui est appelé au cycle précédent (checkInterrupt ne doit plus rien retourner et setter directement _interruptRequested dans la methode)
+    if (_interruptRequested == true) {
         // Read opcode without increment PC
         readDataBus(_programCounterLow, _programCounterHigh);
-        
-        // Save interrupt flag to know that an interrupt is occur (and not brk opcode)
-        _interruptRequested = true;
     } else {
         // Fetch opcode
         fetchData();
     }
     
     // Set sync high
-    _sync = true;   // TODO: voir si ici ou au debut de la methode, normalement c'est ici
+    _sync = true;
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -415,7 +446,7 @@ template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::decodeOpcodeAndExecuteInstruction() {
     // We need this because some instructions will perform actions in the decode step of the next instruction, so we need to let them perform actions even if RDY is low, but we can't decode next opcode because opcode is not ready for reading
     if (_readyWaitRequested == true) {
-        // We can't use fetchOpcode here because fetch was already performed on the previous cycle, so the interrupts must not be checked again, just the data which is ready for reading
+        // We can't use fetchOpcode here because fetch was already performed on the previous cycle, just read the data which is ready for reading
         _currentInstruction = &Chip::fetchOpcodeAfterRdyLow;
         return;
     }
@@ -438,7 +469,8 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::checkOverflowFlag() {
     // Set overflow is requested if setOverflow line has transition from high to low
     if ((_setOverflowLinePrevious == true) && (_setOverflowLine == false)) {
         // Enable overflow flag if setOverflow is low, otherwise does nothing
-        _flagsHelper.set<Flag::Overflow>(_setOverflowLine == false);
+        //_flagsHelper.set<Flag::Overflow>(_setOverflowLine == false);
+        _setOverflowRequested = true;
     }
     
     // Save previous setOverflow signal
@@ -449,7 +481,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::checkOverflowFlag() {
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::checkReady() {
-    // Enable overflow flag if setOverflow is low, otherwise does nothing
+    // A ready wait is requested if the ready line is low
     _readyWaitRequested = (_readyLine == false);
 }
 
@@ -473,20 +505,11 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::checkIrq() {
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
-bool Chip<TBus, TInternalHardware, BDecimalSupported>::checkInterrupts() {
-    //_interruptRequested = (_nmiRequested == true) && (_irqRequested == true);
-    
-    // If Nmi requested
-    if (_nmiRequested == true) {
-        return true;
+void Chip<TBus, TInternalHardware, BDecimalSupported>::checkInterrupts() {
+    // Set interrupt requested flag if interrupts detected
+    if ((_nmiRequested == true) || (_irqRequested == true)) {
+        _interruptRequested = true;
     }
-    
-    // If Irq requested
-    if (_irqRequested == true) {
-        return true;
-    }
-    
-    return false;
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>

@@ -13,11 +13,9 @@
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 template <typename Chip<TBus, TInternalHardware, BDecimalSupported>::Flag flag>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::clearFlag() {
-    // Must be called before changing flag to delay possible interrupts after the next instruction
-    // See http://wiki.nesdev.com/w/index.php/CPU_interrupts
-    fetchOpcode();
-    
     _flagsHelper.clear<flag>();
+    
+    fetchOpcode();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -67,11 +65,9 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::clv1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 template <typename Chip<TBus, TInternalHardware, BDecimalSupported>::Flag flag>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::setFlag() {
-    // Must be called before changing flag to delay possible interrupts after the next instruction
-    // See http://wiki.nesdev.com/w/index.php/CPU_interrupts
-    fetchOpcode();
-    
     _flagsHelper.set<flag>(true);
+    
+    fetchOpcode();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>

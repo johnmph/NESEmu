@@ -157,7 +157,8 @@ namespace Cpu6502 {
         void clockPhi1(bool forceExecute);
         
         // Memory
-        void fetchMemory();
+        void fetchMemoryPhi1();
+        void fetchMemoryPhi2();
         void readDataBus(uint8_t low, uint8_t high);
         void writeDataBus(uint8_t low, uint8_t high, uint8_t data);
         
@@ -179,7 +180,7 @@ namespace Cpu6502 {
         // Interrupts
         void checkNmi();
         void checkIrq();
-        bool checkInterrupts();
+        void checkInterrupts();
         int getCurrentInterruptVectorsIndex();
         
         // Stack
@@ -226,6 +227,7 @@ namespace Cpu6502 {
         
         uint8_t _addressBusLow;
         uint8_t _addressBusHigh;
+        uint8_t _dataBus;
         uint8_t _inputDataLatch;
         uint8_t _dataOutput;
         bool _readyLine;
@@ -241,6 +243,7 @@ namespace Cpu6502 {
         
         bool _setOverflowLine;
         bool _setOverflowLinePrevious;
+        bool _setOverflowRequested;
         
         _Detail::Alu _alu;
         
@@ -252,9 +255,6 @@ namespace Cpu6502 {
         bool _irqLine;
         bool _irqRequested;
         bool _interruptRequested;
-        
-        bool _nmiRequestedSavedForBranchBug;
-        bool _irqRequestedSavedForBranchBug;
     };
     
     #include "Internal/Chip_s.hpp"
