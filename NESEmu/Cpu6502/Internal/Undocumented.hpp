@@ -309,6 +309,7 @@ void insIndY4();
 
 void alrImm0();
 void alrImm1();
+void alrImm2();
 
 // ARR = AND + ROR
 

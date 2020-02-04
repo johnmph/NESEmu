@@ -12,14 +12,7 @@
 // TODO: pour une meilleure emulation des opcodes (surtout les undocumented), peut etre faire comme le vrai cpu et decomposer l'opcode en lignes actives/non actives pour activer certains circuits (appeler certaines fonctions) : https://www.pagetable.com/?p=39
 // TODO: enlever le flag helper et tout le bordel lié aux flags et n'avoir que les signaux séparés et une methode qui les regroupe et qui prend en parametre le bool Break car on les manipule bien plus souvent séparés que regroupé (seulement php, plp)
 // TODO: on peut tester le reset signal avec visual6502 aussi (reset0 et reset1)
-
-/*
- 
- A faire (pour le checkInterrupts) :
- 
- - Tester les undocumented (un normal et un rmw) !!! : reste ca a tester : DCM et ALR
- 
- */
+// TODO: tester les undocumented avec visual6502 (un seul mode d'adressage suffit, c'est pour voir si les etapes internes sont bonnes) : ok a finir
 
 #include "Data.hpp"
 

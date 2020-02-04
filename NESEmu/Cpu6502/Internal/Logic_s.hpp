@@ -594,6 +594,18 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::bitAbs2() {
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
+void Chip<TBus, TInternalHardware, BDecimalSupported>::shiftImm2() {
+    // Write result back
+    _accumulator = _alu.getAdderHold();
+    
+    // Update status
+    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_alu.getAdderHold());
+    
+    // Execute instruction
+    decodeOpcodeAndExecuteInstruction();
+}
+
+template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::asl(uint8_t data) {
     // ASL by adding same number to itself with no carry
     _alu.performSum<BDecimalSupported, false>(data, data, false, false);
@@ -620,20 +632,15 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::aslMemory1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::aslImm0() {
     _currentInstruction = &Chip::aslImm1;
-    asl(_accumulator);
     implied();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::aslImm1() {
-    // Write result back
-    _accumulator = _alu.getAdderHold();
+    asl(_accumulator);
     
-    // Update status
-    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_alu.getAdderHold());
-    
-    // Fetch opcode
-    fetchOpcode();
+    // Fetch next opcode during performing ALU
+    fetchOpcode(&Chip::shiftImm2);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -735,20 +742,15 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::lsrMemory1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::lsrImm0() {
     _currentInstruction = &Chip::lsrImm1;
-    lsr(_accumulator);
     implied();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::lsrImm1() {
-    // Write result back
-    _accumulator = _alu.getAdderHold();
+    lsr(_accumulator);
     
-    // Update status
-    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_alu.getAdderHold());
-    
-    // Fetch opcode
-    fetchOpcode();
+    // Fetch next opcode during performing ALU
+    fetchOpcode(&Chip::shiftImm2);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -850,19 +852,15 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::rolMemory1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::rolImm0() {
     _currentInstruction = &Chip::rolImm1;
-    rol(_accumulator);
     implied();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::rolImm1() {
-    // Write result back
-    _accumulator = _alu.getAdderHold();
+    rol(_accumulator);
     
-    // Update status
-    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_alu.getAdderHold());
-    
-    fetchOpcode();
+    // Fetch next opcode during performing ALU
+    fetchOpcode(&Chip::shiftImm2);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
@@ -964,20 +962,15 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::rorMemory1() {
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::rorImm0() {
     _currentInstruction = &Chip::rorImm1;
-    ror(_accumulator);
     implied();
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
 void Chip<TBus, TInternalHardware, BDecimalSupported>::rorImm1() {
-    // Write result back
-    _accumulator = _alu.getAdderHold();
+    ror(_accumulator);
     
-    // Update status
-    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_alu.getAdderHold());
-    
-    // Fetch opcode
-    fetchOpcode();
+    // Fetch next opcode during performing ALU
+    fetchOpcode(&Chip::shiftImm2);
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>

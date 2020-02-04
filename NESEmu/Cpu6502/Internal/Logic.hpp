@@ -135,7 +135,10 @@ void bitAbs0();
 void bitAbs1();
 void bitAbs2();
 
+void shiftImm2();
+
 void asl(uint8_t data);
+
 void aslMemory0();
 void aslMemory1();
 

@@ -19,7 +19,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::reset0() {
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::reset1() {
+void Chip<TBus, TInternalHardware, BDecimalSupported>::reset1() {   // TODO: peut etre retirer ca et mettre fetchOpcode a la place pour reset0 next instruction
     _currentInstruction = &Chip::brk0;
 }
 
@@ -62,7 +62,7 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::brk3() {
     
     // Push status flags to stack
     pushToStack1();
-    pushToStack0(_statusFlags | ((_interruptRequested == false) << static_cast<int>(Flag::Break))); // TODO: voir si ok
+    pushToStack0(_statusFlags | ((_interruptRequested == false) << static_cast<int>(Flag::Break))); // TODO: voir si ok (test visual6502 avec un brk normal et une interrupt (nmi par exemple) et pour chaque, faire un pla pour récuperer le status flags
 }
 
 template <class TBus, class TInternalHardware, bool BDecimalSupported>

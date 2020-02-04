@@ -1500,6 +1500,14 @@ namespace {
     [self testFile:@"IrqInNmi10.txt"];
 }
 
+- (void)testIrqInInstrUndocumentedImmediateRead1 {
+    [self testFile:@"IrqInInstrUndocumentedImmediateRead1.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedImmediateRead2 {
+    [self testFile:@"IrqInInstrUndocumentedImmediateRead2.txt"];
+}
+
 - (void)testIrqInInstrUndocumentedZeroPageRead1 {
     [self testFile:@"IrqInInstrUndocumentedZeroPageRead1.txt"];
 }
@@ -1720,6 +1728,269 @@ namespace {
     [self testFile:@"IrqInInstrUndocumentedIndYWithPageCrossingRead8.txt"];
 }
 
+- (void)testIrqInInstrUndocumentedZeroPageRMW1 {
+    [self testFile:@"IrqInInstrUndocumentedZeroPageRMW1.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedZeroPageRMW2 {
+    [self testFile:@"IrqInInstrUndocumentedZeroPageRMW2.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedZeroPageRMW3 {
+    [self testFile:@"IrqInInstrUndocumentedZeroPageRMW3.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedZeroPageRMW4 {
+    [self testFile:@"IrqInInstrUndocumentedZeroPageRMW4.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedZeroPageRMW5 {
+    [self testFile:@"IrqInInstrUndocumentedZeroPageRMW5.txt"];
+}
+
+- (void)testIrqInUndocumentedZeroPageXRMW1 {
+    [self testFile:@"IrqInUndocumentedZeroPageXRMW1.txt"];
+}
+
+- (void)testIrqInUndocumentedZeroPageXRMW2 {
+    [self testFile:@"IrqInUndocumentedZeroPageXRMW2.txt"];
+}
+
+- (void)testIrqInUndocumentedZeroPageXRMW3 {
+    [self testFile:@"IrqInUndocumentedZeroPageXRMW3.txt"];
+}
+
+- (void)testIrqInUndocumentedZeroPageXRMW4 {
+    [self testFile:@"IrqInUndocumentedZeroPageXRMW4.txt"];
+}
+
+- (void)testIrqInUndocumentedZeroPageXRMW5 {
+    [self testFile:@"IrqInUndocumentedZeroPageXRMW5.txt"];
+}
+
+- (void)testIrqInUndocumentedZeroPageXRMW6 {
+    [self testFile:@"IrqInUndocumentedZeroPageXRMW6.txt"];
+}
+
+- (void)testIrqInUndocumentedAbsoluteRMW1 {
+    [self testFile:@"IrqInUndocumentedAbsoluteRMW1.txt"];
+}
+
+- (void)testIrqInUndocumentedAbsoluteRMW2 {
+    [self testFile:@"IrqInUndocumentedAbsoluteRMW2.txt"];
+}
+
+- (void)testIrqInUndocumentedAbsoluteRMW3 {
+    [self testFile:@"IrqInUndocumentedAbsoluteRMW3.txt"];
+}
+
+- (void)testIrqInUndocumentedAbsoluteRMW4 {
+    [self testFile:@"IrqInUndocumentedAbsoluteRMW4.txt"];
+}
+
+- (void)testIrqInUndocumentedAbsoluteRMW5 {
+    [self testFile:@"IrqInUndocumentedAbsoluteRMW5.txt"];
+}
+
+- (void)testIrqInUndocumentedAbsoluteRMW6 {
+    [self testFile:@"IrqInUndocumentedAbsoluteRMW6.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedAbsoluteXRMW1 {
+    [self testFile:@"IrqInInstrUndocumentedAbsoluteXRMW1.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedAbsoluteXRMW2 {
+    [self testFile:@"IrqInInstrUndocumentedAbsoluteXRMW2.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedAbsoluteXRMW3 {
+    [self testFile:@"IrqInInstrUndocumentedAbsoluteXRMW3.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedAbsoluteXRMW4 {
+    [self testFile:@"IrqInInstrUndocumentedAbsoluteXRMW4.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedAbsoluteXRMW5 {
+    [self testFile:@"IrqInInstrUndocumentedAbsoluteXRMW5.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedAbsoluteXRMW6 {
+    [self testFile:@"IrqInInstrUndocumentedAbsoluteXRMW6.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedAbsoluteXRMW7 {
+    [self testFile:@"IrqInInstrUndocumentedAbsoluteXRMW7.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedAbsoluteXWithPageCrossingRMW1 {
+    [self testFile:@"IrqInInstrUndocumentedAbsoluteXWithPageCrossingRMW1.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedAbsoluteXWithPageCrossingRMW2 {
+    [self testFile:@"IrqInInstrUndocumentedAbsoluteXWithPageCrossingRMW2.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedAbsoluteXWithPageCrossingRMW3 {
+    [self testFile:@"IrqInInstrUndocumentedAbsoluteXWithPageCrossingRMW3.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedAbsoluteXWithPageCrossingRMW4 {
+    [self testFile:@"IrqInInstrUndocumentedAbsoluteXWithPageCrossingRMW4.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedAbsoluteXWithPageCrossingRMW5 {
+    [self testFile:@"IrqInInstrUndocumentedAbsoluteXWithPageCrossingRMW5.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedAbsoluteXWithPageCrossingRMW6 {
+    [self testFile:@"IrqInInstrUndocumentedAbsoluteXWithPageCrossingRMW6.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedAbsoluteXWithPageCrossingRMW7 {
+    [self testFile:@"IrqInInstrUndocumentedAbsoluteXWithPageCrossingRMW7.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndXRMW1 {
+    [self testFile:@"IrqInInstrUndocumentedIndXRMW1.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndXRMW2 {
+    [self testFile:@"IrqInInstrUndocumentedIndXRMW2.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndXRMW3 {
+    [self testFile:@"IrqInInstrUndocumentedIndXRMW3.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndXRMW4 {
+    [self testFile:@"IrqInInstrUndocumentedIndXRMW4.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndXRMW5 {
+    [self testFile:@"IrqInInstrUndocumentedIndXRMW5.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndXRMW6 {
+    [self testFile:@"IrqInInstrUndocumentedIndXRMW6.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndXRMW7 {
+    [self testFile:@"IrqInInstrUndocumentedIndXRMW7.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndXRMW8 {
+    [self testFile:@"IrqInInstrUndocumentedIndXRMW8.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndYRMW1 {
+    [self testFile:@"IrqInInstrUndocumentedIndYRMW1.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndYRMW2 {
+    [self testFile:@"IrqInInstrUndocumentedIndYRMW2.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndYRMW3 {
+    [self testFile:@"IrqInInstrUndocumentedIndYRMW3.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndYRMW4 {
+    [self testFile:@"IrqInInstrUndocumentedIndYRMW4.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndYRMW5 {
+    [self testFile:@"IrqInInstrUndocumentedIndYRMW5.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndYRMW6 {
+    [self testFile:@"IrqInInstrUndocumentedIndYRMW6.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndYRMW7 {
+    [self testFile:@"IrqInInstrUndocumentedIndYRMW7.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndYRMW8 {
+    [self testFile:@"IrqInInstrUndocumentedIndYRMW8.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndYWithPageCrossingRMW1 {
+    [self testFile:@"IrqInInstrUndocumentedIndYWithPageCrossingRMW1.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndYWithPageCrossingRMW2 {
+    [self testFile:@"IrqInInstrUndocumentedIndYWithPageCrossingRMW2.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndYWithPageCrossingRMW3 {
+    [self testFile:@"IrqInInstrUndocumentedIndYWithPageCrossingRMW3.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndYWithPageCrossingRMW4 {
+    [self testFile:@"IrqInInstrUndocumentedIndYWithPageCrossingRMW4.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndYWithPageCrossingRMW5 {
+    [self testFile:@"IrqInInstrUndocumentedIndYWithPageCrossingRMW5.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndYWithPageCrossingRMW6 {
+    [self testFile:@"IrqInInstrUndocumentedIndYWithPageCrossingRMW6.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndYWithPageCrossingRMW7 {
+    [self testFile:@"IrqInInstrUndocumentedIndYWithPageCrossingRMW7.txt"];
+}
+
+- (void)testIrqInInstrUndocumentedIndYWithPageCrossingRMW8 {
+    [self testFile:@"IrqInInstrUndocumentedIndYWithPageCrossingRMW8.txt"];
+}
+
+- (void)testInstrALURegister {
+    [self testFile:@"InstrALURegister.txt"];
+}
+
+- (void)testInstrALUMemory {
+    [self testFile:@"InstrALUMemory.txt"];
+}
+
+- (void)testInstrUndocumentedALR {
+    [self testFile:@"InstrUndocumentedALR.txt"];
+}
+
+- (void)testInstrUndocumentedASO {
+    [self testFile:@"InstrUndocumentedASO.txt"];
+}
+
+- (void)testInstrUndocumentedAXS {
+    [self testFile:@"InstrUndocumentedAXS.txt"];
+}
+
+- (void)testInstrUndocumentedDCM {
+    [self testFile:@"InstrUndocumentedDCM.txt"];
+}
+
+- (void)testInstrUndocumentedINS {
+    [self testFile:@"InstrUndocumentedINS.txt"];
+}
+
+- (void)testInstrUndocumentedLAX {
+    [self testFile:@"InstrUndocumentedLAX.txt"];
+}
+
+- (void)testInstrUndocumentedLSE {
+    [self testFile:@"InstrUndocumentedLSE.txt"];
+}
+
+- (void)testInstrUndocumentedRLA {
+    [self testFile:@"InstrUndocumentedRLA.txt"];
+}
+
+- (void)testInstrUndocumentedRRA {
+    [self testFile:@"InstrUndocumentedRRA.txt"];
+}
 
 
 
