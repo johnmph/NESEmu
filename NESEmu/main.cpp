@@ -117,8 +117,12 @@ int main(int argc, const char * argv[]) {
     bus._memory.fill(0xEA);
     
     // Read test file
-    std::ifstream ifs("nestest.nes", std::ios::binary);
-    //std::ifstream ifs("official_only.nes", std::ios::binary);
+    std::ifstream ifs("../UnitTestFiles/nestest.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/official_only.nes", std::ios::binary);
+    
+    // Check that file exists
+    assert(ifs.good());
+    
     ifs.seekg(0x10);
     ifs.read(reinterpret_cast<char *>(&bus._memory.data()[0x8000]), 0x4000);
     //ifs.read(reinterpret_cast<char *>(&bus._memory.data()[0x8000]), 0x8000);
@@ -128,6 +132,9 @@ int main(int argc, const char * argv[]) {
     bus.write(0xFFFC, 0x00);
     bus.write(0xFFFD, 0xC0);
     //bus.write(0xFFFD, 0x80);
+    
+    // Power up cpu
+    cpu.powerUp();
     
     // Release reset to start cpu
     cpu.reset(true);

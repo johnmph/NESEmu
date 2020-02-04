@@ -10,15 +10,15 @@
 #define Cpu6502_Internal_Flow_s_hpp
 
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::jmpAbs0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::jmpAbs0() {
     _currentInstruction = &Chip::jmpAbs1;
     
     absolute0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::jmpAbs1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::jmpAbs1() {
     _currentInstruction = &Chip::jmpAbs2;
     
     absolute1();
@@ -27,8 +27,8 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::jmpAbs1() {
     checkInterrupts();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::jmpAbs2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::jmpAbs2() {
     // Set program counter
     _programCounterLow = _alu.getAdderHold();
     _programCounterHigh = _inputDataLatch;
@@ -36,47 +36,47 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::jmpAbs2() {
     fetchOpcode();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::jmpInd0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::jmpInd0() {
     _currentInstruction = &Chip::jmpInd1;
     
     absolute0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::jmpInd1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::jmpInd1() {
     _currentInstruction = &Chip::jmpInd2;
     
     absolute1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::jmpInd2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::jmpInd2() {
     _currentInstruction = &Chip::jmpInd3;
     
     // Read address low (need to be put before ALU operation below because it need adderHold before incrementation)
     readDataBus(_alu.getAdderHold(), _inputDataLatch);
     
     // Adding 1 to address low using ALU (Add 0 with carry set like true 6502)
-    _alu.performSum<BDecimalSupported, false>(0x0, _alu.getAdderHold(), false, true);
+    _alu.performSum<DecimalSupported, false>(0x0, _alu.getAdderHold(), false, true);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::jmpInd3() {
+template <class TConfiguration>
+void Chip<TConfiguration>::jmpInd3() {
     _currentInstruction = &Chip::jmpInd4;
     
     // Read address high (need to be put before ALU operation below because it need adderHold before saving low byte of address)
     readDataBus(_alu.getAdderHold(), _addressBusHigh);
     
     // 6502 uses the ALU to store temporary low byte of address (by adding 0 to it to keep its value in adderHold)
-    _alu.performSum<BDecimalSupported, false>(0x0, _inputDataLatch, false, false);
+    _alu.performSum<DecimalSupported, false>(0x0, _inputDataLatch, false, false);
     
     // Check interrupts
     checkInterrupts();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::jmpInd4() {
+template <class TConfiguration>
+void Chip<TConfiguration>::jmpInd4() {
     // Set address low in PC
     _programCounterLow = _alu.getAdderHold();
     
@@ -86,16 +86,16 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::jmpInd4() {
     fetchOpcode();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::jsr0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::jsr0() {
     _currentInstruction = &Chip::jsr1;
     
     // Fetch ADL
     fetchData();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::jsr1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::jsr1() {
     _currentInstruction = &Chip::jsr2;
     
     // Start stack operation (read of current cycle will read stack memory)
@@ -105,16 +105,16 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::jsr1() {
     _stackPointer = _inputDataLatch;
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::jsr2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::jsr2() {
     _currentInstruction = &Chip::jsr3;
     
     // Push PCH to stack
     pushToStack0(_programCounterHigh);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::jsr3() {
+template <class TConfiguration>
+void Chip<TConfiguration>::jsr3() {
     _currentInstruction = &Chip::jsr4;
     
     // Finish stack operation and push PCL to stack
@@ -122,8 +122,8 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::jsr3() {
     pushToStack0(_programCounterLow);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::jsr4() {
+template <class TConfiguration>
+void Chip<TConfiguration>::jsr4() {
     _currentInstruction = &Chip::jsr5;
     
     // Don't finish stack operation because stack pointer is used to store address low and addressBusLow is set with PC to fetch address high
@@ -135,8 +135,8 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::jsr4() {
     checkInterrupts();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::jsr5() {
+template <class TConfiguration>
+void Chip<TConfiguration>::jsr5() {
     // Set program counter (address low was stored in stackPointer and address high was fetched in last cycle)
     _programCounterLow = _stackPointer;
     _programCounterHigh = _inputDataLatch;
@@ -147,22 +147,22 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::jsr5() {
     fetchOpcode();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::nop0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::nop0() {
     _currentInstruction = &Chip::fetchOpcode;
     implied();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::rts0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::rts0() {
     _currentInstruction = &Chip::rts1;
     
     // Even if it's a implied addressing mode, PC is incremented when reading memory
     fetchData();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::rts1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::rts1() {
     _currentInstruction = &Chip::rts2;
     
     // Start stack operation (read of current cycle will read stack memory)
@@ -170,27 +170,27 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::rts1() {
     pullFromStack0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::rts2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::rts2() {
     _currentInstruction = &Chip::rts3;
     
     pullFromStack1();
     pullFromStack0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::rts3() {
+template <class TConfiguration>
+void Chip<TConfiguration>::rts3() {
     _currentInstruction = &Chip::rts4;
     
     pullFromStack1();
     stopStackOperation();
     
     // 6502 uses the ALU to store temporary low byte of address (by adding 0 to it to keep its value in adderHold)
-    _alu.performSum<BDecimalSupported, false>(0x0, _inputDataLatch, false, false);
+    _alu.performSum<DecimalSupported, false>(0x0, _inputDataLatch, false, false);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::rts4() {
+template <class TConfiguration>
+void Chip<TConfiguration>::rts4() {
     _currentInstruction = &Chip::fetchOpcode;
     
     // Set program counter (address low was stored in alu and address high was fetched in last cycle)
@@ -204,8 +204,8 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::rts4() {
     checkInterrupts();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::unofficial() {  // TODO: a retirer une fois tous les opcodes gérés
+template <class TConfiguration>
+void Chip<TConfiguration>::unofficial() {  // TODO: a retirer une fois tous les opcodes gérés
     nop0();
 }
 

@@ -102,8 +102,26 @@ namespace Cpu6502 {
         
     }
     
+    template <bool BSetOverflowEnabled, bool BResetAccurate, class TBus, class TInternalHardware = std::nullptr_t, bool BDecimalSupported = false>
+    struct Configuration {
+        using Bus = TBus;
+        using InternalHardware = TInternalHardware;
+        
+        static constexpr bool DecimalSupported = BDecimalSupported;
+        static constexpr bool SetOverflowEnabled = BSetOverflowEnabled;
+        static constexpr bool ResetAccurate = BResetAccurate;
+    };
+    
     template <class TBus, class TInternalHardware = std::nullptr_t, bool BDecimalSupported = false>
+    using ConfigurationAccurate = Configuration<true, true, TBus, TInternalHardware, BDecimalSupported>;
+    
+    template <class TBus, class TInternalHardware = std::nullptr_t, bool BDecimalSupported = false>
+    using ConfigurationPerformance = Configuration<false, false, TBus, TInternalHardware, BDecimalSupported>;
+    
+    template <class TConfiguration>
     struct Chip {
+        using Bus = typename TConfiguration::Bus;
+        
         using Flag = _Detail::FlagsHelper::Flag;
         
         enum class ReadWrite : bool {
@@ -111,7 +129,7 @@ namespace Cpu6502 {
             Write = false
         };
         
-        Chip(TBus &bus);
+        Chip(Bus &bus);
         
         void powerUp(uint16_t programCounter = 0x00FF, uint8_t stackPointer = 0x0, uint8_t accumulator = 0xAA, uint8_t xIndex = 0x0, uint8_t yIndex = 0x0, uint8_t statusFlags = 0x22); // TODO: accumulator = 0xAA et Z flag est mis a 1 comme dans Visual6502, a voir
         
@@ -126,12 +144,6 @@ namespace Cpu6502 {
         
         void setOverflow(bool high);
         
-        //uint16_t getProgramCounter() const;
-        //uint8_t getStackPointer() const;
-        //uint8_t getAccumulator() const;
-        //uint8_t getXIndex() const;
-        //uint8_t getYIndex() const;
-        //uint8_t getStatusFlags() const;
         uint16_t getAddressBus() const;
         uint8_t getDataBus() const;
         bool getReadWriteSignal() const;
@@ -141,10 +153,15 @@ namespace Cpu6502 {
         
     private:
         
+        using InternalHardware = typename TConfiguration::InternalHardware;
+        static constexpr bool DecimalSupported = TConfiguration::DecimalSupported;
+        static constexpr bool SetOverflowEnabled = TConfiguration::SetOverflowEnabled;
+        static constexpr bool ResetAccurate = TConfiguration::ResetAccurate;
+        
         using OpcodeInstruction = void (Chip::*)();
         
-        // Set TInternalHardware as friend to keep internal members private
-        friend TInternalHardware;
+        // Set InternalHardware as friend to keep internal members private
+        friend InternalHardware;
         
         enum class Interrupts {
             Nmi,
@@ -172,10 +189,39 @@ namespace Cpu6502 {
         void decodeOpcodeAndExecuteInstruction();
         
         // Overflow
-        void checkOverflowFlag();
+        template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled == true, int>::type = 0>
+        void setOverflow(bool high);
+        
+        template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled == false, int>::type = 0>
+        void setOverflow(bool high);
+        
+        template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled == true, int>::type = 0>
+        void checkSetOverflow();
+        
+        template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled == false, int>::type = 0>
+        void checkSetOverflow();
         
         // Ready
         void checkReady();
+        
+        // Reset
+        template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type = 0>
+        void resetAfterPowerUp();
+        
+        template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type = 0>
+        void resetAfterPowerUp();
+        
+        template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type = 0>
+        void reset(bool high);
+        
+        template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type = 0>
+        void reset(bool high);
+        
+        template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type = 0>
+        void checkReset();
+        
+        template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type = 0>
+        void checkReset();
         
         // Interrupts
         void checkNmi();
@@ -217,7 +263,7 @@ namespace Cpu6502 {
         
         // Internal
         _Detail::FlagsHelper _flagsHelper;
-        TBus &_bus;
+        Bus &_bus;
         static const OpcodeInstruction _opcodeInstructionFuncs[256];
         static const uint8_t _interruptVectors[3][2];
         static const uint8_t _stackPageNumber;
@@ -248,6 +294,7 @@ namespace Cpu6502 {
         _Detail::Alu _alu;
         
         bool _resetLine;
+        bool _resetDetected;
         bool _resetRequested;
         bool _nmiLine;
         bool _nmiLinePrevious;

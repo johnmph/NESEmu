@@ -38,7 +38,7 @@ namespace {
     
     struct Cpu6502InternalViewer {
         
-        Cpu6502InternalViewer(Cpu6502::Chip<Bus, Cpu6502InternalViewer> const &cpu6502) : _cpu6502(cpu6502) {
+        Cpu6502InternalViewer(Cpu6502::Chip<Cpu6502::ConfigurationAccurate<Bus, Cpu6502InternalViewer>> const &cpu6502) : _cpu6502(cpu6502) {
         }
         
         uint16_t getProgramCounter() const {
@@ -66,7 +66,7 @@ namespace {
         }
         
     private:
-        Cpu6502::Chip<Bus, Cpu6502InternalViewer> const &_cpu6502;
+        Cpu6502::Chip<Cpu6502::ConfigurationAccurate<Bus, Cpu6502InternalViewer>> const &_cpu6502;
     };
     
     struct State {
@@ -144,7 +144,7 @@ namespace {
     
     
     Bus bus;
-    Cpu6502::Chip<Bus, Cpu6502InternalViewer> cpu6502(bus);
+    Cpu6502::Chip<Cpu6502::ConfigurationAccurate<Bus, Cpu6502InternalViewer>> cpu6502(bus);
     Cpu6502InternalViewer cpu6502InternalViewer(cpu6502);
     
 }

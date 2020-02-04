@@ -42,10 +42,10 @@ namespace {
     
     struct Cpu6502InternalViewer {
         
-        Cpu6502InternalViewer(Cpu6502::Chip<Bus, Cpu6502InternalViewer> const &cpu6502) : _cpu6502(cpu6502) {
+        Cpu6502InternalViewer(Cpu6502::Chip<Cpu6502::ConfigurationAccurate<Bus, Cpu6502InternalViewer>> const &cpu6502) : _cpu6502(cpu6502) {
         }
         
-        Cpu6502::Chip<Bus, Cpu6502InternalViewer> const &getCpu6502() const {
+        Cpu6502::Chip<Cpu6502::ConfigurationAccurate<Bus, Cpu6502InternalViewer>> const &getCpu6502() const {
             return _cpu6502;
         }
         
@@ -74,7 +74,7 @@ namespace {
         }
         
     private:
-        Cpu6502::Chip<Bus, Cpu6502InternalViewer> const &_cpu6502;
+        Cpu6502::Chip<Cpu6502::ConfigurationAccurate<Bus, Cpu6502InternalViewer>> const &_cpu6502;
     };
     
     struct Visual6502UrlCommand {
@@ -482,7 +482,7 @@ namespace {
     
     
     Bus bus;
-    Cpu6502::Chip<Bus, Cpu6502InternalViewer> cpu6502(bus);
+    Cpu6502::Chip<Cpu6502::ConfigurationAccurate<Bus, Cpu6502InternalViewer>> cpu6502(bus);
     Cpu6502InternalViewer cpu6502InternalViewer(cpu6502);
     
 }
@@ -1992,6 +1992,29 @@ namespace {
     [self testFile:@"InstrUndocumentedRRA.txt"];
 }
 
+- (void)testResetInHalfClock1 {
+    [self testFile:@"ResetInHalfClock1.txt"];
+}
+
+- (void)testResetInHalfClock2 {
+    [self testFile:@"ResetInHalfClock2.txt"];
+}
+
+- (void)testResetForManyHalfClock1 {
+    [self testFile:@"ResetForManyHalfClock1.txt"];
+}
+
+- (void)testResetForManyHalfClock2 {
+    [self testFile:@"ResetForManyHalfClock2.txt"];
+}
+
+- (void)testResetForManyHalfClock3 {
+    [self testFile:@"ResetForManyHalfClock3.txt"];
+}
+
+- (void)testResetForManyHalfClock4 {
+    [self testFile:@"ResetForManyHalfClock4.txt"];
+}
 
 
 - (void)testCheckRegistersValueWhenReset {

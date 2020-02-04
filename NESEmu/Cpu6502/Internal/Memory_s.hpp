@@ -10,8 +10,8 @@
 #define Cpu6502_Internal_Memory_s_hpp
 
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ld0(uint8_t &data) {
+template <class TConfiguration>
+void Chip<TConfiguration>::ld0(uint8_t &data) {
     data = _inputDataLatch;
     
     // Update status
@@ -21,587 +21,587 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::ld0(uint8_t &data) {
     fetchOpcode();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::lda0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::lda0() {
     ld0(_accumulator);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaImm0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaImm0() {
     _currentInstruction = &Chip::lda0;
     immediate();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaZp0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaZp0() {
     _currentInstruction = &Chip::ldaZp1;
     zeroPage();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaZp1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaZp1() {
     _currentInstruction = &Chip::lda0;
     zeroPageRead();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaZpX0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaZpX0() {
     _currentInstruction = &Chip::ldaZpX1;
     zeroPageIndexed0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaZpX1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaZpX1() {
     _currentInstruction = &Chip::ldaZpX2;
     zeroPageIndexedX1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaZpX2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaZpX2() {
     _currentInstruction = &Chip::lda0;
     zeroPageIndexedRead();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaAbs0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaAbs0() {
     _currentInstruction = &Chip::ldaAbs1;
     absolute0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaAbs1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaAbs1() {
     _currentInstruction = &Chip::ldaAbs2;
     absolute1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaAbs2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaAbs2() {
     _currentInstruction = &Chip::lda0;
     absoluteRead();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaAbsX0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaAbsX0() {
     _currentInstruction = &Chip::ldaAbsX1;
     absoluteIndexed0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaAbsX1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaAbsX1() {
     _currentInstruction = &Chip::ldaAbsX2;
     absoluteIndexedX1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaAbsX2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaAbsX2() {
     _currentInstruction = &Chip::ldaAbsX3;
     absoluteIndexedRead0(&Chip::lda0);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaAbsX3() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaAbsX3() {
     _currentInstruction = &Chip::lda0;
     absoluteIndexedRead1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaAbsY0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaAbsY0() {
     _currentInstruction = &Chip::ldaAbsY1;
     absoluteIndexed0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaAbsY1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaAbsY1() {
     _currentInstruction = &Chip::ldaAbsY2;
     absoluteIndexedY1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaAbsY2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaAbsY2() {
     _currentInstruction = &Chip::ldaAbsY3;
     absoluteIndexedRead0(&Chip::lda0);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaAbsY3() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaAbsY3() {
     _currentInstruction = &Chip::lda0;
     absoluteIndexedRead1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaIndX0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaIndX0() {
     _currentInstruction = &Chip::ldaIndX1;
     zeroPagePreIndexedIndirect0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaIndX1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaIndX1() {
     _currentInstruction = &Chip::ldaIndX2;
     zeroPagePreIndexedIndirect1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaIndX2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaIndX2() {
     _currentInstruction = &Chip::ldaIndX3;
     zeroPagePreIndexedIndirect2();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaIndX3() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaIndX3() {
     _currentInstruction = &Chip::ldaIndX4;
     zeroPagePreIndexedIndirect3();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaIndX4() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaIndX4() {
     _currentInstruction = &Chip::lda0;
     zeroPagePreIndexedIndirectRead();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaIndY0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaIndY0() {
     _currentInstruction = &Chip::ldaIndY1;
     zeroPageIndirectPostIndexed0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaIndY1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaIndY1() {
     _currentInstruction = &Chip::ldaIndY2;
     zeroPageIndirectPostIndexed1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaIndY2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaIndY2() {
     _currentInstruction = &Chip::ldaIndY3;
     zeroPageIndirectPostIndexed2();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaIndY3() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaIndY3() {
     _currentInstruction = &Chip::ldaIndY4;
     zeroPageIndirectPostIndexedRead0(&Chip::lda0);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldaIndY4() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldaIndY4() {
     _currentInstruction = &Chip::lda0;
     zeroPageIndirectPostIndexedRead1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldx0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldx0() {
     ld0(_xIndex);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldxImm0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldxImm0() {
     _currentInstruction = &Chip::ldx0;
     immediate();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldxZp0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldxZp0() {
     _currentInstruction = &Chip::ldxZp1;
     zeroPage();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldxZp1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldxZp1() {
     _currentInstruction = &Chip::ldx0;
     zeroPageRead();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldxZpY0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldxZpY0() {
     _currentInstruction = &Chip::ldxZpY1;
     zeroPageIndexed0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldxZpY1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldxZpY1() {
     _currentInstruction = &Chip::ldxZpY2;
     zeroPageIndexedY1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldxZpY2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldxZpY2() {
     _currentInstruction = &Chip::ldx0;
     zeroPageIndexedRead();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldxAbs0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldxAbs0() {
     _currentInstruction = &Chip::ldxAbs1;
     absolute0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldxAbs1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldxAbs1() {
     _currentInstruction = &Chip::ldxAbs2;
     absolute1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldxAbs2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldxAbs2() {
     _currentInstruction = &Chip::ldx0;
     absoluteRead();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldxAbsY0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldxAbsY0() {
     _currentInstruction = &Chip::ldxAbsY1;
     absoluteIndexed0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldxAbsY1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldxAbsY1() {
     _currentInstruction = &Chip::ldxAbsY2;
     absoluteIndexedY1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldxAbsY2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldxAbsY2() {
     _currentInstruction = &Chip::ldxAbsY3;
     absoluteIndexedRead0(&Chip::ldx0);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldxAbsY3() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldxAbsY3() {
     _currentInstruction = &Chip::ldx0;
     absoluteIndexedRead1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldy0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldy0() {
     ld0(_yIndex);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldyImm0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldyImm0() {
     _currentInstruction = &Chip::ldy0;
     immediate();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldyZp0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldyZp0() {
     _currentInstruction = &Chip::ldyZp1;
     zeroPage();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldyZp1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldyZp1() {
     _currentInstruction = &Chip::ldy0;
     zeroPageRead();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldyZpX0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldyZpX0() {
     _currentInstruction = &Chip::ldyZpX1;
     zeroPageIndexed0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldyZpX1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldyZpX1() {
     _currentInstruction = &Chip::ldyZpX2;
     zeroPageIndexedX1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldyZpX2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldyZpX2() {
     _currentInstruction = &Chip::ldy0;
     zeroPageIndexedRead();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldyAbs0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldyAbs0() {
     _currentInstruction = &Chip::ldyAbs1;
     absolute0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldyAbs1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldyAbs1() {
     _currentInstruction = &Chip::ldyAbs2;
     absolute1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldyAbs2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldyAbs2() {
     _currentInstruction = &Chip::ldy0;
     absoluteRead();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldyAbsX0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldyAbsX0() {
     _currentInstruction = &Chip::ldyAbsX1;
     absoluteIndexed0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldyAbsX1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldyAbsX1() {
     _currentInstruction = &Chip::ldyAbsX2;
     absoluteIndexedX1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldyAbsX2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldyAbsX2() {
     _currentInstruction = &Chip::ldyAbsX3;
     absoluteIndexedRead0(&Chip::ldy0);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::ldyAbsX3() {
+template <class TConfiguration>
+void Chip<TConfiguration>::ldyAbsX3() {
     _currentInstruction = &Chip::ldy0;
     absoluteIndexedRead1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staZp0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staZp0() {
     _currentInstruction = &Chip::staZp1;
     zeroPage();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staZp1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staZp1() {
     _currentInstruction = &Chip::fetchOpcode;
     zeroPageWrite(_accumulator);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staZpX0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staZpX0() {
     _currentInstruction = &Chip::staZpX1;
     zeroPageIndexed0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staZpX1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staZpX1() {
     _currentInstruction = &Chip::staZpX2;
     zeroPageIndexedX1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staZpX2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staZpX2() {
     _currentInstruction = &Chip::fetchOpcode;
     zeroPageIndexedWrite(_accumulator);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staAbs0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staAbs0() {
     _currentInstruction = &Chip::staAbs1;
     absolute0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staAbs1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staAbs1() {
     _currentInstruction = &Chip::staAbs2;
     absolute1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staAbs2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staAbs2() {
     _currentInstruction = &Chip::fetchOpcode;
     absoluteWrite(_accumulator);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staAbsX0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staAbsX0() {
     _currentInstruction = &Chip::staAbsX1;
     absoluteIndexed0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staAbsX1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staAbsX1() {
     _currentInstruction = &Chip::staAbsX2;
     absoluteIndexedX1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staAbsX2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staAbsX2() {
     _currentInstruction = &Chip::staAbsX3;
     absoluteIndexedWrite0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staAbsX3() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staAbsX3() {
     _currentInstruction = &Chip::fetchOpcode;
     absoluteIndexedWrite1(_accumulator);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staAbsY0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staAbsY0() {
     _currentInstruction = &Chip::staAbsY1;
     absoluteIndexed0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staAbsY1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staAbsY1() {
     _currentInstruction = &Chip::staAbsY2;
     absoluteIndexedY1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staAbsY2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staAbsY2() {
     _currentInstruction = &Chip::staAbsY3;
     absoluteIndexedWrite0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staAbsY3() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staAbsY3() {
     _currentInstruction = &Chip::fetchOpcode;
     absoluteIndexedWrite1(_accumulator);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staIndX0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staIndX0() {
     _currentInstruction = &Chip::staIndX1;
     zeroPagePreIndexedIndirect0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staIndX1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staIndX1() {
     _currentInstruction = &Chip::staIndX2;
     zeroPagePreIndexedIndirect1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staIndX2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staIndX2() {
     _currentInstruction = &Chip::staIndX3;
     zeroPagePreIndexedIndirect2();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staIndX3() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staIndX3() {
     _currentInstruction = &Chip::staIndX4;
     zeroPagePreIndexedIndirect3();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staIndX4() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staIndX4() {
     _currentInstruction = &Chip::fetchOpcode;
     zeroPagePreIndexedIndirectWrite(_accumulator);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staIndY0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staIndY0() {
     _currentInstruction = &Chip::staIndY1;
     zeroPageIndirectPostIndexed0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staIndY1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staIndY1() {
     _currentInstruction = &Chip::staIndY2;
     zeroPageIndirectPostIndexed1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staIndY2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staIndY2() {
     _currentInstruction = &Chip::staIndY3;
     zeroPageIndirectPostIndexed2();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staIndY3() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staIndY3() {
     _currentInstruction = &Chip::staIndY4;
     zeroPageIndirectPostIndexedWrite0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::staIndY4() {
+template <class TConfiguration>
+void Chip<TConfiguration>::staIndY4() {
     _currentInstruction = &Chip::fetchOpcode;
     zeroPageIndirectPostIndexedWrite1(_accumulator);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::stxZp0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::stxZp0() {
     _currentInstruction = &Chip::stxZp1;
     zeroPage();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::stxZp1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::stxZp1() {
     _currentInstruction = &Chip::fetchOpcode;
     zeroPageWrite(_xIndex);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::stxZpY0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::stxZpY0() {
     _currentInstruction = &Chip::stxZpY1;
     zeroPageIndexed0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::stxZpY1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::stxZpY1() {
     _currentInstruction = &Chip::stxZpY2;
     zeroPageIndexedY1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::stxZpY2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::stxZpY2() {
     _currentInstruction = &Chip::fetchOpcode;
     zeroPageIndexedWrite(_xIndex);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::stxAbs0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::stxAbs0() {
     _currentInstruction = &Chip::stxAbs1;
     absolute0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::stxAbs1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::stxAbs1() {
     _currentInstruction = &Chip::stxAbs2;
     absolute1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::stxAbs2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::stxAbs2() {
     _currentInstruction = &Chip::fetchOpcode;
     absoluteWrite(_xIndex);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::styZp0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::styZp0() {
     _currentInstruction = &Chip::styZp1;
     zeroPage();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::styZp1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::styZp1() {
     _currentInstruction = &Chip::fetchOpcode;
     zeroPageWrite(_yIndex);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::styZpX0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::styZpX0() {
     _currentInstruction = &Chip::styZpX1;
     zeroPageIndexed0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::styZpX1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::styZpX1() {
     _currentInstruction = &Chip::styZpX2;
     zeroPageIndexedX1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::styZpX2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::styZpX2() {
     _currentInstruction = &Chip::fetchOpcode;
     zeroPageIndexedWrite(_yIndex);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::styAbs0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::styAbs0() {
     _currentInstruction = &Chip::styAbs1;
     absolute0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::styAbs1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::styAbs1() {
     _currentInstruction = &Chip::styAbs2;
     absolute1();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::styAbs2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::styAbs2() {
     _currentInstruction = &Chip::fetchOpcode;
     absoluteWrite(_yIndex);
 }

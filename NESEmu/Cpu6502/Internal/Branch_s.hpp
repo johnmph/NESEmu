@@ -10,91 +10,91 @@
 #define Cpu6502_Internal_Branch_s_hpp
 
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::bpl0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::bpl0() {
     _currentInstruction = &Chip::bpl1;
     relative0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::bpl1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::bpl1() {
     relative1(_flagsHelper.get<Flag::Negative>() == false);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::bmi0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::bmi0() {
     _currentInstruction = &Chip::bmi1;
     relative0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::bmi1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::bmi1() {
     relative1(_flagsHelper.get<Flag::Negative>() == true);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::bvc0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::bvc0() {
     _currentInstruction = &Chip::bvc1;
     relative0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::bvc1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::bvc1() {
     relative1(_flagsHelper.get<Flag::Overflow>() == false);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::bvs0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::bvs0() {
     _currentInstruction = &Chip::bvs1;
     relative0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::bvs1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::bvs1() {
     relative1(_flagsHelper.get<Flag::Overflow>() == true);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::bcc0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::bcc0() {
     _currentInstruction = &Chip::bcc1;
     relative0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::bcc1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::bcc1() {
     relative1(_flagsHelper.get<Flag::Carry>() == false);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::bcs0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::bcs0() {
     _currentInstruction = &Chip::bcs1;
     relative0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::bcs1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::bcs1() {
     relative1(_flagsHelper.get<Flag::Carry>() == true);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::bne0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::bne0() {
     _currentInstruction = &Chip::bne1;
     relative0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::bne1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::bne1() {
     relative1(_flagsHelper.get<Flag::Zero>() == false);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::beq0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::beq0() {
     _currentInstruction = &Chip::beq1;
     relative0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::beq1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::beq1() {
     relative1(_flagsHelper.get<Flag::Zero>() == true);
 }
 

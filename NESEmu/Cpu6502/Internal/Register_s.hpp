@@ -10,8 +10,8 @@
 #define Cpu6502_Internal_Register_s_hpp
 
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::transfert0(uint8_t source, uint8_t &destination) {
+template <class TConfiguration>
+void Chip<TConfiguration>::transfert0(uint8_t source, uint8_t &destination) {
     destination = source;
     
     // Update status
@@ -21,69 +21,69 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::transfert0(uint8_t source
     fetchOpcode();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::tax0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::tax0() {
     _currentInstruction = &Chip::tax1;
     implied();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::tax1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::tax1() {
     transfert0(_accumulator, _xIndex);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::txa0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::txa0() {
     _currentInstruction = &Chip::txa1;
     implied();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::txa1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::txa1() {
     transfert0(_xIndex, _accumulator);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::tay0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::tay0() {
     _currentInstruction = &Chip::tay1;
     implied();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::tay1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::tay1() {
     transfert0(_accumulator, _yIndex);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::tya0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::tya0() {
     _currentInstruction = &Chip::tya1;
     implied();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::tya1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::tya1() {
     transfert0(_yIndex, _accumulator);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::tsx0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::tsx0() {
     _currentInstruction = &Chip::tsx1;
     implied();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::tsx1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::tsx1() {
     transfert0(_stackPointer, _xIndex);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::txs0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::txs0() {
     _currentInstruction = &Chip::txs1;
     implied();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::txs1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::txs1() {
     _stackPointer = _xIndex;
     
     // No flag changed during this instruction

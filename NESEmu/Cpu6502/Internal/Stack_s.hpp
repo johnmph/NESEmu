@@ -10,24 +10,24 @@
 #define Cpu6502_Internal_Stack_s_hpp
 
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::push2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::push2() {
     pushToStack1();
     stopStackOperation();
     
     fetchOpcode();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::pha0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::pha0() {
     _currentInstruction = &Chip::pha1;
     
     // In implied addressing mode, there is a unused read which doesn't increment PC
     readDataBus(_programCounterLow, _programCounterHigh);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::pha1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::pha1() {
     _currentInstruction = &Chip::push2;
     
     startStackOperation();
@@ -37,16 +37,16 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::pha1() {
     checkInterrupts();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::php0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::php0() {
     _currentInstruction = &Chip::php1;
     
     // In implied addressing mode, there is a unused read which doesn't increment PC
     readDataBus(_programCounterLow, _programCounterHigh);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::php1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::php1() {
     _currentInstruction = &Chip::push2;
     
     startStackOperation();
@@ -56,16 +56,16 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::php1() {
     checkInterrupts();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::pla0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::pla0() {
     _currentInstruction = &Chip::pla1;
     
     // In implied addressing mode, there is a unused read which doesn't increment PC
     readDataBus(_programCounterLow, _programCounterHigh);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::pla1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::pla1() {
     _currentInstruction = &Chip::pla2;
     
     // Start stack operation (read of current cycle will read stack memory)
@@ -73,8 +73,8 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::pla1() {
     pullFromStack0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::pla2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::pla2() {
     _currentInstruction = &Chip::pla3;
     
     pullFromStack1();
@@ -84,8 +84,8 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::pla2() {
     checkInterrupts();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::pla3() {
+template <class TConfiguration>
+void Chip<TConfiguration>::pla3() {
     _accumulator = _inputDataLatch;
     
     // Update status
@@ -95,16 +95,16 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::pla3() {
     fetchOpcode();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::plp0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::plp0() {
     _currentInstruction = &Chip::plp1;
     
     // In implied addressing mode, there is a unused read which doesn't increment PC
     readDataBus(_programCounterLow, _programCounterHigh);
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::plp1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::plp1() {
     _currentInstruction = &Chip::plp2;
     
     // Start stack operation (read of current cycle will read stack memory)
@@ -112,8 +112,8 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::plp1() {
     pullFromStack0();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::plp2() {
+template <class TConfiguration>
+void Chip<TConfiguration>::plp2() {
     _currentInstruction = &Chip::plp3;
     
     pullFromStack1();
@@ -123,8 +123,8 @@ void Chip<TBus, TInternalHardware, BDecimalSupported>::plp2() {
     checkInterrupts();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::plp3() {
+template <class TConfiguration>
+void Chip<TConfiguration>::plp3() {
     _statusFlags = (_inputDataLatch & _Detail::FlagsHelper::getDisableMask<Flag::Break>()) | (1 << static_cast<int>(Flag::UnusedHigh));
     
     fetchOpcode();

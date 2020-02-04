@@ -10,96 +10,96 @@
 #define Cpu6502_Internal_Flag_s_hpp
 
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-template <typename Chip<TBus, TInternalHardware, BDecimalSupported>::Flag flag>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::clearFlag() {
+template <class TConfiguration>
+template <typename Chip<TConfiguration>::Flag flag>
+void Chip<TConfiguration>::clearFlag() {
     _flagsHelper.clear<flag>();
     
     fetchOpcode();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::clc0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::clc0() {
     _currentInstruction = &Chip::clc1;
     implied();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::clc1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::clc1() {
     clearFlag<Flag::Carry>();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::cld0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::cld0() {
     _currentInstruction = &Chip::cld1;
     implied();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::cld1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::cld1() {
     clearFlag<Flag::DecimalMode>();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::cli0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::cli0() {
     _currentInstruction = &Chip::cli1;
     implied();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::cli1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::cli1() {
     clearFlag<Flag::InterruptDisable>();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::clv0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::clv0() {
     _currentInstruction = &Chip::clv1;
     implied();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::clv1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::clv1() {
     clearFlag<Flag::Overflow>();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-template <typename Chip<TBus, TInternalHardware, BDecimalSupported>::Flag flag>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::setFlag() {
+template <class TConfiguration>
+template <typename Chip<TConfiguration>::Flag flag>
+void Chip<TConfiguration>::setFlag() {
     _flagsHelper.set<flag>(true);
     
     fetchOpcode();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::sec0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::sec0() {
     _currentInstruction = &Chip::sec1;
     implied();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::sec1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::sec1() {
     setFlag<Flag::Carry>();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::sed0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::sed0() {
     _currentInstruction = &Chip::sed1;
     implied();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::sed1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::sed1() {
     setFlag<Flag::DecimalMode>();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::sei0() {
+template <class TConfiguration>
+void Chip<TConfiguration>::sei0() {
     _currentInstruction = &Chip::sei1;
     implied();
 }
 
-template <class TBus, class TInternalHardware, bool BDecimalSupported>
-void Chip<TBus, TInternalHardware, BDecimalSupported>::sei1() {
+template <class TConfiguration>
+void Chip<TConfiguration>::sei1() {
     setFlag<Flag::InterruptDisable>();
 }
 

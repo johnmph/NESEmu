@@ -13,7 +13,7 @@
 // BRK (+ IRQ/NMI/RESET), RTI
 
 void reset0();
-void reset1();
+//void reset1();
 
 void brk0();
 void brk1();
