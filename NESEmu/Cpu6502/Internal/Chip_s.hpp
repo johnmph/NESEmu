@@ -11,7 +11,6 @@
 
 // TODO: pour une meilleure emulation des opcodes (surtout les undocumented), peut etre faire comme le vrai cpu et decomposer l'opcode en lignes actives/non actives pour activer certains circuits (appeler certaines fonctions) : https://www.pagetable.com/?p=39
 // TODO: enlever le flag helper et tout le bordel lié aux flags et n'avoir que les signaux séparés et une methode qui les regroupe et qui prend en parametre le bool Break car on les manipule bien plus souvent séparés que regroupé (seulement php, plp)
-// TODO: on peut tester le reset signal avec visual6502 aussi (reset0 et reset1)
 // TODO: tester les undocumented avec visual6502 (un seul mode d'adressage suffit, c'est pour voir si les etapes internes sont bonnes) : ok a finir
 
 #include "Data.hpp"
@@ -147,7 +146,7 @@ void Chip<TConfiguration>::powerUp(uint16_t programCounter, uint8_t stackPointer
     _setOverflowRequested = false;
     
     _resetLine = true;
-    _resetDetected = false;
+    _resetLineLatch = true;
     _resetRequested = false;
     _nmiLine = true;
     _nmiLinePrevious = true;
@@ -234,10 +233,10 @@ bool Chip<TConfiguration>::getM2Signal() const {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::clock(bool forceExecute) {
-    // ** PHI1 **
+    // Execute phi1
     clockPhi1(forceExecute);
     
-    // ** PHI2 **
+    // Execute phi2
     clockPhi2();
 }
 
@@ -407,7 +406,7 @@ void Chip<TConfiguration>::decodeOpcodeAndExecuteInstruction() {
     (this->*_currentInstruction)();
     
     // Set sync low
-    _sync = false;   // TODO: voir si ici ou au debut de la methode, normalement c'est ici
+    _sync = false;
 }
 
 // Overflow
@@ -465,6 +464,10 @@ void Chip<TConfiguration>::checkReady() {
 template <class TConfiguration>
 template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type>
 void Chip<TConfiguration>::resetAfterPowerUp() {
+    // Set current instruction because reset will save it in _resetSavedInstruction to execute it later
+    _currentInstruction = &Chip::fetchOpcode;
+    
+    // Reset by pulling line down and calling checkReset two times because detection is delayed
     reset(false);
     checkReset<ResetAccurate>();
     checkReset<ResetAccurate>();
@@ -477,42 +480,46 @@ void Chip<TConfiguration>::resetAfterPowerUp() {
 }
 
 template <class TConfiguration>
-template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled == true, int>::type>
+template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type>
 void Chip<TConfiguration>::reset(bool high) {
     // Save signal
     _resetLine = high;
 }
 
 template <class TConfiguration>
-template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled == false, int>::type>
+template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type>
 void Chip<TConfiguration>::reset(bool high) {
+    // If line is low and reset is not alreay requested
     if ((high == false) && (_resetRequested == false)) {
-        _currentInstruction = &Chip::reset0;
+        // Set reset requested and execute reset0 for the next instruction
+        _currentInstruction = &Chip::reset0<ResetAccurate>;
         _resetRequested = true;
         _interruptRequested = true;
     }
 }
 
 template <class TConfiguration>
-template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled == true, int>::type>
+template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type>
 void Chip<TConfiguration>::checkReset() {
-    // If reset detected
-    if (_resetDetected == true) {
-        _currentInstruction = &Chip::reset0;
+    // If reset signal
+    if (_resetLineLatch == false) {
+        // If not already requested, save next instruction
+        if (_resetRequested == false) {
+            _resetSavedInstruction = _currentInstruction;
+        }
+        
+        // Set reset requested and execute reset0 for the next instruction
+        _currentInstruction = &Chip::reset0<ResetAccurate>;
         _resetRequested = true;
         _interruptRequested = true;
-        
-        _resetDetected = false;
     }
     
-    // If reset line low and no reset requested, detect the reset
-    if ((_resetLine == false) && (_resetRequested == false)) {
-        _resetDetected = true;
-    }
+    // Save signal
+    _resetLineLatch = _resetLine;
 }
 
 template <class TConfiguration>
-template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled == false, int>::type>
+template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type>
 void Chip<TConfiguration>::checkReset() {
     // Does nothing
 }

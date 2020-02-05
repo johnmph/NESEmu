@@ -32,7 +32,7 @@ struct Bus {
 
 int main(int argc, const char * argv[]) {
     Bus bus;
-    Cpu6502::Chip<Bus> cpu(bus);
+    Cpu6502::Chip<Cpu6502::ConfigurationPerformance<Bus>> cpu(bus); // Performance = 4.65sec, Accuracy = 5.3sec (Pour 100 * 1 seconde de cycles)
     
     /*
     bus._memory[0xFFFC] = 0;
@@ -165,7 +165,7 @@ int main(int argc, const char * argv[]) {
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     
     // TODO: check avec http://www.qmtpro.com/~nes/misc/nestest.log et http://www.qmtpro.com/~nes/misc/nestest.txt
-    for (int x = 0; x <= 1789773/*26555*/; ++x) {
+    for (int x = 0; x <= 178977300/*26555*/; ++x) {
         cpu.clock();
         
         //std::cout << std::hex << cpu.getAddressBus() << " " << cpu.getProgramCounter() << " A:" << static_cast<int>(cpu.getAccumulator()) << " X:" << static_cast<int>(cpu.getXIndex()) << " Y:" << static_cast<int>(cpu.getYIndex()) << " P:" << static_cast<int>(cpu.getStatusFlags()) << " SP:" << static_cast<int>(cpu.getStackPointer()) << " Cycle: " << std::dec << x - 1 << "\n";

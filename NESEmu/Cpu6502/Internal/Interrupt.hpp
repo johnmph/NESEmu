@@ -12,8 +12,14 @@
 
 // BRK (+ IRQ/NMI/RESET), RTI
 
+template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type = 0>
 void reset0();
-//void reset1();
+
+template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type = 0>
+void reset0();
+
+template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type = 0>
+void reset1();
 
 void brk0();
 void brk1();

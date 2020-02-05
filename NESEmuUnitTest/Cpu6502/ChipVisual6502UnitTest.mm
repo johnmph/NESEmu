@@ -28,13 +28,13 @@ namespace {
     
     struct Bus {
         uint8_t read(uint16_t address) {
-            //std::cout << std::hex << "Read 0x" << static_cast<int>(memory[address & 0xBFFF]) << " at 0x" << address << "\n";
-            return memory[address & 0xBFFF];
+            //std::cout << std::hex << "Read 0x" << static_cast<int>(memory[address]) << " at 0x" << address << "\n";
+            return memory[address];
         }
         
         void write(uint16_t address, uint8_t data) {
             //std::cout << std::hex << "Write 0x" << static_cast<int>(data) << " at 0x" << address << "\n";
-            memory[address & 0xBFFF] = data;
+            memory[address] = data;
         }
         
         std::array<uint8_t, 1024 * 64> memory;
@@ -523,15 +523,15 @@ namespace {
     // Set data in memory
     for (auto const &data : commands.data) {
         for (int i = 0; i < data.second.size(); ++i) {
-            bus.memory[data.first + i] = data.second[i];
+            bus.write(data.first + i, data.second[i]);
         }
     }
     
     // Release reset to start cpu
     cpu6502.reset(true);
     
-    // We need to sync with Visual6502 by adding eight first clocks to exit the reset state
-    for (int i = 0; i < 8; ++i) {
+    // We need to sync with Visual6502 by adding nine first clocks to exit the reset state
+    for (int i = 0; i < 9; ++i) {
         cpu6502.clock();
     }
     
@@ -621,7 +621,7 @@ namespace {
 }
 
 - (void)testSetOverflow1 {
-    [self testFile:@"SetOverflow1.txt"];    // TODO: le changement des flags doit se faire au phi2 c'est pour ca que ca ne fonctionne pas ici, avoir surement une valeur non reference dans FlagsHelper et copier cette valeur dans _statusFlags dans phi2 : NON pas sur, ce qu'il faut voir deja c'est pour les instructions sur les flags si elles se font dans la micro instruction qui fait aussi implied (et dans ce cas oui le changement doit se faire a la fin du phi2 : ce qui n'est pas bon par rapport a visual6502, ca se fait au phi1 de la micro instruction suivante), donc c'est bien a la micro-instruction qui fait le fetchopcode !!! pour setOverflow, il faut voir quand il est appliqué une fois le signal detecté !
+    [self testFile:@"SetOverflow1.txt"];
 }
 
 - (void)testSetOverflow2 {
@@ -2016,9 +2016,152 @@ namespace {
     [self testFile:@"ResetForManyHalfClock4.txt"];
 }
 
+- (void)testResetInInstrSteps1 {
+    [self testFile:@"ResetInInstrSteps1.txt"];
+}
+
+- (void)testResetInInstrSteps2 {
+    [self testFile:@"ResetInInstrSteps2.txt"];
+}
+
+- (void)testResetInInstrSteps3 {
+    [self testFile:@"ResetInInstrSteps3.txt"];
+}
+
+- (void)testResetInInstrSteps4 {
+    [self testFile:@"ResetInInstrSteps4.txt"];
+}
+
+- (void)testResetInInstrSteps5 {
+    [self testFile:@"ResetInInstrSteps5.txt"];
+}
+
+- (void)testResetInInterrupt1 {
+    [self testFile:@"ResetInInterrupt1.txt"];
+}
+
+- (void)testResetInInterrupt2 {
+    [self testFile:@"ResetInInterrupt2.txt"];
+}
+
+- (void)testResetInInterrupt3 {
+    [self testFile:@"ResetInInterrupt3.txt"];
+}
+
+- (void)testResetInInterrupt4 {
+    [self testFile:@"ResetInInterrupt4.txt"];
+}
+
+- (void)testResetInInterrupt5 {
+    [self testFile:@"ResetInInterrupt5.txt"];
+}
+
+- (void)testResetInInterrupt6 {
+    [self testFile:@"ResetInInterrupt6.txt"];
+}
+
+- (void)testResetInInterrupt7 {
+    [self testFile:@"ResetInInterrupt7.txt"];
+}
 
 - (void)testCheckRegistersValueWhenReset {
     [self testFile:@"CheckRegistersValueWhenReset.txt"];
+}
+
+- (void)testCheckBreakFlagInBrk {
+    [self testFile:@"CheckBreakFlagInBrk.txt"];
+}
+
+- (void)testCheckBreakFlagInNmi {
+    [self testFile:@"CheckBreakFlagInNmi.txt"];
+}
+
+- (void)testNmiInBrk1 {
+    [self testFile:@"NmiInBrk1.txt"];
+}
+
+- (void)testNmiInBrk2 {
+    [self testFile:@"NmiInBrk2.txt"];
+}
+
+- (void)testNmiInBrk3 {
+    [self testFile:@"NmiInBrk3.txt"];
+}
+
+- (void)testNmiInBrk4 {
+    [self testFile:@"NmiInBrk4.txt"];
+}
+
+- (void)testNmiInBrk5 {
+    [self testFile:@"NmiInBrk5.txt"];
+}
+
+- (void)testNmiInBrk6 {
+    [self testFile:@"NmiInBrk6.txt"];
+}
+
+- (void)testNmiInBrk7 {
+    [self testFile:@"NmiInBrk7.txt"];
+}
+
+- (void)testNmiInIrq1 {
+    [self testFile:@"NmiInIrq1.txt"];
+}
+
+- (void)testNmiInIrq2 {
+    [self testFile:@"NmiInIrq2.txt"];
+}
+
+- (void)testNmiInIrq3 {
+    [self testFile:@"NmiInIrq3.txt"];
+}
+
+- (void)testNmiInIrq4 {
+    [self testFile:@"NmiInIrq4.txt"];
+}
+
+- (void)testNmiInIrq5 {
+    [self testFile:@"NmiInIrq5.txt"];
+}
+
+- (void)testNmiInIrq6 {
+    [self testFile:@"NmiInIrq6.txt"];
+}
+
+- (void)testNmiInIrq7 {
+    [self testFile:@"NmiInIrq7.txt"];
+}
+
+- (void)testNmiInIrq8 {
+    [self testFile:@"NmiInIrq8.txt"];
+}
+
+- (void)testIrqInBrk1 {
+    [self testFile:@"IrqInBrk1.txt"];
+}
+
+- (void)testIrqInBrk2 {
+    [self testFile:@"IrqInBrk2.txt"];
+}
+
+- (void)testIrqInBrk3 {
+    [self testFile:@"IrqInBrk3.txt"];
+}
+
+- (void)testIrqInBrk4 {
+    [self testFile:@"IrqInBrk4.txt"];
+}
+
+- (void)testIrqInBrk5 {
+    [self testFile:@"IrqInBrk5.txt"];
+}
+
+- (void)testIrqInBrk6 {
+    [self testFile:@"IrqInBrk6.txt"];
+}
+
+- (void)testIrqInBrk7 {
+    [self testFile:@"IrqInBrk7.txt"];
 }
 
 @end

@@ -294,8 +294,9 @@ namespace Cpu6502 {
         _Detail::Alu _alu;
         
         bool _resetLine;
-        bool _resetDetected;
+        bool _resetLineLatch;
         bool _resetRequested;
+        OpcodeInstruction _resetSavedInstruction;
         bool _nmiLine;
         bool _nmiLinePrevious;
         bool _nmiRequested;

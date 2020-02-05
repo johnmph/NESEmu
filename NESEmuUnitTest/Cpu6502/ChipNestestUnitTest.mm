@@ -13,7 +13,7 @@
 #include <string>
 #include "Cpu6502/Chip.hpp"
 
-// TODO: ecrire des unit tests aussi par instruction ?
+
 @interface ChipNestestUnitTest : XCTestCase
 
 @end
@@ -188,7 +188,8 @@ namespace {
     // Release reset to start cpu
     cpu6502.reset(true);
     
-    // We need to sync with nestest.log by adding two first clocks to exit the reset state
+    // We need to sync with nestest.log by adding three first clocks to exit the reset state (2 clocks to exit early reset and 1 clock for the fetchOpcode (the last 7 clocks for reset are in the first line of log))
+    cpu6502.clock();
     cpu6502.clock();
     cpu6502.clock();
     

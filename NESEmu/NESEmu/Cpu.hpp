@@ -49,8 +49,10 @@ namespace NESEmu { namespace Cpu {
         
         using Constants = Constants<EModel>;
         
+        using InternalCpu = Cpu6502::Chip<Cpu6502::ConfigurationPerformance<Chip, Chip, false>>;
+        
         // Set Cpu as friend to keep data bus methods private
-        friend Cpu6502::Chip<Chip, Chip, false>;
+        friend InternalCpu;
         
         // Memory
         uint8_t read(uint16_t address);
@@ -61,7 +63,7 @@ namespace NESEmu { namespace Cpu {
         
         // Internal
         TBus &_bus;
-        Cpu6502::Chip<Chip, Chip, false> _cpu;
+        InternalCpu _cpu;
         int _dmaCount;
         uint8_t _dmaAddress;
         bool _dmaToggle;

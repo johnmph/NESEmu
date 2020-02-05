@@ -147,14 +147,14 @@ bool Chip<EModel, TBus>::checkDma() {   // TODO: j'ai fait cette fonction qui re
         }
         
         // Read from dmaAddress (only inputDataLatch / predecode / RW from 6502 is affected)
-        _cpu._readWrite = static_cast<bool>(Cpu6502::Chip<Chip, Chip, false>::ReadWrite::Read);
+        _cpu._readWrite = static_cast<bool>(InternalCpu::ReadWrite::Read);
         _cpu._inputDataLatch = read((_dmaAddress << 8) | (256 - _dmaCount));
         _cpu._predecode = _cpu._inputDataLatch;
     }
     // If DMA is in write phase
     else {
         // Write to PPU (only RW from 6502 is affected)
-        _cpu._readWrite = static_cast<bool>(Cpu6502::Chip<Chip, Chip, false>::ReadWrite::Write);
+        _cpu._readWrite = static_cast<bool>(InternalCpu::ReadWrite::Write);
         write(0x2004, _cpu._inputDataLatch);
         
         // One byte copied

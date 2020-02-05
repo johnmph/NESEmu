@@ -11,18 +11,35 @@
 
 
 template <class TConfiguration>
+template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type>
 void Chip<TConfiguration>::reset0() {
-    // If reset line stays low, continue this step, else go to next step
-    if (_resetLine == true) {
-        //_currentInstruction = &Chip::reset1;
+    // Execute saved instruction if it's not a fetchOpcode
+    if (_resetSavedInstruction != static_cast<OpcodeInstruction>(&Chip::fetchOpcode)) {
+        // Execute saved instruction
+        (this->*_resetSavedInstruction)();
+    }
+    
+    // Next instruction is fetchOpcode but need to check if resetRequested is still true in case of reset in interrupt
+    if (_resetRequested == true) {
         _currentInstruction = &Chip::fetchOpcode;
     }
 }
-/*
+
 template <class TConfiguration>
-void Chip<TConfiguration>::reset1() {   // TODO: peut etre retirer ca et mettre fetchOpcode a la place pour reset0 next instruction
-    _currentInstruction = &Chip::brk0;
-}*/
+template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type>
+void Chip<TConfiguration>::reset0() {
+    // Stay in this step until reset goes high again
+    if (_resetLine == true) {
+        _currentInstruction = &Chip::reset1<ResetAccurate>;
+    }
+}
+
+template <class TConfiguration>
+template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type>
+void Chip<TConfiguration>::reset1() {
+    // Need this extra-step to sync number of clocks with the ResetAccurate version for exiting the reset state
+    _currentInstruction = &Chip::fetchOpcode;
+}
 
 template <class TConfiguration>
 void Chip<TConfiguration>::brk0() {
@@ -63,7 +80,7 @@ void Chip<TConfiguration>::brk3() {
     
     // Push status flags to stack
     pushToStack1();
-    pushToStack0(_statusFlags | ((_interruptRequested == false) << static_cast<int>(Flag::Break))); // TODO: voir si ok (test visual6502 avec un brk normal et une interrupt (nmi par exemple) et pour chaque, faire un pla pour récuperer le status flags
+    pushToStack0(_statusFlags | ((_interruptRequested == false) << static_cast<int>(Flag::Break)));
 }
 
 template <class TConfiguration>
@@ -90,6 +107,11 @@ void Chip<TConfiguration>::brk5() {
     
     // 6502 uses the ALU to store temporary low byte of address (by adding 0 to it to keep its value in adderHold)
     _alu.performSum<DecimalSupported, false>(0x0, _inputDataLatch, false, false);
+    
+    // TODO: mettre ca dans une methode :
+    if (_resetRequested == true) {  // TODO: mettre ca dans une methode avec choix via ResetAccurate
+        _interruptVectorsIndex = static_cast<int>(Interrupts::Reset);
+    }
     
     // Read high byte of address
     readDataBus(_interruptVectors[_interruptVectorsIndex][0] + 1, _interruptVectors[_interruptVectorsIndex][1]);
