@@ -90,7 +90,7 @@ uint8_t Nes<EModel>::read(uint16_t address) {   // TODO: a la place de ca, avoir
     
     // Open data bus latch (reading open bus (no device active address) repeats the last value that was read from the bus before this read)
     // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
-    return _cpu.getDataBus();   // TODO: voir si correct, voir c'est affecté par le write aussi (dans ce cas ce code n'est pas bon), voir avec le ppu
+    return _cpu.getDataBus();   // TODO: voir si correct, voir si c'est affecté par le write aussi (dans ce cas ce code n'est pas bon), voir avec le ppu
 }
 
 template <Model EModel>

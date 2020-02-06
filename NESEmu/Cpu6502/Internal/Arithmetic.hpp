@@ -12,8 +12,6 @@
 
 // ADC, SBC, CMP, CPX, CPY, DEC, INC, DEX, DEY, INX, INY
 
-void arithmetic1();
-
 void adc0();
 
 void adcImm0();
@@ -103,7 +101,6 @@ void sbcIndY4();
 void sbcIndY5();
 
 void cp0(uint8_t data);
-void cp1();
 
 void cmp0();
 
@@ -177,8 +174,6 @@ void cpyAbs3();
 
 void dec(uint8_t data);
 void inc(uint8_t data);
-
-void incdecMemory1();
 
 void decMemory0();
 

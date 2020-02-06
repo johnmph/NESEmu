@@ -43,6 +43,8 @@
 		4D6B9C2023D92D25000889C3 /* Cpu_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu_s.hpp; sourceTree = "<group>"; };
 		4D6B9C2123E2310D000889C3 /* ChipVisual6502UnitTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ChipVisual6502UnitTest.mm; sourceTree = "<group>"; };
 		4D6FAB2B23EB719A009977EE /* Cpu6502InternalViewer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502InternalViewer.hpp; sourceTree = "<group>"; };
+		4D6FAB2D23EC6BDA009977EE /* Common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Common.hpp; sourceTree = "<group>"; };
+		4D6FAB2E23EC6C48009977EE /* Common_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Common_s.hpp; sourceTree = "<group>"; };
 		4D9807EE23C39A66007D1953 /* Data.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Data.hpp; sourceTree = "<group>"; };
 		4D9807EF23C50190007D1953 /* AddressingMode.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AddressingMode.hpp; sourceTree = "<group>"; };
 		4D9807F023C50448007D1953 /* Flag.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Flag.hpp; sourceTree = "<group>"; };
@@ -125,6 +127,8 @@
 				4D9807EE23C39A66007D1953 /* Data.hpp */,
 				4D9807EF23C50190007D1953 /* AddressingMode.hpp */,
 				4D9807F923C51579007D1953 /* AddressingMode_s.hpp */,
+				4D6FAB2D23EC6BDA009977EE /* Common.hpp */,
+				4D6FAB2E23EC6C48009977EE /* Common_s.hpp */,
 				4D9807F523C507B9007D1953 /* Arithmetic.hpp */,
 				4D9807FA23C5159B007D1953 /* Arithmetic_s.hpp */,
 				4D9807F123C5051B007D1953 /* Branch.hpp */,

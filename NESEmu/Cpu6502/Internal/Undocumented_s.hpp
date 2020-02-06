@@ -14,25 +14,16 @@
 
 template <class TConfiguration>
 void Chip<TConfiguration>::aso0() {
-    _currentInstruction = &Chip::aso1;
-    asl(_inputDataLatch);
+    // Modify (just write non modified value back)
+    anyRMWModify(&Chip::aso1, _inputDataLatch);
     
-    // Write read memory back (like true 6502)
-    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
+    // Shift left
+    asl(_inputDataLatch);
 }
 
 template <class TConfiguration>
 void Chip<TConfiguration>::aso1() {
-    _currentInstruction = &Chip::aso2;
-    
-    // Write result back
-    writeDataBus(_addressBusLow, _addressBusHigh, _alu.getAdderHold());
-    
-    // Update status
-    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_alu.getAdderHold());
-    
-    // Check interrupts
-    checkInterrupts();
+    finishAluForMemory<Flag::Carry, Flag::Zero, Flag::Negative>(&Chip::aso2);
 }
 
 template <class TConfiguration>
@@ -40,7 +31,7 @@ void Chip<TConfiguration>::aso2() {
     _alu.performOr(_accumulator, _alu.getAdderHold());
     
     // Fetch next opcode during performing ALU
-    fetchOpcode(&Chip::logic1);
+    fetchOpcode(&Chip::finishAluForAccumulator<Flag::Zero, Flag::Negative>);
 }
 
 template <class TConfiguration>
@@ -203,25 +194,16 @@ void Chip<TConfiguration>::asoIndY4() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::rla0() {
-    _currentInstruction = &Chip::rla1;
-    rol(_inputDataLatch);
+    // Modify (just write non modified value back)
+    anyRMWModify(&Chip::rla1, _inputDataLatch);
     
-    // Write read memory back (like true 6502)
-    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
+    // Rotate left
+    rol(_inputDataLatch);
 }
 
 template <class TConfiguration>
 void Chip<TConfiguration>::rla1() {
-    _currentInstruction = &Chip::rla2;
-    
-    // Write result back
-    writeDataBus(_addressBusLow, _addressBusHigh, _alu.getAdderHold());
-    
-    // Update status
-    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_alu.getAdderHold());
-    
-    // Check interrupts
-    checkInterrupts();
+    finishAluForMemory<Flag::Carry, Flag::Zero, Flag::Negative>(&Chip::rla2);
 }
 
 template <class TConfiguration>
@@ -229,7 +211,7 @@ void Chip<TConfiguration>::rla2() {
     _alu.performAnd(_accumulator, _alu.getAdderHold());
     
     // Fetch next opcode during performing ALU
-    fetchOpcode(&Chip::logic1);
+    fetchOpcode(&Chip::finishAluForAccumulator<Flag::Zero, Flag::Negative>);
 }
 
 template <class TConfiguration>
@@ -392,25 +374,16 @@ void Chip<TConfiguration>::rlaIndY4() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::lse0() {
-    _currentInstruction = &Chip::lse1;
-    lsr(_inputDataLatch);
+    // Modify (just write non modified value back)
+    anyRMWModify(&Chip::lse1, _inputDataLatch);
     
-    // Write read memory back (like true 6502)
-    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
+    // Shift right
+    lsr(_inputDataLatch);
 }
 
 template <class TConfiguration>
 void Chip<TConfiguration>::lse1() {
-    _currentInstruction = &Chip::lse2;
-    
-    // Write result back
-    writeDataBus(_addressBusLow, _addressBusHigh, _alu.getAdderHold());
-    
-    // Update status
-    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_alu.getAdderHold());
-    
-    // Check interrupts
-    checkInterrupts();
+    finishAluForMemory<Flag::Carry, Flag::Zero, Flag::Negative>(&Chip::lse2);
 }
 
 template <class TConfiguration>
@@ -418,7 +391,7 @@ void Chip<TConfiguration>::lse2() {
     _alu.performEor(_accumulator, _alu.getAdderHold());
     
     // Fetch next opcode during performing ALU
-    fetchOpcode(&Chip::logic1);
+    fetchOpcode(&Chip::finishAluForAccumulator<Flag::Zero, Flag::Negative>);
 }
 
 template <class TConfiguration>
@@ -581,25 +554,16 @@ void Chip<TConfiguration>::lseIndY4() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::rra0() {
-    _currentInstruction = &Chip::rra1;
-    ror(_inputDataLatch);
+    // Modify (just write non modified value back)
+    anyRMWModify(&Chip::rra1, _inputDataLatch);
     
-    // Write read memory back (like true 6502)
-    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
+    // Rotate right
+    ror(_inputDataLatch);
 }
 
 template <class TConfiguration>
 void Chip<TConfiguration>::rra1() {
-    _currentInstruction = &Chip::rra2;
-    
-    // Write result back
-    writeDataBus(_addressBusLow, _addressBusHigh, _alu.getAdderHold());
-    
-    // Update status
-    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_alu.getAdderHold());
-    
-    // Check interrupts
-    checkInterrupts();
+    finishAluForMemory<Flag::Carry, Flag::Zero, Flag::Negative>(&Chip::rra2);
 }
 
 template <class TConfiguration>
@@ -608,7 +572,7 @@ void Chip<TConfiguration>::rra2() {
     _alu.performSum<DecimalSupported, false>(_accumulator, _alu.getAdderHold(), _flagsHelper.get<Flag::DecimalMode>(), _flagsHelper.get<Flag::Carry>());
     
     // Fetch next opcode during performing ALU
-    fetchOpcode(&Chip::arithmetic1);
+    fetchOpcode(&Chip::finishAluForAccumulator<Flag::Carry, Flag::Zero, Flag::Overflow, Flag::Negative>);
 }
 
 template <class TConfiguration>
@@ -1002,26 +966,16 @@ void Chip<TConfiguration>::laxIndY4() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::dcm0() {
-    _currentInstruction = &Chip::dcm1;
+    // Modify (just write non modified value back)
+    anyRMWModify(&Chip::dcm1, _inputDataLatch);
     
+    // Decrement
     dec(_inputDataLatch);
-    
-    // Write read memory back (like true 6502)
-    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
 }
 
 template <class TConfiguration>
 void Chip<TConfiguration>::dcm1() {
-    _currentInstruction = &Chip::dcm2;
-    
-    // Write result back
-    writeDataBus(_addressBusLow, _addressBusHigh, _alu.getAdderHold());
-    
-    // Update status
-    _flagsHelper.refresh<Flag::Zero, Flag::Negative>(_alu.getAdderHold());
-    
-    // Check interrupts
-    checkInterrupts();
+    finishAluForMemory<Flag::Zero, Flag::Negative>(&Chip::dcm2);
 }
 
 template <class TConfiguration>
@@ -1030,18 +984,7 @@ void Chip<TConfiguration>::dcm2() {
     _alu.performSum<DecimalSupported, true>(_accumulator, _alu.getAdderHold(), false, true);
     
     // Fetch next opcode during performing ALU
-    fetchOpcode(&Chip::dcm3);
-}
-
-template <class TConfiguration>
-void Chip<TConfiguration>::dcm3() {
-    // Don't save result, it's just to set the flags
-    
-    // Update status
-    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_alu.getAdderHold());
-    
-    // Execute instruction
-    decodeOpcodeAndExecuteInstruction();
+    fetchOpcode(&Chip::finishAlu<Flag::Carry, Flag::Zero, Flag::Negative>);
 }
 
 template <class TConfiguration>
@@ -1204,26 +1147,16 @@ void Chip<TConfiguration>::dcmIndY4() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::ins0() {
-    _currentInstruction = &Chip::ins1;
+    // Modify (just write non modified value back)
+    anyRMWModify(&Chip::ins1, _inputDataLatch);
     
+    // Increment
     inc(_inputDataLatch);
-    
-    // Write read memory back (like true 6502)
-    writeDataBus(_addressBusLow, _addressBusHigh, _inputDataLatch);
 }
 
 template <class TConfiguration>
 void Chip<TConfiguration>::ins1() {
-    _currentInstruction = &Chip::ins2;
-    
-    // Write result back
-    writeDataBus(_addressBusLow, _addressBusHigh, _alu.getAdderHold());
-    
-    // Update status
-    _flagsHelper.refresh<Flag::Zero, Flag::Negative>(_alu.getAdderHold());
-    
-    // Check interrupts
-    checkInterrupts();
+    finishAluForMemory<Flag::Zero, Flag::Negative>(&Chip::ins2);
 }
 
 template <class TConfiguration>
@@ -1232,19 +1165,7 @@ void Chip<TConfiguration>::ins2() {
     _alu.performSum<DecimalSupported, true>(_accumulator, _alu.getAdderHold(), _flagsHelper.get<Flag::DecimalMode>(), _flagsHelper.get<Flag::Carry>());
     
     // Fetch next opcode during performing ALU
-    fetchOpcode(&Chip::ins3);
-}
-
-template <class TConfiguration>
-void Chip<TConfiguration>::ins3() {
-    // Store ALU result in accumulator
-    _accumulator = _alu.getAdderHold();
-    
-    // Update status
-    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Overflow, Flag::Negative>(_alu.getAdderHold());
-    
-    // Execute instruction
-    decodeOpcodeAndExecuteInstruction();
+    fetchOpcode(&Chip::finishAluForAccumulator<Flag::Carry, Flag::Zero, Flag::Overflow, Flag::Negative>);
 }
 
 template <class TConfiguration>
@@ -1419,19 +1340,7 @@ void Chip<TConfiguration>::alrImm1() {
     lsr(_accumulator & _inputDataLatch);
     
     // Fetch next opcode during performing ALU
-    fetchOpcode(&Chip::alrImm2);
-}
-
-template <class TConfiguration>
-void Chip<TConfiguration>::alrImm2() {
-    // Write result back
-    _accumulator = _alu.getAdderHold();
-    
-    // Update status
-    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_alu.getAdderHold());
-    
-    // Execute instruction
-    decodeOpcodeAndExecuteInstruction();
+    fetchOpcode(&Chip::finishAluForAccumulator<Flag::Carry, Flag::Zero, Flag::Negative>);
 }
 
 // NOP

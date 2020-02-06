@@ -230,7 +230,6 @@ void laxIndY4();
 void dcm0();
 void dcm1();
 void dcm2();
-void dcm3();
 
 void dcmZp0();
 void dcmZp1();
@@ -270,7 +269,6 @@ void dcmIndY4();
 void ins0();
 void ins1();
 void ins2();
-void ins3();
 
 void insZp0();
 void insZp1();
@@ -309,7 +307,6 @@ void insIndY4();
 
 void alrImm0();
 void alrImm1();
-void alrImm2();
 
 // ARR = AND + ROR
 

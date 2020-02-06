@@ -11,24 +11,12 @@
 
 
 template <class TConfiguration>
-void Chip<TConfiguration>::arithmetic1() {
-    // Store ALU result in accumulator
-    _accumulator = _alu.getAdderHold();
-    
-    // Update status
-    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Overflow, Flag::Negative>(_alu.getAdderHold());
-    
-    // Execute instruction
-    decodeOpcodeAndExecuteInstruction();
-}
-
-template <class TConfiguration>
 void Chip<TConfiguration>::adc0() {
     // Adding data to accumulator with possible carry
     _alu.performSum<DecimalSupported, false>(_accumulator, _inputDataLatch, _flagsHelper.get<Flag::DecimalMode>(), _flagsHelper.get<Flag::Carry>());
     
     // Fetch next opcode during performing ALU
-    fetchOpcode(&Chip::arithmetic1);
+    fetchOpcode(&Chip::finishAluForAccumulator<Flag::Carry, Flag::Zero, Flag::Overflow, Flag::Negative>);
 }
 
 template <class TConfiguration>
@@ -202,7 +190,7 @@ void Chip<TConfiguration>::sbc0() {
     _alu.performSum<DecimalSupported, true>(_accumulator, _inputDataLatch, _flagsHelper.get<Flag::DecimalMode>(), _flagsHelper.get<Flag::Carry>());
     
     // Fetch next opcode during performing ALU
-    fetchOpcode(&Chip::arithmetic1);
+    fetchOpcode(&Chip::finishAluForAccumulator<Flag::Carry, Flag::Zero, Flag::Overflow, Flag::Negative>);
 }
 
 template <class TConfiguration>
@@ -375,19 +363,8 @@ void Chip<TConfiguration>::cp0(uint8_t data) {
     // Substracting data fetched to data to compare them
     _alu.performSum<DecimalSupported, true>(data, _inputDataLatch, false, true);
     
-    // Fetch next opcode during performing ALU
-    fetchOpcode(&Chip::cp1);
-}
-
-template <class TConfiguration>
-void Chip<TConfiguration>::cp1() {
-    // Don't save result, it's just to set the flags
-    
-    // Update status
-    _flagsHelper.refresh<Flag::Carry, Flag::Zero, Flag::Negative>(_alu.getAdderHold());
-    
-    // Execute instruction
-    decodeOpcodeAndExecuteInstruction();
+    // Fetch next opcode during performing ALU (don't save result, just affect flags)
+    fetchOpcode(&Chip::finishAlu<Flag::Carry, Flag::Zero, Flag::Negative>);
 }
 
 template <class TConfiguration>
@@ -655,18 +632,9 @@ void Chip<TConfiguration>::inc(uint8_t data) {
 }
 
 template <class TConfiguration>
-void Chip<TConfiguration>::incdecMemory1() {
-    // Write result back
-    anyRMWWrite(_alu.getAdderHold());
-    
-    // Update status
-    _flagsHelper.refresh<Flag::Zero, Flag::Negative>(_alu.getAdderHold());
-}
-
-template <class TConfiguration>
 void Chip<TConfiguration>::decMemory0() {
     // Modify (just write non modified value back)
-    anyRMWModify(&Chip::incdecMemory1, _inputDataLatch);
+    anyRMWModify(&Chip::finishAluForMemory<Flag::Zero, Flag::Negative>, _inputDataLatch);
     
     // Decrement
     dec(_inputDataLatch);
@@ -747,7 +715,7 @@ void Chip<TConfiguration>::decAbsX3() {
 template <class TConfiguration>
 void Chip<TConfiguration>::incMemory0() {
     // Modify (just write non modified value back)
-    anyRMWModify(&Chip::incdecMemory1, _inputDataLatch);
+    anyRMWModify(&Chip::finishAluForMemory<Flag::Zero, Flag::Negative>, _inputDataLatch);
     
     // Increment
     inc(_inputDataLatch);
@@ -830,11 +798,8 @@ void Chip<TConfiguration>::incdecRegister2(uint8_t &data) {
     // Write result back
     data = _alu.getAdderHold();
     
-    // Update status
-    _flagsHelper.refresh<Flag::Zero, Flag::Negative>(_alu.getAdderHold());
-    
-    // Execute instruction
-    decodeOpcodeAndExecuteInstruction();
+    // Finish performing alu
+    finishAlu<Flag::Zero, Flag::Negative>();
 }
 
 template <class TConfiguration>

@@ -12,8 +12,6 @@
 
 // AND, ASL, BIT, EOR, LSR, ORA, ROL, ROR
 
-void logic1();
-
 void and0();
 
 void andImm0();
@@ -135,12 +133,8 @@ void bitAbs0();
 void bitAbs1();
 void bitAbs2();
 
-void shiftImm2();
-
 void asl(uint8_t data);
-
 void aslMemory0();
-void aslMemory1();
 
 void aslImm0();
 void aslImm1();
@@ -163,7 +157,6 @@ void aslAbsX3();
 
 void lsr(uint8_t data);
 void lsrMemory0();
-void lsrMemory1();
 
 void lsrImm0();
 void lsrImm1();
@@ -186,7 +179,6 @@ void lsrAbsX3();
 
 void rol(uint8_t data);
 void rolMemory0();
-void rolMemory1();
 
 void rolImm0();
 void rolImm1();
@@ -209,7 +201,6 @@ void rolAbsX3();
 
 void ror(uint8_t data);
 void rorMemory0();
-void rorMemory1();
 
 void rorImm0();
 void rorImm1();

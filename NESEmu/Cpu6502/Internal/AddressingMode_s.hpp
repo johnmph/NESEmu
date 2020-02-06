@@ -399,9 +399,6 @@ void Chip<TConfiguration>::anyRMWModify(OpcodeInstruction nextInstruction, uint8
 
 template <class TConfiguration>
 void Chip<TConfiguration>::anyRMWWrite(uint8_t data) {
-    // Set next instruction
-    _currentInstruction = &Chip::fetchOpcode;
-    
     // Write result back
     writeDataBus(_addressBusLow, _addressBusHigh, data);
     

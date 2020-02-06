@@ -2054,6 +2054,16 @@ namespace {
     [self testFile:@"InstrUndocumentedRRA.txt"];
 }
 
+/*
+ 
+ Reset conclusions :
+ 
+ - Il n'est détecté qu'au phi2
+ - On dirait qu'une fois détecté, il laisse un cycle complet de l'instruction en cours puis le cycle suivant de l'instruction en cours mais avec le flag interrupt mis (pour etre exact apres le low detecté, il laisse un cycle complet sans le flag puis il met le flag, meme si la ligne reste low) (donc des read a la place des writes, des vecteurs d'interruptions de reset a la place des vraies interruptions) et si le cycle suivant de l'instruction en cours est le fetchOpcode alors il fait un cycle vide (il fait un readdatabus), puis le fetchOpcode (sans incrémentation du PC et avec forcage du BRK comme une interruption normale), suivi du BRK0, ...
+ - S'il est détecté juste au brk4 alors il n'est pas executé (surement car dans ce step, les flags d'interruptions sont remis a 0)
+ 
+ */
+
 - (void)testResetInHalfClock1 {
     [self testFile:@"ResetInHalfClock1.txt"];
 }

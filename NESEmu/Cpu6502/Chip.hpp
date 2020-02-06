@@ -131,7 +131,7 @@ namespace Cpu6502 {
         
         Chip(Bus &bus);
         
-        void powerUp(uint16_t programCounter = 0x00FF, uint8_t stackPointer = 0x0, uint8_t accumulator = 0xAA, uint8_t xIndex = 0x0, uint8_t yIndex = 0x0, uint8_t statusFlags = 0x22); // TODO: accumulator = 0xAA et Z flag est mis a 1 comme dans Visual6502, a voir
+        void powerUp(uint16_t programCounter = 0x00FF, uint8_t stackPointer = 0x0, uint8_t accumulator = 0xAA, uint8_t xIndex = 0x0, uint8_t yIndex = 0x0, uint8_t statusFlags = 0x22);
         
         void clock();
         void clockPhi1();
@@ -247,6 +247,7 @@ namespace Cpu6502 {
         #include "Internal/AddressingMode.hpp"
         
         // Instructions
+        #include "Internal/Common.hpp"
         #include "Internal/Arithmetic.hpp"
         #include "Internal/Branch.hpp"
         #include "Internal/Flag.hpp"
@@ -265,7 +266,7 @@ namespace Cpu6502 {
         uint8_t _accumulator;
         uint8_t _xIndex;
         uint8_t _yIndex;
-        uint8_t _statusFlags;   // TODO: pour eviter de faire les operations pour les flags, peut etre separer ce registre en bools flag et le reconstituer que la ou c'est necessaire
+        uint8_t _statusFlags;
         
         // Internal
         _Detail::FlagsHelper _flagsHelper;
@@ -315,6 +316,7 @@ namespace Cpu6502 {
     
     #include "Internal/AddressingMode_s.hpp"
     
+    #include "Internal/Common_s.hpp"
     #include "Internal/Arithmetic_s.hpp"
     #include "Internal/Branch_s.hpp"
     #include "Internal/Flag_s.hpp"
