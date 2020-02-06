@@ -567,6 +567,21 @@ int Chip<TConfiguration>::getCurrentInterruptVectorsIndex() {
     return static_cast<int>(Interrupts::IrqBrk);
 }
 
+template <class TConfiguration>
+template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type>
+void Chip<TConfiguration>::correctInterruptVectorIndexForReset() {
+    // Get reset vector if we are in reset
+    if (_resetRequested == true) {
+        _interruptVectorsIndex = static_cast<int>(Interrupts::Reset);
+    }
+}
+
+template <class TConfiguration>
+template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type>
+void Chip<TConfiguration>::correctInterruptVectorIndexForReset() {
+    // Does nothing
+}
+
 // Stack
 
 template <class TConfiguration>

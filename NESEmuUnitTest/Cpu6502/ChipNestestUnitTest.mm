@@ -12,6 +12,7 @@
 #include <fstream>
 #include <string>
 #include "Cpu6502/Chip.hpp"
+#include "Cpu6502InternalViewer.hpp"
 
 
 @interface ChipNestestUnitTest : XCTestCase
@@ -34,39 +35,6 @@ namespace {
         }
         
         std::array<uint8_t, 1024 * 64> memory;
-    };
-    
-    struct Cpu6502InternalViewer {
-        
-        Cpu6502InternalViewer(Cpu6502::Chip<Cpu6502::ConfigurationAccurate<Bus, Cpu6502InternalViewer>> const &cpu6502) : _cpu6502(cpu6502) {
-        }
-        
-        uint16_t getProgramCounter() const {
-            return (_cpu6502._programCounterHigh << 8) | _cpu6502._programCounterLow;
-        }
-        
-        uint8_t getStackPointer() const {
-            return _cpu6502._stackPointer;
-        }
-        
-        uint8_t getAccumulator() const {
-            return _cpu6502._accumulator;
-        }
-        
-        uint8_t getXIndex() const {
-            return _cpu6502._xIndex;
-        }
-        
-        uint8_t getYIndex() const {
-            return _cpu6502._yIndex;
-        }
-        
-        uint8_t getStatusFlags() const {
-            return _cpu6502._statusFlags;
-        }
-        
-    private:
-        Cpu6502::Chip<Cpu6502::ConfigurationAccurate<Bus, Cpu6502InternalViewer>> const &_cpu6502;
     };
     
     struct State {
@@ -144,8 +112,8 @@ namespace {
     
     
     Bus bus;
-    Cpu6502::Chip<Cpu6502::ConfigurationAccurate<Bus, Cpu6502InternalViewer>> cpu6502(bus);
-    Cpu6502InternalViewer cpu6502InternalViewer(cpu6502);
+    Cpu6502InternalViewer<Bus>::Chip cpu6502(bus);
+    Cpu6502InternalViewer<Bus> cpu6502InternalViewer(cpu6502);
     
 }
 

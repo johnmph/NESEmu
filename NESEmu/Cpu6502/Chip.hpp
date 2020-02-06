@@ -229,6 +229,12 @@ namespace Cpu6502 {
         void checkInterrupts();
         int getCurrentInterruptVectorsIndex();
         
+        template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type = 0>
+        void correctInterruptVectorIndexForReset();
+        
+        template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type = 0>
+        void correctInterruptVectorIndexForReset();
+        
         // Stack
         void startStackOperation();
         void stopStackOperation();

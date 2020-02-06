@@ -17,6 +17,9 @@ void Chip<TConfiguration>::reset0() {
     if (_resetSavedInstruction != static_cast<OpcodeInstruction>(&Chip::fetchOpcode)) {
         // Execute saved instruction
         (this->*_resetSavedInstruction)();
+    } else {
+        // Ensure that we are in read mode
+        readDataBus(_addressBusLow, _addressBusHigh);
     }
     
     // Next instruction is fetchOpcode but need to check if resetRequested is still true in case of reset in interrupt
@@ -81,6 +84,9 @@ void Chip<TConfiguration>::brk3() {
     // Push status flags to stack
     pushToStack1();
     pushToStack0(_statusFlags | ((_interruptRequested == false) << static_cast<int>(Flag::Break)));
+    
+    // Calculate interrupt vectors index
+    _interruptVectorsIndex = getCurrentInterruptVectorsIndex(); // TODO: avant c'etait dans brk4 mais ca posait un probleme car ca detectait le nmi meme s'il etait trop tard (a la fin de brk3), alors déplacé ici, normalement c'est ok
 }
 
 template <class TConfiguration>
@@ -92,7 +98,7 @@ void Chip<TConfiguration>::brk4() {
     stopStackOperation();
     
     // Calculate interrupt vectors index
-    _interruptVectorsIndex = getCurrentInterruptVectorsIndex(); // TODO: peut etre plus besoin de ca car maintenant on a addressBusLow/High et on peut l'incrementer dans brk5
+    //_interruptVectorsIndex = getCurrentInterruptVectorsIndex();//TODO: déplacé dans brk3, voir ci dessus
     
     // Read low byte of address
     readDataBus(_interruptVectors[_interruptVectorsIndex][0], _interruptVectors[_interruptVectorsIndex][1]);
@@ -108,10 +114,8 @@ void Chip<TConfiguration>::brk5() {
     // 6502 uses the ALU to store temporary low byte of address (by adding 0 to it to keep its value in adderHold)
     _alu.performSum<DecimalSupported, false>(0x0, _inputDataLatch, false, false);
     
-    // TODO: mettre ca dans une methode :
-    if (_resetRequested == true) {  // TODO: mettre ca dans une methode avec choix via ResetAccurate
-        _interruptVectorsIndex = static_cast<int>(Interrupts::Reset);
-    }
+    // Possibly correct vector index for reset
+    correctInterruptVectorIndexForReset<ResetAccurate>();
     
     // Read high byte of address
     readDataBus(_interruptVectors[_interruptVectorsIndex][0] + 1, _interruptVectors[_interruptVectorsIndex][1]);
