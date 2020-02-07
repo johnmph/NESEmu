@@ -48,7 +48,6 @@ namespace NESEmu { namespace Cpu {
     private:
         
         using Constants = Constants<EModel>;
-        
         using InternalCpu = Cpu6502::Chip<Cpu6502::ConfigurationPerformance<Chip, Chip, false>>;
         
         // Set Cpu as friend to keep data bus methods private

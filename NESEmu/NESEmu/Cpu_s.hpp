@@ -154,7 +154,7 @@ bool Chip<EModel, TBus>::checkDma() {   // TODO: j'ai fait cette fonction qui re
     // If DMA is in write phase
     else {
         // Write to PPU (only RW from 6502 is affected)
-        _cpu._readWrite = static_cast<bool>(InternalCpu::ReadWrite::Write);
+        _cpu._readWrite = static_cast<bool>(InternalCpu::ReadWrite::Write);     // TODO: voir si un reset signal pendant le dma, si write devient read
         write(0x2004, _cpu._inputDataLatch);
         
         // One byte copied

@@ -12,6 +12,8 @@
 		4D11382B23D533E70056AAAD /* Chip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D11382A23D533E60056AAAD /* Chip.cpp */; };
 		4D11382C23D534280056AAAD /* Chip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D11382A23D533E60056AAAD /* Chip.cpp */; };
 		4D6B9C2223E2310D000889C3 /* ChipVisual6502UnitTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D6B9C2123E2310D000889C3 /* ChipVisual6502UnitTest.mm */; };
+		4D6FAB3123ECBF9C009977EE /* Visual6502.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6FAB2F23ECBF9C009977EE /* Visual6502.cpp */; };
+		4D6FAB3423ECF19E009977EE /* CpuVisual6502UnitTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D6FAB3323ECF19E009977EE /* CpuVisual6502UnitTest.mm */; };
 		4DE643F523BAE2EC00CFFE4E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE643F423BAE2EC00CFFE4E /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -42,9 +44,13 @@
 		4D6B9C1F23D92C32000889C3 /* Cpu.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu.hpp; sourceTree = "<group>"; };
 		4D6B9C2023D92D25000889C3 /* Cpu_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu_s.hpp; sourceTree = "<group>"; };
 		4D6B9C2123E2310D000889C3 /* ChipVisual6502UnitTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ChipVisual6502UnitTest.mm; sourceTree = "<group>"; };
-		4D6FAB2B23EB719A009977EE /* Cpu6502InternalViewer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502InternalViewer.hpp; sourceTree = "<group>"; };
+		4D6FAB2B23EB719A009977EE /* Cpu6502FullAccess.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502FullAccess.hpp; sourceTree = "<group>"; };
 		4D6FAB2D23EC6BDA009977EE /* Common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Common.hpp; sourceTree = "<group>"; };
 		4D6FAB2E23EC6C48009977EE /* Common_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Common_s.hpp; sourceTree = "<group>"; };
+		4D6FAB2F23ECBF9C009977EE /* Visual6502.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Visual6502.cpp; sourceTree = "<group>"; };
+		4D6FAB3023ECBF9C009977EE /* Visual6502.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Visual6502.hpp; sourceTree = "<group>"; };
+		4D6FAB3223ECC363009977EE /* Visual6502_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Visual6502_s.hpp; sourceTree = "<group>"; };
+		4D6FAB3323ECF19E009977EE /* CpuVisual6502UnitTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CpuVisual6502UnitTest.mm; sourceTree = "<group>"; };
 		4D9807EE23C39A66007D1953 /* Data.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Data.hpp; sourceTree = "<group>"; };
 		4D9807EF23C50190007D1953 /* AddressingMode.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AddressingMode.hpp; sourceTree = "<group>"; };
 		4D9807F023C50448007D1953 /* Flag.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Flag.hpp; sourceTree = "<group>"; };
@@ -94,6 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				4D1137F923CD3FA10056AAAD /* Cpu6502 */,
+				4D6FAB3323ECF19E009977EE /* CpuVisual6502UnitTest.mm */,
 				4D1137F223CD3EEC0056AAAD /* NESEmuUnitTest.mm */,
 				4D1137F423CD3EEC0056AAAD /* Info.plist */,
 			);
@@ -113,7 +120,10 @@
 		4D1137F923CD3FA10056AAAD /* Cpu6502 */ = {
 			isa = PBXGroup;
 			children = (
-				4D6FAB2B23EB719A009977EE /* Cpu6502InternalViewer.hpp */,
+				4D6FAB2B23EB719A009977EE /* Cpu6502FullAccess.hpp */,
+				4D6FAB3023ECBF9C009977EE /* Visual6502.hpp */,
+				4D6FAB3223ECC363009977EE /* Visual6502_s.hpp */,
+				4D6FAB2F23ECBF9C009977EE /* Visual6502.cpp */,
 				4D1137FC23CD403E0056AAAD /* ChipNestestUnitTest.mm */,
 				4D6B9C2123E2310D000889C3 /* ChipVisual6502UnitTest.mm */,
 			);
@@ -283,8 +293,10 @@
 			files = (
 				4D6B9C2223E2310D000889C3 /* ChipVisual6502UnitTest.mm in Sources */,
 				4D1137F323CD3EEC0056AAAD /* NESEmuUnitTest.mm in Sources */,
+				4D6FAB3123ECBF9C009977EE /* Visual6502.cpp in Sources */,
 				4D1137FD23CD403E0056AAAD /* ChipNestestUnitTest.mm in Sources */,
 				4D11382C23D534280056AAAD /* Chip.cpp in Sources */,
+				4D6FAB3423ECF19E009977EE /* CpuVisual6502UnitTest.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
