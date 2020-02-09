@@ -267,94 +267,121 @@ Analyzer<TCpu6502>::Analyzer(std::istream &istream, TFunction &&writeFunction) :
 
 template <class TCpu6502>
 template <class TFunction>
-void Analyzer<TCpu6502>::analyze(TCpu6502 &cpu6502, TFunction &&checkResult) {
-    int cycle = 0;
+void Analyzer<TCpu6502>::analyze(TCpu6502 &cpu6502, TFunction &&checkResult, int startCycle) {
+    int cycle = startCycle;
+    int lastResultFullCycle = -1;
     
     for (std::string line; std::getline(_istream, line);) {
         // Decode current result
         auto result = decodeResults(line);
         
-        // Check commands
-        for (auto const &resetLine : _command.resetLine) {
-            if (resetLine.first == cycle) {
-                cpu6502.reset(false);
+        int resultFullCycle = std::stoi(result[0], 0, 10);
+        
+        while ((cycle <= (resultFullCycle * 2)) || (lastResultFullCycle == resultFullCycle)) {
+            // Check commands
+            for (auto const &resetLine : _command.resetLine) {
+                if (resetLine.first == cycle) {
+                    cpu6502.reset(false);
+                }
+                
+                if (resetLine.second == cycle) {
+                    cpu6502.reset(true);
+                }
             }
             
-            if (resetLine.second == cycle) {
-                cpu6502.reset(true);
-            }
-        }
-        
-        for (auto const &nmiLine : _command.nmiLine) {
-            if (nmiLine.first == cycle) {
-                cpu6502.nmi(false);
-            }
-            
-            if (nmiLine.second == cycle) {
-                cpu6502.nmi(true);
-            }
-        }
-        
-        for (auto const &irqLine : _command.irqLine) {
-            if (irqLine.first == cycle) {
-                cpu6502.irq(false);
+            for (auto const &nmiLine : _command.nmiLine) {
+                if (nmiLine.first == cycle) {
+                    cpu6502.nmi(false);
+                }
+                
+                if (nmiLine.second == cycle) {
+                    cpu6502.nmi(true);
+                }
             }
             
-            if (irqLine.second == cycle) {
-                cpu6502.irq(true);
-            }
-        }
-        
-        for (auto const &soLine : _command.soLine) {
-            if (soLine.first == cycle) {
-                cpu6502.setOverflow(false);
+            for (auto const &irqLine : _command.irqLine) {
+                if (irqLine.first == cycle) {
+                    cpu6502.irq(false);
+                }
+                
+                if (irqLine.second == cycle) {
+                    cpu6502.irq(true);
+                }
             }
             
-            if (soLine.second == cycle) {
-                cpu6502.setOverflow(true);
+            for (auto const &soLine : _command.soLine) {
+                if (soLine.first == cycle) {
+                    cpu6502.setOverflow(false);
+                }
+                
+                if (soLine.second == cycle) {
+                    cpu6502.setOverflow(true);
+                }
+            }
+            
+            for (auto const &rdyLine : _command.rdyLine) {
+                if (rdyLine.first == cycle) {
+                    cpu6502.ready(false);
+                }
+                
+                if (rdyLine.second == cycle) {
+                    cpu6502.ready(true);
+                }
+            }
+            
+            // Execute CPU
+            if ((cycle & 0x1) == 0x0) {
+                cpu6502.clockPhi1();
+            } else {
+                cpu6502.clockPhi2();
+            }
+            
+            //std::cout << cycle << ") " << std::hex << cpu6502.getAddressBus() << ", " << static_cast<int>(cpu6502.getDataBus()) << "\n";
+            
+            // Check attribute enable
+            for (int i = 0; i < _attributes.attributes.size(); ++i) {
+                auto &attribute = *_attributes.attributes[i];
+                
+                for (auto const &checkAttribute : _command.checkAttribute) {
+                    if (checkAttribute.first != attribute.getName()) {
+                        continue;
+                    }
+                    
+                    for (auto const &checkCycles : checkAttribute.second) {
+                        if (checkCycles.first == cycle) {
+                            attribute.setEnableCheck(false);
+                        }
+                        
+                        if (checkCycles.second == cycle) {
+                            attribute.setEnableCheck(true);
+                        }
+                    }
+                }
+            }
+            
+            // Increment cycle count
+            ++cycle;
+            
+            // Check steps
+            if (cycle >= _command.numCyclesToExecute) {
+                return;
+            }
+            
+            // If we are in phi2, exit this loop
+            if (lastResultFullCycle == resultFullCycle) {
+                break;
             }
         }
         
-        // Execute CPU
-        if ((cycle & 0x1) == 0x0) {
-            cpu6502.clockPhi1();
-        } else {
-            cpu6502.clockPhi2();
-        }
-        
-        //std::cout << cycle << ") " << std::hex << cpu6502.getAddressBus() << ", " << static_cast<int>(cpu6502.getDataBus()) << "\n";
+        // Save resultFullCycle
+        lastResultFullCycle = resultFullCycle;
         
         // Check result
         for (int i = 0; i < _attributes.attributes.size(); ++i) {
             auto &attribute = *_attributes.attributes[i];
             
-            for (auto const &checkAttribute : _command.checkAttribute) {
-                if (checkAttribute.first != attribute.getName()) {
-                    continue;
-                }
-                
-                for (auto const &checkCycles : checkAttribute.second) {
-                    if (checkCycles.first == cycle) {
-                        attribute.setEnableCheck(false);
-                    }
-                    
-                    if (checkCycles.second == cycle) {
-                        attribute.setEnableCheck(true);
-                    }
-                }
-            }
-            
             attribute.setValue(result[i]);
-            
             checkResult(attribute.compareValue(cpu6502));
-        }
-        
-        // Increment cycle count
-        ++cycle;
-        
-        // Check steps
-        if (cycle >= _command.numCyclesToExecute) {
-            break;
         }
     }
 }
@@ -518,6 +545,21 @@ void Analyzer<TCpu6502>::decodeUrlParameter(std::string const &name, std::string
     if (name == "so1") {
         if (command.soLine.rbegin() != command.soLine.rend()) {
             command.soLine.rbegin()->second = std::stoi(value, 0, 10);
+        }
+        
+        return;
+    }
+    
+    // Rdy low
+    if (name == "rdy0") {
+        command.rdyLine.push_back({ std::stoi(value, 0, 10), 0 });
+        return;
+    }
+    
+    // So high
+    if (name == "rdy1") {
+        if (command.rdyLine.rbegin() != command.rdyLine.rend()) {
+            command.rdyLine.rbegin()->second = std::stoi(value, 0, 10);
         }
         
         return;

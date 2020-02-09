@@ -1,5 +1,5 @@
 //
-//  CpuVisual6502UnitTest.mm
+//  CpuVisual2A03UnitTest.mm
 //  NESEmuUnitTest
 //
 //  Created by Jonathan Baliko on 7/02/20.
@@ -11,16 +11,15 @@
 #include <array>
 #include <fstream>
 #include <memory>
-#include "Cpu.hpp"
-#include "Cpu6502FullAccess.hpp"
+#include "Cpu2A03FullAccess.hpp"
 #include "Visual6502.hpp"
 
 
-@interface CpuVisual6502UnitTest : XCTestCase
+@interface CpuVisual2A03UnitTest : XCTestCase
 
 @end
 
-@implementation CpuVisual6502UnitTest
+@implementation CpuVisual2A03UnitTest
 
 namespace {
     
@@ -40,8 +39,7 @@ namespace {
     
     
     Bus bus;
-    NESEmu::Cpu::Chip<NESEmu::Cpu::Model::Ricoh2A03, Bus> cpu2A03(bus);
-    Cpu6502FullAccess<Bus> cpu6502(bus);
+    Cpu2A03FullAccess<NESEmu::Cpu::Model::Ricoh2A03, Bus> cpu2A03(bus);
     
 }
 
@@ -52,7 +50,7 @@ namespace {
     bus.memory.fill(0x00);
     
     // Power up cpu
-    cpu6502.powerUp();
+    cpu2A03.powerUp();
 }
 
 - (void)tearDown {
@@ -69,7 +67,7 @@ namespace {
     XCTAssertTrue(ifsLog.good());
     
     // Create analyzer
-    Visual6502::Analyzer<Cpu6502FullAccess<Bus>> visual6502Analyzer(ifsLog, [](uint16_t address, uint8_t data) { bus.write(address, data); });
+    Visual6502::Analyzer<Cpu2A03FullAccess<NESEmu::Cpu::Model::Ricoh2A03, Bus>> visual6502Analyzer(ifsLog, [](uint16_t address, uint8_t data) { bus.write(address, data); });
     
     // Release reset to start cpu
     cpu2A03.reset(true);
@@ -80,7 +78,7 @@ namespace {
     }
     
     // Analyze
-    visual6502Analyzer.analyze(cpu2A03._cpu, [self](bool result) { XCTAssertTrue(result); });
+    visual6502Analyzer.analyze(cpu2A03, [self](bool result) { XCTAssertTrue(result); }, 16);
     
     // Close file
     ifsLog.close();
@@ -88,6 +86,10 @@ namespace {
 
 - (void)testDma {
     [self testFile:@"Dma.txt"];
+}
+
+- (void)testDmaWithASO {
+    [self testFile:@"DmaWithASO.txt"];
 }
 
 @end

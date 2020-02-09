@@ -102,21 +102,20 @@ namespace Cpu6502 {
         
     }
     
-    template <bool BSetOverflowEnabled, bool BResetAccurate, class TBus, class TInternalHardware = std::nullptr_t, bool BDecimalSupported = false>
+    template <bool BSetOverflowEnabled, bool BResetAccurate, class TBus, bool BDecimalSupported = false>
     struct Configuration {
         using Bus = TBus;
-        using InternalHardware = TInternalHardware;
         
         static constexpr bool DecimalSupported = BDecimalSupported;
         static constexpr bool SetOverflowEnabled = BSetOverflowEnabled;
         static constexpr bool ResetAccurate = BResetAccurate;
     };
     
-    template <class TBus, class TInternalHardware = std::nullptr_t, bool BDecimalSupported = false>
-    using ConfigurationAccurate = Configuration<true, true, TBus, TInternalHardware, BDecimalSupported>;
+    template <class TBus, bool BDecimalSupported = false>
+    using ConfigurationAccurate = Configuration<true, true, TBus, BDecimalSupported>;
     
-    template <class TBus, class TInternalHardware = std::nullptr_t, bool BDecimalSupported = false>
-    using ConfigurationPerformance = Configuration<false, false, TBus, TInternalHardware, BDecimalSupported>;
+    template <class TBus, bool BDecimalSupported = false>
+    using ConfigurationPerformance = Configuration<false, false, TBus, BDecimalSupported>;
     
     template <class TConfiguration>
     struct Chip {
@@ -151,27 +150,19 @@ namespace Cpu6502 {
         bool getM1Signal() const;
         bool getM2Signal() const;
         
-    private:
+    protected:
         
-        using InternalHardware = typename TConfiguration::InternalHardware;
         static constexpr bool DecimalSupported = TConfiguration::DecimalSupported;
         static constexpr bool SetOverflowEnabled = TConfiguration::SetOverflowEnabled;
         static constexpr bool ResetAccurate = TConfiguration::ResetAccurate;
         
         using OpcodeInstruction = void (Chip::*)();
         
-        // Set InternalHardware as friend to keep internal members private
-        friend InternalHardware;
-        
         enum class Interrupts {
             Nmi,
             Reset,
             IrqBrk
         };
-        
-        // Clock
-        void clock(bool forceExecute);
-        void clockPhi1(bool forceExecute);
         
         // Memory
         void fetchMemoryPhi1();
@@ -185,7 +176,7 @@ namespace Cpu6502 {
         void fetchData();
         void fetchOpcode(OpcodeInstruction nextInstruction);
         void fetchOpcode();
-        void fetchOpcodeAfterRdyLow();
+        //void fetchOpcodeAfterRdyLow();
         void decodeOpcodeAndExecuteInstruction();
         
         // Overflow
@@ -278,9 +269,10 @@ namespace Cpu6502 {
         OpcodeInstruction _currentInstruction;
         int _interruptVectorsIndex;
         
+        uint16_t _addressBus;   // TODO: peut etre sortir addressBus et dataBus d'ici et le mettre dans le bus
+        uint8_t _dataBus;
         uint8_t _addressBusLow;
         uint8_t _addressBusHigh;
-        uint8_t _dataBus;
         uint8_t _inputDataLatch;
         uint8_t _dataOutput;
         bool _readyLine;

@@ -29,6 +29,7 @@ namespace Visual6502 {
         std::vector<std::pair<int, int>> nmiLine;
         std::vector<std::pair<int, int>> irqLine;
         std::vector<std::pair<int, int>> soLine;
+        std::vector<std::pair<int, int>> rdyLine;
     };
     
     template <class TCpu6502>
@@ -215,7 +216,7 @@ namespace Visual6502 {
         Analyzer(std::istream &istream, TFunction &&writeFunction);
         
         template <class TFunction>
-        void analyze(TCpu6502 &cpu6502, TFunction &&checkResult);
+        void analyze(TCpu6502 &cpu6502, TFunction &&checkResult, int startCycle = 0);
         
     private:
         std::unique_ptr<Attribute<TCpu6502>> makeAttributeFromName(std::string const &name);

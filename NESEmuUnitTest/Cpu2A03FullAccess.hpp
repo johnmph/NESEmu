@@ -1,24 +1,24 @@
 //
-//  Cpu6502FullAccess.hpp
-//  NESEmuUnitTest
+//  Cpu2A03FullAccess.hpp
+//  NESEmu
 //
-//  Created by Jonathan Baliko on 5/02/20.
+//  Created by Jonathan Baliko on 8/02/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef Cpu6502FullAccess_hpp
-#define Cpu6502FullAccess_hpp
+#ifndef Cpu2A03FullAccess_hpp
+#define Cpu2A03FullAccess_hpp
 
 #include <cstdint>
-#include "Cpu6502/Chip.hpp"
+#include "NESEmu/Cpu.hpp"
 
 
-template <class TConfiguration>
-struct Cpu6502FullAccess : Cpu6502::Chip<TConfiguration> {
+template <NESEmu::Cpu::Model EModel, class TBus>
+struct Cpu2A03FullAccess : NESEmu::Cpu::Chip<EModel, TBus> {
     
-    using Cpu = Cpu6502::Chip<TConfiguration>;
+    using Cpu = NESEmu::Cpu::Chip<EModel, TBus>;
     
-    Cpu6502FullAccess(typename TConfiguration::Bus &bus) : Cpu(bus) {
+    Cpu2A03FullAccess(TBus &bus) : Cpu(bus) {
     }
     
     uint16_t getProgramCounter() const {
@@ -48,6 +48,19 @@ struct Cpu6502FullAccess : Cpu6502::Chip<TConfiguration> {
     bool getReadyLine() const {
         return this->_readyLine;
     }
+    
+    bool getSyncSignal() const {
+        return Cpu::getSyncSignal();
+    }
+    
+    void setOverflow(bool high) {
+        //Cpu::setOverflow(high);   // TODO: ce cpu n'utilise pas setOverflow
+    }
+    
+    void ready(bool high) {
+        Cpu::ready(high);
+    }
+    
 };
 
-#endif /* Cpu6502FullAccess_hpp */
+#endif /* Cpu2A03FullAccess_hpp */

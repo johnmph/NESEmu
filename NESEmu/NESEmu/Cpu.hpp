@@ -24,11 +24,15 @@ namespace NESEmu { namespace Cpu {
     struct Constants;
     
     template <Model EModel, class TBus>
-    struct Chip {
+    struct Chip : protected Cpu6502::Chip<Cpu6502::ConfigurationPerformance<Chip<EModel, TBus>, false>> {
         
         Chip(TBus &bus);
         
+        void powerUp(uint16_t programCounter = 0x100F, uint8_t stackPointer = 0xC0, uint8_t accumulator = 0x00, uint8_t xIndex = 0xC0, uint8_t yIndex = 0x0, uint8_t statusFlags = 0x22);
+        
         void clock();
+        void clockPhi1();
+        void clockPhi2();
         
         void reset(bool high);
         void nmi(bool high);
@@ -44,11 +48,12 @@ namespace NESEmu { namespace Cpu {
         //uint8_t getOutSignal() const;
         //bool getOe1Signal() const;
         //bool getOe2Signal() const;
+        bool getM2Signal() const;
         
     private:
         
         using Constants = Constants<EModel>;
-        using InternalCpu = Cpu6502::Chip<Cpu6502::ConfigurationPerformance<Chip, Chip, false>>;
+        using InternalCpu = Cpu6502::Chip<Cpu6502::ConfigurationPerformance<Chip, false>>;
         
         // Set Cpu as friend to keep data bus methods private
         friend InternalCpu;
@@ -58,11 +63,12 @@ namespace NESEmu { namespace Cpu {
         void write(uint16_t address, uint8_t data);
         
         // DMA
-        bool checkDma();
+        bool checkDmaPhi1();
+        bool checkDmaPhi2();
         
         // Internal
         TBus &_bus;
-        InternalCpu _cpu;
+        bool _dmaStarted;
         int _dmaCount;
         uint8_t _dmaAddress;
         bool _dmaToggle;

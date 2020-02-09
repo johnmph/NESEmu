@@ -129,6 +129,8 @@ void Chip<TConfiguration>::powerUp(uint16_t programCounter, uint8_t stackPointer
     _statusFlags = statusFlags;
     
     // Internal
+    _addressBus = 0x0;
+    _dataBus = 0x0;
     _addressBusLow = 0x0;
     _addressBusHigh = 0x0;
     _inputDataLatch = 0x0;
@@ -161,14 +163,54 @@ void Chip<TConfiguration>::powerUp(uint16_t programCounter, uint8_t stackPointer
 
 template <class TConfiguration>
 void Chip<TConfiguration>::clock() {
-    // Perform a clock without forcing execution
-    clock(false);
+    // Execute phi1
+    clockPhi1();
+    
+    // Execute phi2
+    clockPhi2();
 }
 
 template <class TConfiguration>
 void Chip<TConfiguration>::clockPhi1() {
-    // Perform a clock phi1 without forcing execution
-    clockPhi1(false);
+    // Start phi1
+    _phi2 = false;
+    
+    // Update PC
+    updateProgramCounter();
+    
+    // Check for overflow flag
+    checkSetOverflow<SetOverflowEnabled>();
+    
+    // Initialize dataOutput to emulate possible bus conflict which cause a low level to win (it is like an AND operation)
+    //_dataOutput = 0xFF;
+    
+    // If rdy is low, wait before perform next read cycle TODO: j'ai mis sync en plus pour arreter sur le fetchOpcode
+    if ((_readyWaitRequested == false) || ((_readWrite != static_cast<bool>(ReadWrite::Read)) && (/*_sync == false*/true))) {
+        // Execute current stage
+        (this->*_currentInstruction)();
+    }
+    
+    // Fetch memory for phi1
+    fetchMemoryPhi1();
+}
+
+template <class TConfiguration>
+void Chip<TConfiguration>::clockPhi2() {
+    // Start phi2
+    _phi2 = true;
+    
+    // Check reset
+    checkReset<ResetAccurate>();
+    
+    // Check interrupts line
+    checkNmi();
+    checkIrq();
+    
+    // Check ready line
+    checkReady();
+    
+    // Fetch memory for phi2
+    fetchMemoryPhi2();
 }
 
 template <class TConfiguration>
@@ -201,7 +243,8 @@ void Chip<TConfiguration>::setOverflow(bool high) {
 
 template <class TConfiguration>
 uint16_t Chip<TConfiguration>::getAddressBus() const {
-    return (_addressBusHigh << 8) | _addressBusLow;
+    //return (_addressBusHigh << 8) | _addressBusLow; // TODO: _addressBus plutot (et avoir getAddressBusLow et getAddressBusHigh ?)
+    return _addressBus;
 }
 
 template <class TConfiguration>
@@ -229,67 +272,13 @@ bool Chip<TConfiguration>::getM2Signal() const {
     return (_phi2 == true);
 }
 
-// Clock
-
-template <class TConfiguration>
-void Chip<TConfiguration>::clock(bool forceExecute) {
-    // Execute phi1
-    clockPhi1(forceExecute);
-    
-    // Execute phi2
-    clockPhi2();
-}
-
-template <class TConfiguration>
-void Chip<TConfiguration>::clockPhi1(bool forceExecute) {
-    // Start phi1
-    _phi2 = false;
-    
-    // Update PC
-    updateProgramCounter();
-    
-    // Check for overflow flag
-    checkSetOverflow<SetOverflowEnabled>();
-    
-    // Initialize dataOutput to emulate possible bus conflict which cause a low level to win (it is like an AND operation)
-    //_dataOutput = 0xFF;
-    
-    // If rdy is low, wait before perform next read cycle unless we force execute
-    if ((_readyWaitRequested == false) || (_readWrite != static_cast<bool>(ReadWrite::Read)) || (forceExecute == true)) {
-        // Execute current stage
-        (this->*_currentInstruction)();
-    }
-    
-    // Fetch memory for phi1
-    fetchMemoryPhi1();
-}
-
-template <class TConfiguration>
-void Chip<TConfiguration>::clockPhi2() {
-    // Start phi2
-    _phi2 = true;
-    
-    // Check reset
-    checkReset<ResetAccurate>();
-    
-    // Check interrupts line
-    checkNmi();
-    checkIrq();
-    
-    // Check ready line
-    checkReady();
-    
-    // Fetch memory for phi2
-    fetchMemoryPhi2();
-}
-
 // Memory
 
 template <class TConfiguration>
 void Chip<TConfiguration>::fetchMemoryPhi1() {
     // Read data on dataBus if it is in read mode else set dataBus with last read value
     if (_readWrite == static_cast<bool>(ReadWrite::Read)) {
-        _dataBus = _bus.read((_addressBusHigh << 8) | _addressBusLow);
+        _dataBus = _bus.read(_addressBus);
     } else {
         _dataBus = _inputDataLatch;
     }
@@ -307,14 +296,17 @@ void Chip<TConfiguration>::fetchMemoryPhi2() {
     
     // Write data to dataBus
     _dataBus = _dataOutput;
-    _bus.write((_addressBusHigh << 8) | _addressBusLow, _dataBus);
+    _bus.write(_addressBus, _dataBus);
 }
 
 template <class TConfiguration>
 void Chip<TConfiguration>::readDataBus(uint8_t low, uint8_t high) {
-    // Write address bus
+    // Write address bus registers
     _addressBusLow = low;
     _addressBusHigh = high;
+    
+    // Set address bus
+    _addressBus = (_addressBusHigh << 8) | _addressBusLow;
     
     // Set R/W to read
     _readWrite = static_cast<bool>(ReadWrite::Read);
@@ -322,9 +314,12 @@ void Chip<TConfiguration>::readDataBus(uint8_t low, uint8_t high) {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::writeDataBus(uint8_t low, uint8_t high, uint8_t data) {
-    // Write address bus
+    // Write address bus registers
     _addressBusLow = low;
     _addressBusHigh = high;
+    
+    // Set address bus
+    _addressBus = (_addressBusHigh << 8) | _addressBusLow;
     
     // Write data bus, emulate possible bus conflict which cause a low level to win (it is like an AND operation)
     //_dataOutput &= data;
@@ -379,7 +374,7 @@ void Chip<TConfiguration>::fetchOpcode() {
     // Fetch opcode then decode opcode and execute instruction on the next cycle
     fetchOpcode(&Chip::decodeOpcodeAndExecuteInstruction);
 }
-
+/*
 template <class TConfiguration>
 void Chip<TConfiguration>::fetchOpcodeAfterRdyLow() {
     // Set next instruction
@@ -387,14 +382,14 @@ void Chip<TConfiguration>::fetchOpcodeAfterRdyLow() {
     
     // Read opcode located at the address saved in address registers
     readDataBus(_addressBusLow, _addressBusHigh);
-}
+}*/
 
 template <class TConfiguration>
 void Chip<TConfiguration>::decodeOpcodeAndExecuteInstruction() {
     // We need this because some instructions will perform actions in the decode step of the next instruction, so we need to let them perform actions even if RDY is low, but we can't decode next opcode because opcode is not ready for reading
     if (_readyWaitRequested == true) {
         // We can't use fetchOpcode here because fetch was already performed on the previous cycle, just read the data which is ready for reading
-        _currentInstruction = &Chip::fetchOpcodeAfterRdyLow;
+        //_currentInstruction = &Chip::fetchOpcodeAfterRdyLow;
         return;
     }
     
@@ -586,8 +581,9 @@ void Chip<TConfiguration>::correctInterruptVectorIndexForReset() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::startStackOperation() {
-    _addressBusLow = _stackPointer;
-    _addressBusHigh = _stackPageNumber;
+    //_addressBusLow = _stackPointer;
+    //_addressBusHigh = _stackPageNumber;
+    readDataBus(_stackPointer, _stackPageNumber);
 }
 
 template <class TConfiguration>

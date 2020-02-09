@@ -11,7 +11,6 @@
 #include <array>
 #include <fstream>
 #include <memory>
-#include "Cpu6502/Chip.hpp"
 #include "Cpu6502FullAccess.hpp"
 #include "Visual6502.hpp"
 
@@ -40,7 +39,7 @@ namespace {
     
     
     Bus bus;
-    Cpu6502FullAccess<Bus> cpu6502(bus);
+    Cpu6502FullAccess<Cpu6502::ConfigurationAccurate<Bus>> cpu6502(bus);
     
 }
 
@@ -68,7 +67,7 @@ namespace {
     XCTAssertTrue(ifsLog.good());
     
     // Create analyzer
-    Visual6502::Analyzer<Cpu6502FullAccess<Bus>> visual6502Analyzer(ifsLog, [](uint16_t address, uint8_t data) { bus.write(address, data); });
+    Visual6502::Analyzer<Cpu6502FullAccess<Cpu6502::ConfigurationAccurate<Bus>>> visual6502Analyzer(ifsLog, [](uint16_t address, uint8_t data) { bus.write(address, data); });
     
     // Release reset to start cpu
     cpu6502.reset(true);
@@ -1645,6 +1644,38 @@ namespace {
 
 - (void)testIrqInBrk7 {
     [self testFile:@"IrqInBrk7.txt"];
+}
+
+- (void)testRdyLowManyCycleInstrALU1 {
+    [self testFile:@"RdyLowManyCycleInstrALU1.txt"];
+}
+
+- (void)testRdyLowManyCycleInstrALU2 {
+    [self testFile:@"RdyLowManyCycleInstrALU2.txt"];
+}
+
+- (void)testRdyLowManyCycleInstrALU3 {
+    [self testFile:@"RdyLowManyCycleInstrALU3.txt"];
+}
+
+- (void)testRdyLowManyCycleInstrALU4 {
+    [self testFile:@"RdyLowManyCycleInstrALU4.txt"];
+}
+
+- (void)testRdyLowManyCycleInstrALU5 {
+    [self testFile:@"RdyLowManyCycleInstrALU5.txt"];
+}
+
+- (void)testRdyLowManyCycleInstrALU6 {
+    [self testFile:@"RdyLowManyCycleInstrALU6.txt"];
+}
+
+- (void)testRdyLowManyCycleInstrALU7 {
+    [self testFile:@"RdyLowManyCycleInstrALU7.txt"];
+}
+
+- (void)testRdyLowManyCycleInstrALU8 {
+    [self testFile:@"RdyLowManyCycleInstrALU8.txt"];
 }
 
 @end

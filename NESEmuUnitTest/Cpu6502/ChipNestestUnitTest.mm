@@ -11,7 +11,6 @@
 #include <array>
 #include <fstream>
 #include <string>
-#include "Cpu6502/Chip.hpp"
 #include "Cpu6502FullAccess.hpp"
 
 
@@ -112,7 +111,7 @@ namespace {
     
     
     Bus bus;
-    Cpu6502FullAccess<Bus> cpu6502(bus);
+    Cpu6502FullAccess<Cpu6502::ConfigurationAccurate<Bus>> cpu6502(bus);
     
 }
 
