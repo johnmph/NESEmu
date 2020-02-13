@@ -12,7 +12,7 @@
 #include <cstdint>
 #include "Cpu6502/Chip.hpp"
 
-// TODO: rajouter des tests Visual2A03 (surtout pour le DMA)
+
 namespace NESEmu { namespace Cpu {
     
     enum class Model {
@@ -65,6 +65,8 @@ namespace NESEmu { namespace Cpu {
         // DMA
         bool checkDmaPhi1();
         bool checkDmaPhi2();
+        void startDma(uint8_t address);
+        void stopDma();
         
         // Internal
         TBus &_bus;

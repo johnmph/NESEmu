@@ -10,6 +10,8 @@
 #define Cpu6502_Internal_Chip_s_hpp
 
 // TODO: pour une meilleure emulation des opcodes (surtout les undocumented), peut etre faire comme le vrai cpu et decomposer l'opcode en lignes actives/non actives pour activer certains circuits (appeler certaines fonctions) : https://www.pagetable.com/?p=39
+// TODO: http://visual6502.org/wiki/index.php?title=6502_all_256_Opcodes
+// TODO: si on fait ca il faut avoir un tablaeau d'instructions courantes a executer avec un identifiant pour savoir si l'instruction depend d'un read (pour le rdy low qui peut continuer des alu operations)
 // TODO: enlever le flag helper et tout le bordel lié aux flags et n'avoir que les signaux séparés et une methode qui les regroupe et qui prend en parametre le bool Break car on les manipule bien plus souvent séparés que regroupé (seulement php, plp) : NON car plus lent : de 4.6sec ainsi a 5.4sec avec les signaux séparés !!!
 // TODO: tester les undocumented avec visual6502 (un seul mode d'adressage suffit, c'est pour voir si les etapes internes sont bonnes) : ok a finir
 
@@ -184,8 +186,8 @@ void Chip<TConfiguration>::clockPhi1() {
     // Initialize dataOutput to emulate possible bus conflict which cause a low level to win (it is like an AND operation)
     //_dataOutput = 0xFF;
     
-    // If rdy is low, wait before perform next read cycle TODO: j'ai mis sync en plus pour arreter sur le fetchOpcode
-    if ((_readyWaitRequested == false) || ((_readWrite != static_cast<bool>(ReadWrite::Read)) && (/*_sync == false*/true))) {
+    // If rdy is low, wait before perform next read cycle
+    if ((_readyWaitRequested == false) || (_readWrite != static_cast<bool>(ReadWrite::Read))) {
         // Execute current stage
         (this->*_currentInstruction)();
     }
@@ -243,7 +245,6 @@ void Chip<TConfiguration>::setOverflow(bool high) {
 
 template <class TConfiguration>
 uint16_t Chip<TConfiguration>::getAddressBus() const {
-    //return (_addressBusHigh << 8) | _addressBusLow; // TODO: _addressBus plutot (et avoir getAddressBusLow et getAddressBusHigh ?)
     return _addressBus;
 }
 
@@ -374,22 +375,11 @@ void Chip<TConfiguration>::fetchOpcode() {
     // Fetch opcode then decode opcode and execute instruction on the next cycle
     fetchOpcode(&Chip::decodeOpcodeAndExecuteInstruction);
 }
-/*
-template <class TConfiguration>
-void Chip<TConfiguration>::fetchOpcodeAfterRdyLow() {
-    // Set next instruction
-    _currentInstruction = &Chip::decodeOpcodeAndExecuteInstruction;
-    
-    // Read opcode located at the address saved in address registers
-    readDataBus(_addressBusLow, _addressBusHigh);
-}*/
 
 template <class TConfiguration>
 void Chip<TConfiguration>::decodeOpcodeAndExecuteInstruction() {
     // We need this because some instructions will perform actions in the decode step of the next instruction, so we need to let them perform actions even if RDY is low, but we can't decode next opcode because opcode is not ready for reading
     if (_readyWaitRequested == true) {
-        // We can't use fetchOpcode here because fetch was already performed on the previous cycle, just read the data which is ready for reading
-        //_currentInstruction = &Chip::fetchOpcodeAfterRdyLow;
         return;
     }
     
@@ -450,6 +440,11 @@ void Chip<TConfiguration>::checkSetOverflow() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::checkReady() {
+    // Next instruction is fetchOpcode but need to check if resetRequested is still true in case of reset in interrupt
+    /*if ((_readyWaitRequested == true) && (_readyLine == true) && (_resetRequested == true)) { // TODO : besoin de ca pour reussir le testNmiInDma mais ca doit cacher un bug de reset
+        _currentInstruction = &Chip::fetchOpcode;
+    }*/
+    
     // A ready wait is requested if the ready line is low
     _readyWaitRequested = (_readyLine == false);
 }
@@ -484,7 +479,7 @@ void Chip<TConfiguration>::reset(bool high) {
 template <class TConfiguration>
 template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type>
 void Chip<TConfiguration>::reset(bool high) {
-    // If line is low and reset is not alreay requested
+    // If line is low and reset is not already requested
     if ((high == false) && (_resetRequested == false)) {
         // Set reset requested and execute reset0 for the next instruction
         _currentInstruction = &Chip::reset0<ResetAccurate>;
@@ -581,13 +576,13 @@ void Chip<TConfiguration>::correctInterruptVectorIndexForReset() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::startStackOperation() {
-    //_addressBusLow = _stackPointer;
-    //_addressBusHigh = _stackPageNumber;
+    // Copy stack address in address bus registers
     readDataBus(_stackPointer, _stackPageNumber);
 }
 
 template <class TConfiguration>
 void Chip<TConfiguration>::stopStackOperation() {
+    // Save stack pointer
     _stackPointer = _addressBusLow;
 }
 
@@ -602,6 +597,7 @@ void Chip<TConfiguration>::pushToStack0(uint8_t data) {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::pushToStack1() {
+    // Save calculated address
     _addressBusLow = _alu.getAdderHold();
 }
 
@@ -613,6 +609,7 @@ void Chip<TConfiguration>::pullFromStack0() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::pullFromStack1() {
+    // Read in stack
     readDataBus(_alu.getAdderHold(), _addressBusHigh);
 }
 

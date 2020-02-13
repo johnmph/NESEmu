@@ -24,7 +24,7 @@ struct Constants<Model::Ricoh2A07> {
 
 
 template <Model EModel, class TBus>
-Chip<EModel, TBus>::Chip(TBus &bus) : _bus(bus), InternalCpu(*this), _dmaStarted(false), _dmaCount(0), _dmaToggle(false) {//TODO: dmaToggle dans reset plutot ?
+Chip<EModel, TBus>::Chip(TBus &bus) : _bus(bus), InternalCpu(*this), _dmaStarted(false) {
 }
 
 template <Model EModel, class TBus>
@@ -58,8 +58,8 @@ void Chip<EModel, TBus>::clockPhi1() {
     // Check for DMA
     bool needToForceExecute = checkDmaPhi1();
     
-    // If rdy is low, wait before perform next read cycle unless we force execute TODO: j'ai mis sync en plus pour arreter sur le fetchOpcode
-    if ((this->_readyWaitRequested == false) || ((this->_readWrite != static_cast<bool>(InternalCpu::ReadWrite::Read)) && (/*this->_sync == false*/true)) || (needToForceExecute == true)) {
+    // If rdy is low, wait before perform next read cycle unless we force execute
+    if ((this->_readyWaitRequested == false) || (this->_readWrite != static_cast<bool>(InternalCpu::ReadWrite::Read)) || (needToForceExecute == true)) {
         // Execute current stage
         (this->*(this->_currentInstruction))();
     }
@@ -96,6 +96,12 @@ void Chip<EModel, TBus>::clockPhi2() {
 
 template <Model EModel, class TBus>
 void Chip<EModel, TBus>::reset(bool high) {
+    // If reset
+    if (high == false) {
+        // Stop possible DMA
+        stopDma();
+    }
+    
     InternalCpu::reset(high);
 }
 
@@ -160,11 +166,7 @@ void Chip<EModel, TBus>::write(uint16_t address, uint8_t data) {
     }
     // DMA
     else if (address == 0x4014) {
-        // Start a DMA transfert (257 for 1 extra cycle + 256 read-write cycles)
-        _dmaAddress = data;
-        _dmaCount = 257;
-        _dmaStarted = true;
-        InternalCpu::ready(false);
+        startDma(data);
         
         return;
     }
@@ -197,15 +199,7 @@ bool Chip<EModel, TBus>::checkDmaPhi1() {
     
     // If DMA is completed
     if (_dmaCount == 0) {
-        // Restore CPU state
-        this->_readWrite = static_cast<bool>(InternalCpu::ReadWrite::Read);
-        this->_addressBus = (this->_addressBusHigh << 8) | this->_addressBusLow;
-        
-        // Reenable CPU
-        InternalCpu::ready(true);
-        
-        // Reset DMA flag
-        _dmaStarted = false;
+        stopDma();
         
         return false;
     }
@@ -232,7 +226,7 @@ bool Chip<EModel, TBus>::checkDmaPhi1() {
     // If DMA is in write phase
     else {
         // Write to PPU (only RW from 6502 is affected)
-        this->_readWrite = static_cast<bool>(InternalCpu::ReadWrite::Write);     // TODO: voir si un reset signal pendant le dma, si write devient read
+        this->_readWrite = static_cast<bool>(InternalCpu::ReadWrite::Write);
         this->_addressBus = 0x2004;
         
         // One byte copied
@@ -248,6 +242,35 @@ template <Model EModel, class TBus>
 bool Chip<EModel, TBus>::checkDmaPhi2() {
     // Need to write if DMA started and begin to read/write and in write mode
     return ((_dmaStarted == true) && (_dmaCount <= 256) && (this->_readWrite == static_cast<bool>(InternalCpu::ReadWrite::Write)));
+}
+
+template <Model EModel, class TBus>
+void Chip<EModel, TBus>::startDma(uint8_t address) {
+    // Set address
+    _dmaAddress = address;
+    
+    // 257 for 1 extra cycle + 256 read-write cycles
+    _dmaCount = 257;
+    
+    // Set DMA flags
+    _dmaToggle = false;
+    _dmaStarted = true;
+    
+    // Disable CPU
+    InternalCpu::ready(false);
+}
+
+template <Model EModel, class TBus>
+void Chip<EModel, TBus>::stopDma() {
+    // Restore CPU state
+    this->_readWrite = static_cast<bool>(InternalCpu::ReadWrite::Read);
+    this->_addressBus = (this->_addressBusHigh << 8) | this->_addressBusLow;
+    
+    // Reenable CPU
+    InternalCpu::ready(true);
+    
+    // Reset DMA flag
+    _dmaStarted = false;
 }
 
 #endif /* NESEmu_Cpu_s_hpp */

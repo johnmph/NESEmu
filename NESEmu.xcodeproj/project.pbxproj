@@ -73,6 +73,8 @@
 		4D98080023C5161A007D1953 /* Memory_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Memory_s.hpp; sourceTree = "<group>"; };
 		4D98080123C5163C007D1953 /* Register_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Register_s.hpp; sourceTree = "<group>"; };
 		4D98080223C51651007D1953 /* Stack_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Stack_s.hpp; sourceTree = "<group>"; };
+		4DD7178E23F3814600005D8C /* Cartridge.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cartridge.hpp; sourceTree = "<group>"; };
+		4DD7178F23F3815900005D8C /* Controller.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Controller.hpp; sourceTree = "<group>"; };
 		4DE643F123BAE2EC00CFFE4E /* NESEmu */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = NESEmu; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DE643F423BAE2EC00CFFE4E /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		4DE643FB23BAE5CE00CFFE4E /* Chip.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Chip.hpp; sourceTree = "<group>"; };
@@ -172,6 +174,8 @@
 				4D6B9C2023D92D25000889C3 /* Cpu_s.hpp */,
 				4D6B9C1C23D6AC08000889C3 /* Ppu.hpp */,
 				4D6B9C1E23D92987000889C3 /* Ppu_s.hpp */,
+				4DD7178E23F3814600005D8C /* Cartridge.hpp */,
+				4DD7178F23F3815900005D8C /* Controller.hpp */,
 				4D6B9C1A23D69424000889C3 /* Nes.hpp */,
 				4D6B9C1B23D69622000889C3 /* Nes_s.hpp */,
 			);

@@ -243,7 +243,6 @@ bool AttributeReadyLine<TCpu6502>::check(TCpu6502 &cpu6502) {
     return cpu6502.getReadyLine() == _readyLine;
 }
 
-
 template <class TCpu6502>
 template <class TFunction>
 Analyzer<TCpu6502>::Analyzer(std::istream &istream, TFunction &&writeFunction) : _istream(istream) {
@@ -639,6 +638,5 @@ std::vector<std::string> Analyzer<TCpu6502>::decodeResults(std::string resultsSt
     
     return results;
 }
-
 
 #endif /* Visual6502_s_hpp */

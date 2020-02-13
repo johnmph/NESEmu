@@ -92,4 +92,20 @@ namespace {
     [self testFile:@"DmaWithASO.txt"];
 }
 
+- (void)testEarlyNmiOnDma {
+    [self testFile:@"EarlyNmiOnDma.txt"];   // TODO: ajouté don't check pour db pendant les phi1 des push stack du nmi car le db devrait etre ea ???
+}
+
+- (void)testLateNmiOnDma {
+    [self testFile:@"LateNmiOnDma.txt"];    // TODO: ajouté don't check pour db pendant les phi1 des push stack du nmi car le db devrait etre ea ???
+}
+
+- (void)testNmiInDma {
+    [self testFile:@"NmiInDma.txt"];    // TODO: ajouté don't check pour db pendant les phi1 des push stack du nmi car le db devrait etre ea ???
+}
+
+- (void)testResetInDma {
+    [self testFile:@"ResetInDma.txt"];    // TODO: ajouté don't check pour db pendant les phi1 des push stack du nmi car le db devrait etre ea ???
+}
+
 @end

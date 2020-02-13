@@ -28,6 +28,8 @@ namespace NESEmu { namespace Ppu {
         
         Chip(TBus &bus, TInterruptHardware &interruptHardware, TGraphicHardware &graphicHardware);
         
+        void powerUp();
+        
         void clock();
         
         void reset(bool high);
@@ -66,8 +68,16 @@ namespace NESEmu { namespace Ppu {
         
         void incrementPositionCounters();
         
-        void fetchTilesData();
-        void evaluateSprites();
+        void fetchTilesData(uint8_t dataType);
+        void processSprites(uint8_t dataType);
+        void clearSecondaryOAM();
+        void evaluateSprites(uint8_t dataType);
+        void updateShiftRegisters(uint8_t dataType);
+        
+        uint8_t calculatePixel();
+        uint8_t calculateBgPixel();
+        
+        uint8_t getColorFromPalette(uint8_t index);
         
         void incrementXOnAddress();
         void incrementYOnAddress();
@@ -128,15 +138,23 @@ namespace NESEmu { namespace Ppu {
         
         uint8_t _ntByte;
         uint8_t _atByte;
-        uint8_t _lowBGTileByte;
-        uint8_t _highBGTileByte;
+        uint8_t _lowTileByte;
+        uint8_t _highTileByte;
         
-        uint16_t _lowBGTileShiftRegister;
-        uint16_t _highBGTileShiftRegister;
+        uint16_t _bgLowTileShiftRegister;
+        uint16_t _bgHighTileShiftRegister;
+        uint8_t _bgLowAttributeShiftRegister;
+        uint8_t _bgHighAttributeShiftRegister;
+        bool _bgLowAttributeLatch;   // TODO : voir si bool ou uint8_t pour l'optimisation
+        bool _bgHighAttributeLatch;
         
-        //uint8_t _ // 2 shift register de 8 bits pour les attributes, a voir
+        uint8_t _spLowTileShiftRegisters[8];
+        uint8_t _spHighTileShiftRegisters[8];
+        uint8_t _spAttributeLatches[8]; // TODO: pq pas low and high comme tile ?
+        uint8_t _spXPositionCounters[8];
         
         uint8_t _clearSecondOAMReadOverwrite;
+        uint8_t _secondOamAddress;
         
         // Dynamic latch due to capacitance of very long traces of data bus that run to various parts of the PPU
         // See https://wiki.nesdev.com/w/index.php/PPU_registers
