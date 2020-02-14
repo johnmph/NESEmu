@@ -54,24 +54,33 @@ namespace NESEmu { namespace Ppu {
         static constexpr int totalPixelsPerScanlineCount = Constants::visiblePixelsPerScanlineCount + Constants::hBlankLengthInPixel;
         static constexpr int totalScanlinePerFrameCount = Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline + Constants::vBlankLengthInScanline;
         
-        struct ObjectAttribute {    // TODO: voir si besoin
+        struct ObjectAttribute {    // TODO: voir si besoin, peut etre plutot un enum avec des indexs?
             uint8_t yPosition;
             uint8_t tileIndex;
             uint8_t attributes;
             uint8_t xPosition;
         };
         
-        void processVisibleFrameLine();
+        bool isInRenderScanline() const;
+        bool isInPostRenderScanline() const;
+        bool isInVBlankScanline() const;
+        bool isInPreRenderScanline() const;
+        bool isRenderingEnabled() const;
+        bool isInRenderingPeriod() const;
+        bool isInSecondOamClearPeriod() const;
+        
+        void incrementPositionCounters();
+        
+        void processLine();
+        void processRenderLine();
         void processPostRenderLine();
         void processVBlankLine();
         void processPreRenderLine();
         
-        void incrementPositionCounters();
-        
         void fetchTilesData(uint8_t dataType);
-        void processSprites(uint8_t dataType);
-        void clearSecondaryOAM();
-        void evaluateSprites(uint8_t dataType);
+        void processSprites();
+        void clearSecondOAM();
+        void evaluateSprites();
         void updateShiftRegisters(uint8_t dataType);
         
         uint8_t calculatePixel();
@@ -82,9 +91,10 @@ namespace NESEmu { namespace Ppu {
         void incrementXOnAddress();
         void incrementYOnAddress();
         
-        void checkInterrupt();
+        void readObjectAttributeMemory();
+        void writeObjectAttributeMemory(uint8_t data);
         
-        bool isRenderingEnabled() const;
+        void checkInterrupt();
         
         // OAM (64 x 4 bytes of sprites informations)
         //std::vector<ObjectAttribute> _objectAttributeMemory;
@@ -104,7 +114,8 @@ namespace NESEmu { namespace Ppu {
         uint8_t _controlAddressIncrementPerCpuAccess;       // TODO: par apres reorganiser les variables pour l'alignement
         uint16_t _controlSpritePatternTableAddress;
         uint16_t _controlBackgroundPatternTableAddress;
-        bool _controlSpriteSize8x16px;
+        //bool _controlSpriteSize8x16px;
+        uint8_t _controlSpriteSize;
         bool _controlMasterSlaveSelect;
         bool _controlGenerateNmiForVBlank;
         
@@ -126,8 +137,8 @@ namespace NESEmu { namespace Ppu {
         TInterruptHardware &_interruptHardware;
         TGraphicHardware &_graphicHardware;
         
-        int _currentPixel;
-        int _currentScanline;
+        unsigned int _currentPixel;
+        unsigned int _currentScanline;
         bool _oddFrame;
         
         uint16_t _temporaryAddress;
@@ -153,8 +164,16 @@ namespace NESEmu { namespace Ppu {
         uint8_t _spAttributeLatches[8]; // TODO: pq pas low and high comme tile ?
         uint8_t _spXPositionCounters[8];
         
-        uint8_t _clearSecondOAMReadOverwrite;
+        // OAM
+        uint8_t _oamData;
         uint8_t _secondOamAddress;
+        uint8_t _oamAddressIncrement;
+        uint8_t _spriteEvaluationCopyByteCount;
+        bool _oamAddressOverflow;
+        bool _secondOamAddressOverflow;
+        bool _incrementOamAddress;
+        bool _incrementSecondOamAddress;
+        bool _sprite0InSecondOam;
         
         // Dynamic latch due to capacitance of very long traces of data bus that run to various parts of the PPU
         // See https://wiki.nesdev.com/w/index.php/PPU_registers
