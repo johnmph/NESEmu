@@ -79,8 +79,10 @@ namespace NESEmu { namespace Ppu {
         
         void fetchTilesData(uint8_t dataType);
         void processSprites();
-        void clearSecondOAM();
-        void evaluateSprites();
+        void startClearSecondOAM();
+        void startEvaluateSprites();
+        void processClearSecondOAMAndEvaluateSprites();
+        
         void updateShiftRegisters(uint8_t dataType);
         
         uint8_t calculatePixel();
@@ -97,7 +99,6 @@ namespace NESEmu { namespace Ppu {
         void checkInterrupt();
         
         // OAM (64 x 4 bytes of sprites informations)
-        //std::vector<ObjectAttribute> _objectAttributeMemory;
         std::vector<uint8_t> _objectAttributeMemory;
         
         // Second OAM (8 x 4 bytes of sprites informations)
