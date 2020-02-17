@@ -67,31 +67,44 @@ namespace NESEmu { namespace Ppu {
         bool isInPreRenderScanline() const;
         bool isRenderingEnabled() const;
         bool isInRenderingPeriod() const;
-        bool isInSecondOamClearPeriod() const;
-        
-        void incrementPositionCounters();
+        bool isInSecondOAMClearPeriod() const;
         
         void processLine();
+        void updateState();
+        
         void processRenderLine();
         void processPostRenderLine();
         void processVBlankLine();
         void processPreRenderLine();
         
-        void fetchTilesData(uint8_t dataType);
-        void processSprites();
-        void startClearSecondOAM();
-        void startEvaluateSprites();
-        void processClearSecondOAMAndEvaluateSprites();
+        void processTiles(uint8_t dataType);
+        void processSprites(uint8_t dataType);
         
-        void updateShiftRegisters(uint8_t dataType);
+        void fetchTiles(uint8_t dataType);
+        void updateTileShiftRegisters(uint8_t dataType);
+        
+        void startClearSecondOAM();
+        void clearSecondOAM();
+        void startEvaluateSprites();
+        void evaluateSprites();
+        void clearSecondOAMAndEvaluateSprites();
+        void startFetchSprites();
+        void fetchSprites(uint8_t dataType);
+        void updateSpriteShiftRegisters(uint8_t dataType);
+        
+        void incrementXOnAddress();
+        void incrementYOnAddress();
+        
+        void incrementOAMAddress();
+        void resetSecondOAMAddress();
+        void incrementSecondOAMAddress();
+        
+        void incrementPositionCounters();
         
         uint8_t calculatePixel();
         uint8_t calculateBgPixel();
         
         uint8_t getColorFromPalette(uint8_t index);
-        
-        void incrementXOnAddress();
-        void incrementYOnAddress();
         
         void readObjectAttributeMemory();
         void writeObjectAttributeMemory(uint8_t data);
@@ -167,14 +180,14 @@ namespace NESEmu { namespace Ppu {
         
         // OAM
         uint8_t _oamData;
-        uint8_t _secondOamAddress;
+        uint8_t _secondOAMAddress;
         uint8_t _oamAddressIncrement;
         uint8_t _spriteEvaluationCopyByteCount;
         bool _oamAddressOverflow;
-        bool _secondOamAddressOverflow;
-        bool _incrementOamAddress;
-        bool _incrementSecondOamAddress;
-        bool _sprite0InSecondOam;
+        bool _secondOAMAddressOverflow;
+        bool _needIncrementOAMAddress;
+        bool _needIncrementSecondOAMAddress;
+        bool _sprite0InSecondOAM;
         
         // Dynamic latch due to capacitance of very long traces of data bus that run to various parts of the PPU
         // See https://wiki.nesdev.com/w/index.php/PPU_registers

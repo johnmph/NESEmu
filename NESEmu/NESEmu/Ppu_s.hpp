@@ -44,8 +44,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clock() {
     // Process line
     processLine();
     
-    // Increment position counters
-    incrementPositionCounters();    // TODO: par apres il est possible de faire une petite optimisation car dedans il recheck la position du scanline courant pour voir si on a fini une frame, mais on fait deja des checks ici et on peut etre sur que si on est pas dans la pre-render line qu'on a pas fini la frame
+    // Update state
+    updateState();
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -160,7 +160,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::write(uint16_t ad
     // OAM data register
     else if (address == 0x0004) {
         // Can only be written during VBlank, see https://wiki.nesdev.com/w/index.php/PPU_registers
-        if ((isRenderingEnabled() == true) && (_currentScanline < (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline))) {
+        /*if ((isRenderingEnabled() == true) && (_currentScanline < (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline))) {
             // TODO: normalement ca fait des incrementations bizarres de oamAddress : voir les tests que j'ai fait avec Visual2C02, apparemment on écrit FF (a la place de data) a l'adresse _oamAddress si l'écriture s'est fait pendant un pixel pair (et si avant cycle 7 ou 6? mais ici un cycle PPU = 1 pixel tandis que le cycle en question est un 1/8 de cycle PPU) et on incrémente _oamAddress de 4 sauf si le cycle d'incrémentation tombe pendant les 2 1ers cycles (1/8 de cycle PPU) d'écriture IO car le second oam clear desactive l'incrementation de oamAddress
             // TODO: si pendant le sprite evaluation, si l'écriture se fait pendant la lecture du Y byte et que l'évaluation incrémente de 4 car le sprite n'est pas dans le scanline, ca incrementera 2x de 4 donc de 8, et si le sprite est pris, on incremente de 2x 1 donc de 2 (c'est comme s'il y a un signal qui choisit si on incremente de 1 ou de 4 l'adresse et qu'ici c'est le signal d'incrémentation : peut etre que c'est pour ca qu'on incremente pas tjs dans le second oam clear, peut etre qu'il reset le signal d'incrementation qui etait setté ici ?
             // TODO: il y a des fois aussi dans le sprite evaluation ou l'écriture qui etait censée se faire dans le second OAM se fait dans le OAM normal, il écrit donc la valeur lue juste avant (_oamData et pas data d'ici)
@@ -170,13 +170,13 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::write(uint16_t ad
             // TODO: le meilleur moyen d'emuler ca est de retirer ce if, de laisser writeObjectAttributeMemory gérer l'écriture du FF (mais faire attention car en sprite evaluation ca n'ecrit pas) et avoir une methode pour incrementer oamAddress a la place de ++_oamAddress qui gérera l'incrementation par 1 ou par 4 : NON car ca ecrit aussi en sprite evaluation et il faut faire attention au pixel pair
             // TODO: le meilleur moyen d'émuler ca et d'emuler les io en general c'est d'avoir les io qui sont actifs pour 3 cycles PPU ! car un cycle CPU qui lance un io prend 3 cycles PPU, il faudrait donc avoir dans les io des variables qui sont settées : io_ce qui vaut 3, et dès qu'on est dans le clock ici on regarde si io_ce > 0 et si oui on fait les operations io le temps que io_ce > 0 puis a la fin du clock if (io_ce > 0) --io_ce; (pendant le 1er cycle ca ne fait rien apparemment car dans visual2C02 io_ce est tjs a 1, puis il passe a 0 apres 8 cycles visual, donc 1 cycle PPU et il reste ainsi pour 15 cycles visual et le dernier cycle visual il repasse a 1)
             return;
-        }
+        }*/
         
         // Write data to OAM
         writeObjectAttributeMemory(data);
         
         // Increment OAM address
-        ++_oamAddress;// TODO: normalement incrementOamAddress(); mais voir quand reseter _oamAddressIncrement (le mettre a 1)
+        _needIncrementOAMAddress = true;// TODO: normalement incrementOamAddress(); mais voir quand reseter _oamAddressIncrement (le mettre a 1)
     }
     // Scroll register
     else if (address == 0x0005) {
@@ -270,7 +270,7 @@ bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInRenderingPeri
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInSecondOamClearPeriod() const {
+bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInSecondOAMClearPeriod() const {
     // TODO: retourne true si on est dans la periode mais pas obligé la phase (car on est dans la période si on est aussi dans le pre-render mais ca ne le fait pas, ca retourne juste les FF)
     // TODO: normalement entre le pixel 1 et 65 (voir si pixel 0 quand meme ou non)
     // TODO: seulement quand le rendering est activé
@@ -278,33 +278,6 @@ bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInSecondOamClea
     // TODO: on peut combiner les 2 regles ci-dessus pour avoir : isInRenderingPeriod()
     // To be in second OAM clear period, it must be in rendering period and current pixel must be between 1 and 64 (pixel 0 is already skipped on the clock method)
     return (isInRenderingPeriod() == true) && (_currentPixel <= 64);    // TODO: par apres, uniformiser les tests <= ou < et mettre 64 en constants
-}
-
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementPositionCounters() {
-    // Increment pixel counter
-    ++_currentPixel;
-    
-    // Check boundary of pixel counter
-    if (_currentPixel < (Constants::visiblePixelsPerScanlineCount + Constants::hBlankLengthInPixel)) {
-        return;
-    }
-    
-    // Start a new line, reset pixel counter and increment scanline counter
-    _currentPixel = 0;
-    ++_currentScanline;
-    
-    // Check boundary of scanline counter
-    if (_currentScanline < (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline + Constants::vBlankLengthInScanline + 1)) { //TODO: changer 1 par des constants de Constants::
-        return;
-    }
-    
-    // Start a new frame, reset scanline counter and toggle even/odd frame
-    _currentScanline = 0;
-    _oddFrame = !_oddFrame;
-    
-    // If start a new odd frame, skip first cycle
-    _currentPixel += (_oddFrame & isRenderingEnabled());     // TODO: voir si c bon
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -333,6 +306,32 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processLine() {//
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateState() {
+    // TODO: voir pour les IO aussi ici (ou dans une autre methode updateIO())
+    
+    // Increment OAM address if necessary
+    if (_needIncrementOAMAddress == true) {     // TODO: voir si laisser ici ou mettre ca dans le clock (vu qu'il est appelée par rapport au signal actif, pareil pour celui du bas (second OAM address)
+        incrementOAMAddress();
+    }
+    
+    // Increment second OAM address if necessary
+    if (_needIncrementSecondOAMAddress == true) {
+        incrementSecondOAMAddress();
+    }
+    
+    // TODO: surement dans une methode a part, avec gestion des overflows qui mettent un signal a true car ici j'en aurai besoin : ATTENTION: quand incrementation par 4, ca doit etre aligné !! (
+    
+    // TODO: 2a. If n has overflowed back to zero (all 64 sprites evaluated), go to 4 : Mais dans le cas ou oamAddress ne valait pas 0 au début, que se passe t'il ? a simuler avec visual2C02 : ca n'incremente plus second oam address et ca incremente oam address de 4 (de facon alignée) et il ne fait plus de write second OAM meme s'il y a un Y byte valid : OK géré avec le code ainsi
+    
+    // TODO: attention : quand on incremente de 4, on doit etre aligné sur une adresse de 4, donc si par exemple l'addr est a 5, apres l'incrementation de 4 il sera a 8 et non a 9, faire _oamAddress = (_oamAddress & ~0x3) + 4; // Si incrementation == 4
+    
+    // TODO: dans l'incrémentation : si incrementation de 4 et que l'adresse n'est pas alignée on l'aligne avant et on fait l'incrementation SI _statusSpriteOverflow == false, sinon on ne fait l'incrementation de 4 que si l'adresse etait alignée
+    
+    // Increment position counters
+    incrementPositionCounters();    // TODO: par apres il est possible de faire une petite optimisation car dedans il recheck la position du scanline courant pour voir si on a fini une frame, mais on fait deja des checks ici et on peut etre sur que si on est pas dans la pre-render line qu'on a pas fini la frame
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processRenderLine() {
     uint8_t pixelIndexedColor;
     
@@ -341,32 +340,14 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processRenderLine
         // Complete tile data is 8 cycles
         uint8_t dataType = _currentPixel & 0x7;
         
-        // Fetch tiles data
-        fetchTilesData(dataType);
+        // Process tiles
+        processTiles(dataType);
         
         // Process sprites
-        processSprites();
+        processSprites(dataType);
         
         // Calculate pixel
         pixelIndexedColor = calculatePixel();
-        
-        // Update shift registers
-        updateShiftRegisters(dataType);
-        
-        // Check for X address increment
-        if ((dataType == 0x0) && ((_currentPixel <= Constants::visiblePixelsPerScanlineCount) || (_currentPixel >= 328))) {//TODO: changer 328 par des constants de Constants::
-            incrementXOnAddress();
-        }
-        
-        // Check for Y address increment
-        if (_currentPixel == Constants::visiblePixelsPerScanlineCount) {
-            incrementYOnAddress();
-        }
-        
-        // Check for X address copy
-        if (_currentPixel == (Constants::visiblePixelsPerScanlineCount + 1)) {
-            _address = (_address & 0x7BE0) | (_temporaryAddress & 0x41F);
-        }
     } else {
         // Rendering disabled, use background color
         pixelIndexedColor = 0;
@@ -406,8 +387,14 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPreRenderL
     
     // Only VRAM access if rendering is enabled
     if (isRenderingEnabled() == true) {
-        // Fetch tiles / sprites data
-        fetchTilesData(_currentPixel & 0x7);
+        // Complete tile data is 8 cycles
+        uint8_t dataType = _currentPixel & 0x7;
+        
+        // Process tiles
+        processTiles(dataType);
+        
+        // Process sprites
+        processSprites(dataType);
         
         // Check for Y address copy
         if ((_currentPixel >= 280) && (_currentPixel <= 304)) { // TODO: changer 280 et 304 par des constants de Constants::
@@ -417,7 +404,77 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPreRenderL
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchTilesData(uint8_t dataType) {
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processTiles(uint8_t dataType) {
+    // Exit if we are no more in process tiles period (but check for X address copy before)
+    if ((_currentPixel > Constants::visiblePixelsPerScanlineCount) && (_currentPixel <= 320)) {
+        // Check for X address copy
+        if (_currentPixel == (Constants::visiblePixelsPerScanlineCount + 1)) {
+            _address = (_address & 0x7BE0) | (_temporaryAddress & 0x41F);
+        }
+        
+        return;
+    }
+    
+    // Fetch tiles
+    fetchTiles(dataType);
+    
+    // Update tile shift registers
+    updateTileShiftRegisters(dataType);
+    
+    // Check for X address increment
+    if (dataType == 0x0) {
+        incrementXOnAddress();
+    }
+    
+    // Check for Y address increment
+    if (_currentPixel == Constants::visiblePixelsPerScanlineCount) {
+        incrementYOnAddress();
+    }
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processSprites(uint8_t dataType) {
+    // Exit if we are no more in process sprites period
+    if (_currentPixel > 320) {// TODO: remplacer 320 par des constants de Constants:: // TODO: voir si compilateur optimise en ne faisant pas l'appel de la methode si on a cette condition (comme s'il sortait ce if a l'exterieur de cette methode, a l'endroit ou on appelle cette methode
+        return;
+    }
+    
+    // If we start second OAM clear period
+    if (_currentPixel == 1) {
+        startClearSecondOAM();
+    }
+    
+    // If we are in second OAM clear period
+    if (_currentPixel < (64 + 1)) {   //TODO: changer 64 par des constants de Constants:: TODO: pareil qu'au dessus, voir si desactiver le rendu pendant ceci va stopper le second OAM
+        clearSecondOAM();
+        return;
+    }
+    
+    // If we start sprite evaluation period
+    if (_currentPixel == (64 + 1)) {
+        startEvaluateSprites();
+    }
+    
+    // If we are in sprite evaluation period
+    if (_currentPixel < (Constants::visiblePixelsPerScanlineCount + 1)) {   // TODO: pareil qu'au dessus
+        evaluateSprites();
+        return;
+    }
+    
+    // If we start sprite fetch period
+    if (_currentPixel == (Constants::visiblePixelsPerScanlineCount + 1)) {
+        startFetchSprites();
+    }
+    
+    // We are in sprite fetch period
+    fetchSprites(dataType);
+    
+    // Update sprite shift registers
+    updateSpriteShiftRegisters(dataType);
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchTiles(uint8_t dataType) {
     // Nametable set address
     if (dataType == 0x1) {
         _addressBus = 0x2000 | (_address & 0x0FFF);
@@ -455,193 +512,10 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchTilesData(ui
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processSprites() {
-    // Exit if we are no more in process sprites phase (Nothing for the remaining cycles, sprite data fetch is the same than tile data fetch)
-    if (_currentPixel > 320) {// TODO: remplacer 320 par des constants de Constants:: // TODO: voir si compilateur optimise en ne faisant pas l'appel de la methode si on a cette condition (comme s'il sortait ce if a l'exterieur de cette methode, a l'endroit ou on appelle cette methode
-        return;
-    }
-    
-    // If we are in second OAM clear phase
-    if (_currentPixel < (64 + 1)) {   //TODO: changer 64 par des constants de Constants:: TODO: pareil qu'au dessus, voir si desactiver le rendu pendant ceci va stopper le second OAM
-        clearSecondOAM();
-        return;
-    }
-    
-    // If we are in sprite evaluation phase
-    if (_currentPixel < (Constants::visiblePixelsPerScanlineCount + 1)) {   // TODO: pareil qu'au dessus
-        evaluateSprites();
-        return;
-    }
-    
-    // OAMADDR is set to 0 during each of ticks 257-320 (the sprite tile loading interval) of the pre-render and visible scanlines
-    _oamAddress = 0;  // TODO: tester si vrai dans visual2C02 : OUI meme si on ecrit $2003, il prend la valeur puis repasse a 0 ! jusque 320 puis il ne change plus sa valeur donc exactement ainsi (si rendu activé) : Comme ca le fait dans le sprite fetch complet, le deplacer dans cette methode
-}
-
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::startClearSecondOAM() {
-    // We use the same code than evaluate sprites to clear OAM, simply do a 32 bytes copy (oamAddress doesn't change and read to OAM returns $FF in this period)
-    _spriteEvaluationCopyByteCount = 32;
-    
-    // Reset oam address overflow
-    _oamAddressOverflow = false;    // TODO: voir si juste le cycle du start ou a chaque cycle
-    
-    // Don't reset neither increment oamAddr (keep its value all the clear second OAM period)
-    _incrementOamAddress = false;
-    
-    // Normally it happen on pixel 0 and not 1 but due to the even/odd pixel 0 jump, it is put here
-    // Reset secondOamAddress
-    resetSecondOamAddress();
-}
-
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::startEvaluateSprites() {
-    // Only increment OAM address if we are in render scanline and don't reset it
-    _incrementOamAddress = (isInRenderScanline() == true);
-    
-    // Reset secondOamAddress
-    resetSecondOamAddress();
-}
-
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::startFetchSpritesData() {
-    // TODO: voir pour le reste quand analyse du sprite fetch (il y a aussi le reset de l'oamAddress mais ca doit le faire a tous les cycles du fetch pas seulement au start !!
-    
-    // TODO: voir pour _incrementOamAddress (0 ici mais voir si a tous les cycles ou juste ici-
-    
-    // Reset secondOamAddress
-    resetSecondOamAddress();
-}
-
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::resetSecondOamAddress() {
-    // Reset secondOAMAddr (because it can be overflow and it can be lower than 0x1F, no matter its value, it is reset to 0)
-    _secondOamAddressOverflow = false;
-    _secondOamAddress = 0;
-}
-
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processClearSecondOAMAndEvaluateSprites() {
-    // TODO : Because OAM is implemented with dynamic RAM instead of static RAM, the data stored in OAM memory will quickly begin to decay into random bits if it is not being refreshed. The OAM memory is refreshed once per scanline while rendering is enabled (if either the sprite or background bit is enabled via the register at $2001), but on an NTSC PPU this refresh is prevented whenever rendering is disabled.
-    // TODO: quand et comment fait il ca ? 256 read suivi de write ? de 1 a 256 (inclus) ??
-    
-    // Read cycle
-    if (_currentPixel & 0x1) {
-        // Read OAM at current OAM address
-        if (isInRenderScanline() == true) {
-            readObjectAttributeMemory();
-        } else {
-            // Read from second OAM
-            _oamData = _secondObjectAttributeMemory[_secondOamAddress];
-        }
-        
-        return;
-    }
-    
-    // Write cycle
-    // If Y byte (We can't rely on _currentPixel because there is not in sync with the copy/no copy pattern of evaluation, we can't rely on _oamAddress because it can be misaligned due to a previous write to $2003 and we can't rely on _secondOamAddress because once it has been overflow, it stays to 0 but we need to perform the "copy" 4 bytes of the ninth sprite)
-    if (_spriteEvaluationCopyByteCount == 0) {  // TODO: voir quand le reseter a 0 : normalement pas besoin car mis a 32 en debut de clear sprite
-        // Check if Y is in scanline range and not in sprite overflow (if ninth sprite has been found, it only increment _oamAddress by 4 until it enters in hblank, same behaviour if oamAdddress has overflow (in case of oamAddress != 0 at the beginning of the evaluation))
-        if (((_currentScanline - _oamData) < _controlSpriteSize) && (_statusSpriteOverflow == false) && (_oamAddressOverflow == false)) {   // TODO: voir si ok car les types sont unsigned, normalement ok
-            // Check for sprite 0 in range (pixel 66 = 'sprite 0' write cycle)
-            if (_currentPixel == 66) {
-                _sprite0InSecondOam = true; // TODO: voir pour le remettre a 0
-            }
-            
-            // Check for sprite overflow
-            if (_secondOamAddressOverflow == true) {    // TODO: il y a un bug dans le 2C02 qui incremente oamAddress de 5 si Y n'est pas dans le range, voir si ca incremente aussi secondOam de 1 !!! : non secondOam ne bouge pas et si le byte checké apres est dans le range ca incremente de 1 et une fois tout lu, oamAddress n'incremente pas la derniere fois (pour garder la valeur alignée avec 4) pour etre plus précis il aligne la valeur incrémentée avec 4 et ne fait pas l'incrémentation de 4 apres. -> Ensuite il incremente de 4 a chaque fois (que le byte soit dans le range ou non)
-                // TODO: si le byte checké par après n'est pas dans le range, ca réincremente de 5 !!!
-                _statusSpriteOverflow = true;
-            }
-            
-            // Need to copy sprite bytes, so increment _oamAddress by 1 and increment also _secondOamAddress by 1
-            _spriteEvaluationCopyByteCount = 4;
-            _oamAddressIncrement = 1;
-            _incrementSecondOamAddress = true;
-        } else {
-            // Need to go to next sprite, so increment _oamAddress by 4 and don't increment _secondOamAddress
-            // There is a bug in 2C02 that increment by 4 + by 1 (so by 5) _oamAddress when _secondOamAddress has overflow and while the fetched Y byte is not in range, once one fetched Y byte is in range, it set the status sprite overflow and the increment goes to 1 then 4 once all 3 other bytes of the ninth sprite are "copied"
-            _spriteEvaluationCopyByteCount = 1;
-            _oamAddressIncrement = ((_secondOamAddressOverflow == false) || (_statusSpriteOverflow == true)) ? 4 : 5;
-            //_oamAddressIncrement = 4 + ((_secondOamAddressOverflow == true) && (_statusSpriteOverflow == false)); // TODO: voir la meilleure ecriture
-            _incrementSecondOamAddress = false;
-        }
-    } else {
-        _incrementSecondOamAddress = true;
-    }
-    
-    // If none of the OAM address overflow
-    if ((isInRenderScanline() == true) && (_oamAddressOverflow == false) && (_secondOamAddressOverflow == false)) {
-        // Copy other byte to second OAM
-        // In OAM, attributes bytes are AND with $E3 because bits 2, 3 and 4 are unused, but in second OAM there is no AND on these bytes so if we have oamAddress misaligned (by a write of an unaligned with 4 value to $0003 on the second OAM clear by example), the attributes bytes in second OAM could have bits 2, 3 or 4 to 1.
-        _secondObjectAttributeMemory[_secondOamAddress] = _oamData;
-    } else {
-        // Read from second OAM
-        _oamData = _secondObjectAttributeMemory[_secondOamAddress]; // TODO: voir si ainsi, voir si ca incremente apres secondOamAddress, oamAddress, .. : secondOamAddress n'est plus incrementé une fois overflow, il reste a 0, oamAddress se comporte comme s'il evaluait tjs (de 1 si sprite Y ok, de 4 aligné si sprite Y non ok -> seulement pour le 9eme sprite, puis tjs de 4)
-    }
-    
-    // One byte copied (or read)
-    --_spriteEvaluationCopyByteCount;
-    
-    // Increment OAM address if necessary
-    if (_incrementOamAddress == true) {     // TODO: voir si laisser ici ou mettre ca dans le clock (vu qu'il est appelée par rapport au signal actif, pareil pour celui du bas (second OAM address)
-        incrementOamAddress();
-    }
-    
-    // Increment second OAM address if necessary
-    if (_incrementSecondOamAddress == true) {
-        incrementSecondOamAddress();
-    }
-    
-    // TODO: surement dans une methode a part, avec gestion des overflows qui mettent un signal a true car ici j'en aurai besoin : ATTENTION: quand incrementation par 4, ca doit etre aligné !! (
-    
-    // TODO: 2a. If n has overflowed back to zero (all 64 sprites evaluated), go to 4 : Mais dans le cas ou oamAddress ne valait pas 0 au début, que se passe t'il ? a simuler avec visual2C02 : ca n'incremente plus second oam address et ca incremente oam address de 4 (de facon alignée) et il ne fait plus de write second OAM meme s'il y a un Y byte valid : OK géré avec le code ainsi
-    
-    // TODO: attention : quand on incremente de 4, on doit etre aligné sur une adresse de 4, donc si par exemple l'addr est a 5, apres l'incrementation de 4 il sera a 8 et non a 9, faire _oamAddress = (_oamAddress & ~0x3) + 4; // Si incrementation == 4
-    
-    // TODO: dans l'incrémentation : si incrementation de 4 et que l'adresse n'est pas alignée on l'aligne avant et on fait l'incrementation SI _statusSpriteOverflow == false, sinon on ne fait l'incrementation de 4 que si l'adresse etait alignée
-}
-
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementOamAddress() {
-    // Continue to increment even if overflow
-    
-    // Increment
-    _oamAddress += _oamAddressIncrement;
-    
-    // Check overflow (_oamAddress is uint8_t so it returns to its value - 255 after 255)
-    if (_oamAddress < _oamAddressIncrement) {
-        // Set overflow flag
-        _oamAddressOverflow = true; // TODO: quand remettre ca a false ??
-    }
-    
-    // Align if necessary
-    if (_oamAddressIncrement == 4) {
-        _oamAddress &= ~0x3;
-    }
-}
-
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementSecondOamAddress() {
-    // Don't increment if overflow
-    if (_secondOamAddressOverflow == true) {
-        return;
-    }
-    
-    // Increment
-    ++_secondOamAddress;
-    
-    // Check overflow
-    if (_secondOamAddress > 0x1F) {
-        // Reset address and set overflow flag
-        _secondOamAddress = 0;
-        _secondOamAddressOverflow = true; // TODO: quand remettre ca a false ??
-    }
-}
-
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateShiftRegisters(uint8_t dataType) {
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateTileShiftRegisters(uint8_t dataType) {
     // TODO: voir car dans le png de timing ils disent qu'on charge le low byte et dans le wiki ils disent qu'on charge le high byte dans les shifts
     // Check for shifting registers
+    // TODO: surement remplacer ce if par un dataType != 1 et 0
     if (((_currentPixel >= 2) && (_currentPixel <= (Constants::visiblePixelsPerScanlineCount + 1))) || ((_currentPixel >= 322) && (_currentPixel <= 337))) {
         // Shift registers
         _bgLowTileShiftRegister <<= 1;
@@ -666,25 +540,120 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateShiftRegist
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::calculatePixel() {
-}
-
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::calculateBgPixel() {
-    // TODO: ca va etre un genre de : uint8_t pixelIndexed = (((_atHighShiftRegister >> (7 - _fineXScroll)) & 0x1) << 3) | (((_atLowShiftRegister >> (7 - _fineXScroll)) & 0x1) << 2) | ((_highBGTileShiftRegister >> (14 - _fineXScroll)) & 0x2) | ((_lowBGTileShiftRegister >> (15 - _fineXScroll)) & 0x1); // Avec 14 = (7 - _fineXScroll) + 7 -> 7 pour inverser le _fineXScroll et 7 pour décaler a droite en gardant le 2eme bit et avec 15 = (7 - _fineXScroll) + 8 -> 7 pour inverser le _fineXScroll et 8 pour décaler a droite en gardant le 1er bit : OU plus simplement dit 14 pour le 15eme bit et 15 pour le 16eme bit (shift)
-    return (((_bgHighAttributeShiftRegister >> (7 - _fineXScroll)) & 0x1) << 3) |
-            (((_bgLowAttributeShiftRegister >> (7 - _fineXScroll)) & 0x1) << 2) |
-            ((_bgHighTileShiftRegister >> (14 - _fineXScroll)) & 0x2) |
-            ((_bgLowTileShiftRegister >> (15 - _fineXScroll)) & 0x1);
-}
-
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getColorFromPalette(uint8_t index) {
-    // TODO: voir pour background palette hack ici : https://wiki.nesdev.com/w/index.php/PPU_palettes
-    // TODO: voir aussi pour exts en input
-    // TODO: voir emphase colors et grayscale ?
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::startClearSecondOAM() {
+    // We use the same code than evaluate sprites to clear OAM, simply do a 32 bytes copy (_oamAddress doesn't change and read to OAM returns $FF in this period)
+    _spriteEvaluationCopyByteCount = 32;
     
-    return _paletteIndexMemory[index];// TODO: a changer
+    // Normally it happen on pixel 0 and not 1 but due to the even/odd pixel 0 jump, it is put here
+    // Reset second OAM address
+    resetSecondOAMAddress();
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clearSecondOAM() {
+    // Reset OAM address overflow
+    _oamAddressOverflow = false;
+    
+    // Clear second OAM using same circuit than evaluate sprites
+    clearSecondOAMAndEvaluateSprites();
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::startEvaluateSprites() {
+    // Reset second OAM address
+    resetSecondOAMAddress();
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::evaluateSprites() {
+    // Evalute sprites
+    clearSecondOAMAndEvaluateSprites();
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clearSecondOAMAndEvaluateSprites() {
+    // TODO : Because OAM is implemented with dynamic RAM instead of static RAM, the data stored in OAM memory will quickly begin to decay into random bits if it is not being refreshed. The OAM memory is refreshed once per scanline while rendering is enabled (if either the sprite or background bit is enabled via the register at $2001), but on an NTSC PPU this refresh is prevented whenever rendering is disabled.
+    // TODO: quand et comment fait il ca ? 256 read suivi de write ? de 1 a 256 (inclus) ??
+    
+    // ** Read cycle **
+    if (_currentPixel & 0x1) {
+        // Read OAM at current OAM address
+        if (isInRenderScanline() == true) {
+            readObjectAttributeMemory();
+        } else {
+            // Read from second OAM
+            _oamData = _secondObjectAttributeMemory[_secondOAMAddress];
+        }
+        
+        return;
+    }
+    
+    // ** Write cycle **
+    
+    // Only increment OAM address if we are in render scanline and if we are not in second OAM clear period
+    _needIncrementOAMAddress = (isInRenderScanline() == true) && (isInSecondOAMClearPeriod() == false);
+    
+    // If Y byte (We can't rely on _currentPixel because there is not in sync with the copy/no copy pattern of evaluation, we can't rely on _oamAddress because it can be misaligned due to a previous write to $2003 and we can't rely on _secondOAMAddress because once it has been overflow, it stays to 0 but we need to perform the "copy" 4 bytes of the ninth sprite)
+    if (_spriteEvaluationCopyByteCount == 0) {  // TODO: voir quand le reseter a 0 : normalement pas besoin car mis a 32 en debut de clear sprite
+        // Check if Y is in scanline range and not in sprite overflow (if ninth sprite has been found, it only increment _oamAddress by 4 until it enters in hblank, same behaviour if _oamAdddress has overflow (in case of _oamAddress != 0 at the beginning of the evaluation))
+        if (((_currentScanline - _oamData) < _controlSpriteSize) && (_statusSpriteOverflow == false) && (_oamAddressOverflow == false)) {   // TODO: voir si ok car les types sont unsigned, normalement ok
+            // Check for sprite 0 in range (pixel 66 = 'sprite 0' write cycle)
+            if (_currentPixel == 66) {
+                _sprite0InSecondOAM = true; // TODO: voir pour le remettre a 0
+            }
+            
+            // Check for sprite overflow
+            if (_secondOAMAddressOverflow == true) {    // TODO: il y a un bug dans le 2C02 qui incremente _oamAddress de 5 si Y n'est pas dans le range, voir si ca incremente aussi _secondOAMAddress de 1 !!! : non _secondOAMAddress ne bouge pas et si le byte checké apres est dans le range ca incremente de 1 et une fois tout lu, _oamAddress n'incremente pas la derniere fois (pour garder la valeur alignée avec 4) pour etre plus précis il aligne la valeur incrémentée avec 4 et ne fait pas l'incrémentation de 4 apres. -> Ensuite il incremente de 4 a chaque fois (que le byte soit dans le range ou non)
+                // TODO: si le byte checké par après n'est pas dans le range, ca réincremente de 5 !!!
+                _statusSpriteOverflow = true;
+            }
+            
+            // Need to copy sprite bytes, so increment _oamAddress by 1 and increment also _secondOAMAddress by 1
+            _spriteEvaluationCopyByteCount = 4;
+            _oamAddressIncrement = 1;
+            _needIncrementSecondOAMAddress = true;
+        } else {
+            // Need to go to next sprite, so increment _oamAddress by 4 and don't increment _secondOAMAddress
+            // There is a bug in 2C02 that increment by 4 + by 1 (so by 5) _oamAddress when _secondOAMAddress has overflow and while the fetched Y byte is not in range, once one fetched Y byte is in range, it set the status sprite overflow and the increment goes to 1 then 4 once all 3 other bytes of the ninth sprite are "copied"
+            _spriteEvaluationCopyByteCount = 1;
+            _oamAddressIncrement = ((_secondOAMAddressOverflow == false) || (_statusSpriteOverflow == true)) ? 4 : 5;
+            //_oamAddressIncrement = 4 + ((_secondOAMAddressOverflow == true) && (_statusSpriteOverflow == false)); // TODO: voir la meilleure ecriture
+        }
+    } else {
+        _needIncrementSecondOAMAddress = true;
+    }
+    
+    // If none of the OAM address overflow
+    if ((isInRenderScanline() == true) && (_oamAddressOverflow == false) && (_secondOAMAddressOverflow == false)) {
+        // Copy other byte to second OAM
+        // In OAM, attributes bytes are AND with $E3 because bits 2, 3 and 4 are unused, but in second OAM there is no AND on these bytes so if we have _oamAddress misaligned (by a write of an unaligned with 4 value to $0003 on the second OAM clear by example), the attributes bytes in second OAM could have bits 2, 3 or 4 to 1.
+        _secondObjectAttributeMemory[_secondOAMAddress] = _oamData;
+    } else {
+        // Read from second OAM
+        _oamData = _secondObjectAttributeMemory[_secondOAMAddress]; // TODO: voir si ainsi, voir si ca incremente apres secondOamAddress, oamAddress, .. : secondOamAddress n'est plus incrementé une fois overflow, il reste a 0, oamAddress se comporte comme s'il evaluait tjs (de 1 si sprite Y ok, de 4 aligné si sprite Y non ok -> seulement pour le 9eme sprite, puis tjs de 4)
+    }
+    
+    // One byte copied (or read)
+    --_spriteEvaluationCopyByteCount;
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::startFetchSprites() {
+    // TODO: voir pour le reste quand analyse du sprite fetch (il y a aussi le reset de l'oamAddress mais ca doit le faire a tous les cycles du fetch pas seulement au start !!
+    
+    // Reset second OAM address
+    resetSecondOAMAddress();
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchSprites(uint8_t dataType) {
+    
+    // OAMADDR is set to 0 during each of ticks 257-320 (the sprite tile loading interval) of the pre-render and visible scanlines
+    _oamAddress = 0;  // TODO: tester si vrai dans visual2C02 : OUI meme si on ecrit $2003, il prend la valeur puis repasse a 0 ! jusque 320 puis il ne change plus sa valeur donc exactement ainsi (si rendu activé) : Comme ca le fait dans le sprite fetch complet, le deplacer dans cette methode
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateSpriteShiftRegisters(uint8_t dataType) {
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -725,6 +694,105 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementYOnAddre
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementOAMAddress() {
+    // Continue to increment even if overflow
+    
+    // Increment (always by 1 if we are not in rendering period)
+    _oamAddress += (isInRenderingPeriod()) ? _oamAddressIncrement : 1;
+    
+    // Check overflow (_oamAddress is uint8_t so it returns to its value - 255 after 255)
+    if (_oamAddress < _oamAddressIncrement) {
+        // Set overflow flag
+        _oamAddressOverflow = true; // TODO: quand remettre ca a false ??
+    }
+    
+    // Align if necessary
+    if (_oamAddressIncrement == 4) {
+        _oamAddress &= ~0x3;
+    }
+    
+    // Reset increment OAM address increment flag
+    _needIncrementOAMAddress = false;
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::resetSecondOAMAddress() {
+    // Reset second OAM address (because it can be overflow and it can be lower than 0x1F, no matter its value, it is reset to 0)
+    _secondOAMAddressOverflow = false;
+    _secondOAMAddress = 0;
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementSecondOAMAddress() {
+    // Don't increment if overflow
+    if (_secondOAMAddressOverflow == true) {
+        return;
+    }
+    
+    // Increment
+    ++_secondOAMAddress;
+    
+    // Check overflow
+    if (_secondOAMAddress > 0x1F) {
+        // Reset address and set overflow flag
+        _secondOAMAddress = 0;
+        _secondOAMAddressOverflow = true; // TODO: quand remettre ca a false ??
+    }
+    
+    // Reset second increment OAM address increment flag
+    _needIncrementSecondOAMAddress = false;
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementPositionCounters() {
+    // Increment pixel counter
+    ++_currentPixel;
+    
+    // Check boundary of pixel counter
+    if (_currentPixel < (Constants::visiblePixelsPerScanlineCount + Constants::hBlankLengthInPixel)) {
+        return;
+    }
+    
+    // Start a new line, reset pixel counter and increment scanline counter
+    _currentPixel = 0;
+    ++_currentScanline;
+    
+    // Check boundary of scanline counter
+    if (_currentScanline < (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline + Constants::vBlankLengthInScanline + 1)) { //TODO: changer 1 par des constants de Constants::
+        return;
+    }
+    
+    // Start a new frame, reset scanline counter and toggle even/odd frame
+    _currentScanline = 0;
+    _oddFrame = !_oddFrame;
+    
+    // If start a new odd frame, skip first cycle
+    _currentPixel += (_oddFrame & isRenderingEnabled());     // TODO: voir si c bon
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::calculatePixel() {
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::calculateBgPixel() {
+    // TODO: ca va etre un genre de : uint8_t pixelIndexed = (((_atHighShiftRegister >> (7 - _fineXScroll)) & 0x1) << 3) | (((_atLowShiftRegister >> (7 - _fineXScroll)) & 0x1) << 2) | ((_highBGTileShiftRegister >> (14 - _fineXScroll)) & 0x2) | ((_lowBGTileShiftRegister >> (15 - _fineXScroll)) & 0x1); // Avec 14 = (7 - _fineXScroll) + 7 -> 7 pour inverser le _fineXScroll et 7 pour décaler a droite en gardant le 2eme bit et avec 15 = (7 - _fineXScroll) + 8 -> 7 pour inverser le _fineXScroll et 8 pour décaler a droite en gardant le 1er bit : OU plus simplement dit 14 pour le 15eme bit et 15 pour le 16eme bit (shift)
+    return (((_bgHighAttributeShiftRegister >> (7 - _fineXScroll)) & 0x1) << 3) |
+            (((_bgLowAttributeShiftRegister >> (7 - _fineXScroll)) & 0x1) << 2) |
+            ((_bgHighTileShiftRegister >> (14 - _fineXScroll)) & 0x2) |
+            ((_bgLowTileShiftRegister >> (15 - _fineXScroll)) & 0x1);
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getColorFromPalette(uint8_t index) {
+    // TODO: voir pour background palette hack ici : https://wiki.nesdev.com/w/index.php/PPU_palettes
+    // TODO: voir aussi pour exts en input
+    // TODO: voir emphase colors et grayscale ?
+    
+    return _paletteIndexMemory[index];// TODO: a changer
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkInterrupt() {
     // See https://wiki.nesdev.com/w/index.php/NMI
     _interruptHardware.ppuInterrupt((_statusVBlankStarted == true) && (_controlGenerateNmiForVBlank == true));
@@ -733,13 +801,13 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkInterrupt() 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readObjectAttributeMemory() {
     // If we are in second OAM period, we must read $FF instead of real data
-    _oamData = (isInSecondOamClearPeriod() == false) ? _objectAttributeMemory[_oamAddress] : 0xFF;
+    _oamData = (isInSecondOAMClearPeriod() == false) ? _objectAttributeMemory[_oamAddress] : 0xFF;
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writeObjectAttributeMemory(uint8_t data) {
     // If we are in second OAM phase and rendering is enabled, we must write $FF instead of data
-    _oamData = (isInSecondOamClearPeriod() == false) ? data : 0xFF;
+    _oamData = (isInSecondOAMClearPeriod() == false) ? data : 0xFF;
     
     // Write data to OAM (if attribute byte, need to AND with $E3 because bit 2, 3 and 4 are unused)
     // It's the correct behaviour according to Visual2C02 tests, it could be optimized by doing the IF and AND in the read method instead (it's more likely to be written that to be read) but let it like true behaviour
