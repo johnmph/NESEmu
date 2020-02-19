@@ -168,14 +168,18 @@ namespace NESEmu { namespace Ppu {
         
         uint16_t _bgLowTileShiftRegister;
         uint16_t _bgHighTileShiftRegister;
+        uint8_t _bgLowTileBitOut;   // TODO : voir si bool ou uint8_t pour l'optimisation
+        uint8_t _bgHighTileBitOut;
         uint8_t _bgLowAttributeShiftRegister;
         uint8_t _bgHighAttributeShiftRegister;
-        bool _bgLowAttributeLatch;   // TODO : voir si bool ou uint8_t pour l'optimisation
-        bool _bgHighAttributeLatch;
+        uint8_t _bgLowAttributeLatch;   // TODO : voir si bool ou uint8_t pour l'optimisation
+        uint8_t _bgHighAttributeLatch;
+        uint8_t _bgLowAttributeBitOut;
+        uint8_t _bgHighAttributeBitOut;
         
         uint8_t _spLowTileShiftRegisters[8];
         uint8_t _spHighTileShiftRegisters[8];
-        uint8_t _spAttributeLatches[8]; // TODO: pq pas low and high comme tile ?
+        uint8_t _spAttributeLatches[8];
         uint8_t _spXPositionCounters[8];
         
         // OAM

@@ -337,6 +337,9 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processRenderLine
     
     // Only VRAM access if rendering is enabled
     if (isRenderingEnabled() == true) {
+        // Calculate pixel (need to be put before process tiles and sprites because the xxxBitOut already contains data for pixel and once processXXX are called they are updated with next pixel data)
+        pixelIndexedColor = calculatePixel();
+        
         // Complete tile data is 8 cycles
         uint8_t dataType = _currentPixel & 0x7;
         
@@ -345,9 +348,6 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processRenderLine
         
         // Process sprites
         processSprites(dataType);
-        
-        // Calculate pixel
-        pixelIndexedColor = calculatePixel();
     } else {
         // Rendering disabled, use background color
         pixelIndexedColor = 0;
@@ -405,18 +405,15 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPreRenderL
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processTiles(uint8_t dataType) {
-    // Exit if we are no more in process tiles period (but check for X address copy before)
-    if ((_currentPixel > Constants::visiblePixelsPerScanlineCount) && (_currentPixel <= 320)) {
-        // Check for X address copy
-        if (_currentPixel == (Constants::visiblePixelsPerScanlineCount + 1)) {
-            _address = (_address & 0x7BE0) | (_temporaryAddress & 0x41F);
-        }
-        
+    // Exit if we are no more in process tiles period
+    if ((_currentPixel > (Constants::visiblePixelsPerScanlineCount + 1)) && (_currentPixel <= 320)) {
         return;
     }
     
     // Fetch tiles
-    fetchTiles(dataType);
+    if (_currentPixel <= Constants::visiblePixelsPerScanlineCount) {
+        fetchTiles(dataType);
+    }
     
     // Update tile shift registers
     updateTileShiftRegisters(dataType);
@@ -429,6 +426,13 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processTiles(uint
     // Check for Y address increment
     if (_currentPixel == Constants::visiblePixelsPerScanlineCount) {
         incrementYOnAddress();
+        
+        return;
+    }
+    
+    // Check for X address copy
+    if (_currentPixel == (Constants::visiblePixelsPerScanlineCount + 1)) {
+        _address = (_address & 0x7BE0) | (_temporaryAddress & 0x41F);
     }
 }
 
@@ -475,6 +479,11 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processSprites(ui
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchTiles(uint8_t dataType) {
+    // Correct dataType for last cycles (Unused NT fetches)
+    if (_currentPixel > 336) {
+        dataType = ((dataType - 1) & 0x1) + 1;
+    }
+    
     // Nametable set address
     if (dataType == 0x1) {
         _addressBus = 0x2000 | (_address & 0x0FFF);
@@ -494,7 +503,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchTiles(uint8_
     // First pattern table set address
     else if (dataType == 0x5) {
         // One tile is 16 bytes (ntByte << 4), one byte is a 8 pixels row (fineY = _address >> 12)
-        _addressBus = _controlBackgroundPatternTableAddress | (_ntByte << 4) | (_address >> 12);    // TODO: pour les sprites c'est _controlSpritePatternTableAddress mais attention pour les 8x16 sprites c'est différent, donc peut etre que je ne peux pas utiliser  fetchTilesData pour fetcher les sprites, a voir
+        _addressBus = _controlBackgroundPatternTableAddress | (_ntByte << 4) | (_address >> 12);
     }
     // First pattern table fetch (Low tile byte)
     else if (dataType == 0x6) {
@@ -503,7 +512,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchTiles(uint8_
     // Second pattern table set address
     else if (dataType == 0x7) {
         // Same than low BG tile address but 8 bytes after
-        _addressBus = _controlBackgroundPatternTableAddress | (_ntByte << 4) | (_address >> 12) | 0x8;  // TODO: pareil qu'au dessus
+        _addressBus = _controlBackgroundPatternTableAddress | (_ntByte << 4) | (_address >> 12) | 0x8;
     }
     // Second pattern table fetch (High tile byte)
     else {
@@ -514,28 +523,42 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchTiles(uint8_
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateTileShiftRegisters(uint8_t dataType) {
     // TODO: voir car dans le png de timing ils disent qu'on charge le low byte et dans le wiki ils disent qu'on charge le high byte dans les shifts
-    // Check for shifting registers
-    // TODO: surement remplacer ce if par un dataType != 1 et 0
-    if (((_currentPixel >= 2) && (_currentPixel <= (Constants::visiblePixelsPerScanlineCount + 1))) || ((_currentPixel >= 322) && (_currentPixel <= 337))) {
-        // Shift registers
-        _bgLowTileShiftRegister <<= 1;
-        _bgHighTileShiftRegister <<= 1;
-        
-        _bgLowAttributeShiftRegister = (_bgLowAttributeShiftRegister << 1) | _bgLowAttributeLatch;
-        _bgHighAttributeShiftRegister = (_bgHighAttributeShiftRegister << 1) | _bgHighAttributeLatch;
+    
+    // On pixel 1 and 321 there is no shift registers operations
+    if ((_currentPixel == 1) || (_currentPixel == 321)) {
+        return;
     }
     
-    // Update BGs tile shift registers
-    if ((dataType == 0x1) && (((_currentPixel >= 9) && (_currentPixel <= (Constants::visiblePixelsPerScanlineCount + 1))) || ((_currentPixel >= 329) && (_currentPixel <= 337)))) {
-        _bgLowAttributeShiftRegister = (_bgLowAttributeShiftRegister & 0xFF00) | _lowTileByte;      // TODO: le & 0xFF00 n'est pas nécessaire car c'est shifté 8x et donc il y a 8x 0 au low byte
-        _bgHighAttributeShiftRegister = (_bgHighAttributeShiftRegister & 0xFF00) | _highTileByte;   // TODO: pareil
+    // Get tile out bits
+    _bgLowTileBitOut = (_bgLowTileShiftRegister >> _fineXScroll) & 0x1;
+    _bgHighTileBitOut = (_bgHighTileShiftRegister >> _fineXScroll) & 0x1;
+    
+    // Get attribute out bits
+    _bgLowAttributeBitOut = (_bgLowAttributeShiftRegister >> _fineXScroll) & 0x1;
+    _bgHighAttributeBitOut = (_bgHighAttributeShiftRegister >> _fineXScroll) & 0x1;
+    
+    // Shift right tile registers and inject 1 on the MSB
+    //_bgLowTileShiftRegister = 0x8000 | (_bgLowTileShiftRegister >> 1);        // TODO: les bits injectés sont a 1 MAIS c'est surement car la variable est inversée dans Visual2C02
+    //_bgHighTileShiftRegister = 0x8000 | (_bgHighTileShiftRegister >> 1);
+    _bgLowTileShiftRegister >>= 1;
+    _bgHighTileShiftRegister >>= 1;
+    
+    // Shift right attribute registers and inject latch on the MSB
+    _bgLowAttributeShiftRegister = (_bgLowAttributeLatch << 7) | (_bgLowAttributeShiftRegister >> 1);
+    _bgHighAttributeShiftRegister = (_bgHighAttributeLatch << 7) | (_bgHighAttributeShiftRegister >> 1);
+    
+    // Check if need to update registers
+    if (dataType == 0x1) {
+        // Update tile registers
+        _bgLowTileShiftRegister = (_lowTileByte << 8) | (_bgLowTileShiftRegister & 0xFF);
+        _bgHighTileShiftRegister = (_highTileByte << 8) | (_bgHighTileShiftRegister & 0xFF);
         
         // Get two bits AT for current tile (be careful, no AND 0x3 is performed here because the AND is performed on the next lines for latchs)
         uint8_t atForCurrentTile = _atByte >> ((_address & 0x2) | ((_address >> 4) & 0x4)); // TODO: voir si bon par rapport a l'adresse comme on lit pour les prochains tiles
         
-        // Get two bits separated for each latch (latchs are bool so there is no need to AND the high bit with 0x1)
+        // Update attribute latches
         _bgLowAttributeLatch = atForCurrentTile & 0x1;
-        _bgHighAttributeLatch = atForCurrentTile & 0x2;
+        _bgHighAttributeLatch = (atForCurrentTile >> 1) & 0x1;
     }
 }
 
@@ -560,6 +583,9 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clearSecondOAM() 
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::startEvaluateSprites() {
+    // TODO: peut etre rajouter la copie des bytes _oamAddress & 0xF8 dans _oamAddress : voir Notes dans https://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation
+    // TODO: et faire des tests visual2C02
+    
     // Reset second OAM address
     resetSecondOAMAddress();
 }
@@ -594,12 +620,12 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clearSecondOAMAnd
     _needIncrementOAMAddress = (isInRenderScanline() == true) && (isInSecondOAMClearPeriod() == false);
     
     // If Y byte (We can't rely on _currentPixel because there is not in sync with the copy/no copy pattern of evaluation, we can't rely on _oamAddress because it can be misaligned due to a previous write to $2003 and we can't rely on _secondOAMAddress because once it has been overflow, it stays to 0 but we need to perform the "copy" 4 bytes of the ninth sprite)
-    if (_spriteEvaluationCopyByteCount == 0) {  // TODO: voir quand le reseter a 0 : normalement pas besoin car mis a 32 en debut de clear sprite
+    if (_spriteEvaluationCopyByteCount == 0) {
         // Check if Y is in scanline range and not in sprite overflow (if ninth sprite has been found, it only increment _oamAddress by 4 until it enters in hblank, same behaviour if _oamAdddress has overflow (in case of _oamAddress != 0 at the beginning of the evaluation))
         if (((_currentScanline - _oamData) < _controlSpriteSize) && (_statusSpriteOverflow == false) && (_oamAddressOverflow == false)) {   // TODO: voir si ok car les types sont unsigned, normalement ok
             // Check for sprite 0 in range (pixel 66 = 'sprite 0' write cycle)
             if (_currentPixel == 66) {
-                _sprite0InSecondOAM = true; // TODO: voir pour le remettre a 0
+                _sprite0InSecondOAM = true;
             }
             
             // Check for sprite overflow
@@ -613,6 +639,11 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clearSecondOAMAnd
             _oamAddressIncrement = 1;
             _needIncrementSecondOAMAddress = true;
         } else {
+            // Check for sprite 0 in range (pixel 66 = 'sprite 0' write cycle)
+            if (_currentPixel == 66) {
+                _sprite0InSecondOAM = false;
+            }
+            
             // Need to go to next sprite, so increment _oamAddress by 4 and don't increment _secondOAMAddress
             // There is a bug in 2C02 that increment by 4 + by 1 (so by 5) _oamAddress when _secondOAMAddress has overflow and while the fetched Y byte is not in range, once one fetched Y byte is in range, it set the status sprite overflow and the increment goes to 1 then 4 once all 3 other bytes of the ninth sprite are "copied"
             _spriteEvaluationCopyByteCount = 1;
@@ -647,9 +678,55 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::startFetchSprites
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchSprites(uint8_t dataType) {
-    
     // OAMADDR is set to 0 during each of ticks 257-320 (the sprite tile loading interval) of the pre-render and visible scanlines
-    _oamAddress = 0;  // TODO: tester si vrai dans visual2C02 : OUI meme si on ecrit $2003, il prend la valeur puis repasse a 0 ! jusque 320 puis il ne change plus sa valeur donc exactement ainsi (si rendu activé) : Comme ca le fait dans le sprite fetch complet, le deplacer dans cette methode
+    _oamAddress = 0;
+    
+    // Garbage nametable set address
+    if (dataType == 0x1) {
+        _addressBus = 0x2000 | (_address & 0x0FFF);
+        
+        // TODO: normalement fetch Y
+        _needIncrementSecondOAMAddress = true;
+    }
+    // Garbage nametable fetch (NT byte)
+    else if (dataType == 0x2) {
+        _ntByte = _bus.read(_addressBus);
+        
+        // TODO: normalement fetch sprite index
+        _needIncrementSecondOAMAddress = true;
+    }
+    // Garbage nametable set address + load sprite attribute byte
+    else if (dataType == 0x3) {
+        _addressBus = 0x2000 | (_address & 0x0FFF);
+        
+        _spAttributeLatches[_secondOAMAddress >> 2] = _secondObjectAttributeMemory[_secondOAMAddress];  // TODO: voir si on utilise _secondOAMAddress >> 2 dans le hardware ou un compteur separé ou currentPixel car si on coupe le rendu pendant le fetchSprites puis qu'on le reprend, ca ne fera pas pareil selon la methode (car secondOAMAddress ou un compteur va reprendre a la suite de la ou on etait arreté alors que _currentPixel continue de compter meme si rendu desactivé
+        _needIncrementSecondOAMAddress = true;
+    }
+    // Garbage nametable fetch (NT byte) + load sprite X byte
+    else if (dataType == 0x4) {
+        _ntByte = _bus.read(_addressBus);
+        
+        _spXPositionCounters[_secondOAMAddress >> 2] = _secondObjectAttributeMemory[_secondOAMAddress];//TODO: + voir si quand on lit dans le secondObjectAttributeMemory si on change _oamData : oui, vois si possible d'intégrer ca dans readObjectAttributeMemory (et write ?)
+        _needIncrementSecondOAMAddress = true;
+    }
+    // First pattern table set address
+    else if (dataType == 0x5) {
+        // One tile is 16 bytes (ntByte << 4), one byte is a 8 pixels row (fineY = _address >> 12)
+        _addressBus = _controlSpritePatternTableAddress | (_ntByte << 4) | (_address >> 12);    // TODO: pour les sprites c'est _controlSpritePatternTableAddress mais attention pour les 8x16 sprites c'est différent, donc peut etre que je ne peux pas utiliser  fetchTilesData pour fetcher les sprites, a voir
+    }
+    // First pattern table fetch (Low tile byte)
+    else if (dataType == 0x6) {
+        _lowTileByte = _bus.read(_addressBus);
+    }
+    // Second pattern table set address
+    else if (dataType == 0x7) {
+        // Same than low BG tile address but 8 bytes after
+        _addressBus = _controlSpritePatternTableAddress | (_ntByte << 4) | (_address >> 12) | 0x8;  // TODO: pareil qu'au dessus
+    }
+    // Second pattern table fetch (High tile byte)
+    else {
+        _highTileByte = _bus.read(_addressBus);
+    }
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -703,7 +780,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementOAMAddre
     // Check overflow (_oamAddress is uint8_t so it returns to its value - 255 after 255)
     if (_oamAddress < _oamAddressIncrement) {
         // Set overflow flag
-        _oamAddressOverflow = true; // TODO: quand remettre ca a false ??
+        _oamAddressOverflow = true;
     }
     
     // Align if necessary
@@ -736,7 +813,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementSecondOA
     if (_secondOAMAddress > 0x1F) {
         // Reset address and set overflow flag
         _secondOAMAddress = 0;
-        _secondOAMAddressOverflow = true; // TODO: quand remettre ca a false ??
+        _secondOAMAddressOverflow = true;
     }
     
     // Reset second increment OAM address increment flag
@@ -772,15 +849,22 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementPosition
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::calculatePixel() {
+    // Get BG pixel
+    uint8_t bgColor = calculateBgPixel();   // TODO: bgColor est ce qui est envoyé au ext pins apparemment donc surement en fare un member
+    
+    // Get sprite pixel
+    
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::calculateBgPixel() {
     // TODO: ca va etre un genre de : uint8_t pixelIndexed = (((_atHighShiftRegister >> (7 - _fineXScroll)) & 0x1) << 3) | (((_atLowShiftRegister >> (7 - _fineXScroll)) & 0x1) << 2) | ((_highBGTileShiftRegister >> (14 - _fineXScroll)) & 0x2) | ((_lowBGTileShiftRegister >> (15 - _fineXScroll)) & 0x1); // Avec 14 = (7 - _fineXScroll) + 7 -> 7 pour inverser le _fineXScroll et 7 pour décaler a droite en gardant le 2eme bit et avec 15 = (7 - _fineXScroll) + 8 -> 7 pour inverser le _fineXScroll et 8 pour décaler a droite en gardant le 1er bit : OU plus simplement dit 14 pour le 15eme bit et 15 pour le 16eme bit (shift)
-    return (((_bgHighAttributeShiftRegister >> (7 - _fineXScroll)) & 0x1) << 3) |
+    /*return (((_bgHighAttributeShiftRegister >> (7 - _fineXScroll)) & 0x1) << 3) |
             (((_bgLowAttributeShiftRegister >> (7 - _fineXScroll)) & 0x1) << 2) |
             ((_bgHighTileShiftRegister >> (14 - _fineXScroll)) & 0x2) |
-            ((_bgLowTileShiftRegister >> (15 - _fineXScroll)) & 0x1);
+            ((_bgLowTileShiftRegister >> (15 - _fineXScroll)) & 0x1);*/
+    
+    return (_bgHighAttributeBitOut << 3) | (_bgLowAttributeBitOut << 2) | (_bgHighTileBitOut << 1) | _bgLowTileBitOut;
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
