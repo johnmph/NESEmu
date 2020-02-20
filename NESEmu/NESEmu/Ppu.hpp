@@ -90,6 +90,8 @@ namespace NESEmu { namespace Ppu {
         void clearSecondOAMAndEvaluateSprites();
         void startFetchSprites();
         void fetchSprites(uint8_t dataType);
+        uint16_t getAddressForFetchSprites(uint8_t spriteNumber);
+        uint8_t getDataForFetchSprites(uint8_t spriteNumber);
         void updateSpriteShiftRegisters(uint8_t dataType);
         
         void incrementXOnAddress();
@@ -181,6 +183,8 @@ namespace NESEmu { namespace Ppu {
         uint8_t _spHighTileShiftRegisters[8];
         uint8_t _spAttributeLatches[8];
         uint8_t _spXPositionCounters[8];
+        uint8_t _spriteY;
+        uint8_t _spriteTileIndex;
         
         // OAM
         uint8_t _oamData;

@@ -512,7 +512,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchTiles(uint8_
     // Second pattern table set address
     else if (dataType == 0x7) {
         // Same than low BG tile address but 8 bytes after
-        _addressBus = _controlBackgroundPatternTableAddress | (_ntByte << 4) | (_address >> 12) | 0x8;
+        _addressBus = _controlBackgroundPatternTableAddress | (_ntByte << 4) | 0x8 | (_address >> 12);
     }
     // Second pattern table fetch (High tile byte)
     else {
@@ -681,52 +681,115 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchSprites(uint
     // OAMADDR is set to 0 during each of ticks 257-320 (the sprite tile loading interval) of the pre-render and visible scanlines
     _oamAddress = 0;
     
-    // Garbage nametable set address
+    // Sprite number start at 0 at beginning of sprite fetch and a sprite take 8 cycles, we can't use (_secondOAMAddress >> 2) because if rendering is disabled/reenabled in fetch sprites, _secondOAMAddress is not incremented during render disabled but spriteNumber is incremented
+    uint8_t spriteNumber = (_currentPixel - (Constants::visiblePixelsPerScanlineCount + 1)) >> 3;
+    
+    // Garbage nametable set address + load sprite Y byte
     if (dataType == 0x1) {
         _addressBus = 0x2000 | (_address & 0x0FFF);
         
-        // TODO: normalement fetch Y
+        // TODO: je n'arrive pas a trouver ntByte ni le fetchY fetchIndex signal dans visual2C02 !!!
+        _spriteY = _secondObjectAttributeMemory[_secondOAMAddress];
         _needIncrementSecondOAMAddress = true;
     }
-    // Garbage nametable fetch (NT byte)
+    // Garbage nametable fetch (NT byte) + load sprite tile index byte
     else if (dataType == 0x2) {
         _ntByte = _bus.read(_addressBus);
         
-        // TODO: normalement fetch sprite index
+        _spriteTileIndex = _secondObjectAttributeMemory[_secondOAMAddress];
         _needIncrementSecondOAMAddress = true;
     }
     // Garbage nametable set address + load sprite attribute byte
     else if (dataType == 0x3) {
         _addressBus = 0x2000 | (_address & 0x0FFF);
         
-        _spAttributeLatches[_secondOAMAddress >> 2] = _secondObjectAttributeMemory[_secondOAMAddress];  // TODO: voir si on utilise _secondOAMAddress >> 2 dans le hardware ou un compteur separé ou currentPixel car si on coupe le rendu pendant le fetchSprites puis qu'on le reprend, ca ne fera pas pareil selon la methode (car secondOAMAddress ou un compteur va reprendre a la suite de la ou on etait arreté alors que _currentPixel continue de compter meme si rendu desactivé
+        _spAttributeLatches[spriteNumber] = _secondObjectAttributeMemory[_secondOAMAddress];
         _needIncrementSecondOAMAddress = true;
     }
     // Garbage nametable fetch (NT byte) + load sprite X byte
     else if (dataType == 0x4) {
         _ntByte = _bus.read(_addressBus);
         
-        _spXPositionCounters[_secondOAMAddress >> 2] = _secondObjectAttributeMemory[_secondOAMAddress];//TODO: + voir si quand on lit dans le secondObjectAttributeMemory si on change _oamData : oui, vois si possible d'intégrer ca dans readObjectAttributeMemory (et write ?)
+        _spXPositionCounters[spriteNumber] = _secondObjectAttributeMemory[_secondOAMAddress];//TODO: + voir si quand on lit dans le secondObjectAttributeMemory si on change _oamData : oui, vois si possible d'intégrer ca dans readObjectAttributeMemory (et write ?)
         _needIncrementSecondOAMAddress = true;
     }
     // First pattern table set address
     else if (dataType == 0x5) {
-        // One tile is 16 bytes (ntByte << 4), one byte is a 8 pixels row (fineY = _address >> 12)
-        _addressBus = _controlSpritePatternTableAddress | (_ntByte << 4) | (_address >> 12);    // TODO: pour les sprites c'est _controlSpritePatternTableAddress mais attention pour les 8x16 sprites c'est différent, donc peut etre que je ne peux pas utiliser  fetchTilesData pour fetcher les sprites, a voir
+        // Get address for sprite
+        _addressBus = getAddressForFetchSprites(spriteNumber);
     }
     // First pattern table fetch (Low tile byte)
     else if (dataType == 0x6) {
-        _lowTileByte = _bus.read(_addressBus);
+        _lowTileByte = getDataForFetchSprites(spriteNumber);
     }
     // Second pattern table set address
     else if (dataType == 0x7) {
         // Same than low BG tile address but 8 bytes after
-        _addressBus = _controlSpritePatternTableAddress | (_ntByte << 4) | (_address >> 12) | 0x8;  // TODO: pareil qu'au dessus
+        _addressBus = getAddressForFetchSprites(spriteNumber) | 0x8;
     }
     // Second pattern table fetch (High tile byte)
     else {
-        _highTileByte = _bus.read(_addressBus);
+        _highTileByte = getDataForFetchSprites(spriteNumber);
     }
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+uint16_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getAddressForFetchSprites(uint8_t spriteNumber) {
+    uint8_t spriteRow = _currentScanline - _spriteY;
+    uint8_t tileIndex = _spriteTileIndex;
+    
+    // Flip vertically if necessary
+    if ((_spAttributeLatches[spriteNumber] & 0x80) == true) {
+        spriteRow = (_controlSpriteSize - 1) - spriteRow;
+    }
+    
+    uint16_t patternTableAddress;
+    
+    // If 8x16 sprites
+    if (_controlSpriteSize == 16) {
+        patternTableAddress = (_spriteTileIndex & 0x1) << 12;
+        
+        // If second tile of sprite
+        if (spriteRow > 7) {
+            ++tileIndex;
+            spriteRow -= 8;
+        }
+    }
+    // 8x8 sprites
+    else {
+        patternTableAddress = _controlSpritePatternTableAddress;
+    }
+    
+    // One tile is 16 bytes (tileIndex << 4), one byte is a 8 pixels row (spriteRow)
+    return patternTableAddress | (tileIndex << 4) | spriteRow;
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getDataForFetchSprites(uint8_t spriteNumber) {
+    // Read data (even if unused sprite)
+    uint8_t data = _bus.read(_addressBus);
+    
+    // If unused sprite, all pixels are transparent
+    if (_spriteY == 0xFF) {
+        data = 0x0;
+    }
+    
+    // Flip horizontally if necessary (in hardware it is reversed if it is NOT flipped)
+    if ((_spAttributeLatches[spriteNumber] & 0x40) == false) {
+        data = reverseBits(data);
+    }
+    
+    return data;
+}
+
+// TODO: mettre ca dans un fichier utils ou common:
+// Taken from here : https://stackoverflow.com/questions/2602823/in-c-c-whats-the-simplest-way-to-reverse-the-order-of-bits-in-a-byte
+uint8_t reverseBits(uint8_t byte) {
+    byte = (byte & 0xF0) >> 4 | (byte & 0x0F) << 4;
+    byte = (byte & 0xCC) >> 2 | (byte & 0x33) << 2;
+    byte = (byte & 0xAA) >> 1 | (byte & 0x55) << 1;
+    
+    return byte;
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
