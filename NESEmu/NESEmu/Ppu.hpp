@@ -40,9 +40,13 @@ namespace NESEmu { namespace Ppu {
         // TODO: avoir une methode setPixelPlotterFunction() qui prend un template parameter plotPixel qui est une fonction (lambda ou autre) et cette methode appelera la fonction plotPixel ainsi : plotPixel(_currentPixel, _currentScanline, calculatedColor); ainsi on peut découpler le PPU et donc la NES du systeme graphique de l'OS de l'émulateur
         // TODO: il faudra donc aussi une methode setStartingVBlankNotifierFunction() pour notifier que le vblank commence pour par exemple afficher l'image (qui a été calculée via un buffer de pixel setté par plotPixel)
         
-        // Memory (for CPU accessing)
+        // VRAM access
         uint8_t read(uint16_t address);
         void write(uint16_t address, uint8_t data);
+        
+        // IO access
+        uint8_t ioRead(uint16_t address);
+        void ioWrite(uint16_t address, uint8_t data);
         
         // Ext pins
         void exts(uint8_t data);
@@ -93,7 +97,7 @@ namespace NESEmu { namespace Ppu {
         void fetchSprites(uint8_t dataType);
         uint16_t getAddressForFetchSprites(uint8_t spriteNumber);
         uint8_t getDataForFetchSprites(uint8_t spriteNumber);
-        void updateSpriteShiftRegisters(uint8_t dataType);
+        void updateSpriteShiftRegisters();
         
         void incrementXOnAddress();
         void incrementYOnAddress();
@@ -105,7 +109,7 @@ namespace NESEmu { namespace Ppu {
         void incrementPositionCounters();
         
         uint8_t calculatePixel();
-        void checkSprite0Hit(uint8_t bgPixel, uint8_t spPixel);
+        void checkSprite0Hit(uint8_t bgPixel);
         
         uint8_t getColorFromPalette(uint8_t index);
         
@@ -131,7 +135,6 @@ namespace NESEmu { namespace Ppu {
         uint8_t _controlAddressIncrementPerCpuAccess;       // TODO: par apres reorganiser les variables pour l'alignement
         uint16_t _controlSpritePatternTableAddress;
         uint16_t _controlBackgroundPatternTableAddress;
-        //bool _controlSpriteSize8x16px;
         uint8_t _controlSpriteSize;
         bool _controlMasterSlaveSelect;
         bool _controlGenerateNmiForVBlank;

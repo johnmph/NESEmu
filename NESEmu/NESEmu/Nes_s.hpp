@@ -80,7 +80,7 @@ uint8_t Nes<EModel>::read(uint16_t address) {   // TODO: a la place de ca, avoir
     // PPU
     else if (address < 0x4000) {
         // Only A0 to A2 is passed to the PPU address
-        return _ppu.read(address & 0x7);
+        return _ppu.ioRead(address & 0x7);
     }
     // Cartridge
     else if (address >= 0x4020) {   // TODO: voir pour l'adresse et pour le open bus behaviour si par exemple la rom ne contient pas de WRAM !!
@@ -103,7 +103,7 @@ void Nes<EModel>::write(uint16_t address, uint8_t data) {
     // PPU
     else if (address < 0x4000) {
         // Only A0 to A2 is passed to the PPU address
-        _ppu.write(address & 0x7, data);
+        _ppu.ioWrite(address & 0x7, data);
     }
     // I/O is managed internally by CPU, so it is guaranteed that no 0x4000 - 0x401F address are here
     // Cartridge
