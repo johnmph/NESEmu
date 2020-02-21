@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <vector>
+#include "Common.hpp"
 
 
 namespace NESEmu { namespace Ppu {
@@ -104,7 +105,7 @@ namespace NESEmu { namespace Ppu {
         void incrementPositionCounters();
         
         uint8_t calculatePixel();
-        uint8_t calculateBgPixel();
+        void checkSprite0Hit(uint8_t bgPixel, uint8_t spPixel);
         
         uint8_t getColorFromPalette(uint8_t index);
         
@@ -185,6 +186,13 @@ namespace NESEmu { namespace Ppu {
         uint8_t _spXPositionCounters[8];
         uint8_t _spriteY;
         uint8_t _spriteTileIndex;
+        uint8_t _spLowTileBitOut;
+        uint8_t _spHighTileBitOut;
+        uint8_t _spAttributeLatchActive;
+        
+        bool _sprite0OnNextScanline;
+        bool _sprite0OnCurrentScanline;
+        bool _sprite0Active;
         
         // OAM
         uint8_t _oamData;
@@ -195,7 +203,6 @@ namespace NESEmu { namespace Ppu {
         bool _secondOAMAddressOverflow;
         bool _needIncrementOAMAddress;
         bool _needIncrementSecondOAMAddress;
-        bool _sprite0InSecondOAM;
         
         // Dynamic latch due to capacitance of very long traces of data bus that run to various parts of the PPU
         // See https://wiki.nesdev.com/w/index.php/PPU_registers

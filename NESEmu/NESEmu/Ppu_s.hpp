@@ -234,7 +234,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::exts(uint8_t data
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getExts() const {
-    return 0; // TODO: changer
+    return (_bgHighAttributeBitOut << 3) | (_bgLowAttributeBitOut << 2) | (_bgHighTileBitOut << 1) | _bgLowTileBitOut;//TODO: voir si bon (normalement NON car si background disable (full or 8 first bits) ???)
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -338,7 +338,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processRenderLine
     // Only VRAM access if rendering is enabled
     if (isRenderingEnabled() == true) {
         // Calculate pixel (need to be put before process tiles and sprites because the xxxBitOut already contains data for pixel and once processXXX are called they are updated with next pixel data)
-        pixelIndexedColor = calculatePixel();
+        pixelIndexedColor = calculatePixel();   // TODO: voir car ca ne commence qu'au pixel 2 normalement
         
         // Complete tile data is 8 cycles
         uint8_t dataType = _currentPixel & 0x7;
@@ -474,7 +474,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processSprites(ui
     fetchSprites(dataType);
     
     // Update sprite shift registers
-    updateSpriteShiftRegisters(dataType);
+    updateSpriteShiftRegisters(dataType);   // TODO: voir quand appelé exactement (de 1 a 256 ? de 2 a 257 ? ?)
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -530,7 +530,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateTileShiftRe
     }
     
     // Get tile out bits
-    _bgLowTileBitOut = (_bgLowTileShiftRegister >> _fineXScroll) & 0x1;
+    _bgLowTileBitOut = (_bgLowTileShiftRegister >> _fineXScroll) & 0x1; // TODO: voir car ce sont les bits de gauches en 1er qui doivent etre lu (voir si reverseBits sur _lowTileByte/highTileByte avant de les charger dans les shiftregisters !!!
     _bgHighTileBitOut = (_bgHighTileShiftRegister >> _fineXScroll) & 0x1;
     
     // Get attribute out bits
@@ -622,10 +622,10 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clearSecondOAMAnd
     // If Y byte (We can't rely on _currentPixel because there is not in sync with the copy/no copy pattern of evaluation, we can't rely on _oamAddress because it can be misaligned due to a previous write to $2003 and we can't rely on _secondOAMAddress because once it has been overflow, it stays to 0 but we need to perform the "copy" 4 bytes of the ninth sprite)
     if (_spriteEvaluationCopyByteCount == 0) {
         // Check if Y is in scanline range and not in sprite overflow (if ninth sprite has been found, it only increment _oamAddress by 4 until it enters in hblank, same behaviour if _oamAdddress has overflow (in case of _oamAddress != 0 at the beginning of the evaluation))
-        if (((_currentScanline - _oamData) < _controlSpriteSize) && (_statusSpriteOverflow == false) && (_oamAddressOverflow == false)) {   // TODO: voir si ok car les types sont unsigned, normalement ok
+        if (((_currentScanline - _oamData) < _controlSpriteSize) && (_statusSpriteOverflow == false) && (_oamAddressOverflow == false)) {
             // Check for sprite 0 in range (pixel 66 = 'sprite 0' write cycle)
             if (_currentPixel == 66) {
-                _sprite0InSecondOAM = true;
+                _sprite0OnNextScanline = true;
             }
             
             // Check for sprite overflow
@@ -641,7 +641,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clearSecondOAMAnd
         } else {
             // Check for sprite 0 in range (pixel 66 = 'sprite 0' write cycle)
             if (_currentPixel == 66) {
-                _sprite0InSecondOAM = false;
+                _sprite0OnNextScanline = false;
             }
             
             // Need to go to next sprite, so increment _oamAddress by 4 and don't increment _secondOAMAddress
@@ -680,6 +680,9 @@ template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHard
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchSprites(uint8_t dataType) {
     // OAMADDR is set to 0 during each of ticks 257-320 (the sprite tile loading interval) of the pre-render and visible scanlines
     _oamAddress = 0;
+    
+    // Save _sprite0OnNextScanline on _sprite0OnCurrentScanline (during 257-320) because it can be modified during rendering of the current scanline
+    _sprite0OnCurrentScanline = _sprite0OnNextScanline;
     
     // Sprite number start at 0 at beginning of sprite fetch and a sprite take 8 cycles, we can't use (_secondOAMAddress >> 2) because if rendering is disabled/reenabled in fetch sprites, _secondOAMAddress is not incremented during render disabled but spriteNumber is incremented
     uint8_t spriteNumber = (_currentPixel - (Constants::visiblePixelsPerScanlineCount + 1)) >> 3;
@@ -770,30 +773,59 @@ uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getDataForFetc
     uint8_t data = _bus.read(_addressBus);
     
     // If unused sprite, all pixels are transparent
-    if (_spriteY == 0xFF) {
+    if ((_currentScanline - _spriteY) >= _controlSpriteSize) {
         data = 0x0;
     }
     
     // Flip horizontally if necessary (in hardware it is reversed if it is NOT flipped)
     if ((_spAttributeLatches[spriteNumber] & 0x40) == false) {
-        data = reverseBits(data);
+        data = Common::reverseBits(data);
     }
     
     return data;
 }
 
-// TODO: mettre ca dans un fichier utils ou common:
-// Taken from here : https://stackoverflow.com/questions/2602823/in-c-c-whats-the-simplest-way-to-reverse-the-order-of-bits-in-a-byte
-uint8_t reverseBits(uint8_t byte) {
-    byte = (byte & 0xF0) >> 4 | (byte & 0x0F) << 4;
-    byte = (byte & 0xCC) >> 2 | (byte & 0x33) << 2;
-    byte = (byte & 0xAA) >> 1 | (byte & 0x55) << 1;
-    
-    return byte;
-}
-
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateSpriteShiftRegisters(uint8_t dataType) {
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateSpriteShiftRegisters(uint8_t dataType) {   // TODO: il commence bien a decompter a partir de _currentPixel == 1
+    
+    // Sprites loop
+    bool spriteFound = false;
+    for (int spriteNumber = 0; spriteNumber < 8; ++spriteNumber) {
+        // If sprite not ready, decrement its X counter then go to next sprite
+        if (_spXPositionCounters[spriteNumber] > 0) {
+            --_spXPositionCounters[spriteNumber];
+            continue;
+        }
+        
+        // Shift registers
+        uint8_t spLowTileBitOut =_spLowTileShiftRegisters[spriteNumber] & 0x1;
+        uint8_t spHighTileBitOut =_spHighTileShiftRegisters[spriteNumber] & 0x1;
+        _spLowTileShiftRegisters[spriteNumber] >>= 1;
+        _spHighTileShiftRegisters[spriteNumber] >>= 1;
+        
+        // If sprite already found or pixel transparent, skip this sprite
+        if ((spriteFound == true) || ((spLowTileBitOut | spHighTileBitOut) == 0x0)) {   // TODO: voir si bon ainsi
+            continue;
+        }
+        
+        // Save sprite data
+        _spLowTileBitOut = spLowTileBitOut;
+        _spHighTileBitOut = spHighTileBitOut;
+        _currentSpriteNumber = spriteNumber;                // TODO: quand reseter ces 2 variables (+ spLowTileBitOut et High) dans le cas ou les 8 sprites ne sont pas ok ? : A la place de ces variables avoir le flag pour savoir si sprite0 actif + attributs
+        _currentSpritePriority = ((_spAttributeLatches[spriteNumber] & 0x20) == true);
+        
+        // Set flag
+        spriteFound = true;
+    }
+    
+    // If no sprite found
+    if (spriteFound == false) {
+        // Initialize with 0
+        _spLowTileBitOut = 0;
+        _spHighTileBitOut = 0;
+        _currentSpriteNumber = 7;
+        _currentSpritePriority = ((_spAttributeLatches[7] & 0x20) == true);
+    }
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -912,22 +944,50 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementPosition
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::calculatePixel() {
+    // TODO: attention, il y a un truc a rajouter : si v pointe vers la palette quand le rendu est desactivé on affiche la couleur pointée et non 0 ! (voir palette hack)
+    
     // Get BG pixel
-    uint8_t bgColor = calculateBgPixel();   // TODO: bgColor est ce qui est envoyé au ext pins apparemment donc surement en fare un member
+    uint8_t bgPixel = ((_maskShowBackground == true) && ((_maskShowBackgroundFirst8px == true) || (_currentPixel >= 8))) ? ((_bgHighTileBitOut << 1) | _bgLowTileBitOut) : 0;// TODO: voir si _currentPixel est synchronisé avec le pixel courant a afficher !!! sinon je devrai faire (_currentPixel - x)
     
     // Get sprite pixel
+    uint8_t spPixel = ((_maskShowSprites == true) && ((_maskShowSpritesFirst8px == true) || (_currentPixel >= 8))) ? ((_spHighTileBitOut << 1) |_spLowTileBitOut) : 0; // TODO: pareil
     
+    // Check for sprite 0 hit
+    checkSprite0Hit(bgPixel, spPixel);
+    
+    // Check if sprite pixel has priority
+    if ((spPixel != 0x0) && ((_currentSpritePriority == false) || (bgPixel == 0x0))) {
+        // 0x10 for sprite palettes
+        return 0x10 | ((_spAttributeLatches[_currentSpriteNumber] & 0x3) << 2) | spPixel;
+    }
+    
+    // Check if background pixel has priority
+    if (bgPixel != 0x0) {
+        return (_bgHighAttributeBitOut << 3) | (_bgLowAttributeBitOut << 2) | bgPixel;
+    }
+    
+    // No pixel has priority, use BG ($3F00)
+    return 0x0;
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::calculateBgPixel() {
-    // TODO: ca va etre un genre de : uint8_t pixelIndexed = (((_atHighShiftRegister >> (7 - _fineXScroll)) & 0x1) << 3) | (((_atLowShiftRegister >> (7 - _fineXScroll)) & 0x1) << 2) | ((_highBGTileShiftRegister >> (14 - _fineXScroll)) & 0x2) | ((_lowBGTileShiftRegister >> (15 - _fineXScroll)) & 0x1); // Avec 14 = (7 - _fineXScroll) + 7 -> 7 pour inverser le _fineXScroll et 7 pour décaler a droite en gardant le 2eme bit et avec 15 = (7 - _fineXScroll) + 8 -> 7 pour inverser le _fineXScroll et 8 pour décaler a droite en gardant le 1er bit : OU plus simplement dit 14 pour le 15eme bit et 15 pour le 16eme bit (shift)
-    /*return (((_bgHighAttributeShiftRegister >> (7 - _fineXScroll)) & 0x1) << 3) |
-            (((_bgLowAttributeShiftRegister >> (7 - _fineXScroll)) & 0x1) << 2) |
-            ((_bgHighTileShiftRegister >> (14 - _fineXScroll)) & 0x2) |
-            ((_bgLowTileShiftRegister >> (15 - _fineXScroll)) & 0x1);*/
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkSprite0Hit(uint8_t bgPixel, uint8_t spPixel) {
+    // Don't check if sprite 0 not in current scanline
+    if (_sprite0OnCurrentScanline == false) {
+        return;
+    }
     
-    return (_bgHighAttributeBitOut << 3) | (_bgLowAttributeBitOut << 2) | (_bgHighTileBitOut << 1) | _bgLowTileBitOut;
+    // Don't check if it's not the sprite 0
+    if (_currentSpriteNumber != 0) {        // TODO: un peu le meme que celui du dessus dans un certain sens, voir comment en vrai
+        return;
+    }
+    
+    // TODO: n'est pas activé au pixel 255 !!! a voir : https://wiki.nesdev.com/w/index.php/PPU_OAM
+    
+    // A sprite 0 hit occurs if both pixels are non zero (and don't change flag if no sprite 0 hit occurs on this current pixel)
+    if ((bgPixel | spPixel) != 0) {
+        _statusSprite0Hit = true;
+    }
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
