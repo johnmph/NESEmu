@@ -50,7 +50,7 @@ namespace NESEmu { namespace Ppu {
         
         // Ext pins
         void exts(uint8_t data);
-        uint8_t getExts() const;
+        void getExts(uint8_t &data) const;
         
     private:
         
@@ -82,6 +82,8 @@ namespace NESEmu { namespace Ppu {
         void processVBlankLine();
         void processPreRenderLine();
         
+        void processPixel();
+        
         void processTiles(uint8_t dataType);
         void processSprites(uint8_t dataType);
         
@@ -108,7 +110,7 @@ namespace NESEmu { namespace Ppu {
         
         void incrementPositionCounters();
         
-        uint8_t calculatePixel();
+        uint8_t calculatePixel(uint8_t pixelNumber);
         void checkSprite0Hit(uint8_t bgPixel);
         
         uint8_t getColorFromPalette(uint8_t index);
