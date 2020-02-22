@@ -113,10 +113,13 @@ namespace NESEmu { namespace Ppu {
         uint8_t calculatePixel(uint8_t pixelNumber);
         void checkSprite0Hit(uint8_t bgPixel);
         
-        uint8_t getColorFromPalette(uint8_t index);
+        uint8_t getColorFromPaletteIndex(uint8_t index);
         
         void readObjectAttributeMemory();
         void writeObjectAttributeMemory(uint8_t data);
+        
+        uint8_t readPaletteIndexMemory(uint8_t address);
+        void writePaletteIndexMemory(uint8_t address, uint8_t data);
         
         void checkInterrupt();
         
@@ -141,7 +144,7 @@ namespace NESEmu { namespace Ppu {
         bool _controlMasterSlaveSelect;
         bool _controlGenerateNmiForVBlank;
         
-        bool _maskGrayscale;
+        uint8_t _maskGrayscale;
         bool _maskShowBackgroundFirst8px;
         bool _maskShowSpritesFirst8px;
         bool _maskShowBackground;
@@ -168,6 +171,8 @@ namespace NESEmu { namespace Ppu {
         bool _writeToggle;
         
         uint16_t _addressBus;
+        // Data bus not really exists on the PPU but on a external octal latch
+        uint8_t _externalOctalLatch;
         
         uint8_t _ntByte;
         uint8_t _atByte;
@@ -198,6 +203,9 @@ namespace NESEmu { namespace Ppu {
         bool _sprite0OnNextScanline;
         bool _sprite0OnCurrentScanline;
         bool _sprite0Active;
+        
+        uint8_t _currentPixelIndex;
+        uint8_t _extBackgroundIndexedColor;
         
         // OAM
         uint8_t _oamData;
