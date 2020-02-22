@@ -117,7 +117,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::write(uint16_t ad
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioRead(uint16_t address) {
     // Status register
-    if (address == 0x0002) {
+    if (address == 0x2) {
         // Least significant bits previously written into a PPU register (due to register not being updated for this address)
         _dataLatch &= 0x1F;
         
@@ -137,7 +137,7 @@ uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioRead(uint16_
         _writeToggle = false;
     }
     // OAM data register
-    else if (address == 0x0004) {
+    else if (address == 0x4) {
         // Read OAM
         readObjectAttributeMemory();
         
@@ -147,7 +147,7 @@ uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioRead(uint16_
         _dataLatch = _oamData;
     }
     // Data register
-    else if (address == 0x0007) {
+    else if (address == 0x7) {
         // Save data read buffer
         uint8_t oldDataReadBuffer = _dataReadBuffer;
         
@@ -181,7 +181,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite(uint16_t 
     _dataLatch = data;
     
     // Control register
-    if (address == 0x0000) {
+    if (address == 0x0) {
         _temporaryAddress = (_temporaryAddress & 0x73FF) | (data & 0x3) << 10;
         _controlAddressIncrementPerCpuAccess = ((data & 0x4) != 0) ? 32 : 1;//((data & 0x4) << 3) | (((data & 0x4) >> 2) ^ 0x1);
         _controlSpritePatternTableAddress = (data & 0x8) << 9;
@@ -194,7 +194,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite(uint16_t 
         checkInterrupt();
     }
     // Mask register
-    else if (address == 0x0001) {
+    else if (address == 0x1) {
         _maskGrayscale = (data & 0x1) ? 0x30 : 0x1F;
         _maskShowBackgroundFirst8px = data & 0x2;
         _maskShowSpritesFirst8px = data & 0x4;
@@ -205,13 +205,13 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite(uint16_t 
         _maskEmphasizeBlue = data & 0x80;
     }
     // OAM address register
-    else if (address == 0x0003) {
+    else if (address == 0x3) {
         _oamAddress = data;
         
         // TODO: voir pour les bugs (2C02 seulement)
     }
     // OAM data register
-    else if (address == 0x0004) {
+    else if (address == 0x4) {
         // Can only be written during VBlank, see https://wiki.nesdev.com/w/index.php/PPU_registers
         /*if ((isRenderingEnabled() == true) && (_currentScanline < (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline))) {
             // TODO: normalement ca fait des incrementations bizarres de oamAddress : voir les tests que j'ai fait avec Visual2C02, apparemment on écrit FF (a la place de data) a l'adresse _oamAddress si l'écriture s'est fait pendant un pixel pair (et si avant cycle 7 ou 6? mais ici un cycle PPU = 1 pixel tandis que le cycle en question est un 1/8 de cycle PPU) et on incrémente _oamAddress de 4 sauf si le cycle d'incrémentation tombe pendant les 2 1ers cycles (1/8 de cycle PPU) d'écriture IO car le second oam clear desactive l'incrementation de oamAddress
@@ -232,7 +232,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite(uint16_t 
         _needIncrementOAMAddress = true;// TODO: normalement incrementOamAddress(); mais voir quand reseter _oamAddressIncrement (le mettre a 1)
     }
     // Scroll register
-    else if (address == 0x0005) {
+    else if (address == 0x5) {
         // First write
         if (_writeToggle == false) {
             _temporaryAddress = (_temporaryAddress & 0x7FE0) | (data >> 3);
@@ -247,7 +247,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite(uint16_t 
         _writeToggle = !_writeToggle;
     }
     // Address register
-    else if (address == 0x0006) {
+    else if (address == 0x6) {
         // First write
         if (_writeToggle == false) {
             _temporaryAddress = (_temporaryAddress & 0xFF) | ((data & 0x3F) << 8);
@@ -262,7 +262,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite(uint16_t 
         _writeToggle = !_writeToggle;
     }
     // Data register
-    else {
+    else if (address == 0x7) {
         // If palette index address, write to it
         if (_address > 0x3EFF) {
             // Write to palette memory

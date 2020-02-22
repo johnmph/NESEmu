@@ -25,10 +25,10 @@ namespace NESEmu {
     template <Model EModel>
     struct Constants;
     
-    template <Model EModel>
+    template <Model EModel, class TGraphicHardware>
     struct Nes {
         
-        Nes();
+        Nes(TGraphicHardware &graphicHardware);
         
         void clock();
         
@@ -53,10 +53,13 @@ namespace NESEmu {
         
         // Chips
         Cpu::Chip<Constants::cpuModel, Nes> _cpu;
-        Ppu::Chip<Constants::ppuModel, Nes, Nes, Nes> _ppu;     // TODO: changer par apres, ca doit etre cartridge pour le 2eme parametre et pour le dernier ca doit etre la classe qui gerera le rendu
+        Ppu::Chip<Constants::ppuModel, Nes, Nes, TGraphicHardware> _ppu;     // TODO: changer par apres, ca doit etre cartridge pour le 2eme parametre et pour le dernier ca doit etre la classe qui gerera le rendu
         
         // 2kb of RAM
         std::vector<uint8_t> _ram;
+        
+        // 2kb of VRAM
+        std::vector<uint8_t> _vram;
         
         // Internals
         int _currentClockForCpu;

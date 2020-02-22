@@ -39,12 +39,12 @@ struct Constants<Model::Pal> {
 };
 
 
-template <Model EModel>
-Nes<EModel>::Nes() : _cpu(*this), _ppu(*this, *this, *this), _ram(2 * 1024) {
+template <Model EModel, class TGraphicHardware>
+Nes<EModel, TGraphicHardware>::Nes(TGraphicHardware &graphicHardware) : _cpu(*this), _ppu(*this, *this, graphicHardware), _ram(2 * 1024), _vram(2 * 1024) {
 }
 
-template <Model EModel>
-void Nes<EModel>::clock() {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::clock() {
     ++_currentClockForCpu;
     ++_currentClockForPpu;
     
@@ -61,8 +61,8 @@ void Nes<EModel>::clock() {
     }
 }
 
-template <Model EModel>
-void Nes<EModel>::reset(bool high) {  // TODO: a voir et a terminer
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::reset(bool high) {  // TODO: a voir et a terminer
     // Reset CPU
     _cpu.reset(high);
     
@@ -70,8 +70,8 @@ void Nes<EModel>::reset(bool high) {  // TODO: a voir et a terminer
     _ppu.reset(high);
 }
 
-template <Model EModel>
-uint8_t Nes<EModel>::read(uint16_t address) {   // TODO: a la place de ca, avoir l'emulation de la chip 74139 ?? (ca revient au meme normalement)
+template <Model EModel, class TGraphicHardware>
+uint8_t Nes<EModel, TGraphicHardware>::read(uint16_t address) {   // TODO: a la place de ca, avoir l'emulation de la chip 74139 ?? (ca revient au meme normalement)
     // RAM
     if (address < 0x2000) {
         // RAM is mirrored each 0x800 bytes
@@ -85,7 +85,7 @@ uint8_t Nes<EModel>::read(uint16_t address) {   // TODO: a la place de ca, avoir
     // Cartridge
     else if (address >= 0x4020) {   // TODO: voir pour l'adresse et pour le open bus behaviour si par exemple la rom ne contient pas de WRAM !!
         // Read from cartridge
-        //return _cartridge.read(address);  // TODO: a mettre une fois la classe faite, voir si mask ?
+        //return _cartridge.cpuRead(address);  // TODO: a mettre une fois la classe faite, voir si mask ?
     }
     
     // Open data bus latch (reading open bus (no device active address) repeats the last value that was read from the bus before this read)
@@ -93,8 +93,8 @@ uint8_t Nes<EModel>::read(uint16_t address) {   // TODO: a la place de ca, avoir
     return _cpu.getDataBus();   // TODO: voir si correct, voir si c'est affecté par le write aussi (dans ce cas ce code n'est pas bon), voir avec le ppu
 }
 
-template <Model EModel>
-void Nes<EModel>::write(uint16_t address, uint8_t data) {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::write(uint16_t address, uint8_t data) {
     // RAM
     if (address < 0x2000) {
         // RAM is mirrored each 0x800 bytes
@@ -109,14 +109,14 @@ void Nes<EModel>::write(uint16_t address, uint8_t data) {
     // Cartridge
     else {
         // Write to cartridge
-        //_cartridge.write(address, data);  // TODO: a mettre une fois la classe faite, voir si mask ?
+        //_cartridge.cpuWrite(address, data);  // TODO: a mettre une fois la classe faite, voir si mask ?
     }
     
     // Write does not affect open data bus latch because when CPU read on the open data bus latch, the last operation was a read (for the opcode, operand or address)
 }
 
-template <Model EModel>
-void Nes<EModel>::ppuInterrupt(bool high) {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::ppuInterrupt(bool high) {
     // PPU interrupt is connected to CPU NMI
     _cpu.nmi(high);
 }
