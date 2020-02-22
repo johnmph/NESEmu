@@ -166,6 +166,8 @@ namespace NESEmu { namespace Ppu {
         unsigned int _currentScanline;
         bool _oddFrame;
         
+        bool _vBlankStartedLatch;
+        
         uint16_t _temporaryAddress;
         uint8_t _fineXScroll;
         bool _writeToggle;
@@ -205,7 +207,7 @@ namespace NESEmu { namespace Ppu {
         bool _sprite0Active;
         
         uint8_t _currentPixelIndex;
-        uint8_t _extBackgroundIndexedColor;
+        uint8_t _extBackgroundIndex;
         
         // OAM
         uint8_t _oamData;

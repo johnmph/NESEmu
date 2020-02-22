@@ -102,9 +102,10 @@ uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioRead(uint16_
         
         // Reset VBlank started flag
         _statusVBlankStarted = false;
+        _vBlankStartedLatch = false;
         
         // Check for interrupt
-        checkInterrupt();   // TODO: peut etre pas ici mais a la fin du clock, voir le bug quand lu avant 1 cycle du VBL pendant et 1 cycle apres le VBL TESTER AVEC Visual2C02
+        checkInterrupt();
         
         // Reset write toggle
         _writeToggle = false;
@@ -161,14 +162,10 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite(uint16_t 
         _controlBackgroundPatternTableAddress = (data & 0x10) << 8;
         _controlSpriteSize = ((data & 0x20) != 0) ? 16 : 8; // (((data & 0x20) >> 1) | (((data & 0x20) >> 2) ^ 0x8));
         _controlMasterSlaveSelect = data & 0x40;
-        
-        bool oldControlGenerateNmiForVBlank = _controlGenerateNmiForVBlank;
         _controlGenerateNmiForVBlank = data & 0x80;
         
-        // Check for interrupt if generateNmiForVBlank changed
-        if (oldControlGenerateNmiForVBlank != _controlGenerateNmiForVBlank) {   // TODO: voir si ainsi
-            checkInterrupt();// TODO: peut etre pas ici mais a la fin du clock, a voir
-        }
+        // Check for interrupt
+        checkInterrupt();
     }
     // Mask register
     else if (address == 0x0001) {
@@ -240,7 +237,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite(uint16_t 
     }
     // Data register
     else {
-        // If palette index address, write to it    TODO: gerer la palette, est ce qu'on ecrit aussi via le bus a l'adresse ou juste la palette ??? : normalement juste la palette car sinon des qu'on veut updater la palette on va ecrire dans les mirroirs de la nametable aussi !!!
+        // If palette index address, write to it
         if (_address > 0x3EFF) {
             // Write to palette memory
             writePaletteIndexMemory(_address, data);
@@ -262,7 +259,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::exts(uint8_t data
     }
     
     // Save exts indexed color
-    _extBackgroundIndexedColor = data;
+    _extBackgroundIndex = data;
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -323,6 +320,13 @@ template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHard
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processLine() {// TODO: a la place de faire ca (checker le current scanline), utiliser les methodes isInXXXPhase !!! : le meilleur serait d'avoir une methode qui rafraichirerait tous les signaux en fonction du currentPixel, du currentScanline et d'autres choses et ensuite (ou avant le rafraichissement des signaux ?) appeler la methode qui gere les io et qui elle aussi modifierai certains signaux et ensuite faire les operations d'apres ces signaux
     // Idle on first pixel
     if (_currentPixel == 0) {
+        
+        // For the VBlank frame timing (the case when reading $2002 one PPU cycle before vblank flag is set)
+        // See : https://wiki.nesdev.com/w/index.php/PPU_frame_timing
+        if (_currentScanline == (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline)) {    // TOOD: il reste un probleme : comme les ioRead/Write ne dependent pas du PPU cycle (alors que je devrai le faire ainsi) si le cycle CPU du read $2002 est appelé avant le cycle PPU ici (scanline 241, pixel 0) ca va remettre ce flag a true et donc le flag vblank sera mis a true au cycle PPU d'apres alors qu'il ne le devrai pas !!, ca ne marche que si ce cycle PPU (scanline 241, pixel 0) est appelé avant le cycle CPU read $2002 (ainsi le flag est mis a false et au cycle PPU d'apres le vblank flag reste a false)
+            _vBlankStartedLatch = true;
+        }
+        
         return;
     }
     
@@ -405,7 +409,7 @@ template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHard
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processVBlankLine() {
     // Set VBlank flag if necessary
     if ((_currentScanline == (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline)) && (_currentPixel == 1)) { // TODO: changer 1 par des constants de Constants::
-        _statusVBlankStarted = true;    // TODO: voir le bug quand lu avant 1 cycle du VBL pendant et 1 cycle apres le VBL
+        _statusVBlankStarted = _vBlankStartedLatch;    // TODO: voir le bug quand lu avant 1 cycle du VBL pendant et 1 cycle apres le VBL
         
         // Notify hardware that the VBlank has started
         _graphicHardware.notifyVBlankStarted();
@@ -446,7 +450,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPixel() {
     // If not in process pixel period, exit
     if ((_currentPixel < 2) || (_currentPixel > (Constants::visibleScanlinePerFrameCount + 1))) {
         // No output if no in process pixel period
-        _currentPixelIndex = _extBackgroundIndexedColor;        // TODO: voir si ca ou background palette hack ou 0 ?
+        _currentPixelIndex = _extBackgroundIndex;        // TODO: voir si ca ou background palette hack ou 0 ?
         
         return;
     }
@@ -459,7 +463,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPixel() {
         _currentPixelIndex = calculatePixel(pixelNumber);
     } else {
         // Rendering disabled, use background color (if VRAM address points to palette during forced vblank, there is the background palette hack)
-        _currentPixelIndex = (_address >= 0x3F00) ? (_address & 0xFF) : _extBackgroundIndexedColor;
+        _currentPixelIndex = (_address >= 0x3F00) ? (_address & 0xFF) : _extBackgroundIndex;
     }
     
     // Get color from index
@@ -1026,7 +1030,7 @@ uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::calculatePixel
     }
     
     // No pixel has priority, use BG ($3F00)
-    return _extBackgroundIndexedColor;  // TODO: voir si ok + SI le spPixel ou bgPixel == 0 (si la palette = 0) est ce qu'on retourne 0 ou bien _extBackgroundIndexedColor ??? si on doi retourner _extBackgroundIndexedColor, alors remettre 0 a la place de _extBackgroundIndexedColor partout et dans getColorFromPalette checker si l'index 0 et si oui utiliser l'index _extBackgroundIndexedColor
+    return _extBackgroundIndex;  // TODO: voir si ok + SI le spPixel ou bgPixel == 0 (si la palette = 0) est ce qu'on retourne 0 ou bien _extBackgroundIndex ??? si on doi retourner _extBackgroundIndex, alors remettre 0 a la place de _extBackgroundIndex partout et dans getColorFromPalette checker si l'index 0 et si oui utiliser l'index _extBackgroundIndex
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -1056,7 +1060,7 @@ uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getColorFromPa
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkInterrupt() {
     // See https://wiki.nesdev.com/w/index.php/NMI
-    _interruptHardware.ppuInterrupt((_statusVBlankStarted == true) && (_controlGenerateNmiForVBlank == true));
+    _interruptHardware.ppuInterrupt((_statusVBlankStarted == false) || (_controlGenerateNmiForVBlank == false));
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
