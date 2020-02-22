@@ -9,6 +9,11 @@
 #ifndef NESEmu_Ppu_s_hpp
 #define NESEmu_Ppu_s_hpp
 
+// TODO: constantes a la place des valeurs ?
+// TODO: par apres uniformiser les operations logiques et binaires (tester si performance)
+// TODO: par apres, uniformiser les tests <= ou < et > ou >=
+// TODO: utiliser ~ sur les autres calculs aussi ?
+
 
 template <>
 struct Constants<Model::Ricoh2C02> {//TODO: + voir overscan (normalement c'est 224 scanline la frame visible en NTSC)
@@ -37,6 +42,19 @@ Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::Chip(TBus &bus, TInter
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::powerUp() {
+    // Reset PPUSTATUS
+    _statusSpriteOverflow = true;
+    _statusSprite0Hit = false;
+    _statusVBlankStarted = true;
+    
+    // Reset OAMADDR
+    _oamAddress = 0x0;
+    
+    // Reset PPUADDR
+    _address = 0x0;
+    
+    // Do a reset
+    reset(false);
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -46,12 +64,20 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clock() {
     
     // Update state
     updateState();
+    
+    // Check reset
+    checkReset();
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::reset(bool high) {
-    // TODO: voir ici pour les registres remis a 0 : https://wiki.nesdev.com/w/index.php/PPU_pin_out_and_signal_description
-    // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
+    // Save reset line
+    _resetLine = high;
+    
+    // If reset line is low, set reset requested
+    if (_resetLine == false) {
+        _resetRequested = true;
+    }
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -91,7 +117,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::write(uint16_t ad
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioRead(uint16_t address) {
     // Status register
-    if (address == 0x0002) {    // TODO: constantes a la place des valeurs ?
+    if (address == 0x0002) {
         // Least significant bits previously written into a PPU register (due to register not being updated for this address)
         _dataLatch &= 0x1F;
         
@@ -274,6 +300,59 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getExts(uint8_t &
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkReset() {
+    // TODO: voir ici pour les registres remis a 0 : https://wiki.nesdev.com/w/index.php/PPU_pin_out_and_signal_description
+    // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
+    
+    /*
+     
+     /RST resets certain parts of the chip to their initial power-on state: the clock divider, video phase generator, scanline/pixel counters, and the even/odd frame toggle. It also keeps several registers zeroed out for a full frame: PPUCTRL, PPUMASK ($2001), PPUSCROLL ($2005; the VRAM address latch "T", fine X scroll, and the H/V toggle), and the VRAM read buffer. It is used in the NES to clear the screen when the console is reset either by the button or the CIC, and in a dual-PPU system it can be used to genlock the two PPUs together.
+     
+     */
+    
+    // If no need to reset, exit
+    if (_resetRequested == false) {
+        return;
+    }
+    
+    // Reset PPUCTRL/PPUSCROLL temporary address
+    _temporaryAddress = 0x2000;
+    
+    // Reset PPUCTRL
+    _controlAddressIncrementPerCpuAccess = 0x1;
+    _controlSpritePatternTableAddress = 0x0;
+    _controlBackgroundPatternTableAddress = 0x0;
+    _controlSpriteSize = 8;
+    _controlMasterSlaveSelect = 0;
+    _controlGenerateNmiForVBlank = 0;
+    
+    // Reset PPUMASK
+    _maskGrayscale = false;
+    _maskShowBackgroundFirst8px = false;
+    _maskShowSpritesFirst8px = false;
+    _maskShowBackground = false;
+    _maskShowSprites = false;
+    _maskEmphasizeRed = false;
+    _maskEmphasizeGreen = false;
+    _maskEmphasizeBlue = false;
+    
+    // Reset PPUSTATUS
+    // TODO: le bit 7 est unchanged, et pas d'info sur les bits 5 et 6
+    
+    // Reset PPUSCROLL
+    _fineXScroll = 0;
+    
+    // Reset PPUDATA
+    _dataReadBuffer = 0x0;
+    
+    // Reset internals
+    _oddFrame = false;
+    _writeToggle = false;
+    
+    // TODO: voir pour les autres variables (scanline, pixel counter, ...)
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInRenderScanline() const {
     return (_currentScanline < Constants::visibleScanlinePerFrameCount);
 }
@@ -296,7 +375,7 @@ bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInPreRenderScan
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isRenderingEnabled() const {
-    return _maskShowBackground | _maskShowSprites;  // TODO: par apres uniformiser les operations logiques et binaires (tester si performance)
+    return _maskShowBackground | _maskShowSprites;
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -313,7 +392,7 @@ bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInSecondOAMClea
     // TODO: normalement entre le scanline 0 et 239 + le 261 (voir si autre quand meme ou non) -> pas les autres
     // TODO: on peut combiner les 2 regles ci-dessus pour avoir : isInRenderingPeriod()
     // To be in second OAM clear period, it must be in rendering period and current pixel must be between 1 and 64 (pixel 0 is already skipped on the clock method)
-    return (isInRenderingPeriod() == true) && (_currentPixel <= 64);    // TODO: par apres, uniformiser les tests <= ou < et mettre 64 en constants
+    return (isInRenderingPeriod() == true) && (_currentPixel <= 64);
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -408,8 +487,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPostRender
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processVBlankLine() {
     // Set VBlank flag if necessary
-    if ((_currentScanline == (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline)) && (_currentPixel == 1)) { // TODO: changer 1 par des constants de Constants::
-        _statusVBlankStarted = _vBlankStartedLatch;    // TODO: voir le bug quand lu avant 1 cycle du VBL pendant et 1 cycle apres le VBL
+    if ((_currentScanline == (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline)) && (_currentPixel == 1)) {
+        _statusVBlankStarted = _vBlankStartedLatch;
         
         // Notify hardware that the VBlank has started
         _graphicHardware.notifyVBlankStarted();
@@ -419,10 +498,14 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processVBlankLine
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPreRenderLine() {
     // Clear flags if necessary
-    if (_currentPixel == 1) {   // TODO: changer 1 par des constants de Constants::
+    if (_currentPixel == 1) {
         _statusSpriteOverflow = false;
         _statusSprite0Hit = false;
         _statusVBlankStarted = false;
+        
+        // Signal which is set when reset line is low and reset at the end of VBlank
+        // See https://wiki.nesdev.com/w/index.php/PPU_power_up_state
+        _resetRequested = (_resetLine == false);
     }
     
     // Only VRAM access if rendering is enabled
@@ -440,7 +523,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPreRenderL
     processSprites(dataType);
     
     // Check for Y address copy
-    if ((_currentPixel >= 280) && (_currentPixel <= 304)) { // TODO: changer 280 et 304 par des constants de Constants::
+    if ((_currentPixel >= 280) && (_currentPixel <= 304)) {
         _address = (_address & 0x41F) | (_temporaryAddress & 0x7BE0);
     }
 }
@@ -509,7 +592,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processTiles(uint
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processSprites(uint8_t dataType) {
     // Exit if we are no more in process sprites period
-    if (_currentPixel > 320) {// TODO: remplacer 320 par des constants de Constants:: // TODO: voir si compilateur optimise en ne faisant pas l'appel de la methode si on a cette condition (comme s'il sortait ce if a l'exterieur de cette methode, a l'endroit ou on appelle cette methode
+    if (_currentPixel > 320) {
         return;
     }
     
@@ -519,7 +602,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processSprites(ui
     }
     
     // If we are in second OAM clear period
-    if (_currentPixel < (64 + 1)) {   //TODO: changer 64 par des constants de Constants:: TODO: pareil qu'au dessus, voir si desactiver le rendu pendant ceci va stopper le second OAM
+    if (_currentPixel < (64 + 1)) {
         clearSecondOAM();
         return;
     }
@@ -530,7 +613,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processSprites(ui
     }
     
     // If we are in sprite evaluation period
-    if (_currentPixel < (Constants::visiblePixelsPerScanlineCount + 1)) {   // TODO: pareil qu'au dessus
+    if (_currentPixel < (Constants::visiblePixelsPerScanlineCount + 1)) {
         evaluateSprites();
         return;
     }
@@ -735,8 +818,6 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clearSecondOAMAnd
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::startFetchSprites() {
-    // TODO: voir pour le reste quand analyse du sprite fetch (il y a aussi le reset de l'oamAddress mais ca doit le faire a tous les cycles du fetch pas seulement au start !!
-    
     // Reset second OAM address
     resetSecondOAMAddress();
 }
@@ -895,7 +976,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateSpriteShift
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementXOnAddress() {
-    _address = ((_address & ~0x1F) | ((_address + 1) & 0x1F)) ^ ((((_address & 0x1F) + 1) & 0x20) << 5);    // TODO: utiliser ~ sur les autres calculs aussi ?
+    _address = ((_address & ~0x1F) | ((_address + 1) & 0x1F)) ^ ((((_address & 0x1F) + 1) & 0x20) << 5);
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -995,7 +1076,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementPosition
     ++_currentScanline;
     
     // Check boundary of scanline counter
-    if (_currentScanline < (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline + Constants::vBlankLengthInScanline + 1)) { //TODO: changer 1 par des constants de Constants::
+    if (_currentScanline < (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline + Constants::vBlankLengthInScanline + 1)) {
         return;
     }
     

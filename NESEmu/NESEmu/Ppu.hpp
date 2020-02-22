@@ -66,6 +66,8 @@ namespace NESEmu { namespace Ppu {
             uint8_t xPosition;
         };
         
+        void checkReset();
+        
         bool isInRenderScanline() const;
         bool isInPostRenderScanline() const;
         bool isInVBlankScanline() const;
@@ -161,6 +163,9 @@ namespace NESEmu { namespace Ppu {
         TBus &_bus;
         TInterruptHardware &_interruptHardware;
         TGraphicHardware &_graphicHardware;
+        
+        bool _resetLine;
+        bool _resetRequested;
         
         unsigned int _currentPixel;
         unsigned int _currentScanline;
