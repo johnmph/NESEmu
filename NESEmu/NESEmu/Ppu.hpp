@@ -35,15 +35,6 @@ namespace NESEmu { namespace Ppu {
         
         void reset(bool high);
         
-        // TODO: il y a un int (interrupt) qui appelle le nmi du cpu, donc avoir une methode setInterruptFunction qui recoit un lambda que la nes configurera pour appeler le nmi, peut etre que c'est possible de le faire au compile-time (passer une lambda en template parameter ?) -> surement pas car on appelle ca de l'objet cpu !!! -> un std function car il faut le sauver ? c'est lourd, peut etre un simple pointeur de fonction si possible
-        
-        // TODO: avoir une methode setPixelPlotterFunction() qui prend un template parameter plotPixel qui est une fonction (lambda ou autre) et cette methode appelera la fonction plotPixel ainsi : plotPixel(_currentPixel, _currentScanline, calculatedColor); ainsi on peut découpler le PPU et donc la NES du systeme graphique de l'OS de l'émulateur
-        // TODO: il faudra donc aussi une methode setStartingVBlankNotifierFunction() pour notifier que le vblank commence pour par exemple afficher l'image (qui a été calculée via un buffer de pixel setté par plotPixel)
-        
-        // VRAM access
-        uint8_t read(uint16_t address);
-        void write(uint16_t address, uint8_t data);
-        
         // IO access
         uint8_t ioRead(uint16_t address);
         void ioWrite(uint16_t address, uint8_t data);
@@ -67,6 +58,10 @@ namespace NESEmu { namespace Ppu {
         };
         
         void checkReset();
+        
+        // VRAM access
+        uint8_t read(uint16_t address);             // TODO: renommer readFromBus et writeToBus et pareil dans le cpu ? (et renommer ioRead/write en read/write) ?
+        void write(uint16_t address, uint8_t data);
         
         bool isInRenderScanline() const;
         bool isInPostRenderScanline() const;

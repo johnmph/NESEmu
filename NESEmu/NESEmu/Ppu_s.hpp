@@ -81,40 +81,6 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::reset(bool high) 
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::read(uint16_t address) { // TODO: faire le meme pour le reste (un read qui ne retourne rien mais modifie le dataBus ! ainsi si des lignes ne sont pas affectées, on ne les change pas, car si on retourne 0 on a aucun moyen de savoir si on a lu 0 ou si on a rien lu car on avait une mauvaise address), le faire aussi pour le CPU ?
-    
-    // Set address bus
-    _addressBus = address;
-    
-    // Save low byte of addressBus in external octal latch
-    _externalOctalLatch = _addressBus & 0xFF;
-    
-    // Read data from PPU bus
-    uint8_t dataBus = _externalOctalLatch;
-    _bus.read(_addressBus, dataBus);
-    
-    // Data is on low byte of address bus
-    _addressBus = (_addressBus & 0xFF00) | dataBus;
-    
-    return dataBus;
-}
-
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::write(uint16_t address, uint8_t data) {
-    // Set address bus
-    _addressBus = address;
-    
-    // Save low byte of addressBus in external octal latch
-    _externalOctalLatch = _addressBus & 0xFF;
-    
-    // Data is on low byte of address bus
-    _addressBus = (_addressBus & 0xFF00) | data;
-    
-    // Write data to PPU bus
-    _bus.write((_addressBus & 0xFF00) | _externalOctalLatch, data);// TODO: on doit lire a l'adresse _address (via des fonctions read / write qui seront gérées par le cartridge)
-}
-
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioRead(uint16_t address) {
     // Status register
     if (address == 0x2) {
@@ -350,6 +316,40 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkReset() {
     _writeToggle = false;
     
     // TODO: voir pour les autres variables (scanline, pixel counter, ...)
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::read(uint16_t address) { // TODO: faire le meme pour le reste (un read qui ne retourne rien mais modifie le dataBus ! ainsi si des lignes ne sont pas affectées, on ne les change pas, car si on retourne 0 on a aucun moyen de savoir si on a lu 0 ou si on a rien lu car on avait une mauvaise address), le faire aussi pour le CPU ?
+    
+    // Set address bus
+    _addressBus = address;
+    
+    // Save low byte of addressBus in external octal latch
+    _externalOctalLatch = _addressBus & 0xFF;
+    
+    // Read data from PPU bus
+    uint8_t dataBus = _externalOctalLatch;
+    _bus.read(_addressBus, dataBus);
+    
+    // Data is on low byte of address bus
+    _addressBus = (_addressBus & 0xFF00) | dataBus;
+    
+    return dataBus;
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::write(uint16_t address, uint8_t data) {
+    // Set address bus
+    _addressBus = address;
+    
+    // Save low byte of addressBus in external octal latch
+    _externalOctalLatch = _addressBus & 0xFF;
+    
+    // Data is on low byte of address bus
+    _addressBus = (_addressBus & 0xFF00) | data;
+    
+    // Write data to PPU bus
+    _bus.write((_addressBus & 0xFF00) | _externalOctalLatch, data);// TODO: on doit lire a l'adresse _address (via des fonctions read / write qui seront gérées par le cartridge)
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -1141,7 +1141,7 @@ uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getColorFromPa
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkInterrupt() {
     // See https://wiki.nesdev.com/w/index.php/NMI
-    _interruptHardware.ppuInterrupt((_statusVBlankStarted == false) || (_controlGenerateNmiForVBlank == false));
+    _interruptHardware.interrupt((_statusVBlankStarted == false) || (_controlGenerateNmiForVBlank == false));
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>

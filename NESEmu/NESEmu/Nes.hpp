@@ -11,8 +11,10 @@
 
 #include <cstdint>
 #include <vector>
+#include <memory>
 #include "Cpu.hpp"
 #include "Ppu.hpp"
+#include "Controller/Nothing.hpp"
 
 
 namespace NESEmu {
@@ -25,35 +27,64 @@ namespace NESEmu {
     template <Model EModel>
     struct Constants;
     
-    template <Model EModel, class TGraphicHardware>
+    template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
     struct Nes {
         
-        Nes(TGraphicHardware &graphicHardware);
+        Nes(TCartridgeHardware &cartridgeHardware, TGraphicHardware &graphicHardware);
         
         void clock();
         
         void reset(bool high);
         
+        void connectController(unsigned int portNumber, std::unique_ptr<Controller::Interface> controller);
+        
     private:
+        
+        struct CpuBus {
+            CpuBus(Nes &nes);
+            
+            uint8_t read(uint16_t address);
+            void write(uint16_t address, uint8_t data);
+            
+        private:
+            Nes &_nes;
+        };
+        
+        struct PpuBus {
+            PpuBus(Nes &nes);
+            
+            uint8_t read(uint16_t address);
+            void write(uint16_t address, uint8_t data);
+            
+            void interrupt(bool high);
+            
+        private:
+            Nes &_nes;
+        };
+        
         
         using Constants = Constants<EModel>;
         
         // Set Cpu as friend to keep data bus methods private
-        friend Cpu::Chip<Constants::cpuModel, Nes>;
+        //friend Cpu::Chip<Constants::cpuModel, Nes>;
         
         // Set Ppu as friend to keep interrupt method private
-        friend Ppu::Chip<Constants::ppuModel, Nes, Nes, Nes>;
+        //friend Ppu::Chip<Constants::ppuModel, Nes, Nes, Nes>;
         
-        // Memory bus
-        uint8_t read(uint16_t address);
-        void write(uint16_t address, uint8_t data);
+        // CPU memory bus
+        uint8_t cpuRead(uint16_t address);
+        void cpuWrite(uint16_t address, uint8_t data);
+        
+        // PPU memory bus
+        uint8_t ppuRead(uint16_t address);
+        void ppuWrite(uint16_t address, uint8_t data);
         
         // PPU interrupt hardware
         void ppuInterrupt(bool high);
         
         // Chips
-        Cpu::Chip<Constants::cpuModel, Nes> _cpu;
-        Ppu::Chip<Constants::ppuModel, Nes, Nes, TGraphicHardware> _ppu;     // TODO: changer par apres, ca doit etre cartridge pour le 2eme parametre et pour le dernier ca doit etre la classe qui gerera le rendu
+        Cpu::Chip<Constants::cpuModel, CpuBus> _cpu;
+        Ppu::Chip<Constants::ppuModel, PpuBus, PpuBus, TGraphicHardware> _ppu;     // TODO: changer par apres, ca doit etre cartridge pour le 2eme parametre et pour le dernier ca doit etre la classe qui gerera le rendu
         
         // 2kb of RAM
         std::vector<uint8_t> _ram;
@@ -61,7 +92,14 @@ namespace NESEmu {
         // 2kb of VRAM
         std::vector<uint8_t> _vram;
         
+        // Controllers
+        std::unique_ptr<Controller::Interface> _controllers[2];    // TODO: 2 controllers ports, voir si mettre 2 dans un const
+        
         // Internals
+        TCartridgeHardware &_cartridgeHardware;
+        CpuBus _cpuBus;
+        PpuBus _ppuBus;
+        
         int _currentClockForCpu;
         int _currentClockForPpu;
         
