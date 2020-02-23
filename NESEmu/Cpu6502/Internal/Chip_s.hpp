@@ -287,7 +287,7 @@ void Chip<TConfiguration>::fetchMemoryPhi1() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::fetchMemoryPhi2() {
-    // dataBus is already filled with date since end of phi1, just put dataBus on internal registers
+    // dataBus is already filled with data since end of phi1, just put dataBus on internal registers
     if (_readWrite == static_cast<bool>(ReadWrite::Read)) {
         _inputDataLatch = _dataBus;
         _predecode = _inputDataLatch;

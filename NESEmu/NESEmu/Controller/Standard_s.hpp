@@ -33,7 +33,7 @@ void Standard<TControllerHardware>::write(bool data) {
 }
 
 template <class TControllerHardware>
-void Standard<TControllerHardware>::update() {
+void Standard<TControllerHardware>::update() {  // TODO: soit on l'appelle a chaque clock de la nes, ou du cpu, ou bien pour optimiser (si c'est ok avec tous les controllers) on l'appelle dans read et write (au debut de read et a la fin de write)
     // If no need to update, exit
     if (_needToUpdate == false) {
         return;
