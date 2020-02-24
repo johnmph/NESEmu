@@ -32,6 +32,8 @@ namespace NESEmu {
         
         Nes(TCartridgeHardware &cartridgeHardware, TGraphicHardware &graphicHardware);
         
+        void powerUp();
+        
         void clock();
         
         void reset(bool high);

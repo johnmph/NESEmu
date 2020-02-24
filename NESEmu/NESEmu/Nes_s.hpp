@@ -200,6 +200,15 @@ Nes<EModel, TCartridgeHardware, TGraphicHardware>::Nes(TCartridgeHardware &cartr
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
+void Nes<EModel, TCartridgeHardware, TGraphicHardware>::powerUp() {
+    // Power up CPU
+    _cpu.powerUp();
+    
+    // Power up PPU
+    _ppu.powerUp();
+}
+
+template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
 void Nes<EModel, TCartridgeHardware, TGraphicHardware>::clock() {
     ++_currentClockForCpu;
     ++_currentClockForPpu;

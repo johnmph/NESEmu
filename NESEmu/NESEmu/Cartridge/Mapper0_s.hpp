@@ -12,7 +12,16 @@
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
 Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::Mapper0(std::istream &istream) : _prgRom(IPrgRomSizeInKb), _prgRam(IPrgRamSizeInKb), _chrRom(8 * 1024) {
-    // TODO: voir si read via istream ici ou bien dans un factory a part et avoir directement ici les vectors a copier simplement
+    // TODO: voir si read via istream ici ou bien dans un factory a part et avoir directement ici les vectors a copier simplement : doit etre en dehors
+    // TODO: pour tests :
+    // Skip header
+    istream.seekg(0x10);
+    
+    // Read Prg-Rom
+    istream.read(reinterpret_cast<char *>(_prgRom.data()), IPrgRomSizeInKb);
+    
+    // Read Chr-Rom
+    istream.read(reinterpret_cast<char *>(_chrRom.data()), 8 * 1024);
 }
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
@@ -30,7 +39,7 @@ void Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::cpuReadPerformed(TCo
         }
     }
     // Prg-Rom
-    else if (address >= 0x8000) {   // TODO: voir si nécessaire la condition (est ce qu'on peut etre en dessous de 0x6000 dans cette methode ?
+    else if (address >= 0x8000) {   // TODO: voir si nécessaire la condition (est ce qu'on peut etre en dessous de 0x6000 dans cette methode ? : oui nécessaire !!!
         // Read Prg-Rom with possible mirrored address
         connectedBus.setDataBus(_prgRom[address & ((IPrgRomSizeInKb * 1024) - 1)]);
     }
@@ -63,14 +72,14 @@ void Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::ppuReadPerformed(TCo
     uint16_t address = connectedBus.getAddressBus();
     
     // Chr-Rom
-    if (address < 0x2000) {//TODO: ca ou mirror ??
+    if (address < 0x2000) {
         // Read Chr-Rom
         connectedBus.setDataBus(_chrRom[address]);
     }
     // Internal VRAM
     else if (address < 0x4000) {
         // Read VRAM with mirrored address
-        connectedBus.setDataBus(connectedBus.getVram()[address & 0xFFF]);   // TODO: attention on doit prendre EMirroring en compte, voir comment
+        connectedBus.setDataBus(connectedBus.getVram()[getMirroredAddress<EMirroring>(address)]);
     }
 }
 
@@ -83,11 +92,11 @@ void Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::ppuWritePerformed(TC
     // Get data
     uint8_t data = connectedBus.getDataBus();
     
-    // Nothing for Chr_rom (Can't write to  ROM)
+    // Nothing for Chr-Rom (Can't write to a ROM)
     // Internal VRAM
     if ((address >= 0x2000) && (address < 0x4000)) {
         // Write VRAM with mirrored address
-        connectedBus.getVram()[address & 0xFFF] = data;         // TODO: attention on doit prendre EMirroring en compte, voir comment
+        connectedBus.getVram()[getMirroredAddress<EMirroring>(address)] = data;
     }
 }
 

@@ -16,9 +16,11 @@
 		4D6FAB3423ECF19E009977EE /* CpuVisual2A03UnitTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D6FAB3323ECF19E009977EE /* CpuVisual2A03UnitTest.mm */; };
 		4D70474E2402FAF1005A56B1 /* Nothing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D70474D2402FAF1005A56B1 /* Nothing.cpp */; };
 		4D70474F2402FAF1005A56B1 /* Nothing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D70474D2402FAF1005A56B1 /* Nothing.cpp */; };
+		4DD1EB802403911B00018E52 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD1EB7E2403911B00018E52 /* Common.cpp */; };
+		4DD1EB812403911B00018E52 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD1EB7E2403911B00018E52 /* Common.cpp */; };
+		4DD1EB832403FD1700018E52 /* main2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD1EB822403FD1700018E52 /* main2.cpp */; };
 		4DD7179223FEAADC00005D8C /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD7179023FEAADC00005D8C /* Common.cpp */; };
 		4DD7179323FEAADC00005D8C /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD7179023FEAADC00005D8C /* Common.cpp */; };
-		4DE643F523BAE2EC00CFFE4E /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE643F423BAE2EC00CFFE4E /* main.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -82,6 +84,9 @@
 		4D98080123C5163C007D1953 /* Register_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Register_s.hpp; sourceTree = "<group>"; };
 		4D98080223C51651007D1953 /* Stack_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Stack_s.hpp; sourceTree = "<group>"; };
 		4DD1EB7D240373DB00018E52 /* Mapper0_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mapper0_s.hpp; sourceTree = "<group>"; };
+		4DD1EB7E2403911B00018E52 /* Common.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Common.cpp; sourceTree = "<group>"; };
+		4DD1EB7F2403911B00018E52 /* Common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Common.hpp; sourceTree = "<group>"; };
+		4DD1EB822403FD1700018E52 /* main2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main2.cpp; sourceTree = "<group>"; };
 		4DD7178E23F3814600005D8C /* Mapper0.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mapper0.hpp; sourceTree = "<group>"; };
 		4DD7178F23F3815900005D8C /* Interface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Interface.hpp; sourceTree = "<group>"; };
 		4DD7179023FEAADC00005D8C /* Common.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Common.cpp; sourceTree = "<group>"; };
@@ -210,6 +215,8 @@
 		4D70474A240202D9005A56B1 /* Cartridge */ = {
 			isa = PBXGroup;
 			children = (
+				4DD1EB7F2403911B00018E52 /* Common.hpp */,
+				4DD1EB7E2403911B00018E52 /* Common.cpp */,
 				4DD7178E23F3814600005D8C /* Mapper0.hpp */,
 				4DD1EB7D240373DB00018E52 /* Mapper0_s.hpp */,
 			);
@@ -240,6 +247,7 @@
 				4D1137F823CD3F660056AAAD /* Cpu6502 */,
 				4D6B9C1D23D8CE32000889C3 /* NESEmu */,
 				4DE643F423BAE2EC00CFFE4E /* main.cpp */,
+				4DD1EB822403FD1700018E52 /* main2.cpp */,
 			);
 			path = NESEmu;
 			sourceTree = "<group>";
@@ -333,6 +341,7 @@
 			files = (
 				4D6B9C2223E2310D000889C3 /* ChipVisual6502UnitTest.mm in Sources */,
 				4D1137F323CD3EEC0056AAAD /* NESEmuUnitTest.mm in Sources */,
+				4DD1EB812403911B00018E52 /* Common.cpp in Sources */,
 				4D6FAB3123ECBF9C009977EE /* Visual6502.cpp in Sources */,
 				4D70474F2402FAF1005A56B1 /* Nothing.cpp in Sources */,
 				4D1137FD23CD403E0056AAAD /* ChipNestestUnitTest.mm in Sources */,
@@ -346,9 +355,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4DE643F523BAE2EC00CFFE4E /* main.cpp in Sources */,
+				4DD1EB832403FD1700018E52 /* main2.cpp in Sources */,
 				4D11382B23D533E70056AAAD /* Chip.cpp in Sources */,
 				4DD7179223FEAADC00005D8C /* Common.cpp in Sources */,
+				4DD1EB802403911B00018E52 /* Common.cpp in Sources */,
 				4D70474E2402FAF1005A56B1 /* Nothing.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

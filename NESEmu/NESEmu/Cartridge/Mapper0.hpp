@@ -9,20 +9,14 @@
 #ifndef NESEmu_Cartridge_Mapper0_hpp
 #define NESEmu_Cartridge_Mapper0_hpp
 
-#include <cstdint>
 #include <istream>
+#include "Common.hpp"
 
 
 namespace NESEmu { namespace Cartridge {
     
-    enum class MirroringType {  // TODO: taper ca dans un Cartridge.hpp ? avec en plus SingleScreen et FourScreen ?
-        Horizontal,
-        Vertical
-    };
-    
-    // TODO: rajouter des template parameters pour la taille PRG-ROM, PRG-RAM (battery backup) et le type de nametable mirroring
-    template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
-    struct Mapper0 {    // TODO: comment avoir acces au 2k de vram de nes ici ? + Il faut la possibilité d'envoyer un irq sur le cpu + il faut avoir acces au bus !!! gros probleme : le bus est Nes mais Nes a son parametre template qui est cette classe je ne peux pas donc passer Nes comme parametre template a cette classe (cyclic dependency)
+    template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>//TODO: comment limiter le mirroring a H et V seulement ?
+    struct Mapper0 {    // TODO: comment avoir acces au 2k de vram de nes ici ? + Il faut la possibilité d'envoyer un irq sur le cpu + il faut avoir acces au bus !!! gros probleme : le bus est Nes mais Nes a son parametre template qui est cette classe je ne peux pas donc passer Nes comme parametre template a cette classe (cyclic dependency) : voir si ok avec ce systeme (template sur methodes)
         
         Mapper0(std::istream &istream);
         

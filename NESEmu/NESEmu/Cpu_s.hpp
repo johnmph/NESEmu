@@ -171,7 +171,7 @@ void Chip<EModel, TBus>::performRead() {
     
     uint16_t address = getAddressBus();
     
-    // Sound
+    // APU
     if (address == 0x4015) {
         setDataBus(0x0); // TODO: changer
     }
@@ -193,7 +193,7 @@ void Chip<EModel, TBus>::performWrite() {
     uint16_t address = getAddressBus();
     uint8_t data = getDataBus();
     
-    // Sound
+    // APU
     if (((address >= 0x4000) && (address < 0x4014)) || (address == 0x4015)) {
         //TODO: ajouter
         return;
@@ -205,13 +205,13 @@ void Chip<EModel, TBus>::performWrite() {
         return;
     }
     // Joystick 1 / 2
-    else if (address == 0x4016) {   // TODO: il faut aussi notifier les manettes qu'on a ecrit ca en appelant leur out(_outLatch & 0x1) !!!
+    else if (address == 0x4016) {   // TODO: il faut aussi notifier les manettes qu'on a ecrit ca en appelant leur out(_outLatch & 0x1) !!! : je l'ai mis dans le clock nes cpu, voir si pas moyen de faire mieux optimisé que ca !!
         _outLatch = data & 0x7;
         
         return;
     }
-    // Joystick 2
-    else if (address == 0x4017) {// TODO: rien, a retirer ????
+    // APU frame counter
+    else if (address == 0x4017) {
         //TODO: ajouter
         return;
     }
