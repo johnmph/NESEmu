@@ -12,21 +12,65 @@
 #include <chrono>
 #include "Cpu6502/Chip.hpp"
 #include "Nes.hpp"
+#include "NESEmu/Cartridge/Mapper0.hpp"
 
 
 struct Bus {
     uint8_t read(uint16_t address) {
-        //std::cout << std::hex << "Read 0x" << static_cast<int>(_memory[address & 0xBFFF]) << " at 0x" << address << "\n";
-        return _memory[address & 0xBFFF];
+        //std::cout << std::hex << "Read 0x" << static_cast<int>(memory[address & 0xBFFF]) << " at 0x" << address << "\n";
+        return memory[address & 0xBFFF];
     }
     
     void write(uint16_t address, uint8_t data) {
         //std::cout << std::hex << "Write 0x" << static_cast<int>(data) << " at 0x" << address << "\n";
-        _memory[address & 0xBFFF] = data;
+        memory[address & 0xBFFF] = data;
     }
     
-//private:
-    std::array<uint8_t, 1024 * 64> _memory;
+    uint16_t getAddressBus() const {
+        return _address;
+    }
+    
+    void setAddressBus(uint16_t address) {
+        _address = address;
+    }
+    
+    uint8_t getDataBus() const {
+        return _data;
+    }
+    
+    void setDataBus(uint8_t data) {
+        _data = data;
+    }
+    
+    void setDataBus(uint8_t data, uint8_t mask) {
+        _data = (_data & ~mask) | (data & mask);
+    }
+    
+    void performRead() {
+        //std::cout << std::hex << "Read 0x" << static_cast<int>(memory[_address]) << " at 0x" << _address << "\n";
+        _data = memory[_address & 0xBFFF];
+    }
+    
+    void performWrite() {
+        //std::cout << std::hex << "Write 0x" << static_cast<int>(_data) << " at 0x" << _address << "\n";
+        memory[_address & 0xBFFF] = _data;
+    }
+    
+    std::array<uint8_t, 1024 * 64> memory;
+    uint16_t _address;
+    uint8_t _data;
+};
+
+struct GraphicHardware {
+    uint8_t getColorFromIndex(uint8_t color, bool r, bool g, bool b) {
+        return 0;
+    }
+    
+    void plotPixel(unsigned int x, unsigned int y, uint8_t color) {
+    }
+    
+    void notifyVBlankStarted() {
+    }
 };
 
 
@@ -114,7 +158,7 @@ int main(int argc, const char * argv[]) {
     cpu.clock();*/
     
     // Initialize with NOP
-    bus._memory.fill(0xEA);
+    bus.memory.fill(0xEA);
     
     // Read test file
     std::ifstream ifs("../UnitTestFiles/nestest.nes", std::ios::binary);
@@ -124,8 +168,8 @@ int main(int argc, const char * argv[]) {
     assert(ifs.good());
     
     ifs.seekg(0x10);
-    ifs.read(reinterpret_cast<char *>(&bus._memory.data()[0x8000]), 0x4000);
-    //ifs.read(reinterpret_cast<char *>(&bus._memory.data()[0x8000]), 0x8000);
+    ifs.read(reinterpret_cast<char *>(&bus.memory.data()[0x8000]), 0x4000);
+    //ifs.read(reinterpret_cast<char *>(&bus.memory.data()[0x8000]), 0x8000);
     ifs.close();
     
     // Reset vector
@@ -179,7 +223,9 @@ int main(int argc, const char * argv[]) {
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     std::cout << std::dec << "Time in milliseconds: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "\n";
     
-    NESEmu::Nes<NESEmu::Model::Ntsc> nes;
+    GraphicHardware graphicHardware;
+    NESEmu::Cartridge::Mapper0<> mapper0;
+    NESEmu::Nes<NESEmu::Model::Ntsc, NESEmu::Cartridge::Mapper0, GraphicHardware> nes(mapper0, graphicHardware);
     
     nes.clock();
     

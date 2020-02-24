@@ -131,8 +131,6 @@ void Chip<TConfiguration>::powerUp(uint16_t programCounter, uint8_t stackPointer
     _statusFlags = statusFlags;
     
     // Internal
-    _addressBus = 0x0;
-    _dataBus = 0x0;
     _addressBusLow = 0x0;
     _addressBusHigh = 0x0;
     _inputDataLatch = 0x0;
@@ -244,16 +242,6 @@ void Chip<TConfiguration>::setOverflow(bool high) {
 }
 
 template <class TConfiguration>
-uint16_t Chip<TConfiguration>::getAddressBus() const {
-    return _addressBus;
-}
-
-template <class TConfiguration>
-uint8_t Chip<TConfiguration>::getDataBus() const {
-    return _dataBus;
-}
-
-template <class TConfiguration>
 bool Chip<TConfiguration>::getReadWriteSignal() const {
     return _readWrite;
 }
@@ -279,9 +267,9 @@ template <class TConfiguration>
 void Chip<TConfiguration>::fetchMemoryPhi1() {
     // Read data on dataBus if it is in read mode else set dataBus with last read value
     if (_readWrite == static_cast<bool>(ReadWrite::Read)) {
-        _dataBus = _bus.read(_addressBus);
+        _bus.performRead();
     } else {
-        _dataBus = _inputDataLatch;
+        _bus.setDataBus(_inputDataLatch);   // TODO: voir si ca n'a pas d'influence sur le open bus behaviour !!! (j'ai besoin de ca sinon les tests foirent)
     }
 }
 
@@ -289,15 +277,15 @@ template <class TConfiguration>
 void Chip<TConfiguration>::fetchMemoryPhi2() {
     // dataBus is already filled with data since end of phi1, just put dataBus on internal registers
     if (_readWrite == static_cast<bool>(ReadWrite::Read)) {
-        _inputDataLatch = _dataBus;
+        _inputDataLatch = _bus.getDataBus();
         _predecode = _inputDataLatch;
         
         return;
     }
     
     // Write data to dataBus
-    _dataBus = _dataOutput;
-    _bus.write(_addressBus, _dataBus);
+    _bus.setDataBus(_dataOutput);
+    _bus.performWrite();
 }
 
 template <class TConfiguration>
@@ -307,7 +295,7 @@ void Chip<TConfiguration>::readDataBus(uint8_t low, uint8_t high) {
     _addressBusHigh = high;
     
     // Set address bus
-    _addressBus = (_addressBusHigh << 8) | _addressBusLow;
+    _bus.setAddressBus((_addressBusHigh << 8) | _addressBusLow);
     
     // Set R/W to read
     _readWrite = static_cast<bool>(ReadWrite::Read);
@@ -320,7 +308,7 @@ void Chip<TConfiguration>::writeDataBus(uint8_t low, uint8_t high, uint8_t data)
     _addressBusHigh = high;
     
     // Set address bus
-    _addressBus = (_addressBusHigh << 8) | _addressBusLow;
+    _bus.setAddressBus((_addressBusHigh << 8) | _addressBusLow);
     
     // Write data bus, emulate possible bus conflict which cause a low level to win (it is like an AND operation)
     //_dataOutput &= data;

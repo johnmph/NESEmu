@@ -9,21 +9,37 @@
 #ifndef NESEmu_Cartridge_Mapper0_hpp
 #define NESEmu_Cartridge_Mapper0_hpp
 
+#include <cstdint>
+
 
 namespace NESEmu { namespace Cartridge {
     
+    enum class MirroringType {  // TODO: taper ca dans un Cartridge.hpp ? avec en plus SingleScreen et FourScreen ?
+        Horizontal,
+        Vertical
+    };
+    
     // TODO: rajouter des template parameters pour la taille PRG-ROM, PRG-RAM (battery backup) et le type de nametable mirroring
-    struct Mapper0 {    // TODO: comment avoir acces au 2k de vram de nes ici ? + Il faut la possibilité d'envoyer un irq sur le cpu
+    template <int IPrgRomSizeInKb, int IPrgRamSizeInKb, MirroringType EMirroring>
+    struct Mapper0 {    // TODO: comment avoir acces au 2k de vram de nes ici ? + Il faut la possibilité d'envoyer un irq sur le cpu + il faut avoir acces au bus !!! gros probleme : le bus est Nes mais Nes a son parametre template qui est cette classe je ne peux pas donc passer Nes comme parametre template a cette classe (cyclic dependency)
         
         // Cpu memory bus
-        uint8_t cpuRead(uint16_t address);
-        void cpuWrite(uint16_t address, uint8_t data);
+        template <class TConnectedBus>
+        void cpuReadPerformed(TConnectedBus &bus);
+        
+        template <class TConnectedBus>
+        void cpuWritePerformed(TConnectedBus &bus);
         
         // Ppu memory bus
-        uint8_t ppuRead(uint16_t address);
-        void ppuWrite(uint16_t address, uint8_t data);
+        template <class TConnectedBus>
+        void ppuReadPerformed(TConnectedBus &bus);
+        
+        template <class TConnectedBus>
+        void ppuWritePerformed(TConnectedBus &bus);
         
     };
+    
+    #include "Mapper0_s.hpp"
     
 } }
 

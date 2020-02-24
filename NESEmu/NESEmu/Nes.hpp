@@ -43,23 +43,48 @@ namespace NESEmu {
         struct CpuBus {
             CpuBus(Nes &nes);
             
-            uint8_t read(uint16_t address);
-            void write(uint16_t address, uint8_t data);
+            uint16_t getAddressBus() const;
+            void setAddressBus(uint16_t address);
+            
+            uint8_t getDataBus() const;
+            void setDataBus(uint8_t data);
+            void setDataBus(uint8_t data, uint8_t mask);
+            
+            void performRead();
+            void performWrite();
+            
+            void readControllerPort(unsigned int number);
             
         private:
             Nes &_nes;
+            
+            uint16_t _address;
+            uint8_t _data;
         };
         
         struct PpuBus {
             PpuBus(Nes &nes);
             
-            uint8_t read(uint16_t address);
-            void write(uint16_t address, uint8_t data);
+            uint16_t getAddressBus() const;
+            void setAddressBus(uint16_t address);
+            
+            uint8_t getDataBus() const;
+            void setDataBus(uint8_t data);
+            void setDataBus(uint8_t data, uint8_t mask);
+            
+            void performRead();
+            void performWrite();
+            
+            // TODO: rajouter une methode pour avoir acces a la vram qui sera utilisée par les mappers
             
             void interrupt(bool high);
             
         private:
             Nes &_nes;
+            
+            uint16_t _address;
+            // Data bus not really exists on the PPU but on a external octal latch
+            uint8_t _externalOctalLatch;
         };
         
         
@@ -72,8 +97,8 @@ namespace NESEmu {
         //friend Ppu::Chip<Constants::ppuModel, Nes, Nes, Nes>;
         
         // CPU memory bus
-        uint8_t cpuRead(uint16_t address);
-        void cpuWrite(uint16_t address, uint8_t data);
+        //uint8_t cpuRead(uint16_t address);
+        //void cpuWrite(uint16_t address, uint8_t data);
         
         // PPU memory bus
         uint8_t ppuRead(uint16_t address);
@@ -93,7 +118,7 @@ namespace NESEmu {
         std::vector<uint8_t> _vram;
         
         // Controllers
-        std::unique_ptr<Controller::Interface> _controllers[2];    // TODO: 2 controllers ports, voir si mettre 2 dans un const
+        std::unique_ptr<Controller::Interface> _controllerPorts[2];    // TODO: 2 controllers ports, voir si mettre 2 dans un const
         
         // Internals
         TCartridgeHardware &_cartridgeHardware;

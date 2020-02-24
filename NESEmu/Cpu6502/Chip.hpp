@@ -143,8 +143,6 @@ namespace Cpu6502 {
         
         void setOverflow(bool high);
         
-        uint16_t getAddressBus() const;
-        uint8_t getDataBus() const;
         bool getReadWriteSignal() const;
         bool getSyncSignal() const;
         bool getM1Signal() const;
@@ -176,7 +174,6 @@ namespace Cpu6502 {
         void fetchData();
         void fetchOpcode(OpcodeInstruction nextInstruction);
         void fetchOpcode();
-        //void fetchOpcodeAfterRdyLow();
         void decodeOpcodeAndExecuteInstruction();
         
         // Overflow
@@ -269,8 +266,6 @@ namespace Cpu6502 {
         OpcodeInstruction _currentInstruction;
         int _interruptVectorsIndex;
         
-        uint16_t _addressBus;   // TODO: peut etre sortir addressBus et dataBus d'ici et le mettre dans le bus
-        uint8_t _dataBus;
         uint8_t _addressBusLow;
         uint8_t _addressBusHigh;
         uint8_t _inputDataLatch;

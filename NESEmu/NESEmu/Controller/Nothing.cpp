@@ -11,12 +11,12 @@
 
 namespace NESEmu { namespace Controller {
     
-    uint8_t Nothing::read() {// TODO: pour l'open bus il faudrait passer uint8_t &data et ne modifier que le bit 0 et faire pareil pour tous les read
+    void Nothing::clock(uint8_t &data) {
         // When nothing is connected, there is a pull-up resistor that drive line high
-        return true;
+        data |= 0x1;
     }
     
-    void Nothing::write(bool data) {
+    void Nothing::out(bool high) {
         // Does nothing
     }
     

@@ -34,7 +34,39 @@ namespace {
             memory[address] = data;
         }
         
+        uint16_t getAddressBus() const {
+            return _address;
+        }
+        
+        void setAddressBus(uint16_t address) {
+            _address = address;
+        }
+        
+        uint8_t getDataBus() const {
+            return _data;
+        }
+        
+        void setDataBus(uint8_t data) {
+            _data = data;
+        }
+        
+        void setDataBus(uint8_t data, uint8_t mask) {
+            _data = (_data & ~mask) | (data & mask);
+        }
+        
+        void performRead() {
+            //std::cout << std::hex << "Read 0x" << static_cast<int>(memory[_address]) << " at 0x" << _address << "\n";
+            _data = memory[_address];
+        }
+        
+        void performWrite() {
+            //std::cout << std::hex << "Write 0x" << static_cast<int>(_data) << " at 0x" << _address << "\n";
+            memory[_address] = _data;
+        }
+        
         std::array<uint8_t, 1024 * 64> memory;
+        uint16_t _address;
+        uint8_t _data;
     };
     
     

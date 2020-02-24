@@ -40,17 +40,16 @@ namespace NESEmu { namespace Cpu {
         //void test(bool high);
         
         // TODO: exposer tous ce qu'il y a dans les pins
-        uint16_t getAddressBus() const;
-        uint8_t getDataBus() const;
         //bool getAd1Signal() const;
         //bool getAd2Signal() const;
         bool getReadWriteSignal() const;
-        //uint8_t getOutSignal() const;
-        //bool getOe1Signal() const;
-        //bool getOe2Signal() const;
+        uint8_t getOutSignal() const;
+        bool getOe1Signal() const;
+        bool getOe2Signal() const;
         bool getM2Signal() const;
         
-    private:
+    //private:
+    protected:
         
         using Constants = Constants<EModel>;
         using InternalCpu = Cpu6502::Chip<Cpu6502::ConfigurationPerformance<Chip, false>>;
@@ -58,9 +57,16 @@ namespace NESEmu { namespace Cpu {
         // Set Cpu as friend to keep data bus methods private
         friend InternalCpu;
         
-        // Memory
-        uint8_t read(uint16_t address);
-        void write(uint16_t address, uint8_t data);
+        // Bus intermediate
+        uint16_t getAddressBus() const;
+        void setAddressBus(uint16_t address);
+        
+        uint8_t getDataBus() const;
+        void setDataBus(uint8_t data);
+        void setDataBus(uint8_t data, uint8_t mask);
+        
+        void performRead();
+        void performWrite();
         
         // DMA
         bool checkDmaPhi1();
@@ -74,6 +80,8 @@ namespace NESEmu { namespace Cpu {
         int _dmaCount;
         uint8_t _dmaAddress;
         bool _dmaToggle;
+        
+        uint8_t _outLatch;
     };
     
     #include "Cpu_s.hpp"

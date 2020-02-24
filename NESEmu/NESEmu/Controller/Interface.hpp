@@ -19,8 +19,10 @@ namespace NESEmu { namespace Controller {
     
     struct Interface {
         
-        virtual uint8_t read() = 0;
-        virtual void write(bool data) = 0;
+        virtual ~Interface() {};
+        
+        virtual void clock(uint8_t &data) = 0;
+        virtual void out(bool high) = 0;
         
     };
     

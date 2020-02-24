@@ -81,6 +81,7 @@
 		4D98080023C5161A007D1953 /* Memory_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Memory_s.hpp; sourceTree = "<group>"; };
 		4D98080123C5163C007D1953 /* Register_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Register_s.hpp; sourceTree = "<group>"; };
 		4D98080223C51651007D1953 /* Stack_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Stack_s.hpp; sourceTree = "<group>"; };
+		4DD1EB7D240373DB00018E52 /* Mapper0_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mapper0_s.hpp; sourceTree = "<group>"; };
 		4DD7178E23F3814600005D8C /* Mapper0.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mapper0.hpp; sourceTree = "<group>"; };
 		4DD7178F23F3815900005D8C /* Interface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Interface.hpp; sourceTree = "<group>"; };
 		4DD7179023FEAADC00005D8C /* Common.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Common.cpp; sourceTree = "<group>"; };
@@ -210,6 +211,7 @@
 			isa = PBXGroup;
 			children = (
 				4DD7178E23F3814600005D8C /* Mapper0.hpp */,
+				4DD1EB7D240373DB00018E52 /* Mapper0_s.hpp */,
 			);
 			path = Cartridge;
 			sourceTree = "<group>";

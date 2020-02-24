@@ -15,25 +15,28 @@ Standard<TControllerHardware>::Standard(TControllerHardware &controllerHardware)
 }
 
 template <class TControllerHardware>
-uint8_t Standard<TControllerHardware>::read() {
-    // Get bit out
-    bool bitOut = _buttonsShiftRegister & 0x1;      // TODO: si plus de bits, ca doit retourner 1 car ca retourne 0 mais c'est inversé, mais c'est inversé ou ??? dans le controller ou apres le port au niveau du cpu ??? car dans ce cas les bits des boutons aussi seront inversés !!! : normalement c'est au niveau de la nes pres du CPU que c'est inversé donc retourner ici les valeurs non inversées
+void Standard<TControllerHardware>::clock(uint8_t &data) {
+    // Update
+    update();
+    
+    // Get shifted bit out, it's for the D0 line, D1-D4 lines are unused here, they are driven high by pull-up resistor
+    data = (data & ~0x1) | 0x1F | (_buttonsShiftRegister & 0x1);
     
     // Shift register
     _buttonsShiftRegister >>= 1;
-    
-    // Return current button status
-    return bitOut;
 }
 
 template <class TControllerHardware>
-void Standard<TControllerHardware>::write(bool data) {
+void Standard<TControllerHardware>::out(bool high) {
     // When true, it continuously update the shift register
-    _needToUpdate = data;
+    _needToUpdate = high;
+    
+    // Update
+    update();
 }
 
 template <class TControllerHardware>
-void Standard<TControllerHardware>::update() {  // TODO: soit on l'appelle a chaque clock de la nes, ou du cpu, ou bien pour optimiser (si c'est ok avec tous les controllers) on l'appelle dans read et write (au debut de read et a la fin de write)
+void Standard<TControllerHardware>::update() {  // TODO: soit on l'appelle a chaque clock du cpu, ou bien pour optimiser (si c'est ok avec tous les controllers) on l'appelle dans clock et out (au debut de clock et a la fin de out)
     // If no need to update, exit
     if (_needToUpdate == false) {
         return;

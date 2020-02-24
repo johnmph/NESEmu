@@ -36,8 +36,11 @@ namespace NESEmu { namespace Ppu {
         void reset(bool high);
         
         // IO access
-        uint8_t ioRead(uint16_t address);
-        void ioWrite(uint16_t address, uint8_t data);
+        template <class TConnectedBus>
+        void readPerformed(TConnectedBus &connectedBus);
+        
+        template <class TConnectedBus>
+        void writePerformed(TConnectedBus &connectedBus);
         
         // Ext pins
         void exts(uint8_t data);
@@ -60,8 +63,8 @@ namespace NESEmu { namespace Ppu {
         void checkReset();
         
         // VRAM access
-        uint8_t read(uint16_t address);             // TODO: renommer readFromBus et writeToBus et pareil dans le cpu ? (et renommer ioRead/write en read/write) ?
-        void write(uint16_t address, uint8_t data);
+        uint8_t read(/*uint16_t address*/);             // TODO: renommer readFromBus et writeToBus et pareil dans le cpu ? (et renommer ioRead/write en read/write) ?
+        void write(/*uint16_t address, */uint8_t data);
         
         bool isInRenderScanline() const;
         bool isInPostRenderScanline() const;
@@ -172,9 +175,9 @@ namespace NESEmu { namespace Ppu {
         uint8_t _fineXScroll;
         bool _writeToggle;
         
-        uint16_t _addressBus;
+        //uint16_t _addressBus;
         // Data bus not really exists on the PPU but on a external octal latch
-        uint8_t _externalOctalLatch;
+        //uint8_t _externalOctalLatch;  // TODO: surement mettre ca dans le PPUBUS de Nes
         
         uint8_t _ntByte;
         uint8_t _atByte;

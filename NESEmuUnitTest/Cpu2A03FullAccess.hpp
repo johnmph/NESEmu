@@ -21,6 +21,14 @@ struct Cpu2A03FullAccess : NESEmu::Cpu::Chip<EModel, TBus> {
     Cpu2A03FullAccess(TBus &bus) : Cpu(bus) {
     }
     
+    uint16_t getAddressBus() const {
+        return this->_bus.getAddressBus();
+    }
+    
+    uint8_t getDataBus() const {
+        return this->_bus.getDataBus();
+    }
+    
     uint16_t getProgramCounter() const {
         return (this->_programCounterHigh << 8) | this->_programCounterLow;
     }

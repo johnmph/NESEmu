@@ -16,8 +16,8 @@ namespace NESEmu { namespace Controller {
     
     struct Nothing : Interface {
         
-        uint8_t read() override;
-        void write(bool data) override;
+        void clock(uint8_t &data) override;
+        void out(bool high) override;
         
         void update();
     };

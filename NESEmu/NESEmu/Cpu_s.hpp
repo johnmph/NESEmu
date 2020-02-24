@@ -88,7 +88,8 @@ void Chip<EModel, TBus>::clockPhi2() {
     
     // Fetch memory for phi2
     if (needToWrite == true) {
-        write(this->_addressBus, this->_dataBus);
+        //write(this->_addressBus, this->_dataBus);
+        /*_bus.*/performWrite();//TODO: optimisation en mettant _bus devant pour eviter le decodage de l'adresse ici car le dma ecrit tjs en $2004
     } else {
         InternalCpu::fetchMemoryPhi2();
     }
@@ -116,18 +117,21 @@ void Chip<EModel, TBus>::irq(bool high) {
 }
 
 template <Model EModel, class TBus>
-uint16_t Chip<EModel, TBus>::getAddressBus() const {
-    return InternalCpu::getAddressBus();
-}
-
-template <Model EModel, class TBus>
-uint8_t Chip<EModel, TBus>::getDataBus() const {
-    return InternalCpu::getDataBus();
-}
-
-template <Model EModel, class TBus>
 bool Chip<EModel, TBus>::getReadWriteSignal() const {
     return InternalCpu::getReadWriteSignal();
+}
+
+template <Model EModel, class TBus>
+uint8_t Chip<EModel, TBus>::getOutSignal() const {
+    return _outLatch;
+}
+
+template <Model EModel, class TBus>
+bool Chip<EModel, TBus>::getOe1Signal() const { // TODO: sert a activer/desactiver (signal inversé) le port manette 1 (qui active ce signal ???)
+}
+
+template <Model EModel, class TBus>
+bool Chip<EModel, TBus>::getOe2Signal() const { // TODO: sert a activer/desactiver (signal inversé) le port manette 2 (qui active ce signal ???)
 }
 
 template <Model EModel, class TBus>
@@ -136,29 +140,59 @@ bool Chip<EModel, TBus>::getM2Signal() const {
 }
 
 template <Model EModel, class TBus>
-uint8_t Chip<EModel, TBus>::read(uint16_t address) {
-    // The CPU itself decodes reads of $4015 (APU status) and $4016-$4017 (controller read). But no circuit in the Control Deck decodes reads from $4000-$4014 or $4018-$7FFF
-    // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
-    
-    // Sound
-    if (address == 0x4015) {
-        return 0x0; // TODO: changer
-    }
-    // Joystick 1
-    else if (address == 0x4016) {
-        return 0x0; // TODO: changer
-    }
-    // Joystick 2
-    else if (address == 0x4017) {
-        return 0x0; // TODO: changer
-    }
-    
-    // External bus
-    return _bus.read(address);
+uint16_t Chip<EModel, TBus>::getAddressBus() const {
+    return _bus.getAddressBus();
 }
 
 template <Model EModel, class TBus>
-void Chip<EModel, TBus>::write(uint16_t address, uint8_t data) {
+void Chip<EModel, TBus>::setAddressBus(uint16_t address) {
+    _bus.setAddressBus(address);
+}
+
+template <Model EModel, class TBus>
+uint8_t Chip<EModel, TBus>::getDataBus() const {
+    return _bus.getDataBus();
+}
+
+template <Model EModel, class TBus>
+void Chip<EModel, TBus>::setDataBus(uint8_t data) {
+    _bus.setDataBus(data);
+}
+
+template <Model EModel, class TBus>
+void Chip<EModel, TBus>::setDataBus(uint8_t data, uint8_t mask) {
+    _bus.setDataBus(data, mask);
+}
+
+template <Model EModel, class TBus>
+void Chip<EModel, TBus>::performRead() {
+    // The CPU itself decodes reads of $4015 (APU status) and $4016-$4017 (controller read). But no circuit in the Control Deck decodes reads from $4000-$4014 or $4018-$7FFF
+    // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
+    
+    uint16_t address = getAddressBus();
+    
+    // Sound
+    if (address == 0x4015) {
+        setDataBus(0x0); // TODO: changer
+    }
+    // Joystick 1
+    else if (address == 0x4016) {
+        _bus.readControllerPort(0); // TODO: voir si pas meilleure conception que ca sinon renommer TBus en THardware car ca ne fait pas que le bus
+    }
+    // Joystick 2
+    else if (address == 0x4017) {
+        _bus.readControllerPort(1);
+    }
+    
+    // External bus
+    _bus.performRead();
+}
+
+template <Model EModel, class TBus>
+void Chip<EModel, TBus>::performWrite() {
+    uint16_t address = getAddressBus();
+    uint8_t data = getDataBus();
+    
     // Sound
     if (((address >= 0x4000) && (address < 0x4014)) || (address == 0x4015)) {
         //TODO: ajouter
@@ -170,13 +204,14 @@ void Chip<EModel, TBus>::write(uint16_t address, uint8_t data) {
         
         return;
     }
-    // Joystick 1
-    else if (address == 0x4016) {
-        //TODO: ajouter
+    // Joystick 1 / 2
+    else if (address == 0x4016) {   // TODO: il faut aussi notifier les manettes qu'on a ecrit ca en appelant leur out(_outLatch & 0x1) !!!
+        _outLatch = data & 0x7;
+        
         return;
     }
     // Joystick 2
-    else if (address == 0x4017) {
+    else if (address == 0x4017) {// TODO: rien, a retirer ????
         //TODO: ajouter
         return;
     }
@@ -187,7 +222,7 @@ void Chip<EModel, TBus>::write(uint16_t address, uint8_t data) {
     }
     
     // External bus
-    _bus.write(address, data);
+    _bus.performWrite();
 }
 
 template <Model EModel, class TBus>
@@ -220,14 +255,14 @@ bool Chip<EModel, TBus>::checkDmaPhi1() {
         }
         
         // Read from dmaAddress (only inputDataLatch / predecode / RW from 6502 is affected)
+        _bus.setAddressBus((_dmaAddress << 8) | (256 - _dmaCount));
         this->_readWrite = static_cast<bool>(InternalCpu::ReadWrite::Read);
-        this->_addressBus = (_dmaAddress << 8) | (256 - _dmaCount);
     }
     // If DMA is in write phase
     else {
         // Write to PPU (only RW from 6502 is affected)
+        _bus.setAddressBus(0x2004);
         this->_readWrite = static_cast<bool>(InternalCpu::ReadWrite::Write);
-        this->_addressBus = 0x2004;
         
         // One byte copied
         --_dmaCount;
@@ -263,8 +298,8 @@ void Chip<EModel, TBus>::startDma(uint8_t address) {
 template <Model EModel, class TBus>
 void Chip<EModel, TBus>::stopDma() {
     // Restore CPU state
+    _bus.setAddressBus((this->_addressBusHigh << 8) | this->_addressBusLow);
     this->_readWrite = static_cast<bool>(InternalCpu::ReadWrite::Read);
-    this->_addressBus = (this->_addressBusHigh << 8) | this->_addressBusLow;
     
     // Reenable CPU
     InternalCpu::ready(true);

@@ -21,6 +21,14 @@ struct Cpu6502FullAccess : Cpu6502::Chip<TConfiguration> {
     Cpu6502FullAccess(typename TConfiguration::Bus &bus) : Cpu(bus) {
     }
     
+    uint16_t getAddressBus() const {
+        return this->_bus.getAddressBus();
+    }
+    
+    uint8_t getDataBus() const {
+        return this->_bus.getDataBus();
+    }
+    
     uint16_t getProgramCounter() const {
         return (this->_programCounterHigh << 8) | this->_programCounterLow;
     }

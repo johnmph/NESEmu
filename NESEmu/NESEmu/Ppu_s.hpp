@@ -81,7 +81,11 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::reset(bool high) 
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioRead(uint16_t address) {
+template <class TConnectedBus>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readPerformed(TConnectedBus &connectedBus) {
+    // Get address
+    uint8_t address = connectedBus.getAddressBus() & 0x7;
+    
     // Status register
     if (address == 0x2) {
         // Least significant bits previously written into a PPU register (due to register not being updated for this address)
@@ -122,7 +126,8 @@ uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioRead(uint16_
         //_dataReadBuffer = _address & 0xFF;    // TODO: plus besoin car c'est géré dans read
         
         // Read data from VRAM
-        _dataReadBuffer = read(_address);
+        _bus.setAddressBus(_address);
+        _dataReadBuffer = read(/*_address*/);
         
         // If palette index address, read to it directly ( see https://wiki.nesdev.com/w/index.php/PPU_registers#PPUDATA )
         if (_address > 0x3EFF) {
@@ -138,11 +143,19 @@ uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioRead(uint16_
     }
     
     // dataLatch is set with read value or previous dataLatch value if read a write only register
-    return _dataLatch;
+    //return _dataLatch;
+    connectedBus.setDataBus(_dataLatch);//TODO: surement a modifier, peut etre plus besoin de _dataLatch car c'est le data bus !!! mais est ce que dataLatch est la a cause du bus interne du PPU ? ou bien est ce le data bus normal ?
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite(uint16_t address, uint8_t data) {
+template <class TConnectedBus>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TConnectedBus &connectedBus) {
+    // Get address
+    uint8_t address = connectedBus.getAddressBus() & 0x7;
+    
+    // Get data
+    uint8_t data = connectedBus.getDataBus();
+    
     // When data is written, data latch is filled with the value even if the write occurs on a read-only register
     _dataLatch = data;
     
@@ -235,7 +248,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite(uint16_t 
             writePaletteIndexMemory(_address, data);
         } else {
             // Write data to PPU bus
-            write(_address, data);
+            _bus.setAddressBus(_address);
+            write(/*_address, */data);
         }
         
         // Increment address
@@ -319,37 +333,21 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkReset() {
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::read(uint16_t address) { // TODO: faire le meme pour le reste (un read qui ne retourne rien mais modifie le dataBus ! ainsi si des lignes ne sont pas affectées, on ne les change pas, car si on retourne 0 on a aucun moyen de savoir si on a lu 0 ou si on a rien lu car on avait une mauvaise address), le faire aussi pour le CPU ?
+uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::read() {
+    // Perform read on the bus
+    _bus.performRead();
     
-    // Set address bus
-    _addressBus = address;
-    
-    // Save low byte of addressBus in external octal latch
-    _externalOctalLatch = _addressBus & 0xFF;
-    
-    // Read data from PPU bus
-    uint8_t dataBus = _externalOctalLatch;
-    _bus.read(_addressBus, dataBus);
-    
-    // Data is on low byte of address bus
-    _addressBus = (_addressBus & 0xFF00) | dataBus;
-    
-    return dataBus;
+    // Get data on the bus
+    return _bus.getDataBus();
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::write(uint16_t address, uint8_t data) {
-    // Set address bus
-    _addressBus = address;
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::write(uint8_t data) {
+    // Set data on the bus
+    _bus.setDataBus(data);
     
-    // Save low byte of addressBus in external octal latch
-    _externalOctalLatch = _addressBus & 0xFF;
-    
-    // Data is on low byte of address bus
-    _addressBus = (_addressBus & 0xFF00) | data;
-    
-    // Write data to PPU bus
-    _bus.write((_addressBus & 0xFF00) | _externalOctalLatch, data);// TODO: on doit lire a l'adresse _address (via des fonctions read / write qui seront gérées par le cartridge)
+    // Perform write on the bus
+    _bus.performWrite();
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -636,37 +634,41 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchTiles(uint8_
     
     // Nametable set address
     if (dataType == 0x1) {
-        _addressBus = 0x2000 | (_address & 0x0FFF);
+        //_addressBus = 0x2000 | (_address & 0x0FFF);
+        _bus.setAddressBus(0x2000 | (_address & 0x0FFF));
     }
     // Nametable fetch (NT byte)
     else if (dataType == 0x2) {
-        _ntByte = read(_addressBus);
+        _ntByte = read(/*_addressBus*/);
     }
     // Attributes set address
     else if (dataType == 0x3) {
-        _addressBus = 0x23C0 | (_address & 0x0C00) | ((_address >> 4) & 0x38) | ((_address >> 2) & 0x7);
+        //_addressBus = 0x23C0 | (_address & 0x0C00) | ((_address >> 4) & 0x38) | ((_address >> 2) & 0x7);
+        _bus.setAddressBus(0x23C0 | (_address & 0x0C00) | ((_address >> 4) & 0x38) | ((_address >> 2) & 0x7));
     }
     // Attributes fetch (AT byte)
     else if (dataType == 0x4) {
-        _atByte = read(_addressBus);
+        _atByte = read(/*_addressBus*/);
     }
     // First pattern table set address
     else if (dataType == 0x5) {
         // One tile is 16 bytes (ntByte << 4), one byte is a 8 pixels row (fineY = _address >> 12)
-        _addressBus = _controlBackgroundPatternTableAddress | (_ntByte << 4) | (_address >> 12);
+        //_addressBus = _controlBackgroundPatternTableAddress | (_ntByte << 4) | (_address >> 12);
+        _bus.setAddressBus(_controlBackgroundPatternTableAddress | (_ntByte << 4) | (_address >> 12));
     }
     // First pattern table fetch (Low tile byte)
     else if (dataType == 0x6) {
-        _lowTileByte = read(_addressBus);
+        _lowTileByte = read(/*_addressBus*/);
     }
     // Second pattern table set address
     else if (dataType == 0x7) {
         // Same than low BG tile address but 8 bytes after
-        _addressBus = _controlBackgroundPatternTableAddress | (_ntByte << 4) | 0x8 | (_address >> 12);
+        //_addressBus = _controlBackgroundPatternTableAddress | (_ntByte << 4) | 0x8 | (_address >> 12);
+        _bus.setAddressBus(_controlBackgroundPatternTableAddress | (_ntByte << 4) | 0x8 | (_address >> 12));
     }
     // Second pattern table fetch (High tile byte)
     else {
-        _highTileByte = read(_addressBus);
+        _highTileByte = read(/*_addressBus*/);
     }
 }
 
@@ -835,7 +837,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchSprites(uint
     
     // Garbage nametable set address + load sprite Y byte
     if (dataType == 0x1) {
-        _addressBus = 0x2000 | (_address & 0x0FFF);
+        //_addressBus = 0x2000 | (_address & 0x0FFF);
+        _bus.setAddressBus(0x2000 | (_address & 0x0FFF));
         
         // TODO: je n'arrive pas a trouver ntByte ni le fetchY fetchIndex signal dans visual2C02 !!!
         _spriteY = _secondObjectAttributeMemory[_secondOAMAddress];
@@ -843,21 +846,22 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchSprites(uint
     }
     // Garbage nametable fetch (NT byte) + load sprite tile index byte
     else if (dataType == 0x2) {
-        _ntByte = read(_addressBus);
+        _ntByte = read(/*_addressBus*/);
         
         _spriteTileIndex = _secondObjectAttributeMemory[_secondOAMAddress];
         _needIncrementSecondOAMAddress = true;
     }
     // Garbage nametable set address + load sprite attribute byte
     else if (dataType == 0x3) {
-        _addressBus = 0x2000 | (_address & 0x0FFF);
+        //_addressBus = 0x2000 | (_address & 0x0FFF);
+        _bus.setAddressBus(0x2000 | (_address & 0x0FFF));
         
         _spAttributeLatches[spriteNumber] = _secondObjectAttributeMemory[_secondOAMAddress];
         _needIncrementSecondOAMAddress = true;
     }
     // Garbage nametable fetch (NT byte) + load sprite X byte
     else if (dataType == 0x4) {
-        _ntByte = read(_addressBus);
+        _ntByte = read(/*_addressBus*/);
         
         _spXPositionCounters[spriteNumber] = _secondObjectAttributeMemory[_secondOAMAddress];//TODO: + voir si quand on lit dans le secondObjectAttributeMemory si on change _oamData : oui, vois si possible d'intégrer ca dans readObjectAttributeMemory (et write ?)
         _needIncrementSecondOAMAddress = true;
@@ -865,7 +869,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchSprites(uint
     // First pattern table set address
     else if (dataType == 0x5) {
         // Get address for sprite
-        _addressBus = getAddressForFetchSprites(spriteNumber);
+        //_addressBus = getAddressForFetchSprites(spriteNumber);
+        _bus.setAddressBus(getAddressForFetchSprites(spriteNumber));
     }
     // First pattern table fetch (Low tile byte)
     else if (dataType == 0x6) {
@@ -874,7 +879,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchSprites(uint
     // Second pattern table set address
     else if (dataType == 0x7) {
         // Same than low BG tile address but 8 bytes after
-        _addressBus = getAddressForFetchSprites(spriteNumber) | 0x8;
+        //_addressBus = getAddressForFetchSprites(spriteNumber) | 0x8;
+        _bus.setAddressBus(getAddressForFetchSprites(spriteNumber) | 0x8);
     }
     // Second pattern table fetch (High tile byte)
     else {
@@ -916,7 +922,7 @@ uint16_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getAddressFor
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getDataForFetchSprites(uint8_t spriteNumber) {
     // Read data (even if unused sprite)
-    uint8_t data = read(_addressBus);
+    uint8_t data = read(/*_addressBus*/);
     
     // If unused sprite, all pixels are transparent
     if ((_currentScanline - _spriteY) >= _controlSpriteSize) {

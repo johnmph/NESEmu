@@ -33,7 +33,39 @@ namespace {
             memory[address & 0xBFFF] = data;
         }
         
+        uint16_t getAddressBus() const {
+            return _address;
+        }
+        
+        void setAddressBus(uint16_t address) {
+            _address = address;
+        }
+        
+        uint8_t getDataBus() const {
+            return _data;
+        }
+        
+        void setDataBus(uint8_t data) {
+            _data = data;
+        }
+        
+        void setDataBus(uint8_t data, uint8_t mask) {
+            _data = (_data & ~mask) | (data & mask);
+        }
+        
+        void performRead() {
+            //std::cout << std::hex << "Read 0x" << static_cast<int>(memory[_address & 0xBFFF]) << " at 0x" << _address << "\n";
+            _data = memory[_address & 0xBFFF];
+        }
+        
+        void performWrite() {
+            //std::cout << std::hex << "Write 0x" << static_cast<int>(_data) << " at 0x" << _address << "\n";
+            memory[_address & 0xBFFF] = _data;
+        }
+        
         std::array<uint8_t, 1024 * 64> memory;
+        uint16_t _address;
+        uint8_t _data;
     };
     
     struct State {
@@ -178,7 +210,7 @@ namespace {
         
         // Check state with current Cpu state
         XCTAssertTrue(cpu6502.getProgramCounter() == state.pc);
-        XCTAssertTrue(cpu6502.getDataBus() == state.data[0]);
+        XCTAssertTrue(/*cpu6502*/bus.getDataBus() == state.data[0]);
         
         // There are some instructions which delay the result on the next cycle because they use the decodeOpcodeAndExecuteInstruction cycle to write the result back, for these instructions, we need to process one extra cycle to have correct result
         if ((cpu6502.getAccumulator() != state.a) || (cpu6502.getXIndex() != state.x) || (cpu6502.getYIndex() != state.y) || (cpu6502.getStatusFlags() != state.p) || (cpu6502.getStackPointer() != state.sp)) {
