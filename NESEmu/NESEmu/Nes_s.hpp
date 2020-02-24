@@ -182,8 +182,14 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuBus::performWrite() {
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
+std::vector<uint8_t> &Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuBus::getVram() {    // TODO: est ce qu'on peut mettre const (car meme si on modifie vram, ca n'est pas dans cet objet (mais a voir comme c'est un sous-objet))
+    // Get vram
+    return _nes._vram;
+}
+
+template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
 void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuBus::interrupt(bool high) {
-    _nes.ppuInterrupt(high);
+    _nes.ppuInterrupt(high);//TODO: ca ou directement _nes._cpu.nmi(high); ?
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>

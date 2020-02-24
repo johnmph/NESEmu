@@ -10,6 +10,7 @@
 #define NESEmu_Cartridge_Mapper0_hpp
 
 #include <cstdint>
+#include <istream>
 
 
 namespace NESEmu { namespace Cartridge {
@@ -20,23 +21,29 @@ namespace NESEmu { namespace Cartridge {
     };
     
     // TODO: rajouter des template parameters pour la taille PRG-ROM, PRG-RAM (battery backup) et le type de nametable mirroring
-    template <int IPrgRomSizeInKb, int IPrgRamSizeInKb, MirroringType EMirroring>
+    template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
     struct Mapper0 {    // TODO: comment avoir acces au 2k de vram de nes ici ? + Il faut la possibilité d'envoyer un irq sur le cpu + il faut avoir acces au bus !!! gros probleme : le bus est Nes mais Nes a son parametre template qui est cette classe je ne peux pas donc passer Nes comme parametre template a cette classe (cyclic dependency)
+        
+        Mapper0(std::istream &istream);
         
         // Cpu memory bus
         template <class TConnectedBus>
-        void cpuReadPerformed(TConnectedBus &bus);
+        void cpuReadPerformed(TConnectedBus &connectedBus);
         
         template <class TConnectedBus>
-        void cpuWritePerformed(TConnectedBus &bus);
+        void cpuWritePerformed(TConnectedBus &connectedBus);
         
         // Ppu memory bus
         template <class TConnectedBus>
-        void ppuReadPerformed(TConnectedBus &bus);
+        void ppuReadPerformed(TConnectedBus &connectedBus);
         
         template <class TConnectedBus>
-        void ppuWritePerformed(TConnectedBus &bus);
+        void ppuWritePerformed(TConnectedBus &connectedBus);
         
+    private:
+        std::vector<uint8_t> _prgRom;
+        std::vector<uint8_t> _prgRam;
+        std::vector<uint8_t> _chrRom;
     };
     
     #include "Mapper0_s.hpp"

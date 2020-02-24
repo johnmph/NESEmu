@@ -223,9 +223,10 @@ int main(int argc, const char * argv[]) {
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     std::cout << std::dec << "Time in milliseconds: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "\n";
     
+    std::ifstream ifs2("../UnitTestFiles/nestest.nes", std::ios::binary);
     GraphicHardware graphicHardware;
-    NESEmu::Cartridge::Mapper0<> mapper0;
-    NESEmu::Nes<NESEmu::Model::Ntsc, NESEmu::Cartridge::Mapper0, GraphicHardware> nes(mapper0, graphicHardware);
+    NESEmu::Cartridge::Mapper0<32, 0, NESEmu::Cartridge::MirroringType::Horizontal> mapper0(ifs2);
+    NESEmu::Nes<NESEmu::Model::Ntsc, NESEmu::Cartridge::Mapper0<32, 0, NESEmu::Cartridge::MirroringType::Horizontal>, GraphicHardware> nes(mapper0, graphicHardware);
     
     nes.clock();
     

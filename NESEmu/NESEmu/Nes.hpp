@@ -75,7 +75,7 @@ namespace NESEmu {
             void performRead();
             void performWrite();
             
-            // TODO: rajouter une methode pour avoir acces a la vram qui sera utilisée par les mappers
+            std::vector<uint8_t> &getVram();
             
             void interrupt(bool high);
             
