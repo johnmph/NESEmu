@@ -64,6 +64,9 @@ namespace {
             memory[_address] = _data;
         }
         
+        void readControllerPort(unsigned int index) {
+        }
+        
         std::array<uint8_t, 1024 * 64> memory;
         uint16_t _address;
         uint8_t _data;
@@ -110,7 +113,7 @@ namespace {
     }
     
     // Analyze
-    visual6502Analyzer.analyze(cpu2A03, [self](bool result) { XCTAssertTrue(result); }, 16);
+    visual6502Analyzer.analyze(cpu2A03, [self](bool result, std::string const &name) { XCTAssertTrue(result); }, 16);
     
     // Close file
     ifsLog.close();

@@ -193,7 +193,7 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuBus::interrupt(bool h
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-Nes<EModel, TCartridgeHardware, TGraphicHardware>::Nes(TCartridgeHardware &cartridgeHardware, TGraphicHardware &graphicHardware) : _cartridgeHardware(cartridgeHardware), _cpuBus(*this), _ppuBus(*this), _cpu(_cpuBus), _ppu(_ppuBus, _ppuBus, graphicHardware), _ram(2 * 1024), _vram(2 * 1024) {
+Nes<EModel, TCartridgeHardware, TGraphicHardware>::Nes(TCartridgeHardware &cartridgeHardware, TGraphicHardware &graphicHardware) : _cartridgeHardware(cartridgeHardware), _cpuBus(*this), _ppuBus(*this), _cpu(_cpuBus), _ppu(_ppuBus, _ppuBus, graphicHardware), _ram(2 * 1024), _vram(2 * 1024), _currentClockForCpu(0), _currentClockForPpu(0) {
     // Begin with no controller
     connectController(0, std::make_unique<Controller::Nothing>());
     connectController(1, std::make_unique<Controller::Nothing>());

@@ -380,7 +380,7 @@ void Analyzer<TCpu6502>::analyze(TCpu6502 &cpu6502, TFunction &&checkResult, int
             auto &attribute = *_attributes.attributes[i];
             
             attribute.setValue(result[i]);
-            checkResult(attribute.compareValue(cpu6502));
+            checkResult(attribute.compareValue(cpu6502), attribute.getName());
         }
     }
 }

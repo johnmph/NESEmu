@@ -88,7 +88,6 @@ void Chip<EModel, TBus>::clockPhi2() {
     
     // Fetch memory for phi2
     if (needToWrite == true) {
-        //write(this->_addressBus, this->_dataBus);
         /*_bus.*/performWrite();//TODO: optimisation en mettant _bus devant pour eviter le decodage de l'adresse ici car le dma ecrit tjs en $2004
     } else {
         InternalCpu::fetchMemoryPhi2();

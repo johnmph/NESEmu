@@ -11,14 +11,14 @@
 
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
-Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::Mapper0(std::istream &istream) : _prgRom(IPrgRomSizeInKb), _prgRam(IPrgRamSizeInKb), _chrRom(8 * 1024) {
+Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::Mapper0(std::istream &istream) : _prgRom(IPrgRomSizeInKb * 1024), _prgRam(IPrgRamSizeInKb * 1024), _chrRom(8 * 1024) {
     // TODO: voir si read via istream ici ou bien dans un factory a part et avoir directement ici les vectors a copier simplement : doit etre en dehors
     // TODO: pour tests :
     // Skip header
     istream.seekg(0x10);
     
     // Read Prg-Rom
-    istream.read(reinterpret_cast<char *>(_prgRom.data()), IPrgRomSizeInKb);
+    istream.read(reinterpret_cast<char *>(_prgRom.data()), IPrgRomSizeInKb * 1024);
     
     // Read Chr-Rom
     istream.read(reinterpret_cast<char *>(_chrRom.data()), 8 * 1024);

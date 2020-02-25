@@ -210,7 +210,7 @@ namespace {
         
         // Check state with current Cpu state
         XCTAssertTrue(cpu6502.getProgramCounter() == state.pc);
-        XCTAssertTrue(/*cpu6502*/bus.getDataBus() == state.data[0]);
+        XCTAssertTrue(bus.getDataBus() == state.data[0]);
         
         // There are some instructions which delay the result on the next cycle because they use the decodeOpcodeAndExecuteInstruction cycle to write the result back, for these instructions, we need to process one extra cycle to have correct result
         if ((cpu6502.getAccumulator() != state.a) || (cpu6502.getXIndex() != state.x) || (cpu6502.getYIndex() != state.y) || (cpu6502.getStatusFlags() != state.p) || (cpu6502.getStackPointer() != state.sp)) {

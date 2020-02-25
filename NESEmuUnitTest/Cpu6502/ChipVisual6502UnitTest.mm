@@ -110,7 +110,7 @@ namespace {
     }
     
     // Analyze
-    visual6502Analyzer.analyze(cpu6502, [self](bool result) { XCTAssertTrue(result); });
+    visual6502Analyzer.analyze(cpu6502, [self](bool result, std::string const &name) { if (result == false) { std::cout << name << "\n"; } XCTAssertTrue(result); });
     
     // Close file
     ifsLog.close();

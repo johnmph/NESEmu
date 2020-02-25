@@ -19,6 +19,7 @@
 		4DD1EB802403911B00018E52 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD1EB7E2403911B00018E52 /* Common.cpp */; };
 		4DD1EB812403911B00018E52 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD1EB7E2403911B00018E52 /* Common.cpp */; };
 		4DD1EB832403FD1700018E52 /* main2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD1EB822403FD1700018E52 /* main2.cpp */; };
+		4DD1EB872404047900018E52 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD1EB862404047900018E52 /* SDL2.framework */; };
 		4DD7179223FEAADC00005D8C /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD7179023FEAADC00005D8C /* Common.cpp */; };
 		4DD7179323FEAADC00005D8C /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD7179023FEAADC00005D8C /* Common.cpp */; };
 /* End PBXBuildFile section */
@@ -87,6 +88,7 @@
 		4DD1EB7E2403911B00018E52 /* Common.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Common.cpp; sourceTree = "<group>"; };
 		4DD1EB7F2403911B00018E52 /* Common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Common.hpp; sourceTree = "<group>"; };
 		4DD1EB822403FD1700018E52 /* main2.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main2.cpp; sourceTree = "<group>"; };
+		4DD1EB862404047900018E52 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
 		4DD7178E23F3814600005D8C /* Mapper0.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mapper0.hpp; sourceTree = "<group>"; };
 		4DD7178F23F3815900005D8C /* Interface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Interface.hpp; sourceTree = "<group>"; };
 		4DD7179023FEAADC00005D8C /* Common.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Common.cpp; sourceTree = "<group>"; };
@@ -109,6 +111,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4DD1EB872404047900018E52 /* SDL2.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -223,12 +226,21 @@
 			path = Cartridge;
 			sourceTree = "<group>";
 		};
+		4DD1EB852404047900018E52 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				4DD1EB862404047900018E52 /* SDL2.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		4DE643E823BAE2EC00CFFE4E = {
 			isa = PBXGroup;
 			children = (
 				4DE643F323BAE2EC00CFFE4E /* NESEmu */,
 				4D1137F123CD3EEC0056AAAD /* NESEmuUnitTest */,
 				4DE643F223BAE2EC00CFFE4E /* Products */,
+				4DD1EB852404047900018E52 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -523,7 +535,14 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = N49JX257A6;
-				HEADER_SEARCH_PATHS = "\"${SRCROOT}/NESEmu\"";
+				FRAMEWORK_SEARCH_PATHS = (
+					/Library/Frameworks,
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
+				HEADER_SEARCH_PATHS = (
+					"\"${SRCROOT}/NESEmu\"",
+					/Library/Frameworks/SDL2.framework/Headers,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -534,7 +553,14 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = N49JX257A6;
-				HEADER_SEARCH_PATHS = "\"${SRCROOT}/NESEmu\"";
+				FRAMEWORK_SEARCH_PATHS = (
+					/Library/Frameworks,
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
+				HEADER_SEARCH_PATHS = (
+					"\"${SRCROOT}/NESEmu\"",
+					/Library/Frameworks/SDL2.framework/Headers,
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

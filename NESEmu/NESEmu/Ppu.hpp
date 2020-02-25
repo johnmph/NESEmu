@@ -132,7 +132,6 @@ namespace NESEmu { namespace Ppu {
         // Palette indexes
         std::vector<uint8_t> _paletteIndexMemory;   // TODO: comme petit, voir si pas en stack plutot que dynamic
         
-        // TODO: la nes a 2ko de VRAM mais le PPU n'y accede pas directement mais via un controlleur dans la cartouche, ce qu'il fait que la cartouche peut mapper les adresses VRAM sur d'autres mémoires donc ne pas mettre la vram ici
         // Registers
         uint8_t _oamAddress;
         uint16_t _address;
@@ -174,10 +173,6 @@ namespace NESEmu { namespace Ppu {
         uint16_t _temporaryAddress;
         uint8_t _fineXScroll;
         bool _writeToggle;
-        
-        //uint16_t _addressBus;
-        // Data bus not really exists on the PPU but on a external octal latch
-        //uint8_t _externalOctalLatch;  // TODO: surement mettre ca dans le PPUBUS de Nes
         
         uint8_t _ntByte;
         uint8_t _atByte;

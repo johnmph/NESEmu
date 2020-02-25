@@ -42,10 +42,10 @@ namespace _Detail {
         //_halfCarry = ((_aInput & 0xF) + (_bInput & 0xF) + carryIn) & 0x10;  // TODO: voir ce que c'est et si c'est utilisé
     }
     
-    template <bool BSubstractMode>
-    void Alu::performSubstractMode() {
+    /*template <bool BSubstractMode>
+     void Alu::performSubstractMode() {  // TODO: si je met ca ca appelle tjs cette version quand optimisé avec au moins o2 !!!!
         // Does nothing
-    }
+    }*/
     
     
     // Flags Helper

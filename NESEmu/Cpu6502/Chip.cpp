@@ -72,6 +72,11 @@ void Alu::invertBInput() {
 }
 
 template <>
+void Alu::performSubstractMode<false>() {
+    // Does nothing
+}
+
+template <>
 void Alu::performSubstractMode<true>() {
     invertBInput();
 }
