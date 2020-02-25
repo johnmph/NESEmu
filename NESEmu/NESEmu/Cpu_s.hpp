@@ -42,7 +42,7 @@ void Chip<EModel, TBus>::clock() {
 }
 
 template <Model EModel, class TBus>
-void Chip<EModel, TBus>::clockPhi1() {
+void Chip<EModel, TBus>::clockPhi1() {//TODO: peut etre a la place d'avoir tout ce bordel pour le dma, avoir un bool isInDma et si true alors on effectue le dma (read ou write) sinon on appelle InternalCpu::clockPhi1();
     // Start phi1
     this->_phi2 = false;
     
@@ -59,7 +59,7 @@ void Chip<EModel, TBus>::clockPhi1() {
     bool needToForceExecute = checkDmaPhi1();
     
     // If rdy is low, wait before perform next read cycle unless we force execute
-    if ((this->_readyWaitRequested == false) || (this->_readWrite != static_cast<bool>(InternalCpu::ReadWrite::Read)) || (needToForceExecute == true)) {
+    if ((this->_readyWaitRequested == false) || ((this->_sync == false) && (this->_readWrite != static_cast<bool>(InternalCpu::ReadWrite::Read))) || (needToForceExecute == true)) {
         // Execute current stage
         (this->*(this->_currentInstruction))();
     }
@@ -88,7 +88,7 @@ void Chip<EModel, TBus>::clockPhi2() {
     
     // Fetch memory for phi2
     if (needToWrite == true) {
-        /*_bus.*/performWrite();//TODO: optimisation en mettant _bus devant pour eviter le decodage de l'adresse ici car le dma ecrit tjs en $2004
+        _bus.performWrite();//TODO: optimisation en mettant _bus devant pour eviter le decodage de l'adresse ici car le dma ecrit tjs en $2004
     } else {
         InternalCpu::fetchMemoryPhi2();
     }

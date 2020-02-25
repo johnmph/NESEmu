@@ -139,7 +139,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readPerformed(TCo
         
         // Read data from VRAM
         _bus.setAddressBus(_address);
-        _dataReadBuffer = read(/*_address*/);
+        _dataReadBuffer = read();
         
         // If palette index address, read to it directly ( see https://wiki.nesdev.com/w/index.php/PPU_registers#PPUDATA )
         if (_address > 0x3EFF) {
@@ -341,7 +341,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkReset() {
     _oddFrame = false;
     _writeToggle = false;
     
-    // TODO: voir pour les autres variables (scanline, pixel counter, ...)
+    // TODO: voir pour les autres variables (scanline, pixel counter, ...) : pas pixel counter ni scanline ici sinon on ne sort jamais du reset
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -391,7 +391,7 @@ bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isRenderingEnable
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInRenderingPeriod() const {
     // To be in rendering period, render must be enabled and the current scanline must be in render or pre-render line)
-    return (isRenderingEnabled() == true) && ((_currentScanline < Constants::visibleScanlinePerFrameCount) || (_currentScanline == (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline + Constants::vBlankLengthInScanline)));
+    return (isRenderingEnabled() == true) && ((isInRenderScanline() == true) || (isInPreRenderScanline() == true));
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>

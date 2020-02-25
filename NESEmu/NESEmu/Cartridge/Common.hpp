@@ -14,6 +14,7 @@
 
 namespace NESEmu { namespace Cartridge {
     
+    // See https://wiki.nesdev.com/w/index.php/Mirroring
     enum class MirroringType {
         Horizontal,
         Vertical,
