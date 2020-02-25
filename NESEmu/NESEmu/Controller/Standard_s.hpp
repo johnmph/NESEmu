@@ -20,7 +20,7 @@ void Standard<TControllerHardware>::clock(uint8_t &data) {
     update();
     
     // Get shifted bit out, it's for the D0 line, D1-D4 lines are unused here, they are driven high by pull-up resistor
-    data = (data & ~0x1) | 0x1F | (_buttonsShiftRegister & 0x1);
+    data = (data & ~0x1) | 0x1E | (_buttonsShiftRegister & 0x1);
     
     // Shift register
     _buttonsShiftRegister >>= 1;
@@ -36,13 +36,15 @@ void Standard<TControllerHardware>::out(bool high) {
 }
 
 template <class TControllerHardware>
-void Standard<TControllerHardware>::update() {  // TODO: soit on l'appelle a chaque clock du cpu, ou bien pour optimiser (si c'est ok avec tous les controllers) on l'appelle dans clock et out (au debut de clock et a la fin de out)
+void Standard<TControllerHardware>::update() {
     // If no need to update, exit
     if (_needToUpdate == false) {
         return;
     }
     
     // Update shift register with controller status
+    _controllerHardware.update();
+    
     _buttonsShiftRegister = _controllerHardware.getButtonA();
     _buttonsShiftRegister |= (_controllerHardware.getButtonB()) << 1;
     _buttonsShiftRegister |= (_controllerHardware.getButtonSelect()) << 2;
@@ -52,7 +54,8 @@ void Standard<TControllerHardware>::update() {  // TODO: soit on l'appelle a cha
     _buttonsShiftRegister |= (_controllerHardware.getDirectionalLeft()) << 6;
     _buttonsShiftRegister |= (_controllerHardware.getDirectionalRight()) << 7;
     
-    // TODO: Inverted ?
+    // Buttons from controller hardware returns true if pressed but in NES controller a pressed button is connected to ground so it returns false
+    // We simplify code by inverting all buttons here
     _buttonsShiftRegister = ~_buttonsShiftRegister;
 }
 

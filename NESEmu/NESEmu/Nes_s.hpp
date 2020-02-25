@@ -126,7 +126,7 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuBus::readControllerPo
     _nes._controllerPorts[number]->clock(data);
     
     // Set data bus with inverted data
-    setDataBus(data);
+    setDataBus(~data);
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>

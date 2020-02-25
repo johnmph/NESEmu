@@ -25,6 +25,19 @@ namespace NESEmu { namespace Cartridge {
     template <MirroringType EMirroring>
     uint16_t getMirroredAddress(uint16_t address);
     
+    // Function template explicit instantiation of the specialization
+    template <>
+    uint16_t getMirroredAddress<MirroringType::Horizontal>(uint16_t address);
+    
+    template <>
+    uint16_t getMirroredAddress<MirroringType::Vertical>(uint16_t address);
+    
+    template <>
+    uint16_t getMirroredAddress<MirroringType::SingleScreen>(uint16_t address);
+    
+    template <>
+    uint16_t getMirroredAddress<MirroringType::FourScreen>(uint16_t address);
+    
 } }
 
 #endif /* NESEmu_Cartridge_Common_hpp */

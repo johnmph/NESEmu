@@ -11,12 +11,15 @@
 #include <SDL.h>
 #include "Nes.hpp"
 #include "NESEmu/Cartridge/Mapper0.hpp"
+#include "NESEmu/Controller/Standard.hpp"
 
 
 struct GraphicHardware {
     
-    GraphicHardware() {
-        SDL_Init(SDL_INIT_VIDEO/* | SDL_INIT_GAMECONTROLLER*/);
+    GraphicHardware(SDL_Event &event) : _event(event) {
+        //SDL_Init(SDL_INIT_VIDEO);
+        SDL_InitSubSystem(SDL_INIT_VIDEO);
+        std::cout << SDL_GetError() << "\n";
         
         _window = SDL_CreateWindow("NESEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 512, 480, /*SDL_WINDOW_FULLSCREEN | */SDL_WINDOW_OPENGL);
         std::cout << SDL_GetError() << "\n";
@@ -40,76 +43,6 @@ struct GraphicHardware {
             
             _palette[i] = (rgb[0] << 16) | (rgb[1] << 8) | rgb[2];
         }
-        /*
-        uint8_t NESPaletteDefaut[256][3] = {
-            {127,127,127}, {0,0,255}, {0,0,191}, {71,43,191},
-            {151,0,135}, {171,0,35}, {171,19,0}, {139,23,0},
-            {83,48,0}, {0,120,0}, {0,107,0}, {0,91,0},
-            {0,67,88}, {0,0,0}, {0,0,0}, {0,0,0},
-            {191,191,191}, {0,120,248}, {0,88,248}, {107,71,255},
-            {219,0,205}, {231,0,91}, {248,56,0}, {231,95,19},
-            {175,127,0}, {0,184,0}, {0,171,0}, {0,171,71},
-            {0,139,139}, {0,0,0}, {0,0,0}, {0,0,0},
-            {248,248,248}, {63,191,255}, {107,136,255}, {152,120,248},
-            {248,120,248}, {248,88,152}, {248,120,88}, {255,163,71},
-            {248,184,0}, {184,248,24}, {91,219,87}, {88,248,152},
-            {0,235,219}, {120,120,120}, {0,0,0}, {0,0,0},
-            {255,255,255}, {167,231,255}, {184,184,248}, {216,184,248},
-            {248,184,248}, {251,167,195}, {240,208,176}, {255,227,171},
-            {251,219,123}, {216,248,120}, {184,248,184}, {184,248,216},
-            {0,255,255}, {248,216,248}, {0,0,0}, {0,0,0},
-            {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
-            {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
-            {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
-            {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
-            {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
-            {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
-            {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
-            {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
-            {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
-            {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
-            {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
-            {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
-            {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
-            {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
-            {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
-            {0,0,0}, {0,0,0}, {0,0,0}, {0,0,0},
-            {104,104,104}, {0,64,128}, {0,0,128}, {64,0,128},
-            {128,0,128}, {128,0,64}, {128,0,0}, {85,0,0},
-            {64,64,0}, {51,80,0}, {0,80,0}, {0,80,0},
-            {0,64,64}, {0,0,0}, {0,0,0}, {0,0,0},
-            {152,152,152}, {0,128,192}, {64,64,192}, {128,0,192},
-            {192,0,192}, {192,0,128}, {192,32,32}, {192,64,0},
-            {128,128,0}, {85,128,0}, {0,128,0}, {51,128,51},
-            {0,128,128}, {0,0,0}, {0,0,0}, {0,0,0},
-            {208,208,208}, {64,192,255}, {128,128,255}, {192,64,255},
-            {255,0,255}, {255,64,192}, {255,80,80}, {255,128,64},
-            {192,192,0}, {128,192,0}, {0,192,0}, {85,192,85},
-            {0,192,192}, {51,51,51}, {0,0,0}, {0,0,0},
-            {255,255,255}, {128,255,255}, {192,192,255}, {255,128,255},
-            {255,64,255}, {255,128,255}, {255,128,128}, {255,192,128},
-            {255,255,64}, {192,255,64}, {64,255,64}, {170,255,170},
-            {64,255,255}, {153,153,153}, {0,0,0}, {0,0,0},
-            {152,152,152}, {24,88,248}, {24,56,248}, {88,56,248},
-            {248,24,248}, {248,24,88}, {248,24,0}, {216,24,0},
-            {184,88,0}, {0,120,0}, {0,152,0}, {0,120,24},
-            {0,120,184}, {0,0,0}, {24,24,24}, {24,24,24},
-            {216,216,216}, {0,120,248}, {0,88,248}, {88,88,248},
-            {248,56,248}, {248,56,88}, {248,56,0}, {248,88,0},
-            {96,176,0}, {0,184,0}, {0,216,0}, {24,216,88},
-            {0,184,248}, {24,24,24}, {24,24,24}, {24,24,24},
-            {248,248,248}, {0,152,248}, {120,120,248}, {152,120,248},
-            {248,120,248}, {248,88,152}, {248,120,88}, {248,184,0},
-            {248,184,0}, {184,248,24}, {120,248,56}, {88,248,152},
-            {56,216,248}, {120,120,120}, {24,24,24}, {24,24,24},
-            {248,248,248}, {120,184,248}, {184,184,248}, {216,184,248},
-            {248,184,248}, {248,152,184}, {248,184,120}, {248,184,56},
-            {248,184,88}, {216,248,120}, {184,248,184}, {184,248,216},
-            {152,216,248}, {248,216,248}, {24,24,24}, {0,0,0}};
-        
-        for (int i = 0; i < 64; ++i) {
-            _palette[i] = (NESPaletteDefaut[i][0] << 16) | (NESPaletteDefaut[i][1] << 8) | NESPaletteDefaut[i][2];
-        }*/
         
         _fpsLastTime = SDL_GetTicks();
         _fpsFrames = 0;
@@ -123,7 +56,8 @@ struct GraphicHardware {
         SDL_DestroyRenderer(_renderer);
         SDL_DestroyWindow(_window);
         
-        SDL_Quit();
+        //SDL_Quit();
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
     }
     
     /*uint32_t getColorFromIndex(uint8_t color, bool r, bool g, bool b) {
@@ -155,6 +89,7 @@ struct GraphicHardware {
         SDL_RenderClear(_renderer);
         SDL_RenderCopy(_renderer, _texture, NULL, NULL);
         SDL_RenderPresent(_renderer);
+        SDL_PollEvent(&_event);
         
         // Update fps counter
         ++_fpsFrames;
@@ -168,6 +103,7 @@ struct GraphicHardware {
     }
     
 private:
+    SDL_Event &_event;
     SDL_Window *_window;
     SDL_Renderer *_renderer;
     SDL_Texture *_texture;
@@ -180,21 +116,74 @@ private:
     uint32_t _fpsFrames;
 };
 
+struct ControllerHardware {
+    
+    void update() {
+        _keyStates = SDL_GetKeyboardState(NULL);
+    }
+    
+    bool getButtonA() const {
+        return (_keyStates[SDL_SCANCODE_C] != 0);
+    }
+    
+    bool getButtonB() const {
+        return (_keyStates[SDL_SCANCODE_V] != 0);
+    }
+    
+    bool getButtonSelect() const {
+        return (_keyStates[SDL_SCANCODE_SPACE] != 0);
+    }
+    
+    bool getButtonStart() const {
+        return (_keyStates[SDL_SCANCODE_RETURN] != 0);
+    }
+    
+    bool getDirectionalUp() const {
+        return (_keyStates[SDL_SCANCODE_UP] != 0);
+    }
+    
+    bool getDirectionalDown() const {
+        return (_keyStates[SDL_SCANCODE_DOWN] != 0);
+    }
+    
+    bool getDirectionalLeft() const {
+        return (_keyStates[SDL_SCANCODE_LEFT] != 0);
+    }
+    
+    bool getDirectionalRight() const {
+        return (_keyStates[SDL_SCANCODE_RIGHT] != 0);
+    }
+    
+private:
+    uint8_t const *_keyStates;
+};
+
 
 int main(int argc, const char * argv[]) {
-    GraphicHardware graphicHardware;
+    // Init SDL
+    SDL_Init(SDL_INIT_EVENTS);
+    
+    SDL_Event event;
+    
+    GraphicHardware graphicHardware(event);
+    ControllerHardware controllerHardware;
+    auto controller = std::make_unique<NESEmu::Controller::Standard<ControllerHardware>>(controllerHardware);
     
     // Open ROM
-    std::ifstream ifs("../UnitTestFiles/SMB.nes", std::ios::binary);
+    std::ifstream ifs("../UnitTestFiles/nestest.nes", std::ios::binary);  // 16kb de prg-rom, horizontal mirroring
+    //std::ifstream ifs("../UnitTestFiles/SMB.nes", std::ios::binary);  // 32kb de prg-rom, vertical mirroring
     
     // Check that file exists
     assert(ifs.good());
     
     // Mapper for SMB
-    NESEmu::Cartridge::Mapper0<32, 0, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
+    NESEmu::Cartridge::Mapper0<16, 0, NESEmu::Cartridge::MirroringType::Horizontal> mapper0(ifs);
     
     // Create NES with Mapper
-    NESEmu::Nes<NESEmu::Model::Ntsc, NESEmu::Cartridge::Mapper0<32, 0, NESEmu::Cartridge::MirroringType::Vertical>, GraphicHardware> nes(mapper0, graphicHardware);
+    NESEmu::Nes<NESEmu::Model::Ntsc, NESEmu::Cartridge::Mapper0<16, 0, NESEmu::Cartridge::MirroringType::Horizontal>, GraphicHardware> nes(mapper0, graphicHardware);
+    
+    // Connect controller
+    nes.connectController(0, std::move(controller));
     
     // Power up NES
     nes.powerUp();
@@ -203,9 +192,16 @@ int main(int argc, const char * argv[]) {
     nes.reset(true);
     
     // Clock loop
-    for (;;) {  // TODO: rajouter une condition pour quitter
+    for (;;) {
+        if (event.type == SDL_QUIT) {
+            break;
+        }
+        
         nes.clock();
     }
+    
+    // Clean up SDL
+    SDL_Quit();
     
     return 0;
 }

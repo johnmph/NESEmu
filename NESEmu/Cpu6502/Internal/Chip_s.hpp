@@ -42,10 +42,14 @@ namespace _Detail {
         //_halfCarry = ((_aInput & 0xF) + (_bInput & 0xF) + carryIn) & 0x10;  // TODO: voir ce que c'est et si c'est utilisé
     }
     
-    /*template <bool BSubstractMode>
-     void Alu::performSubstractMode() {  // TODO: si je met ca ca appelle tjs cette version quand optimisé avec au moins o2 !!!!
+    template <bool BSubstractMode>
+     void Alu::performSubstractMode() {
         // Does nothing
-    }*/
+    }
+    
+    // Function template explicit instantiation of the specialization
+    template <>
+    void Alu::performSubstractMode<true>();
     
     
     // Flags Helper
@@ -83,6 +87,19 @@ namespace _Detail {
         // Be careful, if enable can be false, we need to call clearStatusFlags before (It's for multiple clear/set flags optimization by avoiding if statement)
         _value |= enable << static_cast<uint8_t>(EFlag);
     }
+    
+    // Function template explicit instantiation of the specialization
+    template <>
+    void FlagsHelper::refreshImpl<FlagsHelper::Flag::Negative>(uint8_t data);
+    
+    template <>
+    void FlagsHelper::refreshImpl<FlagsHelper::Flag::Zero>(uint8_t data);
+    
+    template <>
+    void FlagsHelper::refreshImpl<FlagsHelper::Flag::Carry>();
+    
+    template <>
+    void FlagsHelper::refreshImpl<FlagsHelper::Flag::Overflow>();
     
     template <FlagsHelper::Flag EFirstFlag, FlagsHelper::Flag ESecondFlag, FlagsHelper::Flag ...EOtherFlags, typename std::enable_if<(EFirstFlag == FlagsHelper::Flag::Negative) || (EFirstFlag == FlagsHelper::Flag::Zero), int>::type>
     void FlagsHelper::refreshImpl(uint8_t data) {

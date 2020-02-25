@@ -186,7 +186,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TC
     }
     // Mask register
     else if (address == 0x1) {
-        _maskGrayscale = (data & 0x1) ? 0x30 : 0x1F;
+        _maskGrayscale = (data & 0x1) ? 0x30 : 0x3F;
         _maskShowBackgroundFirst8px = data & 0x2;
         _maskShowSpritesFirst8px = data & 0x4;
         _maskShowBackground = data & 0x8;
@@ -460,33 +460,31 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateState() {
     // TODO: dans l'incrémentation : si incrementation de 4 et que l'adresse n'est pas alignée on l'aligne avant et on fait l'incrementation SI _statusSpriteOverflow == false, sinon on ne fait l'incrementation de 4 que si l'adresse etait alignée
     
     // Increment position counters
-    incrementPositionCounters();    // TODO: par apres il est possible de faire une petite optimisation car dedans il recheck la position du scanline courant pour voir si on a fini une frame, mais on fait deja des checks ici et on peut etre sur que si on est pas dans la pre-render line qu'on a pas fini la frame
+    incrementPositionCounters();
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processRenderLine() {
+    // Only VRAM access if rendering is enabled
+    if (isRenderingEnabled() == true) {
+        // If we are in sprite shift period (1-256)
+        if (_currentPixel <= Constants::visiblePixelsPerScanlineCount) {
+            // Update sprite shift registers
+            updateSpriteShiftRegisters();   // TODO: voir quand appelé exactement (de 1 a 256 ? de 2 a 257 ? ?) : DE 1 a 256 (le shift en 257 ne sert a rien, voir si le visual le fait quand meme par cohérence des circuits)
+        }
+        
+        // Complete tile data is 8 cycles
+        uint8_t dataType = _currentPixel & 0x7;
+        
+        // Process tiles
+        processTiles(dataType);
+        
+        // Process sprites
+        processSprites(dataType);
+    }
+    
     // Process pixel
     processPixel();
-    
-    // Only VRAM access if rendering is enabled
-    if (isRenderingEnabled() == false) {
-        return;
-    }
-    
-    // If we are in sprite shift period (1-256)
-    if (_currentPixel <= Constants::visiblePixelsPerScanlineCount) {
-        // Update sprite shift registers
-        updateSpriteShiftRegisters();   // TODO: voir quand appelé exactement (de 1 a 256 ? de 2 a 257 ? ?) : DE 1 a 256 (le shift en 257 ne sert a rien, voir si le visual le fait quand meme par cohérence des circuits)
-    }
-    
-    // Complete tile data is 8 cycles
-    uint8_t dataType = _currentPixel & 0x7;
-    
-    // Process tiles
-    processTiles(dataType);
-    
-    // Process sprites
-    processSprites(dataType);
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -578,7 +576,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processTiles(uint
     }
     
     // Fetch tiles
-    if (_currentPixel <= Constants::visiblePixelsPerScanlineCount) {
+    if (_currentPixel != (Constants::visiblePixelsPerScanlineCount + 1)) {
         fetchTiles(dataType);
     }
     
