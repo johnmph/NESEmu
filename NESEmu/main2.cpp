@@ -11,6 +11,8 @@
 #include <SDL.h>
 #include "Nes.hpp"
 #include "NESEmu/Cartridge/Mapper0.hpp"
+#include "NESEmu/Cartridge/Mapper1.hpp"
+#include "NESEmu/Cartridge/Mapper3.hpp"
 #include "NESEmu/Controller/Standard.hpp"
 
 
@@ -170,17 +172,26 @@ int main(int argc, const char * argv[]) {
     auto controller = std::make_unique<NESEmu::Controller::Standard<ControllerHardware>>(controllerHardware);
     
     // Open ROM
-    std::ifstream ifs("../UnitTestFiles/nestest.nes", std::ios::binary);  // 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/SMB.nes", std::ios::binary);  // 32kb de prg-rom, vertical mirroring
+    //std::ifstream ifs("../UnitTestFiles/DK.nes", std::ios::binary);  // 16kb de prg-rom, horizontal mirroring
+
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/nestest.nes", std::ios::binary);  // 16kb de prg-rom, horizontal mirroring
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/1.Branch_Basics.nes", std::ios::binary);  // 16kb de prg-rom, horizontal mirroring
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_misc/instr_misc.nes", std::ios::binary);  // 32kb de prg-rom, horizontal mirroring
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/oam_read/oam_read.nes", std::ios::binary);  // 32kb de prg-rom, vertical mirroring
+    std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_read_buffer/test_ppu_read_buffer.nes", std::ios::binary);  // Mapper3, 16kb de prg-rom, vertical mirroring
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_hit/ppu_sprite_hit.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom, vertical mirroring
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_hit/rom_singles/04-flip.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     
     // Check that file exists
     assert(ifs.good());
     
     // Mapper for SMB
-    NESEmu::Cartridge::Mapper0<16, 0, NESEmu::Cartridge::MirroringType::Horizontal> mapper0(ifs);
+    NESEmu::Cartridge::Mapper3<16, 0, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
     
     // Create NES with Mapper
-    NESEmu::Nes<NESEmu::Model::Ntsc, NESEmu::Cartridge::Mapper0<16, 0, NESEmu::Cartridge::MirroringType::Horizontal>, GraphicHardware> nes(mapper0, graphicHardware);
+    NESEmu::Nes<NESEmu::Model::Ntsc, decltype(mapper0), GraphicHardware> nes(mapper0, graphicHardware);
     
     // Connect controller
     nes.connectController(0, std::move(controller));

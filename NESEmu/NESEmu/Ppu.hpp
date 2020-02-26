@@ -9,6 +9,10 @@
 #ifndef NESEmu_Ppu_hpp
 #define NESEmu_Ppu_hpp
 
+// See https://wiki.nesdev.com/w/index.php/PPU
+// See https://wiki.nesdev.com/w/index.php/PPU_pin_out_and_signal_description
+// For palette generation, see https://bisqwit.iki.fi/utils/nespalette.php and http://drag.wootest.net/misc/palgen.html
+
 #include <cstdint>
 #include <vector>
 #include "Common.hpp"
@@ -25,7 +29,7 @@ namespace NESEmu { namespace Ppu {
     struct Constants;
     
     template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-    struct Chip {    // TODO: par cycle de PPU, un pixel est calculé
+    struct Chip {
         
         Chip(TBus &bus, TInterruptHardware &interruptHardware, TGraphicHardware &graphicHardware);
         
@@ -63,8 +67,8 @@ namespace NESEmu { namespace Ppu {
         void checkReset();
         
         // VRAM access
-        uint8_t read(/*uint16_t address*/);             // TODO: renommer readFromBus et writeToBus et pareil dans le cpu ? (et renommer ioRead/write en read/write) ?
-        void write(/*uint16_t address, */uint8_t data);
+        uint8_t read();
+        void write(uint8_t data);
         
         bool isInRenderScanline() const;
         bool isInPostRenderScanline() const;
@@ -111,7 +115,7 @@ namespace NESEmu { namespace Ppu {
         void incrementPositionCounters();
         
         uint8_t calculatePixel(uint8_t pixelNumber);
-        void checkSprite0Hit(uint8_t bgPixel);
+        void checkSprite0Hit(uint8_t bgPixel, uint8_t spPixel);
         
         uint8_t getColorFromPaletteIndex(uint8_t index);
         

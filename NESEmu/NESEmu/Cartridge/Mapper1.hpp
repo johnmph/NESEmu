@@ -1,25 +1,26 @@
 //
-//  Mapper0.hpp
+//  Mapper1.hpp
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 12/02/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Cartridge_Mapper0_hpp
-#define NESEmu_Cartridge_Mapper0_hpp
+#ifndef NESEmu_Cartridge_Mapper1_hpp
+#define NESEmu_Cartridge_Mapper1_hpp
+
+// See https://wiki.nesdev.com/w/index.php/MMC1
 
 #include <istream>
 #include "Common.hpp"
 
-// See https://wiki.nesdev.com/w/index.php/NROM
-// TODO: par apres, factoriser le code commun des mappers
+// TODO: a faire :
 namespace NESEmu { namespace Cartridge {
     
     template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>//TODO: comment limiter le mirroring a H et V seulement ?
-    struct Mapper0 {    // TODO: comment avoir acces au 2k de vram de nes ici ? + Il faut la possibilité d'envoyer un irq sur le cpu + il faut avoir acces au bus !!! gros probleme : le bus est Nes mais Nes a son parametre template qui est cette classe je ne peux pas donc passer Nes comme parametre template a cette classe (cyclic dependency) : voir si ok avec ce systeme (template sur methodes)
+    struct Mapper1 {    // TODO: comment avoir acces au 2k de vram de nes ici ? + Il faut la possibilité d'envoyer un irq sur le cpu + il faut avoir acces au bus !!! gros probleme : le bus est Nes mais Nes a son parametre template qui est cette classe je ne peux pas donc passer Nes comme parametre template a cette classe (cyclic dependency) : voir si ok avec ce systeme (template sur methodes)
         
-        Mapper0(std::istream &istream);
+        Mapper1(std::istream &istream);
         
         // Cpu memory bus
         template <class TConnectedBus>
@@ -41,8 +42,8 @@ namespace NESEmu { namespace Cartridge {
         std::vector<uint8_t> _chrRom;
     };
     
-    #include "Mapper0_s.hpp"
+    #include "Mapper1_s.hpp"
     
 } }
 
-#endif /* NESEmu_Cartridge_Mapper0_hpp */
+#endif /* NESEmu_Cartridge_Mapper1_hpp */

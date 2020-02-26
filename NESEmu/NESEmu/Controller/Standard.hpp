@@ -9,6 +9,8 @@
 #ifndef NESEmu_Controller_Standard_hpp
 #define NESEmu_Controller_Standard_hpp
 
+// See https://wiki.nesdev.com/w/index.php/Standard_controller
+
 #include "Interface.hpp"
 
 

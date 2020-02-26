@@ -9,8 +9,9 @@
 #ifndef NESEmu_Controller_Interface_hpp
 #define NESEmu_Controller_Interface_hpp
 
-// TODO : https://wiki.nesdev.com/w/index.php/Standard_controller
-// TODO : https://wiki.nesdev.com/w/index.php/Controller_detection
+// See https://wiki.nesdev.com/w/index.php/Controller_port_pinout
+// See https://wiki.nesdev.com/w/index.php/Input_devices
+// See https://wiki.nesdev.com/w/index.php/Controller_detection
 
 #include <cstdint>
 

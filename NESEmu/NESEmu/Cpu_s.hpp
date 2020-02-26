@@ -126,11 +126,11 @@ uint8_t Chip<EModel, TBus>::getOutSignal() const {
 }
 
 template <Model EModel, class TBus>
-bool Chip<EModel, TBus>::getOe1Signal() const { // TODO: sert a activer/desactiver (signal inversé) le port manette 1 (qui active ce signal ???)
+bool Chip<EModel, TBus>::getOe1Signal() const { // TODO: sert a activer/desactiver (signal inversé) le port manette 1 (qui active ce signal ???) (peut etre grace a ca pouvoir eviter d'appeler a chaque clock CPU l'update des controllers ?)
 }
 
 template <Model EModel, class TBus>
-bool Chip<EModel, TBus>::getOe2Signal() const { // TODO: sert a activer/desactiver (signal inversé) le port manette 2 (qui active ce signal ???)
+bool Chip<EModel, TBus>::getOe2Signal() const { // TODO: pareil qu'au dessus
 }
 
 template <Model EModel, class TBus>
@@ -174,11 +174,14 @@ void Chip<EModel, TBus>::performRead() {
     if (address == 0x4015) {
         setDataBus(0x0); // TODO: changer
     }
-    // Joystick 1
+    // Controller 1
+    // See https://wiki.nesdev.com/w/index.php/Controller_reading
+    // See https://wiki.nesdev.com/w/index.php/Controller_reading_code
     else if (address == 0x4016) {
         _bus.readControllerPort(0); // TODO: voir si pas meilleure conception que ca sinon renommer TBus en THardware car ca ne fait pas que le bus
     }
-    // Joystick 2
+    // Controller 2
+    // Same as controller 1
     else if (address == 0x4017) {
         _bus.readControllerPort(1);
     }
@@ -203,7 +206,9 @@ void Chip<EModel, TBus>::performWrite() {
         
         return;
     }
-    // Joystick 1 / 2
+    // Controller 1 / 2
+    // See https://wiki.nesdev.com/w/index.php/Controller_reading
+    // See https://wiki.nesdev.com/w/index.php/Controller_reading_code
     else if (address == 0x4016) {   // TODO: il faut aussi notifier les manettes qu'on a ecrit ca en appelant leur out(_outLatch & 0x1) !!! : je l'ai mis dans le clock nes cpu, voir si pas moyen de faire mieux optimisé que ca !!
         _outLatch = data & 0x7;
         
@@ -235,7 +240,7 @@ bool Chip<EModel, TBus>::checkDmaPhi1() {
     if (_dmaCount == 0) {
         stopDma();
         
-        return false;
+        return true;//TODO: voir, j'ai mis true pour forcer l'execution du cpu a la fin du DMA pour ne pas perdre un cycle CPU a la fin d'un DMA, a tester
     }
     
     // Wait for DMA begin that CPU has terminated current instruction

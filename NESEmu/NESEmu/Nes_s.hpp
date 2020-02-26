@@ -19,9 +19,9 @@ struct Constants<Model::Ntsc> {
     static constexpr Ppu::Model ppuModel = Ppu::Model::Ricoh2C02;
     
     // Clock
-    static constexpr int masterClockSpeedInHz = 21477272;
-    static constexpr int cpuMasterClockDivider = 12;
-    static constexpr int ppuMasterClockDivider = 4;
+    static constexpr int masterClockSpeedInHz = 21477272 / 4;   // TODO: / 4 pour optimiser la clock principale (gain de +- 14 fps en release)
+    static constexpr int cpuMasterClockDivider = 12 / 4;
+    static constexpr int ppuMasterClockDivider = 4 / 4;
 };
 
 template <>

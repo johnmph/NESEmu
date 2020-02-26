@@ -9,6 +9,9 @@
 #ifndef NESEmu_Cpu_hpp
 #define NESEmu_Cpu_hpp
 
+// See https://wiki.nesdev.com/w/index.php/2A03
+// See https://wiki.nesdev.com/w/index.php/CPU_pin_out_and_signal_description
+
 #include <cstdint>
 #include "Cpu6502/Chip.hpp"
 
