@@ -38,7 +38,7 @@ void Standard<TControllerHardware>::out(bool high) {
 template <class TControllerHardware>
 void Standard<TControllerHardware>::update() {
     // If no need to update, exit
-    if (_needToUpdate == false) {
+    if (!_needToUpdate) {
         return;
     }
     

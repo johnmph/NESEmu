@@ -30,7 +30,7 @@ void Attribute<TCpu6502>::setEnableCheck(bool enableCheck) {
 
 template <class TCpu6502>
 bool Attribute<TCpu6502>::compareValue(TCpu6502 &cpu6502) {
-    if (_enableCheck == true) {
+    if (_enableCheck) {
         return check(cpu6502);
     }
     
@@ -599,7 +599,7 @@ void Analyzer<TCpu6502>::decodeAttributes(std::string attributesString) {
     for (auto index = 0; index < attributesString.size(); ++index) {
         // Save attribute and skip tabs and spaces
         if ((attributesString[index] == '\t') || (attributesString[index] == ' ')) {
-            if (attribute.empty() == false) {
+            if (!attribute.empty()) {
                 _attributes.attributes.push_back(makeAttributeFromName(attribute));
                 attribute = "";
             }
@@ -624,7 +624,7 @@ std::vector<std::string> Analyzer<TCpu6502>::decodeResults(std::string resultsSt
         // Save result and skip tabs (but not spaces)
         //if ((resultsString[index] == '\t') || (resultsString[index] == ' ')) {
         if (resultsString[index] == '\t') {
-            if (result.empty() == false) {
+            if (!result.empty()) {
                 results.push_back(result);
                 result = "";
             }

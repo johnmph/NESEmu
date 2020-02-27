@@ -204,6 +204,7 @@ namespace NESEmu { namespace Ppu {
         uint8_t _spHighTileBitOut;
         uint8_t _spAttributeLatchActive;
         
+        bool _spriteOverflow;
         bool _sprite0OnNextScanline;
         bool _sprite0OnCurrentScanline;
         bool _sprite0Active;

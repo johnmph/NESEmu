@@ -177,38 +177,38 @@ namespace Cpu6502 {
         void decodeOpcodeAndExecuteInstruction();
         
         // Overflow
-        template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled == true, int>::type = 0>
+        template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled, int>::type = 0>
         void setOverflow(bool high);
         
-        template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled == false, int>::type = 0>
+        template <bool BSetOverflowEnabled, typename std::enable_if<!BSetOverflowEnabled, int>::type = 0>
         void setOverflow(bool high);
         
-        template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled == true, int>::type = 0>
+        template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled, int>::type = 0>
         void checkSetOverflow();
         
-        template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled == false, int>::type = 0>
+        template <bool BSetOverflowEnabled, typename std::enable_if<!BSetOverflowEnabled, int>::type = 0>
         void checkSetOverflow();
         
         // Ready
         void checkReady();
         
         // Reset
-        template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type = 0>
+        template <bool BResetAccurate, typename std::enable_if<BResetAccurate, int>::type = 0>
         void resetAfterPowerUp();
         
-        template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type = 0>
+        template <bool BResetAccurate, typename std::enable_if<!BResetAccurate, int>::type = 0>
         void resetAfterPowerUp();
         
-        template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type = 0>
+        template <bool BResetAccurate, typename std::enable_if<BResetAccurate, int>::type = 0>
         void reset(bool high);
         
-        template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type = 0>
+        template <bool BResetAccurate, typename std::enable_if<!BResetAccurate, int>::type = 0>
         void reset(bool high);
         
-        template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type = 0>
+        template <bool BResetAccurate, typename std::enable_if<BResetAccurate, int>::type = 0>
         void checkReset();
         
-        template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type = 0>
+        template <bool BResetAccurate, typename std::enable_if<!BResetAccurate, int>::type = 0>
         void checkReset();
         
         // Interrupts
@@ -217,10 +217,10 @@ namespace Cpu6502 {
         void checkInterrupts();
         int getCurrentInterruptVectorsIndex();
         
-        template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type = 0>
+        template <bool BResetAccurate, typename std::enable_if<BResetAccurate, int>::type = 0>
         void correctInterruptVectorIndexForReset();
         
-        template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type = 0>
+        template <bool BResetAccurate, typename std::enable_if<!BResetAccurate, int>::type = 0>
         void correctInterruptVectorIndexForReset();
         
         // Stack

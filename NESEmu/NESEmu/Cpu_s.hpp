@@ -58,8 +58,8 @@ void Chip<EModel, TBus>::clockPhi1() {//TODO: peut etre a la place d'avoir tout 
     // Check for DMA
     bool needToForceExecute = checkDmaPhi1();
     
-    // If rdy is low, wait before perform next read cycle unless we force execute
-    if ((this->_readyWaitRequested == false) || ((this->_sync == false) && (this->_readWrite != static_cast<bool>(InternalCpu::ReadWrite::Read))) || (needToForceExecute == true)) {
+    // If rdy is low, wait before perform next read cycle (or write cycle if sync) unless we force execute
+    if ((!this->_readyWaitRequested) || ((!this->_sync) && (this->_readWrite != static_cast<bool>(InternalCpu::ReadWrite::Read))) || needToForceExecute) {
         // Execute current stage
         (this->*(this->_currentInstruction))();
     }
@@ -87,7 +87,7 @@ void Chip<EModel, TBus>::clockPhi2() {
     bool needToWrite = checkDmaPhi2();
     
     // Fetch memory for phi2
-    if (needToWrite == true) {
+    if (needToWrite) {
         _bus.performWrite();//TODO: optimisation en mettant _bus devant pour eviter le decodage de l'adresse ici car le dma ecrit tjs en $2004
     } else {
         InternalCpu::fetchMemoryPhi2();
@@ -97,7 +97,7 @@ void Chip<EModel, TBus>::clockPhi2() {
 template <Model EModel, class TBus>
 void Chip<EModel, TBus>::reset(bool high) {
     // If reset
-    if (high == false) {
+    if (!high) {
         // Stop possible DMA
         stopDma();
     }
@@ -232,7 +232,7 @@ void Chip<EModel, TBus>::performWrite() {
 template <Model EModel, class TBus>
 bool Chip<EModel, TBus>::checkDmaPhi1() {
     // Don't execute DMA if not asked
-    if (_dmaStarted == false) {
+    if (!_dmaStarted) {
         return false;
     }
     
@@ -244,12 +244,12 @@ bool Chip<EModel, TBus>::checkDmaPhi1() {
     }
     
     // Wait for DMA begin that CPU has terminated current instruction
-    if (InternalCpu::getSyncSignal() == false) {
+    if (!InternalCpu::getSyncSignal()) {
         return false;
     }
     
     // If DMA is in read phase
-    if (_dmaToggle == false) {
+    if (!_dmaToggle) {
         // If DMA begin, wait a last clock to ensure that all operations are finished (some operations does other things in the method which call decode instruction)
         if (_dmaCount > 256) {
             --_dmaCount;
@@ -280,7 +280,7 @@ bool Chip<EModel, TBus>::checkDmaPhi1() {
 template <Model EModel, class TBus>
 bool Chip<EModel, TBus>::checkDmaPhi2() {
     // Need to write if DMA started and begin to read/write and in write mode
-    return ((_dmaStarted == true) && (_dmaCount <= 256) && (this->_readWrite == static_cast<bool>(InternalCpu::ReadWrite::Write)));
+    return (_dmaStarted && (_dmaCount <= 256) && (this->_readWrite == static_cast<bool>(InternalCpu::ReadWrite::Write)));
 }
 
 template <Model EModel, class TBus>

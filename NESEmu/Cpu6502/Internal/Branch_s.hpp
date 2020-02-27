@@ -18,7 +18,7 @@ void Chip<TConfiguration>::bpl0() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::bpl1() {
-    relative1(_flagsHelper.get<Flag::Negative>() == false);
+    relative1(!_flagsHelper.get<Flag::Negative>());
 }
 
 template <class TConfiguration>
@@ -29,7 +29,7 @@ void Chip<TConfiguration>::bmi0() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::bmi1() {
-    relative1(_flagsHelper.get<Flag::Negative>() == true);
+    relative1(_flagsHelper.get<Flag::Negative>());
 }
 
 template <class TConfiguration>
@@ -40,7 +40,7 @@ void Chip<TConfiguration>::bvc0() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::bvc1() {
-    relative1(_flagsHelper.get<Flag::Overflow>() == false);
+    relative1(!_flagsHelper.get<Flag::Overflow>());
 }
 
 template <class TConfiguration>
@@ -51,7 +51,7 @@ void Chip<TConfiguration>::bvs0() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::bvs1() {
-    relative1(_flagsHelper.get<Flag::Overflow>() == true);
+    relative1(_flagsHelper.get<Flag::Overflow>());
 }
 
 template <class TConfiguration>
@@ -62,7 +62,7 @@ void Chip<TConfiguration>::bcc0() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::bcc1() {
-    relative1(_flagsHelper.get<Flag::Carry>() == false);
+    relative1(!_flagsHelper.get<Flag::Carry>());
 }
 
 template <class TConfiguration>
@@ -73,7 +73,7 @@ void Chip<TConfiguration>::bcs0() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::bcs1() {
-    relative1(_flagsHelper.get<Flag::Carry>() == true);
+    relative1(_flagsHelper.get<Flag::Carry>());
 }
 
 template <class TConfiguration>
@@ -84,7 +84,7 @@ void Chip<TConfiguration>::bne0() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::bne1() {
-    relative1(_flagsHelper.get<Flag::Zero>() == false);
+    relative1(!_flagsHelper.get<Flag::Zero>());
 }
 
 template <class TConfiguration>
@@ -95,7 +95,7 @@ void Chip<TConfiguration>::beq0() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::beq1() {
-    relative1(_flagsHelper.get<Flag::Zero>() == true);
+    relative1(_flagsHelper.get<Flag::Zero>());
 }
 
 #endif /* Cpu6502_Internal_Branch_s_hpp */

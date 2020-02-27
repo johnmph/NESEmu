@@ -105,7 +105,7 @@ void Chip<TConfiguration>::relative0() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::relative1(bool condition) {
-    if (condition == true) {
+    if (condition) {
         // Adding offset with programCounterLow using ALU
         _alu.performSum<DecimalSupported, false>(_inputDataLatch, _programCounterLow, false, false);
         
@@ -189,7 +189,7 @@ void Chip<TConfiguration>::absoluteIndexedY1() {
 template <class TConfiguration>
 void Chip<TConfiguration>::absoluteIndexedRead0(OpcodeInstruction nextInstruction) {
     // If we don't need to correct inputDataLatch (address high), skip next instruction
-    if (_alu.getCarry() == false) {
+    if (!_alu.getCarry()) {
         _currentInstruction = nextInstruction;
         
         // Check interrupts

@@ -12,7 +12,9 @@
 #include "Nes.hpp"
 #include "NESEmu/Cartridge/Mapper0.hpp"
 #include "NESEmu/Cartridge/Mapper1.hpp"
+#include "NESEmu/Cartridge/Mapper2.hpp"
 #include "NESEmu/Cartridge/Mapper3.hpp"
+#include "NESEmu/Cartridge/Mapper7.hpp"
 #include "NESEmu/Controller/Standard.hpp"
 
 
@@ -172,23 +174,58 @@ int main(int argc, const char * argv[]) {
     auto controller = std::make_unique<NESEmu::Controller::Standard<ControllerHardware>>(controllerHardware);
     
     // Open ROM
-    //std::ifstream ifs("../UnitTestFiles/SMB.nes", std::ios::binary);  // 32kb de prg-rom, vertical mirroring
-    //std::ifstream ifs("../UnitTestFiles/DK.nes", std::ios::binary);  // 16kb de prg-rom, horizontal mirroring
+    //std::ifstream ifs("../UnitTestFiles/SMB.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
+    //std::ifstream ifs("../UnitTestFiles/DK.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
+    //std::ifstream ifs("../UnitTestFiles/Castlevania.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
+    //std::ifstream ifs("../UnitTestFiles/Duck Tales.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
+    //std::ifstream ifs("../UnitTestFiles/Battletoads.nes", std::ios::binary);  // Mapper7, 256kb de prg-rom, single screen mirroring chr-ram
 
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/nestest.nes", std::ios::binary);  // 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/1.Branch_Basics.nes", std::ios::binary);  // 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_misc/instr_misc.nes", std::ios::binary);  // 32kb de prg-rom, horizontal mirroring
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/oam_read/oam_read.nes", std::ios::binary);  // 32kb de prg-rom, vertical mirroring
-    std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_read_buffer/test_ppu_read_buffer.nes", std::ios::binary);  // Mapper3, 16kb de prg-rom, vertical mirroring
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_read_buffer/test_ppu_read_buffer.nes", std::ios::binary);  // Mapper3, 16kb de prg-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_hit/ppu_sprite_hit.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom, vertical mirroring
-    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_hit/rom_singles/04-flip.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
+    
+    std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_hit/rom_singles/09-timing.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
+    // TestROM/PPU/ppu_sprite_hit/rom_singles/ -> fail : 09 (timing) a cause que l'instruction qui lit le vblank flag (lda) est appelée juste avant que le ppu mette le flag a 1, ensuite la micro instruction ld0 se fait mais le bus a deja été lu juste avant
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_vbl_nmi/rom_singles/06-suppression.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
+    // TestROM/PPU/ppu_vbl_nmi/rom_singles/ -> fail : 05 (timing), 06 (suppression), 07 (nmi on timing), 08 (nmi off timing), 10 (even odd timing)
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/sprdma_and_dmc_dma/sprdma_and_dmc_dma.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/oam_stress/oam_stress.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // Ne va pas
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/oamtest3/oam3.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, vertical mirroring chr-ram // ???
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_overflow/rom_singles/03-timing.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // Seul 03-timing foire
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/blargg_ppu_tests_2005.09.15b/vram_access.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring chr-ram  // OK
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/scanline/scanline.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, vertical mirroring
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_timing/rom_singles/1-instr_timing.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // TODO: a voir une fois le APU frame counter terminé
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_exec_space/test_cpu_exec_space_apu.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_interrupts_v2/rom_singles/2-nmi_and_brk.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // TODO: ne passe pas
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_dummy_writes/cpu_dummy_writes_ppumem.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // OK
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_reset/registers.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // OK
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_misc/rom_singles/03-dummy_reads.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // OK
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_test-v5/rom_singles/16-special.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // TODO: ne foire que sur les instructions pas encore supportées
+    
     
     // Check that file exists
     assert(ifs.good());
     
     // Mapper for SMB
-    NESEmu::Cartridge::Mapper3<16, 0, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
+    NESEmu::Cartridge::Mapper0<32, 0, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
     
     // Create NES with Mapper
     NESEmu::Nes<NESEmu::Model::Ntsc, decltype(mapper0), GraphicHardware> nes(mapper0, graphicHardware);
@@ -203,9 +240,23 @@ int main(int argc, const char * argv[]) {
     nes.reset(true);
     
     // Clock loop
+    bool resetState = false;
+    
     for (;;) {
         if (event.type == SDL_QUIT) {
             break;
+        }
+        
+        if ((event.type == SDL_KEYDOWN) && (event.key.keysym.scancode == SDL_SCANCODE_R) && (resetState == false)) {
+            nes.reset(false);
+            resetState = true;
+            std::cout << "Reset start\n";
+        }
+        
+        if ((event.type == SDL_KEYUP) && (event.key.keysym.scancode == SDL_SCANCODE_R) && (resetState == true)) {
+            nes.reset(true);
+            resetState = false;
+            std::cout << "Reset end\n";
         }
         
         nes.clock();

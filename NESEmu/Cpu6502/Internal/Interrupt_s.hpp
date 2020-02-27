@@ -11,7 +11,7 @@
 
 
 template <class TConfiguration>
-template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type>
+template <bool BResetAccurate, typename std::enable_if<BResetAccurate, int>::type>
 void Chip<TConfiguration>::reset0() {
     // Execute saved instruction if it's not a fetchOpcode
     if (_resetSavedInstruction != static_cast<OpcodeInstruction>(&Chip::fetchOpcode)) {
@@ -23,22 +23,22 @@ void Chip<TConfiguration>::reset0() {
     }
     
     // Next instruction is fetchOpcode but need to check if resetRequested is still true in case of reset in interrupt
-    if (_resetRequested == true) {
+    if (_resetRequested) {
         _currentInstruction = &Chip::fetchOpcode;
     }
 }
 
 template <class TConfiguration>
-template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type>
+template <bool BResetAccurate, typename std::enable_if<!BResetAccurate, int>::type>
 void Chip<TConfiguration>::reset0() {
     // Stay in this step until reset goes high again
-    if (_resetLine == true) {
+    if (_resetLine) {
         _currentInstruction = &Chip::reset1<ResetAccurate>;
     }
 }
 
 template <class TConfiguration>
-template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type>
+template <bool BResetAccurate, typename std::enable_if<!BResetAccurate, int>::type>
 void Chip<TConfiguration>::reset1() {
     // Need this extra-step to sync number of clocks with the ResetAccurate version for exiting the reset state
     _currentInstruction = &Chip::fetchOpcode;
@@ -49,7 +49,7 @@ void Chip<TConfiguration>::brk0() {
     _currentInstruction = &Chip::brk1;
     
     // Read data without increment PC for reset, nmi and irq
-    if (_interruptRequested == true) {
+    if (_interruptRequested) {
         readDataBus(_programCounterLow, _programCounterHigh);
         
         return;
@@ -83,7 +83,7 @@ void Chip<TConfiguration>::brk3() {
     
     // Push status flags to stack
     pushToStack1();
-    pushToStack0(_statusFlags | ((_interruptRequested == false) << static_cast<int>(Flag::Break)));
+    pushToStack0(_statusFlags | ((!_interruptRequested) << static_cast<int>(Flag::Break)));
     
     // Calculate interrupt vectors index
     _interruptVectorsIndex = getCurrentInterruptVectorsIndex(); // TODO: avant c'etait dans brk4 mais ca posait un probleme car ca detectait le nmi meme s'il etait trop tard (a la fin de brk3), alors déplacé ici, normalement c'est ok

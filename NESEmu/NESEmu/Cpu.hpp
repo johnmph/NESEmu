@@ -31,7 +31,7 @@ namespace NESEmu { namespace Cpu {
         
         Chip(TBus &bus);
         
-        void powerUp(uint16_t programCounter = 0x100F, uint8_t stackPointer = 0xC0, uint8_t accumulator = 0x00, uint8_t xIndex = 0xC0, uint8_t yIndex = 0x0, uint8_t statusFlags = 0x22);
+        void powerUp(uint16_t programCounter = 0x100F, uint8_t stackPointer = 0x0, uint8_t accumulator = 0x0, uint8_t xIndex = 0x0, uint8_t yIndex = 0x0, uint8_t statusFlags = 0x34);  // TODO: d'apres la rom de tests ce sont les valeurs que ca doit avoir au power up, a verifier (pour le pc je ne sais pas)
         
         void clock();
         void clockPhi1();

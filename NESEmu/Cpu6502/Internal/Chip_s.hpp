@@ -28,7 +28,7 @@ namespace _Detail {
         _bInput = bInput;
         
         // Only for C++17
-        /*if constexpr (BSubstractMode == true) {
+        /*if constexpr (BSubstractMode) {
             invertBInput();
         }*/
         // Kind of static if in C++11
@@ -202,7 +202,7 @@ void Chip<TConfiguration>::clockPhi1() {
     //_dataOutput = 0xFF;
     
     // If rdy is low, wait before perform next read cycle
-    if ((_readyWaitRequested == false) || (_readWrite != static_cast<bool>(ReadWrite::Read))) {
+    if ((!_readyWaitRequested) || (_readWrite != static_cast<bool>(ReadWrite::Read))) {
         // Execute current stage
         (this->*_currentInstruction)();
     }
@@ -270,12 +270,12 @@ bool Chip<TConfiguration>::getSyncSignal() const {
 
 template <class TConfiguration>
 bool Chip<TConfiguration>::getM1Signal() const {
-    return (_phi2 == false);
+    return !_phi2;
 }
 
 template <class TConfiguration>
 bool Chip<TConfiguration>::getM2Signal() const {
-    return (_phi2 == true);
+    return _phi2;
 }
 
 // Memory
@@ -332,7 +332,7 @@ void Chip<TConfiguration>::writeDataBus(uint8_t low, uint8_t high, uint8_t data)
     _dataOutput = data;
     
     // Set R/W to write (unless it's in reset)
-    _readWrite = static_cast<bool>((_resetRequested == false) ? ReadWrite::Write : ReadWrite::Read);
+    _readWrite = static_cast<bool>((_resetRequested) ? ReadWrite::Read : ReadWrite::Write);
 }
 
 // Program flow
@@ -346,7 +346,7 @@ void Chip<TConfiguration>::incrementProgramCounter() {
 template <class TConfiguration>
 void Chip<TConfiguration>::updateProgramCounter() {
     _programCounterLow += _programCounterNeedsIncrement;
-    _programCounterHigh += ((_programCounterLow == 0) && (_programCounterNeedsIncrement == true));
+    _programCounterHigh += ((_programCounterLow == 0) && _programCounterNeedsIncrement);
     
     _programCounterNeedsIncrement = false;
 }
@@ -363,7 +363,7 @@ void Chip<TConfiguration>::fetchOpcode(OpcodeInstruction nextInstruction) {
     _currentInstruction = nextInstruction;
     
     // If interrupt requested
-    if (_interruptRequested == true) {
+    if (_interruptRequested) {
         // Read opcode without increment PC
         readDataBus(_programCounterLow, _programCounterHigh);
     } else {
@@ -384,12 +384,12 @@ void Chip<TConfiguration>::fetchOpcode() {
 template <class TConfiguration>
 void Chip<TConfiguration>::decodeOpcodeAndExecuteInstruction() {
     // We need this because some instructions will perform actions in the decode step of the next instruction, so we need to let them perform actions even if RDY is low, but we can't decode next opcode because opcode is not ready for reading
-    if (_readyWaitRequested == true) {
+    if (_readyWaitRequested) {
         return;
     }
     
     // Get current instruction from opcode (or BRK (0) if interrupt requested)
-    _instruction = (_interruptRequested == false) ? _predecode : 0;
+    _instruction = (_interruptRequested) ? 0 : _predecode;
     _currentInstruction = _opcodeInstructionFuncs[_instruction];
     
     // Execute current instruction
@@ -402,23 +402,23 @@ void Chip<TConfiguration>::decodeOpcodeAndExecuteInstruction() {
 // Overflow
 
 template <class TConfiguration>
-template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled == true, int>::type>
+template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled, int>::type>
 void Chip<TConfiguration>::setOverflow(bool high) {
     // Save signal
     _setOverflowLine = high;
 }
 
 template <class TConfiguration>
-template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled == false, int>::type>
+template <bool BSetOverflowEnabled, typename std::enable_if<!BSetOverflowEnabled, int>::type>
 void Chip<TConfiguration>::setOverflow(bool high) {
-    static_assert(BSetOverflowEnabled == true, "Can't call setOverflow on a non-supported setOverflow CPU");
+    static_assert(BSetOverflowEnabled, "Can't call setOverflow on a non-supported setOverflow CPU");
 }
 
 template <class TConfiguration>
-template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled == true, int>::type>
+template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled, int>::type>
 void Chip<TConfiguration>::checkSetOverflow() {
     // If setOverflow requested
-    if (_setOverflowRequested == true) {
+    if (_setOverflowRequested) {
         // Enable overflow flag
         _flagsHelper.set<Flag::Overflow>(true);
         
@@ -427,7 +427,7 @@ void Chip<TConfiguration>::checkSetOverflow() {
     }
     
     // Set overflow is requested if setOverflow line has transition from high to low
-    if ((_setOverflowLinePrevious == true) && (_setOverflowLine == false)) {
+    if (_setOverflowLinePrevious && (!_setOverflowLine)) {
         _setOverflowRequested = true;
     }
     
@@ -436,7 +436,7 @@ void Chip<TConfiguration>::checkSetOverflow() {
 }
 
 template <class TConfiguration>
-template <bool BSetOverflowEnabled, typename std::enable_if<BSetOverflowEnabled == false, int>::type>
+template <bool BSetOverflowEnabled, typename std::enable_if<!BSetOverflowEnabled, int>::type>
 void Chip<TConfiguration>::checkSetOverflow() {
     // Does nothing
 }
@@ -446,18 +446,18 @@ void Chip<TConfiguration>::checkSetOverflow() {
 template <class TConfiguration>
 void Chip<TConfiguration>::checkReady() {
     // Next instruction is fetchOpcode but need to check if resetRequested is still true in case of reset in interrupt
-    /*if ((_readyWaitRequested == true) && (_readyLine == true) && (_resetRequested == true)) { // TODO : besoin de ca pour reussir le testNmiInDma mais ca doit cacher un bug de reset
+    /*if (_readyWaitRequested && _readyLine && _resetRequested) { // TODO : besoin de ca pour reussir le testNmiInDma mais ca doit cacher un bug de reset
         _currentInstruction = &Chip::fetchOpcode;
     }*/
     
     // A ready wait is requested if the ready line is low
-    _readyWaitRequested = (_readyLine == false);
+    _readyWaitRequested = !_readyLine;
 }
 
 // Reset
 
 template <class TConfiguration>
-template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type>
+template <bool BResetAccurate, typename std::enable_if<BResetAccurate, int>::type>
 void Chip<TConfiguration>::resetAfterPowerUp() {
     // Set current instruction because reset will save it in _resetSavedInstruction to execute it later
     _currentInstruction = &Chip::fetchOpcode;
@@ -469,37 +469,40 @@ void Chip<TConfiguration>::resetAfterPowerUp() {
 }
 
 template <class TConfiguration>
-template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type>
+template <bool BResetAccurate, typename std::enable_if<!BResetAccurate, int>::type>
 void Chip<TConfiguration>::resetAfterPowerUp() {
     reset(false);
 }
 
 template <class TConfiguration>
-template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type>
+template <bool BResetAccurate, typename std::enable_if<BResetAccurate, int>::type>
 void Chip<TConfiguration>::reset(bool high) {
     // Save signal
     _resetLine = high;
 }
 
 template <class TConfiguration>
-template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type>
+template <bool BResetAccurate, typename std::enable_if<!BResetAccurate, int>::type>
 void Chip<TConfiguration>::reset(bool high) {
     // If line is low and reset is not already requested
-    if ((high == false) && (_resetRequested == false)) {
+    if ((!high) && (!_resetRequested)) {
         // Set reset requested and execute reset0 for the next instruction
         _currentInstruction = &Chip::reset0<ResetAccurate>;
         _resetRequested = true;
         _interruptRequested = true;
     }
+    
+    // Save signal
+    _resetLine = high;
 }
 
 template <class TConfiguration>
-template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type>
+template <bool BResetAccurate, typename std::enable_if<BResetAccurate, int>::type>
 void Chip<TConfiguration>::checkReset() {
-    // If reset signal
-    if (_resetLineLatch == false) {
+    // If reset signal is low
+    if (!_resetLineLatch) {
         // If not already requested, save next instruction
-        if (_resetRequested == false) {
+        if (!_resetRequested) {
             _resetSavedInstruction = _currentInstruction;
         }
         
@@ -514,7 +517,7 @@ void Chip<TConfiguration>::checkReset() {
 }
 
 template <class TConfiguration>
-template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type>
+template <bool BResetAccurate, typename std::enable_if<!BResetAccurate, int>::type>
 void Chip<TConfiguration>::checkReset() {
     // Does nothing
 }
@@ -524,7 +527,7 @@ void Chip<TConfiguration>::checkReset() {
 template <class TConfiguration>
 void Chip<TConfiguration>::checkNmi() {
     // Nmi is requested if nmi line has transition from high to low
-    if ((_nmiLinePrevious == true) && (_nmiLine == false)) {
+    if (_nmiLinePrevious && (!_nmiLine)) {
         _nmiRequested = true;
     }
     
@@ -535,13 +538,13 @@ void Chip<TConfiguration>::checkNmi() {
 template <class TConfiguration>
 void Chip<TConfiguration>::checkIrq() {
     // Irq is requested if interrupts are not disabled and if irq line goes to low (and stay for one cycle)
-    _irqRequested = (_flagsHelper.get<Flag::InterruptDisable>() == false) && (_irqLine == false);
+    _irqRequested = (!_flagsHelper.get<Flag::InterruptDisable>()) && (!_irqLine);
 }
 
 template <class TConfiguration>
 void Chip<TConfiguration>::checkInterrupts() {
     // Set interrupt requested flag if interrupts detected
-    if ((_nmiRequested == true) || (_irqRequested == true)) {
+    if (_nmiRequested || _irqRequested) {
         _interruptRequested = true;
     }
 }
@@ -549,12 +552,12 @@ void Chip<TConfiguration>::checkInterrupts() {
 template <class TConfiguration>
 int Chip<TConfiguration>::getCurrentInterruptVectorsIndex() {
     // If reset
-    if (_resetRequested == true) {
+    if (_resetRequested) {
         return static_cast<int>(Interrupts::Reset);
     }
     
     // If nmi
-    if (_nmiRequested == true) {
+    if (_nmiRequested) {
         return static_cast<int>(Interrupts::Nmi);
     }
     
@@ -563,16 +566,16 @@ int Chip<TConfiguration>::getCurrentInterruptVectorsIndex() {
 }
 
 template <class TConfiguration>
-template <bool BResetAccurate, typename std::enable_if<BResetAccurate == true, int>::type>
+template <bool BResetAccurate, typename std::enable_if<BResetAccurate, int>::type>
 void Chip<TConfiguration>::correctInterruptVectorIndexForReset() {
     // Get reset vector if we are in reset
-    if (_resetRequested == true) {
+    if (_resetRequested) {
         _interruptVectorsIndex = static_cast<int>(Interrupts::Reset);
     }
 }
 
 template <class TConfiguration>
-template <bool BResetAccurate, typename std::enable_if<BResetAccurate == false, int>::type>
+template <bool BResetAccurate, typename std::enable_if<!BResetAccurate, int>::type>
 void Chip<TConfiguration>::correctInterruptVectorIndexForReset() {
     // Does nothing
 }

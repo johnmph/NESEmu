@@ -85,7 +85,7 @@ namespace {
     bus.memory.fill(0x00);
     
     // Power up cpu
-    cpu2A03.powerUp();
+    cpu2A03.powerUp(0x100F, 0xC0, 0x0, 0xC0, 0x0, 0x22);
 }
 
 - (void)tearDown {

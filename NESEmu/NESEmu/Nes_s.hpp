@@ -20,7 +20,7 @@ struct Constants<Model::Ntsc> {
     
     // Clock
     static constexpr int masterClockSpeedInHz = 21477272 / 4;   // TODO: / 4 pour optimiser la clock principale (gain de +- 14 fps en release)
-    static constexpr int cpuMasterClockDivider = 12 / 4;
+    static constexpr int cpuMasterClockDivider = 12 / 4;//6
     static constexpr int ppuMasterClockDivider = 4 / 4;
 };
 
@@ -210,6 +210,9 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::powerUp() {
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
 void Nes<EModel, TCartridgeHardware, TGraphicHardware>::clock() {
+    //static bool f = false;
+    static int cpuCycle = 0;
+    
     ++_currentClockForCpu;
     ++_currentClockForPpu;
     
@@ -220,7 +223,20 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::clock() {
     }
     
     // Perform a cpu clock if necessary
-    if (_currentClockForCpu >= Constants::cpuMasterClockDivider) {
+    if (_currentClockForCpu >= Constants::cpuMasterClockDivider) {/*
+        if (!f) {
+            // Update controllers
+            for (int i = 0; i < 2; ++i) {
+                _controllerPorts[i]->out(_cpu.getOutSignal() & 0x1);        // TODO: voir pour les performances ici
+            }
+            
+            _cpu.clockPhi1();
+        } else {
+            _cpu.clockPhi2();
+        }
+        _currentClockForCpu = 0;
+        f = !f;*/
+        
         // Update controllers
         for (int i = 0; i < 2; ++i) {
             _controllerPorts[i]->out(_cpu.getOutSignal() & 0x1);        // TODO: voir pour les performances ici
@@ -228,6 +244,11 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::clock() {
         
         _cpu.clock();
         _currentClockForCpu = 0;
+        /*++cpuCycle;
+        
+        if (cpuCycle == 29658) {
+            int x = 0;
+        }*/
     }
 }
 
