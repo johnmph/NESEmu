@@ -211,7 +211,7 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::powerUp() {
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
 void Nes<EModel, TCartridgeHardware, TGraphicHardware>::clock() {
     //static bool f = false;
-    static int cpuCycle = 0;
+    //static int cpuCycle = 0;
     
     ++_currentClockForCpu;
     ++_currentClockForPpu;

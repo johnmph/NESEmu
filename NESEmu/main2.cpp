@@ -178,7 +178,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/DK.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/Castlevania.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Duck Tales.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
-    //std::ifstream ifs("../UnitTestFiles/Battletoads.nes", std::ios::binary);  // Mapper7, 256kb de prg-rom, single screen mirroring chr-ram
+    std::ifstream ifs("../UnitTestFiles/Battletoads.nes", std::ios::binary);  // Mapper7, 256kb de prg-rom, single screen mirroring chr-ram
 
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/nestest.nes", std::ios::binary);  // 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/1.Branch_Basics.nes", std::ios::binary);  // 16kb de prg-rom, horizontal mirroring
@@ -188,10 +188,10 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_read_buffer/test_ppu_read_buffer.nes", std::ios::binary);  // Mapper3, 16kb de prg-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_hit/ppu_sprite_hit.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom, vertical mirroring
     
-    std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_hit/rom_singles/09-timing.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
-    // TestROM/PPU/ppu_sprite_hit/rom_singles/ -> fail : 09 (timing) a cause que l'instruction qui lit le vblank flag (lda) est appelée juste avant que le ppu mette le flag a 1, ensuite la micro instruction ld0 se fait mais le bus a deja été lu juste avant
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_hit/rom_singles/09-timing.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
+    // TestROM/PPU/ppu_sprite_hit/rom_singles/ -> fail : 09 (timing) a cause que l'instruction qui lit le vblank flag (lda) est appelée juste avant que le ppu mette le flag a 1, ensuite la micro instruction ld0 se fait mais le bus a deja été lu juste avant ?
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_vbl_nmi/rom_singles/06-suppression.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_vbl_nmi/rom_singles/10-even_odd_timing.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     // TestROM/PPU/ppu_vbl_nmi/rom_singles/ -> fail : 05 (timing), 06 (suppression), 07 (nmi on timing), 08 (nmi off timing), 10 (even odd timing)
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/sprdma_and_dmc_dma/sprdma_and_dmc_dma.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
@@ -205,6 +205,10 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/blargg_ppu_tests_2005.09.15b/vram_access.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring chr-ram  // OK
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/scanline/scanline.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, vertical mirroring
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/palette.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, horizontal mirroring
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/full_palette/full_palette.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, horizontal mirroring
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_timing/rom_singles/1-instr_timing.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // TODO: a voir une fois le APU frame counter terminé
     
@@ -225,7 +229,7 @@ int main(int argc, const char * argv[]) {
     assert(ifs.good());
     
     // Mapper for SMB
-    NESEmu::Cartridge::Mapper0<32, 0, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
+    NESEmu::Cartridge::Mapper7<256, 0/*, NESEmu::Cartridge::MirroringType::Vertical*/> mapper0(ifs);
     
     // Create NES with Mapper
     NESEmu::Nes<NESEmu::Model::Ntsc, decltype(mapper0), GraphicHardware> nes(mapper0, graphicHardware);

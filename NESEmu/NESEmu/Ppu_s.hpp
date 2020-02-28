@@ -485,7 +485,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processRenderLine
         // If we are in sprite shift period (1-256)
         if ((_currentPixel > 1) && (_currentPixel <= (Constants::visiblePixelsPerScanlineCount + 1))) {
             // Update sprite shift registers
-            updateSpriteShiftRegisters();   // TODO: voir quand appelé exactement (de 1 a 256 ? de 2 a 257 ? ?) : DE 1 a 256 (le shift en 257 ne sert a rien, voir si le visual le fait quand meme par cohérence des circuits): TODO en mettant processPixel a la fin (pour les tiles) je dois commencer ceci a 2 et terminer a 257
+            updateSpriteShiftRegisters();   // TODO: voir quand appelé exactement (de 1 a 256 ? de 2 a 257 ? ?) : DE 1 a 256 (le shift en 257 ne sert a rien, voir si le visual le fait quand meme par cohérence des circuits): TODO en mettant processPixel a la fin (pour les tiles) je dois commencer ceci a 2 et terminer a 257 : bien verifier car est ce que c'est sur que c'est seulement pendant le rendu actif ?? (pareil pour les tiles shift registers)
         }
         
         // Complete tile data is 8 cycles
@@ -530,7 +530,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPreRenderL
         _statusVBlankStarted = false;
         
         // Check for interrupt
-        checkInterrupt();
+        checkInterrupt();   // TODO: voir car je l'ai rajouté ici, voir dans Visual2C02
         
         // Signal which is set when reset line is low and reset at the end of VBlank
         // See https://wiki.nesdev.com/w/index.php/PPU_power_up_state
@@ -553,7 +553,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPreRenderL
     
     // Check for Y address copy
     if ((_currentPixel >= 280) && (_currentPixel <= 304)) {
-        _address = (_address & 0x41F) | (_temporaryAddress & 0x7BE0);
+        copyYOnAddress();
     }
 }
 
@@ -567,7 +567,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPixel() {
         return;
     }
     
-    // Current pixel to draw is delayed by two (Pixel 0 is a idle cycle and pixel 1 is the first sprite shift registers, so we can use these bit out informations only starting at _currentPixel == 2)
+    // Current pixel to draw is delayed by two (Shift registers starting to shift at pixel 2, so we can use these bit out informations only starting at _currentPixel == 2)
     unsigned int pixelNumber = _currentPixel - 2;
     
     if (isRenderingEnabled()) {
@@ -615,7 +615,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processTiles(uint
     
     // Check for X address copy
     if (_currentPixel == (Constants::visiblePixelsPerScanlineCount + 1)) {
-        _address = (_address & 0x7BE0) | (_temporaryAddress & 0x41F);
+        copyXOnAddress();
     }
 }
 
@@ -1041,6 +1041,16 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementYOnAddre
     
     // Correct address
     _address = (_address & ~0x73E0) | coarseYScrollInAddress;
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::copyXOnAddress() {
+    _address = (_address & 0x7BE0) | (_temporaryAddress & 0x41F);
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::copyYOnAddress() {
+    _address = (_address & 0x41F) | (_temporaryAddress & 0x7BE0);
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>

@@ -107,6 +107,8 @@ namespace NESEmu { namespace Ppu {
         
         void incrementXOnAddress();
         void incrementYOnAddress();
+        void copyXOnAddress();
+        void copyYOnAddress();
         
         void incrementOAMAddress();
         void resetSecondOAMAddress();
