@@ -139,18 +139,15 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readPerformed(TCo
         // Save data read buffer
         uint8_t oldDataReadBuffer = _dataReadBuffer;
         
-        // Get mirrored address (address bus of PPU go from A0 to A13)
-        uint16_t address = _address & 0x3FFF;
-        
         // Read data from VRAM
-        _bus.setAddressBus(address);    // TODO: normalement ne fait pas tout ca sur le meme cycle PPU (il faut un cycle pour setter l'adresse, et un autre pour lire)
+        _bus.setAddressBus(_address);    // TODO: normalement ne fait pas tout ca sur le meme cycle PPU (il faut un cycle pour setter l'adresse, et un autre pour lire)
         _dataReadBuffer = read();
         
         // If palette index address, read to it directly ( see https://wiki.nesdev.com/w/index.php/PPU_registers#PPUDATA )
-        if (address > 0x3EFF) {
+        if ((_address & 0x3FFF) > 0x3EFF) {
             // Read from palette memory (Only 6 lower bits, 2 upper bits from open bus behaviour)
-            //_dataBusCapacitanceLatch = (oldDataReadBuffer & 0xC0) | readPaletteIndexMemory(address & 0xFF);   // TODO: voir si ok : pas ok avec la rom de test, ok avec la ligne du dessous (open bus sur _dataBusCapacitanceLatch et non oldDataReadBuffer !)
-            _dataBusCapacitanceLatch = (_dataBusCapacitanceLatch & 0xC0) | readPaletteIndexMemory(address & 0xFF);
+            //_dataBusCapacitanceLatch = (oldDataReadBuffer & 0xC0) | readPaletteIndexMemory(_address & 0xFF);   // TODO: voir si ok : pas ok avec la rom de test, ok avec la ligne du dessous (open bus sur _dataBusCapacitanceLatch et non oldDataReadBuffer !)
+            _dataBusCapacitanceLatch = (_dataBusCapacitanceLatch & 0xC0) | readPaletteIndexMemory(_address & 0xFF);
         } else {
             // Read return the content of the data read buffer, data read buffer is then updated with the read value
             _dataBusCapacitanceLatch = oldDataReadBuffer;
@@ -226,7 +223,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TC
         writeObjectAttributeMemory(data);
         
         // Increment OAM address
-        _oamAddressIncrement = 1;// TODO: je l'ai mis ici car en DMA il etait = 4 mais peut etre le remettre a 1 en debut de vblank ? en tout cas il ne faut pas le mettre ici car voir les comments ci dessus
+        //_oamAddressIncrement = 1;// TODO: je l'ai mis ici car en DMA il etait = 4 mais peut etre le remettre a 1 en debut de vblank ? en tout cas il ne faut pas le mettre ici car voir les comments ci dessus : c'etait un bug dans incrementOamAddress, voir quand meme avec visual2C02
         _needIncrementOAMAddress = true;// TODO: normalement incrementOamAddress(); mais voir quand reseter _oamAddressIncrement (le mettre a 1)
     }
     // Scroll register
@@ -255,7 +252,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TC
             _temporaryAddress = (_temporaryAddress & 0x7F00) | data;
             _address = _temporaryAddress;
             
-            _bus.setAddressBus(_address & 0x3FFF);//TODO: voir
+            _bus.setAddressBus(_address);
         }
         
         // Toggle write
@@ -263,16 +260,13 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TC
     }
     // Data register
     else if (address == 0x7) {
-        // Get mirrored address (address bus of PPU go from A0 to A13)
-        uint16_t address = _address & 0x3FFF;
-        
         // If palette index address, write to it
-        if (address > 0x3EFF) {
+        if ((_address & 0x3FFF) > 0x3EFF) {
             // Write to palette memory
-            writePaletteIndexMemory(address & 0xFF, data);
+            writePaletteIndexMemory(_address & 0xFF, data);
         } else {
             // Write data to PPU bus
-            _bus.setAddressBus(address);
+            _bus.setAddressBus(_address);
             write(data);
         }
         
@@ -855,7 +849,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchSprites(uint
     
     // Garbage nametable set address + load sprite Y byte
     if (dataType == 0x1) {
-        //_bus.setAddressBus(0x2000 | (_address & 0x0FFF)); // TODO: je ne dois pas mettre ca sinon ca fout la merde avec l'A12 de l'irq du MMC3, si besoin de lire a cet endroit peut etre mettre ce setAddressBus dans startFetchSprite plutot pour ne l'appeler qu'une fois au début mais ca ne marchera pas car ici je change quand meme addressbus !!! donc voir si l'addressbus est changé ou pas dans visual2C02
+        _bus.setAddressBus(0x2000 | (_address & 0x0FFF)); // TODO: je ne dois pas mettre ca sinon ca fout la merde avec l'A12 de l'irq du MMC3, si besoin de lire a cet endroit peut etre mettre ce setAddressBus dans startFetchSprite plutot pour ne l'appeler qu'une fois au début mais ca ne marchera pas car ici je change quand meme addressbus !!! donc voir si l'addressbus est changé ou pas dans visual2C02 : il change !!! comment faire ??? : C'est parce que le changement de A12 de 0 -> 1 n'est detecté que si A12 avait 0 au moins pendant 2 cycles CPU (donc 6 cycles PPU et ici le changement se fait sur 4 cycles PPU donc ce n'est pas detecté !!!)
         
         // TODO: je n'arrive pas a trouver ntByte ni le fetchY fetchIndex signal dans visual2C02 !!!
         _spriteY = _secondObjectAttributeMemory[_secondOAMAddress];
@@ -870,7 +864,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchSprites(uint
     }
     // Garbage nametable set address + load sprite attribute byte
     else if (dataType == 0x3) {
-        //_bus.setAddressBus(0x2000 | (_address & 0x0FFF)); // TODO: je ne dois pas mettre ca sinon ca fout la merde avec l'A12 de l'irq du MMC3
+        _bus.setAddressBus(0x2000 | (_address & 0x0FFF));
         
         _spAttributeLatches[spriteNumber] = _secondObjectAttributeMemory[_secondOAMAddress];
         _needIncrementSecondOAMAddress = true;
@@ -1046,11 +1040,14 @@ template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHard
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementOAMAddress() {
     // Continue to increment even if overflow
     
+    uint8_t increment = (isInRenderingPeriod()) ? _oamAddressIncrement : 1;
+    
     // Increment (always by 1 if we are not in rendering period)
-    _oamAddress += (isInRenderingPeriod()) ? _oamAddressIncrement : 1;
+    //_oamAddress += (isInRenderingPeriod()) ? _oamAddressIncrement : 1;
+    _oamAddress += increment;
     
     // Check overflow (_oamAddress is uint8_t so it returns to its value - 255 after 255)
-    if (_oamAddress < _oamAddressIncrement) {
+    if (_oamAddress < /*_oamAddressIncrement*/increment) {
         // Set overflow flag
         _oamAddressOverflow = true;
     }
@@ -1059,7 +1056,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementOAMAddre
     /*if (_oamAddressIncrement == 4) {
         _oamAddress &= ~0x3;
     }*/
-    if ((_oamAddressIncrement > 4) && ((_oamAddress & 0x3) == 0x0)) {//TODO: voir pour ameliorer ca
+    if ((/*_oamAddressIncrement*/increment > 4) && ((_oamAddress & 0x3) == 0x0)) {//TODO: voir pour ameliorer ca
         _oamAddress -= 4;
     }
     

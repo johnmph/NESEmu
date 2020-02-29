@@ -147,8 +147,8 @@ uint16_t Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuHardwareInterface
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
 void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuHardwareInterface::setAddressBus(uint16_t address) {
-    // Set address
-    _address = address;
+    // Set address (Only 14 bits)
+    _address = address & 0x3FFF;
     
     // Save low byte of addressBus in external octal latch
     _externalOctalLatch = _address & 0xFF;

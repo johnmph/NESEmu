@@ -83,7 +83,7 @@ void Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::ppuReadPerformed(TCo
         connectedBus.setDataBus(_chrRom[address]);
     }
     // Internal VRAM
-    else if (address < 0x4000) {
+    else if (address < 0x4000) {    // TODO: pas besoin de la condition car le mask & 0x3FFF est mis via le PPU
         // Read VRAM with mirrored address
         connectedBus.setDataBus(connectedBus.getVram()[getMirroredAddress<EMirroring>(address)]);
     }
@@ -107,7 +107,7 @@ void Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::ppuWritePerformed(TC
     }else
     
     // Internal VRAM
-    if ((address >= 0x2000) && (address < 0x4000)) {
+    if ((address >= 0x2000) && (address < 0x4000)) {    // TODO: pas besoin de la condition car le mask & 0x3FFF est mis via le PPU
         // Write VRAM with mirrored address
         connectedBus.getVram()[getMirroredAddress<EMirroring>(address)] = data;
     }
