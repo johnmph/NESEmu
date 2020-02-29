@@ -31,6 +31,9 @@ namespace NESEmu { namespace Cartridge {
         
         // Ppu memory bus
         template <class TConnectedBus>
+        void ppuAddressBusChanged(TConnectedBus &connectedBus);
+        
+        template <class TConnectedBus>
         void ppuReadPerformed(TConnectedBus &connectedBus);
         
         template <class TConnectedBus>

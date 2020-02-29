@@ -16,7 +16,7 @@
 
 namespace NESEmu { namespace Cartridge {
     
-    template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
+    template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, unsigned int IChrRomSizeInKb, MirroringType EMirroring>
     struct Mapper3 {
         
         Mapper3(std::istream &istream);
@@ -30,6 +30,9 @@ namespace NESEmu { namespace Cartridge {
         
         // Ppu memory bus
         template <class TConnectedBus>
+        void ppuAddressBusChanged(TConnectedBus &connectedBus);
+        
+        template <class TConnectedBus>
         void ppuReadPerformed(TConnectedBus &connectedBus);
         
         template <class TConnectedBus>
@@ -39,7 +42,8 @@ namespace NESEmu { namespace Cartridge {
         std::vector<uint8_t> _prgRom;
         std::vector<uint8_t> _prgRam;
         std::vector<uint8_t> _chrRom;
-        uint8_t _bankSelect;
+        
+        uint8_t _chrRomBankSelect;
     };
     
     #include "Mapper3_s.hpp"

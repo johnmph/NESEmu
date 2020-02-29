@@ -42,10 +42,15 @@ Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::Chip(TBus &bus, TInter
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::powerUp() {
+    // See https://wiki.nesdev.com/w/index.php/PPU_power_up_state
+    
     // Reset PPUSTATUS
     _statusSpriteOverflow = true;
     _statusSprite0Hit = false;
-    _statusVBlankStarted = /*true*/false;// TODO: si true, probleme avec DK qui n'attend pas la fin du reset pour ecrire dans la VRAM et donc il ecrit a la mauvaise adresse car _writeToggle est reseté a chaque clock tant qu'on est dans le reset
+    
+    // This flag is specified as often set in the doc but there is a problem with Donkey Kong if it is set because of the PPU warm up and the fact that Donkey Kong doesn't wait two VBlank in case of first VBlank wait loop passed immediatly due to the VBlank status flag set at power up
+    // See http://forums.nesdev.com/viewtopic.php?f=3&t=19792
+    _statusVBlankStarted = false;
     
     // Reset OAMADDR
     _oamAddress = 0x0;
@@ -100,14 +105,13 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readPerformed(TCo
     
     // Status register
     if (address == 0x2) {
-        // Least significant bits previously written into a PPU register (due to register not being updated for this address)
-        _dataLatch &= 0x1F;
+        // Unused data lines stay at capacitance latch value
+        _dataBusCapacitanceLatch &= 0x1F;
         
         // Update register with status
-        _dataLatch |= _statusSpriteOverflow << 5;
-        _dataLatch |= _statusSprite0Hit << 6;
-        _dataLatch |= _statusVBlankStarted << 7;
-        //connectedBus.setDataBus((_statusVBlankStarted << 7) | (_statusSprite0Hit << 6) | (_statusSpriteOverflow << 5), 0xE0);
+        _dataBusCapacitanceLatch |= _statusSpriteOverflow << 5;
+        _dataBusCapacitanceLatch |= _statusSprite0Hit << 6;
+        _dataBusCapacitanceLatch |= _statusVBlankStarted << 7;
         
         // Reset VBlank started flag
         _statusVBlankStarted = false;
@@ -128,45 +132,37 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readPerformed(TCo
         // Get data
         // After doing some tests on Visual2C02, it seems that PPU drives unused bits low and there is no open bus behaviour implicated
         // Test : testprogram = [ 0x2000, 0x2100, 0x2300, 0x24FF, 0x0018, 0x24FF, 0x0018, 0x24AA, 0x0018, 0x24FF, 0x0018, 0x2302, 0x2514, 0x3400];
-        _dataLatch = _oamData;
-        //connectedBus.setDataBus(_oamData);
+        _dataBusCapacitanceLatch = _oamData;
     }
     // Data register
     else if (address == 0x7) {
         // Save data read buffer
         uint8_t oldDataReadBuffer = _dataReadBuffer;
         
-        // If bad address, open bus behaviour return low address because it is multiplexed with data bus
-        // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
-        //_dataReadBuffer = _address & 0xFF;    // TODO: plus besoin car c'est géré dans read
-        
         // Get mirrored address (address bus of PPU go from A0 to A13)
         uint16_t address = _address & 0x3FFF;
         
         // Read data from VRAM
-        _bus.setAddressBus(address);
+        _bus.setAddressBus(address);    // TODO: normalement ne fait pas tout ca sur le meme cycle PPU (il faut un cycle pour setter l'adresse, et un autre pour lire)
         _dataReadBuffer = read();
         
         // If palette index address, read to it directly ( see https://wiki.nesdev.com/w/index.php/PPU_registers#PPUDATA )
         if (address > 0x3EFF) {
             // Read from palette memory (Only 6 lower bits, 2 upper bits from open bus behaviour)
-            //_dataLatch = (oldDataReadBuffer & 0xC0) | readPaletteIndexMemory(address & 0xFF);   // TODO: voir si ok : pas ok avec la rom de test, ok avec la ligne du dessous (open bus sur _dataLatch et non oldDataReadBuffer !)
-            _dataLatch = (_dataLatch & 0xC0) | readPaletteIndexMemory(address & 0xFF);
-            //connectedBus.setDataBus((oldDataReadBuffer & 0xC0) | readPaletteIndexMemory(address & 0xFF));
+            //_dataBusCapacitanceLatch = (oldDataReadBuffer & 0xC0) | readPaletteIndexMemory(address & 0xFF);   // TODO: voir si ok : pas ok avec la rom de test, ok avec la ligne du dessous (open bus sur _dataBusCapacitanceLatch et non oldDataReadBuffer !)
+            _dataBusCapacitanceLatch = (_dataBusCapacitanceLatch & 0xC0) | readPaletteIndexMemory(address & 0xFF);
         } else {
             // Read return the content of the data read buffer, data read buffer is then updated with the read value
-            _dataLatch = oldDataReadBuffer;
-            //connectedBus.setDataBus(oldDataReadBuffer);
+            _dataBusCapacitanceLatch = oldDataReadBuffer;
         }
         
         // Increment address
-        _address += _controlAddressIncrementPerCpuAccess;   // TODO: surement changer par un signal needIncrement : TODO est ce qu'on incremente aussi si on lit dans la palette ??? : oui normalement
+        _address += _controlAddressIncrementPerCpuAccess;   // TODO: surement changer par un signal needIncrement : TODO est ce qu'on incremente aussi si on lit dans la palette ??? : oui normalement : voir pour uniformiser ca et incrementXOnAddress et incrementYOnAddress si possible
         _address &= 0x7FFF; // A15 unused inside PPU
     }
     
-    // dataLatch is set with read value or previous dataLatch value if read a write only register
-    //return _dataLatch;
-    connectedBus.setDataBus(_dataLatch);//TODO: surement a modifier, peut etre plus besoin de _dataLatch car c'est le data bus !!! mais est ce que dataLatch est la a cause du bus interne du PPU ? ou bien est ce le data bus normal ? : Avec la rom de test ppu ca foire si je retire _dataLatch !! a voir
+    // Set data
+    connectedBus.setDataBus(_dataBusCapacitanceLatch);
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -178,8 +174,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TC
     // Get data
     uint8_t data = connectedBus.getDataBus();
     
-    // When data is written, data latch is filled with the value even if the write occurs on a read-only register
-    _dataLatch = data;
+    // When data is written, data bus capacitance latch is filled with the value even if the write occurs on a read-only register
+    _dataBusCapacitanceLatch = data;
     
     // Control register
     if (address == 0x0) {
@@ -258,6 +254,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TC
         else {
             _temporaryAddress = (_temporaryAddress & 0x7F00) | data;
             _address = _temporaryAddress;
+            
+            _bus.setAddressBus(_address & 0x3FFF);//TODO: voir
         }
         
         // Toggle write
@@ -279,7 +277,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TC
         }
         
         // Increment address
-        _address += _controlAddressIncrementPerCpuAccess;   // TODO: surement changer par un signal needIncrement : TODO est ce qu'on incremente aussi si on ecrit dans la palette ??? : oui normalement
+        _address += _controlAddressIncrementPerCpuAccess;   // TODO: surement changer par un signal needIncrement : TODO est ce qu'on incremente aussi si on ecrit dans la palette ??? : oui normalement : voir pour uniformiser ca et incrementXOnAddress et incrementYOnAddress si possible
         _address &= 0x7FFF; // A15 unused
     }
 }
@@ -308,14 +306,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getExts(uint8_t &
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkReset() {
-    // TODO: voir ici pour les registres remis a 0 : https://wiki.nesdev.com/w/index.php/PPU_pin_out_and_signal_description
-    // https://wiki.nesdev.com/w/index.php/PPU_power_up_state
-    
-    /*
-     
-     /RST resets certain parts of the chip to their initial power-on state: the clock divider, video phase generator, scanline/pixel counters, and the even/odd frame toggle. It also keeps several registers zeroed out for a full frame: PPUCTRL, PPUMASK ($2001), PPUSCROLL ($2005; the VRAM address latch "T", fine X scroll, and the H/V toggle), and the VRAM read buffer. It is used in the NES to clear the screen when the console is reset either by the button or the CIC, and in a dual-PPU system it can be used to genlock the two PPUs together.
-     
-     */
+    // See https://wiki.nesdev.com/w/index.php/PPU_power_up_state
     
     // If no need to reset, exit
     if (!_resetRequested) {
@@ -355,8 +346,6 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkReset() {
     // Reset internals
     _oddFrame = false;
     _writeToggle = false;
-    
-    // TODO: voir pour les autres variables (scanline, pixel counter, ...) : pas pixel counter ni scanline ici sinon on ne sort jamais du reset
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -427,7 +416,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processLine() {//
         
         // For the VBlank frame timing (the case when reading $2002 one PPU cycle before vblank flag is set)
         // See : https://wiki.nesdev.com/w/index.php/PPU_frame_timing
-        if (_currentScanline == (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline)) {    // TOOD: il reste un probleme : comme les ioRead/Write ne dependent pas du PPU cycle (alors que je devrai le faire ainsi) si le cycle CPU du read $2002 est appelé avant le cycle PPU ici (scanline 241, pixel 0) ca va remettre ce flag a true et donc le flag vblank sera mis a true au cycle PPU d'apres alors qu'il ne le devrai pas !!, ca ne marche que si ce cycle PPU (scanline 241, pixel 0) est appelé avant le cycle CPU read $2002 (ainsi le flag est mis a false et au cycle PPU d'apres le vblank flag reste a false) : si c'est bon normalement car ca fait 2 cycles PPU avant le set vblank et donc il ne doit plus avoir d'effet
+        if (_currentScanline == (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline)) {    // TOOD: il reste un probleme : comme les ioRead/Write ne dependent pas du PPU cycle (alors que je devrai le faire ainsi) si le cycle CPU du read $2002 est appelé avant le cycle PPU ici (scanline 241, pixel 0) ca va remettre ce flag a true et donc le flag vblank sera mis a true au cycle PPU d'apres alors qu'il ne le devrai pas !!, ca ne marche que si ce cycle PPU (scanline 241, pixel 0) est appelé avant le cycle CPU read $2002 (ainsi le flag est mis a false et au cycle PPU d'apres le vblank flag reste a false) : si c'est bon normalement car ca fait 2 cycles PPU avant le set vblank et donc il ne doit plus avoir d'effet (car j'apelle le clock du CPU apres celui du PPU dans NES::clock)
             _vBlankStartedLatch = true;
         }
         
@@ -482,7 +471,7 @@ template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHard
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processRenderLine() {
     // Only VRAM access if rendering is enabled
     if (isRenderingEnabled()) {
-        // If we are in sprite shift period (1-256)
+        // If we are in sprite shift period (2-257)
         if ((_currentPixel > 1) && (_currentPixel <= (Constants::visiblePixelsPerScanlineCount + 1))) {
             // Update sprite shift registers
             updateSpriteShiftRegisters();   // TODO: voir quand appelé exactement (de 1 a 256 ? de 2 a 257 ? ?) : DE 1 a 256 (le shift en 257 ne sert a rien, voir si le visual le fait quand meme par cohérence des circuits): TODO en mettant processPixel a la fin (pour les tiles) je dois commencer ceci a 2 et terminer a 257 : bien verifier car est ce que c'est sur que c'est seulement pendant le rendu actif ?? (pareil pour les tiles shift registers)
@@ -571,7 +560,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPixel() {
     unsigned int pixelNumber = _currentPixel - 2;
     
     if (isRenderingEnabled()) {
-        // Calculate pixel (need to be put before process tiles and sprites because the xxxBitOut already contains data for pixel and once processXXX are called they are updated with next pixel data) // TODO: plus nécessairement vrai, a voir
+        // Calculate pixel
         _currentPixelIndex = calculatePixel(pixelNumber);
     } else {
         // Rendering disabled, use background color (if VRAM address points to palette during forced vblank, there is the background palette hack)
@@ -820,7 +809,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clearSecondOAMAnd
         } else {
             // Check for sprite 0 in range (pixel 66 = 'sprite 0' write cycle)
             if (_currentPixel == 66) {
-                _sprite0OnNextScanline = false;
+                _sprite0OnNextScanline = false; // TODO: voir s'il ne le fait pas qu'en pre-render plutot !!!
             }
             
             // Need to go to next sprite, so increment _oamAddress by 4 and don't increment _secondOAMAddress
@@ -866,7 +855,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchSprites(uint
     
     // Garbage nametable set address + load sprite Y byte
     if (dataType == 0x1) {
-        _bus.setAddressBus(0x2000 | (_address & 0x0FFF));
+        //_bus.setAddressBus(0x2000 | (_address & 0x0FFF)); // TODO: je ne dois pas mettre ca sinon ca fout la merde avec l'A12 de l'irq du MMC3, si besoin de lire a cet endroit peut etre mettre ce setAddressBus dans startFetchSprite plutot pour ne l'appeler qu'une fois au début mais ca ne marchera pas car ici je change quand meme addressbus !!! donc voir si l'addressbus est changé ou pas dans visual2C02
         
         // TODO: je n'arrive pas a trouver ntByte ni le fetchY fetchIndex signal dans visual2C02 !!!
         _spriteY = _secondObjectAttributeMemory[_secondOAMAddress];
@@ -881,7 +870,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchSprites(uint
     }
     // Garbage nametable set address + load sprite attribute byte
     else if (dataType == 0x3) {
-        _bus.setAddressBus(0x2000 | (_address & 0x0FFF));
+        //_bus.setAddressBus(0x2000 | (_address & 0x0FFF)); // TODO: je ne dois pas mettre ca sinon ca fout la merde avec l'A12 de l'irq du MMC3
         
         _spAttributeLatches[spriteNumber] = _secondObjectAttributeMemory[_secondOAMAddress];
         _needIncrementSecondOAMAddress = true;

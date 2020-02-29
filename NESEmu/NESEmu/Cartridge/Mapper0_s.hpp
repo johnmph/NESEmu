@@ -67,6 +67,12 @@ void Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::cpuWritePerformed(TC
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
 template <class TConnectedBus>
+void Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::ppuAddressBusChanged(TConnectedBus &connectedBus) {
+    // Does nothing
+}
+
+template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
+template <class TConnectedBus>
 void Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::ppuReadPerformed(TConnectedBus &connectedBus) {
     // Get address
     uint16_t address = connectedBus.getAddressBus();
@@ -95,10 +101,10 @@ void Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::ppuWritePerformed(TC
     //std::cout << std::hex << "address = " << +address << ", data = " << +data << "\n";    // TODO: a retirer
     
     // Nothing for Chr-Rom (Can't write to a ROM)
-    /*if (address < 0x2000) {//TODO: j'ai mis ca pour supporter le chr-ram pour certaines rom tests, voir comment bien l'integrer dans ce mapper (via les template parameters) TODO: quand je met ca, dans donkeykong, le sprite mario deconne (bizarre car il ne devrait pas ecrire dans le chr-rom) : normalement ok maintenant
+    if (address < 0x2000) {//TODO: j'ai mis ca pour supporter le chr-ram pour certaines rom tests, voir comment bien l'integrer dans ce mapper (via les template parameters) TODO: quand je met ca, dans donkeykong, le sprite mario deconne (bizarre car il ne devrait pas ecrire dans le chr-rom) : normalement ok maintenant
         // Write Chr-Rom
         _chrRom[address] = data;
-    }else*/
+    }else
     
     // Internal VRAM
     if ((address >= 0x2000) && (address < 0x4000)) {

@@ -12,7 +12,7 @@
 #include <istream>
 #include "Common.hpp"
 
-// See https://wiki.nesdev.com/w/index.php/NROM
+// See https://wiki.nesdev.com/w/index.php/AxROM
 // TODO: par apres, factoriser le code commun des mappers
 namespace NESEmu { namespace Cartridge {
     
@@ -30,6 +30,9 @@ namespace NESEmu { namespace Cartridge {
         
         // Ppu memory bus
         template <class TConnectedBus>
+        void ppuAddressBusChanged(TConnectedBus &connectedBus);
+        
+        template <class TConnectedBus>
         void ppuReadPerformed(TConnectedBus &connectedBus);
         
         template <class TConnectedBus>
@@ -38,12 +41,13 @@ namespace NESEmu { namespace Cartridge {
     private:
         std::vector<uint8_t> _prgRom;
         std::vector<uint8_t> _prgRam;
-        std::vector<uint8_t> _chrRom;
-        uint8_t _bankSelect;
-        uint8_t _vramSelect;
+        std::vector<uint8_t> _chrRam;
+        
+        uint8_t _prgRomBankSelect;
+        uint8_t _vramBankSelect;
     };
     
-#include "Mapper7_s.hpp"
+    #include "Mapper7_s.hpp"
     
 } }
 

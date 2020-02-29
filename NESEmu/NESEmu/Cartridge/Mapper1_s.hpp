@@ -67,6 +67,12 @@ void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::cpuWritePerformed(TC
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
 template <class TConnectedBus>
+void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::ppuAddressBusChanged(TConnectedBus &connectedBus) {
+    // Does nothing
+}
+
+template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
+template <class TConnectedBus>
 void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::ppuReadPerformed(TConnectedBus &connectedBus) {
     // Get address
     uint16_t address = connectedBus.getAddressBus();

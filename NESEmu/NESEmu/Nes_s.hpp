@@ -40,43 +40,43 @@ struct Constants<Model::Pal> {
 
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuBus::CpuBus(Nes &nes) : _nes(nes) {
+Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::CpuHardwareInterface(Nes &nes) : _nes(nes) {
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-uint16_t Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuBus::getAddressBus() const {
+uint16_t Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::getAddressBus() const {
     // Get address
     return _address;
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuBus::setAddressBus(uint16_t address) {
+void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::setAddressBus(uint16_t address) {
     // Set address
     _address = address;
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-uint8_t Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuBus::getDataBus() const {
+uint8_t Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::getDataBus() const {
     // Get data with possibly open data bus latch on some or all lines
     // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
     return _data;
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuBus::setDataBus(uint8_t data) {
+void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::setDataBus(uint8_t data) {
     // Set data
     _data = data;
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuBus::setDataBus(uint8_t data, uint8_t mask) {
+void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::setDataBus(uint8_t data, uint8_t mask) {
     // Set data with possibly open data bus latch on some or all lines
     // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
     _data = (_data & ~mask) | (data & mask);
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuBus::performRead() {
+void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::performRead() {
     // RAM
     if (_address < 0x2000) {
         // RAM is mirrored each 0x800 bytes
@@ -88,14 +88,14 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuBus::performRead() {
         _nes._ppu.readPerformed(*this);
     }
     // Cartridge
-    else if (_address >= 0x4020) {   // TODO: voir pour l'adresse et pour le open bus behaviour si par exemple la rom ne contient pas de WRAM !!
+    else if (_address >= 0x4020) {   // TODO: est ce qu'un mapper peut gerer les address < 0x4020 non gérée par le CPU ($4000-$4014 or $4018-$4020) ??
         // Read from cartridge
         _nes._cartridgeHardware.cpuReadPerformed(*this);
     }
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuBus::performWrite() {
+void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::performWrite() {
     // RAM
     if (_address < 0x2000) {
         // RAM is mirrored each 0x800 bytes
@@ -115,7 +115,7 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuBus::performWrite() {
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuBus::readControllerPort(unsigned int number) {
+void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::readControllerPort(unsigned int number) {
     // Get current data bus
     uint8_t data = getDataBus();
     
@@ -130,39 +130,48 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuBus::readControllerPo
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuBus::PpuBus(Nes &nes) : _nes(nes) {
+void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::irq(bool high) {
+    //_nes.mapperInterrupt(high);//TODO: ca ou directement _nes._cpu.irq(high); ?
+    _nes._cpu.irq(high);
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-uint16_t Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuBus::getAddressBus() const {
+Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuHardwareInterface::PpuHardwareInterface(Nes &nes) : _nes(nes) {
+}
+
+template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
+uint16_t Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuHardwareInterface::getAddressBus() const {
     // Get address
     return (_address & 0xFF00) | _externalOctalLatch;
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuBus::setAddressBus(uint16_t address) {
+void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuHardwareInterface::setAddressBus(uint16_t address) {
     // Set address
     _address = address;
     
     // Save low byte of addressBus in external octal latch
     _externalOctalLatch = _address & 0xFF;
+    
+    // Notify cartridge hardware that address has changed
+    _nes._cartridgeHardware.ppuAddressBusChanged(*this);
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-uint8_t Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuBus::getDataBus() const {
+uint8_t Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuHardwareInterface::getDataBus() const {
     // Get data with possibly open data bus latch on some or all lines
     // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
     return _address & 0xFF;
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuBus::setDataBus(uint8_t data) {
+void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuHardwareInterface::setDataBus(uint8_t data) {
     // Set data
     _address = (_address & 0xFF00) | data;
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuBus::setDataBus(uint8_t data, uint8_t mask) {
+void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuHardwareInterface::setDataBus(uint8_t data, uint8_t mask) {
     // Set data with possibly open data bus latch on some or all lines
     // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
     uint16_t mask16Bits = mask;
@@ -170,30 +179,36 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuBus::setDataBus(uint8
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuBus::performRead() {
+void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuHardwareInterface::performRead() {
     // Read from cartridge
     _nes._cartridgeHardware.ppuReadPerformed(*this);
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuBus::performWrite() {
+void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuHardwareInterface::performWrite() {
     // Write to cartridge
     _nes._cartridgeHardware.ppuWritePerformed(*this);
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-std::vector<uint8_t> &Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuBus::getVram() {    // TODO: est ce qu'on peut mettre const (car meme si on modifie vram, ca n'est pas dans cet objet (mais a voir comme c'est un sous-objet))
+std::vector<uint8_t> &Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuHardwareInterface::getVram() {    // TODO: est ce qu'on peut mettre const (car meme si on modifie vram, ca n'est pas dans cet objet (mais a voir comme c'est un sous-objet))
     // Get vram
     return _nes._vram;
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuBus::interrupt(bool high) {
+void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuHardwareInterface::interrupt(bool high) {
     _nes.ppuInterrupt(high);//TODO: ca ou directement _nes._cpu.nmi(high); ?
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-Nes<EModel, TCartridgeHardware, TGraphicHardware>::Nes(TCartridgeHardware &cartridgeHardware, TGraphicHardware &graphicHardware) : _cartridgeHardware(cartridgeHardware), _cpuBus(*this), _ppuBus(*this), _cpu(_cpuBus), _ppu(_ppuBus, _ppuBus, graphicHardware), _ram(2 * 1024), _vram(2 * 1024), _currentClockForCpu(0), _currentClockForPpu(0) {
+void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuHardwareInterface::irq(bool high) {
+    //_nes.mapperInterrupt(high);//TODO: ca ou directement _nes._cpu.irq(high); ?
+    _nes._cpu.irq(high);
+}
+
+template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
+Nes<EModel, TCartridgeHardware, TGraphicHardware>::Nes(TCartridgeHardware &cartridgeHardware, TGraphicHardware &graphicHardware) : _cartridgeHardware(cartridgeHardware), _cpuHardwareInterface(*this), _ppuHardwareInterface(*this), _cpu(_cpuHardwareInterface), _ppu(_ppuHardwareInterface, _ppuHardwareInterface, graphicHardware), _ram(2 * 1024), _vram(2 * 1024), _currentClockForCpu(0), _currentClockForPpu(0) {
     // Begin with no controller
     connectController(0, std::make_unique<Controller::Nothing>());
     connectController(1, std::make_unique<Controller::Nothing>());
@@ -211,7 +226,7 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::powerUp() {
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
 void Nes<EModel, TCartridgeHardware, TGraphicHardware>::clock() {
     //static bool f = false;
-    //static int cpuCycle = 0;
+    static int cpuCycle = 0;
     
     ++_currentClockForCpu;
     ++_currentClockForPpu;
@@ -244,11 +259,11 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::clock() {
         
         _cpu.clock();
         _currentClockForCpu = 0;
-        /*++cpuCycle;
+        ++cpuCycle;
         
         if (cpuCycle == 29658) {
             int x = 0;
-        }*/
+        }
     }
 }
 
@@ -266,68 +281,12 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::connectController(unsign
     assert(portNumber < 2);
     assert(controller != nullptr);
     
+    // Connect the controller
     _controllerPorts[portNumber] = std::move(controller);
 }
-/*
-template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-uint8_t Nes<EModel, TCartridgeHardware, TGraphicHardware>::cpuRead(uint16_t address) {   // TODO: a la place de ca, avoir l'emulation de la chip 74139 ?? (ca revient au meme normalement)
-    // RAM
-    if (address < 0x2000) {
-        // RAM is mirrored each 0x800 bytes
-        return _ram[address & 0x7FF];
-    }
-    // PPU
-    else if (address < 0x4000) {
-        // Only A0 to A2 is passed to the PPU address
-        return _ppu.ioRead(address & 0x7);
-    }
-    // Cartridge
-    else if (address >= 0x4020) {   // TODO: voir pour l'adresse et pour le open bus behaviour si par exemple la rom ne contient pas de WRAM !!
-        // Read from cartridge
-        return _cartridgeHardware.cpuRead(address);  // TODO: a mettre une fois la classe faite, voir si mask ?
-    }
-    
-    // Open data bus latch (reading open bus (no device active address) repeats the last value that was read from the bus before this read)
-    // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
-    return _cpu.getDataBus();   // TODO: voir si correct, voir si c'est affecté par le write aussi (dans ce cas ce code n'est pas bon), voir avec le ppu
-}
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-void Nes<EModel, TCartridgeHardware, TGraphicHardware>::cpuWrite(uint16_t address, uint8_t data) {
-    // RAM
-    if (address < 0x2000) {
-        // RAM is mirrored each 0x800 bytes
-        _ram[address & 0x7FF] = data;
-    }
-    // PPU
-    else if (address < 0x4000) {
-        // Only A0 to A2 is passed to the PPU address
-        _ppu.ioWrite(address & 0x7, data);
-    }
-    // I/O is managed internally by CPU, so it is guaranteed that no 0x4000 - 0x401F address are here
-    // Cartridge
-    else {
-        // Write to cartridge
-        _cartridgeHardware.cpuWrite(address, data);  // TODO: a mettre une fois la classe faite, voir si mask ?
-    }
-    
-    // Write does not affect open data bus latch because when CPU read on the open data bus latch, the last operation was a read (for the opcode, operand or address)
-}
-
-template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-uint8_t Nes<EModel, TCartridgeHardware, TGraphicHardware>::ppuRead(uint16_t address) {
-    // Read from cartridge
-    return _cartridgeHardware.ppuRead(address);
-}
-
-template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-void Nes<EModel, TCartridgeHardware, TGraphicHardware>::ppuWrite(uint16_t address, uint8_t data) {
-    // Write to cartridge
-    _cartridgeHardware.ppuWrite(address, data);
-}*/
-
-template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-void Nes<EModel, TCartridgeHardware, TGraphicHardware>::ppuInterrupt(bool high) {   // TODO: avoir une struct interne pour l'interrupt qui a une methode interrupt ? et qui appelle celle ci ? ainsi dans le PPU on appelle interrupt et pas ppuInterrupt (ce qui est plus propre niveau conception)
+void Nes<EModel, TCartridgeHardware, TGraphicHardware>::ppuInterrupt(bool high) {
     // PPU interrupt is connected to CPU NMI
     _cpu.nmi(high);
 }

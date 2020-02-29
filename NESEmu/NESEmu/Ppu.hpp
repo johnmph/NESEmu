@@ -227,7 +227,7 @@ namespace NESEmu { namespace Ppu {
         // Dynamic latch due to capacitance of very long traces of data bus that run to various parts of the PPU
         // See https://wiki.nesdev.com/w/index.php/PPU_registers
         // And https://wiki.nesdev.com/w/index.php/Open_bus_behavior
-        uint8_t _dataLatch; // TODO: emuler le decay aussi ? (apres une frame et depend du pattern)
+        uint8_t _dataBusCapacitanceLatch; // TODO: emuler le decay aussi ? (apres une frame et depend du pattern)
         
         // Data read buffer
         // See https://wiki.nesdev.com/w/index.php/PPU_registers#PPUDATA

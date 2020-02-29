@@ -41,6 +41,8 @@
 		4D09C9DB24082EC10035AE0C /* Mapper2_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mapper2_s.hpp; sourceTree = "<group>"; };
 		4D09C9DC24083FEB0035AE0C /* Mapper7.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mapper7.hpp; sourceTree = "<group>"; };
 		4D09C9DD24083FFF0035AE0C /* Mapper7_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mapper7_s.hpp; sourceTree = "<group>"; };
+		4D09C9DE2408DFE30035AE0C /* Mapper4.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mapper4.hpp; sourceTree = "<group>"; };
+		4D09C9DF2408DFF30035AE0C /* Mapper4_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mapper4_s.hpp; sourceTree = "<group>"; };
 		4D1137F023CD3EEC0056AAAD /* NESEmuUnitTest.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NESEmuUnitTest.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D1137F223CD3EEC0056AAAD /* NESEmuUnitTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = NESEmuUnitTest.mm; sourceTree = "<group>"; };
 		4D1137F423CD3EEC0056AAAD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -236,6 +238,8 @@
 				4D09C9DB24082EC10035AE0C /* Mapper2_s.hpp */,
 				4D6E33152405CE1400749F24 /* Mapper3.hpp */,
 				4D6E33162405CEC000749F24 /* Mapper3_s.hpp */,
+				4D09C9DE2408DFE30035AE0C /* Mapper4.hpp */,
+				4D09C9DF2408DFF30035AE0C /* Mapper4_s.hpp */,
 				4D09C9DC24083FEB0035AE0C /* Mapper7.hpp */,
 				4D09C9DD24083FFF0035AE0C /* Mapper7_s.hpp */,
 			);

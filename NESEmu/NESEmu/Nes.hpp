@@ -42,8 +42,8 @@ namespace NESEmu {
         
     private:
         
-        struct CpuBus {
-            CpuBus(Nes &nes);
+        struct CpuHardwareInterface {
+            CpuHardwareInterface(Nes &nes);
             
             uint16_t getAddressBus() const;
             void setAddressBus(uint16_t address);
@@ -57,6 +57,8 @@ namespace NESEmu {
             
             void readControllerPort(unsigned int number);
             
+            void irq(bool high);    // TODO: besoin pour le mapper4 (MMC3) a voir !!!
+            
         private:
             Nes &_nes;
             
@@ -64,8 +66,8 @@ namespace NESEmu {
             uint8_t _data;
         };
         
-        struct PpuBus {
-            PpuBus(Nes &nes);
+        struct PpuHardwareInterface {
+            PpuHardwareInterface(Nes &nes);
             
             uint16_t getAddressBus() const;
             void setAddressBus(uint16_t address);
@@ -81,6 +83,8 @@ namespace NESEmu {
             
             void interrupt(bool high);
             
+            void irq(bool high);    // TODO: besoin pour le mapper4 (MMC3) a voir !!!
+            
         private:
             Nes &_nes;
             
@@ -92,16 +96,6 @@ namespace NESEmu {
         
         using Constants = Constants<EModel>;
         
-        // Set Cpu as friend to keep data bus methods private
-        //friend Cpu::Chip<Constants::cpuModel, Nes>;
-        
-        // Set Ppu as friend to keep interrupt method private
-        //friend Ppu::Chip<Constants::ppuModel, Nes, Nes, Nes>;
-        
-        // CPU memory bus
-        //uint8_t cpuRead(uint16_t address);
-        //void cpuWrite(uint16_t address, uint8_t data);
-        
         // PPU memory bus
         uint8_t ppuRead(uint16_t address);
         void ppuWrite(uint16_t address, uint8_t data);
@@ -110,8 +104,8 @@ namespace NESEmu {
         void ppuInterrupt(bool high);
         
         // Chips
-        Cpu::Chip<Constants::cpuModel, CpuBus> _cpu;
-        Ppu::Chip<Constants::ppuModel, PpuBus, PpuBus, TGraphicHardware> _ppu;     // TODO: changer par apres, ca doit etre cartridge pour le 2eme parametre et pour le dernier ca doit etre la classe qui gerera le rendu
+        Cpu::Chip<Constants::cpuModel, CpuHardwareInterface> _cpu;
+        Ppu::Chip<Constants::ppuModel, PpuHardwareInterface, PpuHardwareInterface, TGraphicHardware> _ppu;
         
         // 2kb of RAM
         std::vector<uint8_t> _ram;
@@ -124,8 +118,8 @@ namespace NESEmu {
         
         // Internals
         TCartridgeHardware &_cartridgeHardware;
-        CpuBus _cpuBus;
-        PpuBus _ppuBus;
+        CpuHardwareInterface _cpuHardwareInterface;
+        PpuHardwareInterface _ppuHardwareInterface;
         
         int _currentClockForCpu;
         int _currentClockForPpu;

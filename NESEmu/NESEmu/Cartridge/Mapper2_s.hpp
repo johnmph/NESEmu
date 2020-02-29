@@ -11,7 +11,7 @@
 
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
-Mapper2<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::Mapper2(std::istream &istream) : _prgRom(IPrgRomSizeInKb * 1024), _prgRam(IPrgRamSizeInKb * 1024), _chrRom(8 * 1024), _bankSelect(0) {
+Mapper2<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::Mapper2(std::istream &istream) : _prgRom(IPrgRomSizeInKb * 1024), _prgRam(IPrgRamSizeInKb * 1024), _chrRom(8 * 1024), _prgRomBankSelect(0) {
     // TODO: voir si read via istream ici ou bien dans un factory a part et avoir directement ici les vectors a copier simplement : doit etre en dehors
     // TODO: pour tests :
     // Skip header
@@ -41,7 +41,7 @@ void Mapper2<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::cpuReadPerformed(TCo
     // Prg-Rom (first bank)
     else if ((address >= 0x8000) && (address < 0xC000)) {   // TODO: voir si nécessaire la condition (est ce qu'on peut etre en dessous de 0x6000 dans cette methode ? : oui nécessaire !!!
         // Read Prg-Rom selected bank
-        connectedBus.setDataBus(_prgRom[(_bankSelect << 14) | (address & 0x3FFF)]);
+        connectedBus.setDataBus(_prgRom[(_prgRomBankSelect << 14) | (address & 0x3FFF)]);
     }
     // Prg-Rom (last bank)
     else if (address >= 0xC000) {
@@ -67,10 +67,16 @@ void Mapper2<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::cpuWritePerformed(TC
             _prgRam[address & ((IPrgRamSizeInKb * 1024) - 1)] = data;
         }
     }
-    // Writing to Prg-Rom select the Chr-rom bank
+    // Writing to Prg-Rom select the Prg-rom bank
     else if (address >= 0x8000) {
-        _bankSelect = data & 0x7;
+        _prgRomBankSelect = data & 0x7;
     }
+}
+
+template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
+template <class TConnectedBus>
+void Mapper2<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::ppuAddressBusChanged(TConnectedBus &connectedBus) {
+    // Does nothing
 }
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
