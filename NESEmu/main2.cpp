@@ -181,9 +181,13 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Duck Tales.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Battletoads.nes", std::ios::binary);  // Mapper7, 256kb de prg-rom, single screen mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Paperboy.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, horizontal mirroring
-    //std::ifstream ifs("../UnitTestFiles/SuperMarioBros3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom
+    //std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/SMB2.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom
-    std::ifstream ifs("../UnitTestFiles/Young Indiana Jones Chronicles.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom
+    //std::ifstream ifs("../UnitTestFiles/Young Indiana Jones Chronicles.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom
+    //std::ifstream ifs("../UnitTestFiles/Metroid.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom
+    std::ifstream ifs("../UnitTestFiles/Final Fantasy.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom
+    //std::ifstream ifs("../UnitTestFiles/Zelda.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom
+    //std::ifstream ifs("../UnitTestFiles/Zelda 2.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom // TODO: bug mais peut etre parce que le mapper1 n'est pas complet (selon les versions du mapper !) deja c du chr-rom et ici c du chr-rom !!!
 
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/nestest.nes", std::ios::binary);  // 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/1.Branch_Basics.nes", std::ios::binary);  // 16kb de prg-rom, horizontal mirroring
@@ -237,7 +241,7 @@ int main(int argc, const char * argv[]) {
     assert(ifs.good());
     
     // Mapper for SMB
-    NESEmu::Cartridge::Mapper4<128, 128/*, NESEmu::Cartridge::MirroringType::Horizontal*/> mapper0(ifs);
+    NESEmu::Cartridge::Mapper1<256, 8/*, NESEmu::Cartridge::MirroringType::Horizontal*/> mapper0(ifs);
     
     // Create NES with Mapper
     NESEmu::Nes<NESEmu::Model::Ntsc, decltype(mapper0), GraphicHardware> nes(mapper0, graphicHardware);

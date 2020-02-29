@@ -10,8 +10,8 @@
 #define NESEmu_Cartridge_Mapper1_s_hpp
 
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
-Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::Mapper1(std::istream &istream) : _prgRom(IPrgRomSizeInKb * 1024), _prgRam(IPrgRamSizeInKb * 1024), _chrRom(8 * 1024) {
+template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
+Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::Mapper1(std::istream &istream) : _prgRom(IPrgRomSizeInKb * 1024), _prgRam(IPrgRamSizeInKb * 1024), _chrRam(8 * 1024), _shiftRegister(0x10), _shiftCount(0) {//TODO: a voir pour les valeurs des registres
     // TODO: voir si read via istream ici ou bien dans un factory a part et avoir directement ici les vectors a copier simplement : doit etre en dehors
     // TODO: pour tests :
     // Skip header
@@ -20,34 +20,60 @@ Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::Mapper1(std::istream &ist
     // Read Prg-Rom
     istream.read(reinterpret_cast<char *>(_prgRom.data()), IPrgRomSizeInKb * 1024);
     
-    // Read Chr-Rom
-    istream.read(reinterpret_cast<char *>(_chrRom.data()), 8 * 1024);
+    // Read Chr-Ram
+    istream.read(reinterpret_cast<char *>(_chrRam.data()), 8 * 1024);
+    
+    // Set internal registers
+    _internalRegisters[0] = 0xC;        // TODO a voir
+    _internalRegisters[1] = 0x0;
+    _internalRegisters[2] = 0x0;
+    _internalRegisters[3] = 0x0;
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
+template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
 template <class TConnectedBus>
-void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::cpuReadPerformed(TConnectedBus &connectedBus) {
+void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::cpuReadPerformed(TConnectedBus &connectedBus) {
     // Get address
     uint16_t address = connectedBus.getAddressBus();
     
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
-        // If has Prg-Ram
-        if (IPrgRamSizeInKb > 0) {
+        // If Prg-Ram enabled
+        if ((_internalRegisters[3] & 0x10) == 0x0) {
             // Read Prg-Ram with possible mirrored address
             connectedBus.setDataBus(_prgRam[address & ((IPrgRamSizeInKb * 1024) - 1)]);
         }
     }
     // Prg-Rom
     else if (address >= 0x8000) {   // TODO: voir si nécessaire la condition (est ce qu'on peut etre en dessous de 0x6000 dans cette methode ? : oui nécessaire !!!
-        // Read Prg-Rom with possible mirrored address
-        connectedBus.setDataBus(_prgRom[address & ((IPrgRomSizeInKb * 1024) - 1)]);
+        
+        uint16_t mask;
+        uint8_t bank;
+        
+        // 32kb switch
+        if ((_internalRegisters[0] & 0x8) == 0x0) {
+            mask = 0x7FFF;
+            bank = _internalRegisters[3] & 0xE;
+        }
+        // Last 16kb switch
+        else if ((_internalRegisters[0] & 0x4) == 0x0) {
+            mask = 0x3FFF;
+            bank = (address < 0xC000) ? 0x0 : _internalRegisters[3];
+        }
+        // First 16kb switch
+        else {
+            mask = 0x3FFF;
+            bank = (address < 0xC000) ? _internalRegisters[3] : ((IPrgRomSizeInKb >> 4) - 1);
+        }
+        
+        // Read Prg-Rom
+        connectedBus.setDataBus(_prgRom[(bank << 14) | (address & mask)]);
     }
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
+template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
 template <class TConnectedBus>
-void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::cpuWritePerformed(TConnectedBus &connectedBus) {
+void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::cpuWritePerformed(TConnectedBus &connectedBus) {
     // Get address
     uint16_t address = connectedBus.getAddressBus();
     
@@ -56,54 +82,121 @@ void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::cpuWritePerformed(TC
     
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
-        // If has Prg-Ram
-        if (IPrgRamSizeInKb > 0) {
+        // If Prg-Ram enabled
+        if ((_internalRegisters[3] & 0x10) == 0x0) {
             // Write Prg-Ram with possible mirrored address
             _prgRam[address & ((IPrgRamSizeInKb * 1024) - 1)] = data;
         }
     }
-    // Nothing for Prg-Rom (Can't write to a ROM)
+    // Shift register
+    else if (address >= 0x8000) {
+        // Clear registers
+        if ((data & 0x80) != 0x0) {
+            _shiftRegister = 0x10;
+            _shiftCount = 0;
+            _internalRegisters[0] |= 0xC0;
+            
+            return;
+        }
+        
+        // Shift register and load LSB in shift register MSB
+        _shiftRegister >>= 1;
+        _shiftRegister |= (data & 0x1) << 4;
+        ++_shiftCount;
+        
+        // If last shift
+        if (_shiftCount >= 5) {
+            _internalRegisters[(address >> 13) & 0x3] = _shiftRegister;
+            
+            // Reset shift registers
+            _shiftRegister = 0x10;
+            _shiftCount = 0;
+        }
+    }
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
+template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
 template <class TConnectedBus>
-void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::ppuAddressBusChanged(TConnectedBus &connectedBus) {
+void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::ppuAddressBusChanged(TConnectedBus &connectedBus) {
     // Does nothing
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
+template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
 template <class TConnectedBus>
-void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::ppuReadPerformed(TConnectedBus &connectedBus) {
+void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::ppuReadPerformed(TConnectedBus &connectedBus) {
     // Get address
     uint16_t address = connectedBus.getAddressBus();
     
-    // Chr-Rom
+    // Chr-Ram
     if (address < 0x2000) {
-        // Read Chr-Rom
-        connectedBus.setDataBus(_chrRom[address]);
+        // Read Chr-Ram
+        connectedBus.setDataBus(_chrRam[getChrRamAddress(address)]);
     }
     // Internal VRAM
     else if (address < 0x4000) {
         // Read VRAM with mirrored address
-        connectedBus.setDataBus(connectedBus.getVram()[getMirroredAddress<EMirroring>(address)]);
+        connectedBus.setDataBus(connectedBus.getVram()[getVramAddress(address)]);
     }
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
+template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
 template <class TConnectedBus>
-void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::ppuWritePerformed(TConnectedBus &connectedBus) {
+void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::ppuWritePerformed(TConnectedBus &connectedBus) {
     // Get address
     uint16_t address = connectedBus.getAddressBus();
     
     // Get data
     uint8_t data = connectedBus.getDataBus();
     
-    // Nothing for Chr-Rom (Can't write to a ROM)
-    // Internal VRAM
-    if ((address >= 0x2000) && (address < 0x4000)) {
-        // Write VRAM with mirrored address
-        connectedBus.getVram()[getMirroredAddress<EMirroring>(address)] = data;
+    // Chr-Ram
+    if (address < 0x2000) {
+        // Write Chr-Ram
+        _chrRam[getChrRamAddress(address)] = data;
     }
+    // Internal VRAM
+    else if (address < 0x4000) {
+        // Write VRAM with mirrored address
+        connectedBus.getVram()[getVramAddress(address)] = data;
+    }
+}
+
+template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
+uint16_t Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::getChrRamAddress(uint16_t address) {
+    uint16_t mask;
+    uint8_t bank;
+    
+    // 8kb switch
+    if ((_internalRegisters[0] & 0x10) == 0x0) {
+        mask = 0x1FFF;
+        bank = _internalRegisters[1] & 0x1E;
+    }
+    // 4kb switch
+    else {
+        mask = 0xFFF;
+        bank = _internalRegisters[1 + ((address >> 12) & 0x1)];
+    }
+    
+    return (bank << 12) | (address & mask);
+}
+
+template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
+uint16_t Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::getVramAddress(uint16_t address) {
+    switch (_internalRegisters[0] & 0x3) {
+        case 0x0 :
+            return getMirroredAddress<MirroringType::SingleScreen>(address);
+        break;
+        
+        case 0x1 :
+            return 0x400 | getMirroredAddress<MirroringType::SingleScreen>(address);
+        break;
+        
+        case 0x2 :
+            return getMirroredAddress<MirroringType::Vertical>(address);
+        break;
+    }
+    
+    // 0x3 = Horizontal mirroring
+    return getMirroredAddress<MirroringType::Horizontal>(address);
 }
 
 #endif /* NESEmu_Cartridge_Mapper1_s_hpp */

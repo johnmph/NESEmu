@@ -17,8 +17,8 @@
 // TODO: a faire :
 namespace NESEmu { namespace Cartridge {
     
-    template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>//TODO: comment limiter le mirroring a H et V seulement ?
-    struct Mapper1 {    // TODO: comment avoir acces au 2k de vram de nes ici ? + Il faut la possibilité d'envoyer un irq sur le cpu + il faut avoir acces au bus !!! gros probleme : le bus est Nes mais Nes a son parametre template qui est cette classe je ne peux pas donc passer Nes comme parametre template a cette classe (cyclic dependency) : voir si ok avec ce systeme (template sur methodes)
+    template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
+    struct Mapper1 {
         
         Mapper1(std::istream &istream);
         
@@ -40,9 +40,16 @@ namespace NESEmu { namespace Cartridge {
         void ppuWritePerformed(TConnectedBus &connectedBus);
         
     private:
+        uint16_t getChrRamAddress(uint16_t address);
+        uint16_t getVramAddress(uint16_t address);
+        
         std::vector<uint8_t> _prgRom;
         std::vector<uint8_t> _prgRam;
-        std::vector<uint8_t> _chrRom;
+        std::vector<uint8_t> _chrRam;
+        
+        uint8_t _shiftRegister;
+        uint8_t _shiftCount;
+        uint8_t _internalRegisters[4];
     };
     
     #include "Mapper1_s.hpp"

@@ -202,7 +202,7 @@ void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::ppuReadPerformed(TConnectedBus &
     }
     // Internal VRAM
     else if (address < 0x4000) {
-        // Get mirrored address TODO peut etre changer ca par un nametableMirroring qui est une reference de methode, voir si plus rapide
+        // Get mirrored address TODO peut etre changer ca par un nametableMirroring qui est une reference de methode, voir si plus rapide : en tout cas mettre ca dans une methode a part getMirroredVramAddress car le meme qu'en dessous
         uint16_t mirroredAddress = (_nametableMirroring) ? getMirroredAddress<MirroringType::Horizontal>(address) : getMirroredAddress<MirroringType::Vertical>(address);
         
         // Read VRAM with mirrored address
