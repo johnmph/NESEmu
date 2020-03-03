@@ -21,6 +21,9 @@ namespace NESEmu { namespace Cartridge {
         
         Mapper3(std::istream &istream);
         
+        template <class TConnectedBus, class TInterruptHardware>
+        void clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware);
+        
         // Cpu memory bus
         template <class TConnectedBus>
         void cpuReadPerformed(TConnectedBus &connectedBus);
@@ -29,9 +32,6 @@ namespace NESEmu { namespace Cartridge {
         void cpuWritePerformed(TConnectedBus &connectedBus);
         
         // Ppu memory bus
-        template <class TConnectedBus>
-        void ppuAddressBusChanged(TConnectedBus &connectedBus);
-        
         template <class TConnectedBus>
         void ppuReadPerformed(TConnectedBus &connectedBus);
         

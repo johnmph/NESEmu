@@ -25,6 +25,12 @@ Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::Mapper0(std::istream &ist
 }
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
+template <class TConnectedBus, class TInterruptHardware>
+void Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware) {
+    // Does nothing
+}
+
+template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
 template <class TConnectedBus>
 void Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::cpuReadPerformed(TConnectedBus &connectedBus) {
     // Get address
@@ -63,12 +69,6 @@ void Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::cpuWritePerformed(TC
         }
     }
     // Nothing for Prg-Rom (Can't write to a ROM)
-}
-
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
-template <class TConnectedBus>
-void Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::ppuAddressBusChanged(TConnectedBus &connectedBus) {
-    // Does nothing
 }
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>

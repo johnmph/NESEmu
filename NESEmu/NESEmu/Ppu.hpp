@@ -119,8 +119,6 @@ namespace NESEmu { namespace Ppu {
         uint8_t calculatePixel(uint8_t pixelNumber);
         void checkSprite0Hit(uint8_t bgPixel, uint8_t spPixel);
         
-        uint8_t getColorFromPaletteIndex(uint8_t index);
-        
         void readObjectAttributeMemory();
         void writeObjectAttributeMemory(uint8_t data);
         

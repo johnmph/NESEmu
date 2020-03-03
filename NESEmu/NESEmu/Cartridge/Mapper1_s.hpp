@@ -31,6 +31,12 @@ Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::Mapper1(std::istream &istream) : _prg
 }
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
+template <class TConnectedBus, class TInterruptHardware>
+void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware) {
+    // Does nothing
+}
+
+template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
 template <class TConnectedBus>
 void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::cpuReadPerformed(TConnectedBus &connectedBus) {
     // Get address
@@ -89,7 +95,7 @@ void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::cpuWritePerformed(TConnectedBus 
         }
     }
     // Shift register
-    else if (address >= 0x8000) {
+    else if (address >= 0x8000) {//TODO: attention, si 2 writes consecutifs, il n'y a que le 1er qui est pris en compte (a implementer surement avec clock en sauvant le rw signal du cpu et en le checkant ici (voir https://wiki.nesdev.com/w/index.php/MMC1 ) a tester avec Bill & Ted's Excellent Adventure
         // Clear registers
         if ((data & 0x80) != 0x0) {
             _shiftRegister = 0x10;
@@ -113,12 +119,6 @@ void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::cpuWritePerformed(TConnectedBus 
             _shiftCount = 0;
         }
     }
-}
-
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
-template <class TConnectedBus>
-void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::ppuAddressBusChanged(TConnectedBus &connectedBus) {
-    // Does nothing
 }
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>

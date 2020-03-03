@@ -57,7 +57,7 @@ namespace NESEmu {
             
             void readControllerPort(unsigned int number);
             
-            void irq(bool high);    // TODO: besoin pour le mapper4 (MMC3) a voir !!!
+            void irq(bool high);
             
         private:
             Nes &_nes;
@@ -82,8 +82,6 @@ namespace NESEmu {
             std::vector<uint8_t> &getVram();
             
             void interrupt(bool high);
-            
-            void irq(bool high);    // TODO: besoin pour le mapper4 (MMC3) a voir !!!
             
         private:
             Nes &_nes;

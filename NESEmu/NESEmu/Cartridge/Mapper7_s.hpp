@@ -25,6 +25,12 @@ Mapper7<IPrgRomSizeInKb, IPrgRamSizeInKb>::Mapper7(std::istream &istream) : _prg
 }
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
+template <class TConnectedBus, class TInterruptHardware>
+void Mapper7<IPrgRomSizeInKb, IPrgRamSizeInKb>::clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware) {
+    // Does nothing
+}
+
+template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
 template <class TConnectedBus>
 void Mapper7<IPrgRomSizeInKb, IPrgRamSizeInKb>::cpuReadPerformed(TConnectedBus &connectedBus) {
     // Get address
@@ -67,12 +73,6 @@ void Mapper7<IPrgRomSizeInKb, IPrgRamSizeInKb>::cpuWritePerformed(TConnectedBus 
         _prgRomBankSelect = data & 0x7;
         _vramBankSelect = data & 0x10;
     }
-}
-
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
-template <class TConnectedBus>
-void Mapper7<IPrgRomSizeInKb, IPrgRamSizeInKb>::ppuAddressBusChanged(TConnectedBus &connectedBus) {
-    // Does nothing
 }
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>

@@ -19,9 +19,9 @@ struct Constants<Model::Ntsc> {
     static constexpr Ppu::Model ppuModel = Ppu::Model::Ricoh2C02;
     
     // Clock
-    static constexpr int masterClockSpeedInHz = 21477272 / 4;   // TODO: / 4 pour optimiser la clock principale (gain de +- 14 fps en release)
-    static constexpr int cpuMasterClockDivider = 12 / 4;//6
-    static constexpr int ppuMasterClockDivider = 4 / 4;
+    static constexpr int masterClockSpeedInHz = 21477272;// / 4;   // TODO: / 4 pour optimiser la clock principale (gain de +- 14 fps en release)
+    static constexpr int cpuMasterClockDivider = 6;//12 / 4;//6
+    static constexpr int ppuMasterClockDivider = 4;//4 / 4;
 };
 
 template <>
@@ -80,7 +80,7 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::pe
     // RAM
     if (_address < 0x2000) {
         // RAM is mirrored each 0x800 bytes
-        _data = _nes._ram[_address & 0x7FF];
+        setDataBus(_nes._ram[_address & 0x7FF]);
     }
     // PPU
     else if (_address < 0x4000) {
@@ -99,7 +99,7 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::pe
     // RAM
     if (_address < 0x2000) {
         // RAM is mirrored each 0x800 bytes
-        _nes._ram[_address & 0x7FF] = _data;
+        _nes._ram[_address & 0x7FF] = getDataBus();
     }
     // PPU
     else if (_address < 0x4000) {
@@ -152,9 +152,6 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuHardwareInterface::se
     
     // Save low byte of addressBus in external octal latch
     _externalOctalLatch = _address & 0xFF;
-    
-    // Notify cartridge hardware that address has changed
-    _nes._cartridgeHardware.ppuAddressBusChanged(*this);
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
@@ -202,12 +199,6 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuHardwareInterface::in
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-void Nes<EModel, TCartridgeHardware, TGraphicHardware>::PpuHardwareInterface::irq(bool high) {
-    //_nes.mapperInterrupt(high);//TODO: ca ou directement _nes._cpu.irq(high); ?
-    _nes._cpu.irq(high);
-}
-
-template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
 Nes<EModel, TCartridgeHardware, TGraphicHardware>::Nes(TCartridgeHardware &cartridgeHardware, TGraphicHardware &graphicHardware) : _cartridgeHardware(cartridgeHardware), _cpuHardwareInterface(*this), _ppuHardwareInterface(*this), _cpu(_cpuHardwareInterface), _ppu(_ppuHardwareInterface, _ppuHardwareInterface, graphicHardware), _ram(2 * 1024), _vram(2 * 1024), _currentClockForCpu(0), _currentClockForPpu(0) {
     // Begin with no controller
     connectController(0, std::make_unique<Controller::Nothing>());
@@ -225,46 +216,51 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::powerUp() {
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
 void Nes<EModel, TCartridgeHardware, TGraphicHardware>::clock() {
-    //static bool f = false;
+    static bool f = false;
     static int cpuCycle = 0;
     
-    ++_currentClockForCpu;
-    ++_currentClockForPpu;
     
     // Perform a ppu clock if necessary
-    if (_currentClockForPpu >= Constants::ppuMasterClockDivider) {
+    if (_currentClockForPpu <= 0) {
         _ppu.clock();
-        _currentClockForPpu = 0;
+        _currentClockForPpu = Constants::ppuMasterClockDivider;
     }
     
     // Perform a cpu clock if necessary
-    if (_currentClockForCpu >= Constants::cpuMasterClockDivider) {/*
+    if (_currentClockForCpu <= 0) {
         if (!f) {
             // Update controllers
             for (int i = 0; i < 2; ++i) {
                 _controllerPorts[i]->out(_cpu.getOutSignal() & 0x1);        // TODO: voir pour les performances ici
             }
             
+            _cartridgeHardware.clock(_ppuHardwareInterface, _cpuHardwareInterface);
+            
             _cpu.clockPhi1();
         } else {
             _cpu.clockPhi2();
+            ++cpuCycle;
         }
-        _currentClockForCpu = 0;
-        f = !f;*/
-        
+        _currentClockForCpu = Constants::cpuMasterClockDivider;
+        f = !f;
+        /*
         // Update controllers
         for (int i = 0; i < 2; ++i) {
             _controllerPorts[i]->out(_cpu.getOutSignal() & 0x1);        // TODO: voir pour les performances ici
         }
         
+        _cartridgeHardware.clock(_ppuHardwareInterface, _cpuHardwareInterface);
         _cpu.clock();
-        _currentClockForCpu = 0;
-        ++cpuCycle;
+        _currentClockForCpu = 0;*/
+        /*++cpuCycle;
         
         if (cpuCycle == 29658) {
             int x = 0;
-        }
+        }*/
     }
+    
+    --_currentClockForCpu;
+    --_currentClockForPpu;
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>

@@ -25,6 +25,12 @@ Mapper3<IPrgRomSizeInKb, IPrgRamSizeInKb, IChrRomSizeInKb, EMirroring>::Mapper3(
 }
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, unsigned int IChrRomSizeInKb, MirroringType EMirroring>
+template <class TConnectedBus, class TInterruptHardware>
+void Mapper3<IPrgRomSizeInKb, IPrgRamSizeInKb, IChrRomSizeInKb, EMirroring>::clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware) {
+    // Does nothing
+}
+
+template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, unsigned int IChrRomSizeInKb, MirroringType EMirroring>
 template <class TConnectedBus>
 void Mapper3<IPrgRomSizeInKb, IPrgRamSizeInKb, IChrRomSizeInKb, EMirroring>::cpuReadPerformed(TConnectedBus &connectedBus) {
     // Get address
@@ -68,12 +74,6 @@ void Mapper3<IPrgRomSizeInKb, IPrgRamSizeInKb, IChrRomSizeInKb, EMirroring>::cpu
         
         // TODO: rajouter un assert pour etre sur que le bank select ne depasse pas IChrRomSizeInKb
     }
-}
-
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, unsigned int IChrRomSizeInKb, MirroringType EMirroring>
-template <class TConnectedBus>
-void Mapper3<IPrgRomSizeInKb, IPrgRamSizeInKb, IChrRomSizeInKb, EMirroring>::ppuAddressBusChanged(TConnectedBus &connectedBus) {
-    // Does nothing
 }
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, unsigned int IChrRomSizeInKb, MirroringType EMirroring>

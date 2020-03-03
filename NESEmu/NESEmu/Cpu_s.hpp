@@ -185,9 +185,10 @@ void Chip<EModel, TBus>::performRead() {
     else if (address == 0x4017) {
         _bus.readControllerPort(1);
     }
-    
     // External bus
-    _bus.performRead();
+    else {
+        _bus.performRead();
+    }
 }
 
 template <Model EModel, class TBus>
@@ -198,35 +199,29 @@ void Chip<EModel, TBus>::performWrite() {
     // APU
     if (((address >= 0x4000) && (address < 0x4014)) || (address == 0x4015)) {
         //TODO: ajouter
-        return;
     }
     // DMA
     else if (address == 0x4014) {
         startDma(data);
-        
-        return;
     }
     // Controller 1 / 2
     // See https://wiki.nesdev.com/w/index.php/Controller_reading
     // See https://wiki.nesdev.com/w/index.php/Controller_reading_code
     else if (address == 0x4016) {   // TODO: il faut aussi notifier les manettes qu'on a ecrit ca en appelant leur out(_outLatch & 0x1) !!! : je l'ai mis dans le clock nes cpu, voir si pas moyen de faire mieux optimisé que ca !!
         _outLatch = data & 0x7;
-        
-        return;
     }
     // APU frame counter
     else if (address == 0x4017) {
         //TODO: ajouter
-        return;
     }
     // Test mode
     else if ((address >= 0x4018) && (address < 0x4020)) {
         //TODO: ajouter
-        return;
     }
-    
     // External bus
-    _bus.performWrite();
+    else {
+        _bus.performWrite();
+    }
 }
 
 template <Model EModel, class TBus>

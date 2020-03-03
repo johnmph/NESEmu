@@ -11,7 +11,7 @@
 
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IChrRomSizeInKb>
-Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::Mapper4(std::istream &istream) : _prgRom(IPrgRomSizeInKb * 1024), _prgRam(8 * 1024), _chrRom(IChrRomSizeInKb * 1024), _bankRegisterSelect(0), _prgRomBankMode(false), _chrRomBankMode(false), _nametableMirroring(false), _prgRamWriteProtection(false), _prgRamChipEnable(false), _lastA12(false), _irqEnable(false), _irqReload(false), _irqLatch(0), _irqCounter(0) {
+Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::Mapper4(std::istream &istream) : _prgRom(IPrgRomSizeInKb * 1024), _prgRam(8 * 1024), _chrRom(IChrRomSizeInKb * 1024), _bankRegisterSelect(0), _prgRomBankMode(false), _chrRomBankMode(false), _nametableMirroring(false), _prgRamWriteProtection(false), _prgRamChipEnable(false), _lastA12(0), _irqEnable(false), _irqReload(false), _irqLatch(0), _irqCounter(0) {
     // TODO: voir si read via istream ici ou bien dans un factory a part et avoir directement ici les vectors a copier simplement : doit etre en dehors
     // TODO: pour tests :
     // Skip header
@@ -25,6 +25,16 @@ Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::Mapper4(std::istream &istream) : _prg
     
     // TODO: reseter aussi les _bankSelect ?
     //memset(_bankSelect, 0, sizeof(_bankSelect[0]) * 8);
+}
+
+template <unsigned int IPrgRomSizeInKb, unsigned int IChrRomSizeInKb>
+template <class TConnectedBus, class TInterruptHardware>
+void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware) {
+    // Get address
+    uint16_t address = connectedBus.getAddressBus();
+    
+    // Process IRQ counter
+    processIrqCounter(interruptHardware, (address & 0x1000) != 0x0);
 }
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IChrRomSizeInKb>
@@ -140,16 +150,6 @@ void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::cpuWritePerformed(TConnectedBus 
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IChrRomSizeInKb>
 template <class TConnectedBus>
-void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::ppuAddressBusChanged(TConnectedBus &connectedBus) {
-    // Get address
-    uint16_t address = connectedBus.getAddressBus();
-    
-    // Process IRQ counter
-    processIrqCounter(connectedBus, (address & 0x1000) != 0x0);
-}
-
-template <unsigned int IPrgRomSizeInKb, unsigned int IChrRomSizeInKb>
-template <class TConnectedBus>
 void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::ppuReadPerformed(TConnectedBus &connectedBus) {
     // Get address
     uint16_t address = connectedBus.getAddressBus();
@@ -232,11 +232,10 @@ void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::ppuWritePerformed(TConnectedBus 
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IChrRomSizeInKb>
 template <class TConnectedBus>
-void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::processIrqCounter(TConnectedBus &connectedBus, bool a12) {   // TODO: je pensais l'appeler dans ppuRead/Write avec le a12 mais ca doit le faire meme si on ne modifie que l'adresse VRAM (et donc qu'on ne lit pas la VRAM) donc il faudrait un clock dans les mappers aussi ? SI oui pour clock, il y a moyen de le faire au compile time (cad que sur les mappers ou on a pas besoin de clock il n'y aurait pas d'appels de clock), seulement sur les mappers qui en ont besoin, ainsi on evite des pertes de performances : voir si ok ainsi
-    
-    // Save a12
-    bool savedLastA12 = _lastA12;
-    _lastA12 = a12;
+void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::processIrqCounter(TConnectedBus &connectedBus, bool a12) {
+    // Save A12 and filter it (only clock if A12 is high and was low for at least 3 CPU cycles before)
+    bool savedLastA12 = _lastA12 != 0;
+    _lastA12 = (a12 << 2) | (_lastA12 >> 1);
     
     // Check if IRQ clocked
     if (!(a12 && (!savedLastA12))) {
