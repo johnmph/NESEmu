@@ -181,7 +181,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/DK.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/Castlevania.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Duck Tales.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
-    std::ifstream ifs("../UnitTestFiles/Battletoads.nes", std::ios::binary);  // Mapper7, 256kb de prg-rom, single screen mirroring chr-ram
+    //std::ifstream ifs("../UnitTestFiles/Battletoads.nes", std::ios::binary);  // Mapper7, 256kb de prg-rom, single screen mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Paperboy.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/Huge Insect.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
@@ -220,7 +220,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_read_buffer/test_ppu_read_buffer.nes", std::ios::binary);  // Mapper3, 16kb de prg-rom, 32 de chr-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_hit/ppu_sprite_hit.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom, vertical mirroring
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_vbl_nmi/ppu_vbl_nmi.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom, vertical mirroring OK !!!
+    std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_vbl_nmi/ppu_vbl_nmi.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom, vertical mirroring OK !!!
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_overflow/ppu_sprite_overflow.nes", std::ios::binary);// Mapper1, 128kb de prg-rom, vertical mirroring OK
     
@@ -253,11 +253,11 @@ int main(int argc, const char * argv[]) {
     
     // Mapper for SMB
     //NESEmu::Cartridge::Mapper0<16, 0, NESEmu::Cartridge::MirroringType::Horizontal> mapper0(ifs);
-    //NESEmu::Cartridge::Mapper1<128, 8/*, NESEmu::Cartridge::MirroringType::Vertical*/> mapper0(ifs);
+    NESEmu::Cartridge::Mapper1<256, 8/*, NESEmu::Cartridge::MirroringType::Vertical*/> mapper0(ifs);
     //NESEmu::Cartridge::Mapper2<128, 0, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
     //NESEmu::Cartridge::Mapper3<16, 0, 32, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
     //NESEmu::Cartridge::Mapper4<32, 8> mapper0(ifs);
-    NESEmu::Cartridge::Mapper7<256, 0> mapper0(ifs);
+    //NESEmu::Cartridge::Mapper7<256, 0> mapper0(ifs);
     
     // Create NES with Mapper
     NESEmu::Nes<NESEmu::Model::Ntsc, decltype(mapper0), GraphicHardware> nes(mapper0, graphicHardware);

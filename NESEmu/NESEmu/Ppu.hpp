@@ -121,8 +121,14 @@ namespace NESEmu { namespace Ppu {
         void incrementPositionCounters();
         
         // IO
+        template <class TConnectedBus>
         void ioRead();
+        
+        template <class TConnectedBus>
         void ioWrite();
+        
+        template <class TConnectedBus>
+        TConnectedBus &ioGetBus();//TODO : voir si const
         
         // External memory
         uint8_t read();
@@ -146,9 +152,10 @@ namespace NESEmu { namespace Ppu {
         
         // Registers
         uint8_t _oamAddress;
+        uint8_t _oamData;
         uint16_t _address;
         
-        uint8_t _controlAddressIncrementPerCpuAccess;       // TODO: par apres reorganiser les variables pour l'alignement
+        uint8_t _controlAddressIncrementPerCpuAccess;
         uint16_t _controlSpritePatternTableAddress;
         uint16_t _controlBackgroundPatternTableAddress;
         uint8_t _controlSpriteSize;
@@ -176,14 +183,21 @@ namespace NESEmu { namespace Ppu {
         bool _resetLine;
         bool _resetRequested;
         
-        unsigned int _currentPixel;
+        uint8_t _currentPixelIndex;
+        uint8_t _extBackgroundIndex;
+        
         unsigned int _currentScanline;
+        unsigned int _currentPixel;
+        bool _needToSkipCycle;
         bool _oddFrame;
         
         uint16_t _temporaryAddress;
         uint8_t _fineXScroll;
         bool _writeToggle;
         
+        bool _vBlankStartedLatch;
+        
+        // Tiles
         uint8_t _ntByte;
         uint8_t _atByte;
         uint8_t _lowTileByte;
@@ -191,15 +205,16 @@ namespace NESEmu { namespace Ppu {
         
         uint16_t _bgLowTileShiftRegister;
         uint16_t _bgHighTileShiftRegister;
-        uint8_t _bgLowTileBitOut;   // TODO : voir si bool ou uint8_t pour l'optimisation
+        uint8_t _bgLowTileBitOut;
         uint8_t _bgHighTileBitOut;
         uint8_t _bgLowAttributeShiftRegister;
         uint8_t _bgHighAttributeShiftRegister;
-        uint8_t _bgLowAttributeLatch;   // TODO : voir si bool ou uint8_t pour l'optimisation
+        uint8_t _bgLowAttributeLatch;
         uint8_t _bgHighAttributeLatch;
         uint8_t _bgLowAttributeBitOut;
         uint8_t _bgHighAttributeBitOut;
         
+        // Sprites
         uint8_t _spLowTileShiftRegisters[8];
         uint8_t _spHighTileShiftRegisters[8];
         uint8_t _spAttributeLatches[8];
@@ -215,11 +230,7 @@ namespace NESEmu { namespace Ppu {
         bool _sprite0OnCurrentScanline;
         bool _sprite0Active;
         
-        uint8_t _currentPixelIndex;
-        uint8_t _extBackgroundIndex;
-        
         // OAM
-        uint8_t _oamData;
         uint8_t _secondOAMAddress;
         uint8_t _oamAddressIncrement;
         uint8_t _spriteEvaluationCopyByteCount;
@@ -227,6 +238,12 @@ namespace NESEmu { namespace Ppu {
         bool _secondOAMAddressOverflow;
         bool _needIncrementOAMAddress;
         bool _needIncrementSecondOAMAddress;
+        
+        // IO
+        void *_ioBus;
+        void (Chip::*_ioMethod)();
+        uint8_t _ioPending;
+        //bool _ioReadMode;   // TODO: seulement besoin si on veut mettre le write avant processRendering sinon pas besoin de différencier car on a _ioMethod
         
         // Dynamic latch due to capacitance of very long traces of data bus that run to various parts of the PPU
         // See https://wiki.nesdev.com/w/index.php/PPU_registers
@@ -236,15 +253,6 @@ namespace NESEmu { namespace Ppu {
         // Data read buffer
         // See https://wiki.nesdev.com/w/index.php/PPU_registers#PPUDATA
         uint8_t _dataReadBuffer;
-        
-        bool _needToSkipCycle;
-        
-        bool _vBlankStartedLatch;
-        
-        uint16_t _ioAddress;
-        uint8_t *_ioData;           // TODO: trouver un moyen pour se passer de ca !!!
-        bool _ioReadMode;
-        uint8_t _ioPending;
     };
     
     #include "Ppu_s.hpp"

@@ -109,14 +109,14 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::reset(bool high) 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 template <class TConnectedBus>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readPerformed(TConnectedBus &connectedBus) {
-    // Get address
-    _ioAddress = connectedBus.getAddressBus() & 0x7;
+    // Get bus
+    _ioBus = &connectedBus;
     
-    // Get data address
-    _ioData = &connectedBus.getDataBus();
+    // Get read method
+    _ioMethod = &Chip::ioRead<TConnectedBus>;
     
     // Set mode to read
-    _ioReadMode = true;
+    //_ioReadMode = true;
     
     // Set io pending
     _ioPending = 1;
@@ -125,14 +125,14 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readPerformed(TCo
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 template <class TConnectedBus>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TConnectedBus &connectedBus) {
-    // Get address
-    _ioAddress = connectedBus.getAddressBus() & 0x7;
+    // Get bus
+    _ioBus = &connectedBus;
     
-    // Get data address
-    _ioData = &connectedBus.getDataBus();
+    // Get write method
+    _ioMethod = &Chip::ioWrite<TConnectedBus>;
     
     // Set mode to write
-    _ioReadMode = false;
+    //_ioReadMode = false;
     
     // Set io pending
     _ioPending = 1;
@@ -244,14 +244,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processIO() {
     
     // If time to process IO
     if (_ioPending == 1) {
-        // Perform read IO
-        if (_ioReadMode) {
-            ioRead();
-        }
-        // Perform write IO
-        else {
-            ioWrite();
-        }
+        // Perform IO
+        (this->*_ioMethod)();
     }
     
     // Count down time for processing IO
@@ -1070,9 +1064,16 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementPosition
 // *** IO ***
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+template <class TConnectedBus>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioRead() {
+    // Get bus
+    TConnectedBus &ioBus = ioGetBus<TConnectedBus>();
+    
+    // Get address
+    uint16_t address = ioBus.getAddressBus() & 0x7;
+    
     // Status register
-    if (_ioAddress == 0x2) {
+    if (address == 0x2) {
         // Unused data lines stay at capacitance latch value
         _dataBusCapacitanceLatch &= 0x1F;
         
@@ -1088,7 +1089,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioRead() {
         _writeToggle = false;
     }
     // OAM data register
-    else if (_ioAddress == 0x4) {
+    else if (address == 0x4) {
         // Read OAM
         readObjectAttributeMemory();
         
@@ -1098,7 +1099,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioRead() {
         _dataBusCapacitanceLatch = _oamData;
     }
     // Data register
-    else if (_ioAddress == 0x7) {// TODO: il parait que 2 read successif ignore le dernier read ??? a voir dans la doc
+    else if (address == 0x7) {// TODO: il parait que 2 read successif ignore le dernier read ??? a voir dans la doc
         // Save data read buffer
         uint8_t oldDataReadBuffer = _dataReadBuffer;
         
@@ -1126,20 +1127,27 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioRead() {
         _bus.setAddressBus(_address);//TODO: j'ai besoin de ca pour que le test MMC3 A12_clocking passe, donc peut etre que _address est _addressBus  tout le temps !!! : non car dans Visual2C02 les valeurs sont souvent différentes !!!
     }
     
-    // Set data
-    *_ioData = _dataBusCapacitanceLatch;
+    // Set data on bus
+    ioBus.setDataBus(_dataBusCapacitanceLatch);
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+template <class TConnectedBus>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite() {
-    // Get data
-    uint8_t data = *_ioData;
+    // Get bus
+    TConnectedBus &ioBus = ioGetBus<TConnectedBus>();
+    
+    // Get address
+    uint16_t address = ioBus.getAddressBus() & 0x7;
+    
+    // Get data on bus
+    uint8_t data = ioBus.getDataBus();
     
     // When data is written, data bus capacitance latch is filled with the value even if the write occurs on a read-only register
     _dataBusCapacitanceLatch = data;
     
     // Control register
-    if (_ioAddress == 0x0) {
+    if (address == 0x0) {
         _temporaryAddress = (_temporaryAddress & 0x73FF) | (data & 0x3) << 10;
         _controlAddressIncrementPerCpuAccess = ((data & 0x4) != 0x0) ? 32 : 1;//((data & 0x4) << 3) | (((data & 0x4) >> 2) ^ 0x1);
         _controlSpritePatternTableAddress = (data & 0x8) << 9;
@@ -1149,7 +1157,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite() {
         _controlGenerateNmiForVBlank = data & 0x80;
     }
     // Mask register
-    else if (_ioAddress == 0x1) {
+    else if (address == 0x1) {
         _maskGrayscale = (data & 0x1) ? 0x30 : 0x3F;
         _maskShowBackgroundFirst8px = data & 0x2;
         _maskShowSpritesFirst8px = data & 0x4;
@@ -1160,13 +1168,13 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite() {
         _maskEmphasizeBlue = data & 0x80;
     }
     // OAM address register
-    else if (_ioAddress == 0x3) {
+    else if (address == 0x3) {
         _oamAddress = data;
         
         // TODO: voir pour les bugs (2C02 seulement)
     }
     // OAM data register
-    else if (_ioAddress == 0x4) {
+    else if (address == 0x4) {
         // Can only be written during VBlank, see https://wiki.nesdev.com/w/index.php/PPU_registers
         /*if ((isRenderingEnabled()) && (_currentScanline < (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline))) {
          // TODO: normalement ca fait des incrementations bizarres de oamAddress : voir les tests que j'ai fait avec Visual2C02, apparemment on écrit FF (a la place de data) a l'adresse _oamAddress si l'écriture s'est fait pendant un pixel pair (et si avant cycle 7 ou 6? mais ici un cycle PPU = 1 pixel tandis que le cycle en question est un 1/8 de cycle PPU) et on incrémente _oamAddress de 4 sauf si le cycle d'incrémentation tombe pendant les 2 1ers cycles (1/8 de cycle PPU) d'écriture IO car le second oam clear desactive l'incrementation de oamAddress
@@ -1188,7 +1196,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite() {
         _needIncrementOAMAddress = true;// TODO: normalement incrementOamAddress(); mais voir quand reseter _oamAddressIncrement (le mettre a 1)
     }
     // Scroll register
-    else if (_ioAddress == 0x5) {
+    else if (address == 0x5) {
         // First write
         if (!_writeToggle) {
             // Set scroll X on temporary address
@@ -1205,7 +1213,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite() {
         _writeToggle = !_writeToggle;
     }
     // Address register
-    else if (_ioAddress == 0x6) {
+    else if (address == 0x6) {
         // First write
         if (!_writeToggle) {
             // Set high byte address on temporary address
@@ -1227,7 +1235,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite() {
         _writeToggle = !_writeToggle;
     }
     // Data register
-    else if (_ioAddress == 0x7) {
+    else if (address == 0x7) {
         // If palette index address, write to it
         if ((_address & 0x3FFF) > 0x3EFF) {
             // Write to palette memory
@@ -1247,6 +1255,12 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite() {
         // Set address bus
         _bus.setAddressBus(_address);//TODO: j'ai besoin de ca pour que le test MMC3 A12_clocking passe, donc peut etre que _address est _addressBus  tout le temps !!! : non car dans Visual2C02 les valeurs sont souvent différentes !!!
     }
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+template <class TConnectedBus>
+TConnectedBus &Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioGetBus() {
+    return *static_cast<TConnectedBus *>(_ioBus);
 }
 
 
