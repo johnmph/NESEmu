@@ -168,7 +168,8 @@ void Chip<TConfiguration>::powerUp(uint16_t programCounter, uint8_t stackPointer
     _resetLineLatch = true;
     _resetRequested = false;
     _nmiLine = true;
-    _nmiLinePrevious = true;
+    _nmiLatched = true;
+    _nmiLatchedPrevious = true;
     _nmiRequested = false;
     _irqLine = true;
     _irqRequested = false;
@@ -189,6 +190,10 @@ void Chip<TConfiguration>::clock() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::clockPhi1() {
+    // Check interrupts line (before phi1 begins)
+    checkNmi();
+    checkIrq();
+    
     // Start phi1
     _phi2 = false;
     
@@ -220,8 +225,8 @@ void Chip<TConfiguration>::clockPhi2() {
     checkReset<ResetAccurate>();
     
     // Check interrupts line
-    checkNmi();
-    checkIrq();
+    //checkNmi();
+    //checkIrq();
     
     // Check ready line
     checkReady();
@@ -245,12 +250,28 @@ template <class TConfiguration>
 void Chip<TConfiguration>::nmi(bool high) {
     // Save signal
     _nmiLine = high;
+    
+    // Process if we are in phi2
+    if (!_phi2) {
+        return;
+    }
+    
+    // Latch signal
+    _nmiLatched = _nmiLine;
+    
+    // Nmi is requested if nmi line has transition from high to low
+    if (_nmiLatchedPrevious && (!_nmiLatched)) {
+        _nmiRequested = true;
+    }
 }
 
 template <class TConfiguration>
-void Chip<TConfiguration>::irq(bool high) {
+void Chip<TConfiguration>::irq(bool high) {//TODO: voir pour avoir la meme logique que nmi pour irq et reset (par rapport a la phase complete de phi2)
     // Save signal
     _irqLine = high;
+    
+    // Irq is requested if interrupts are not disabled and if irq line goes to low in phi2
+    _irqRequested = (!_flagsHelper.get<Flag::InterruptDisable>()) && (!_irqLine) && _phi2;
 }
 
 template <class TConfiguration>
@@ -281,10 +302,10 @@ bool Chip<TConfiguration>::getM2Signal() const {
 // Memory
 
 template <class TConfiguration>
-void Chip<TConfiguration>::fetchMemoryPhi1() {
+void Chip<TConfiguration>::fetchMemoryPhi1() {// TODO: voir pour tout remettre comme avant (sauf les interrupts) pour repasser les tests et faire les changement dans le 2A03 plutot (car c'est lui qui a son timing modifié et c'est lui qui en a besoin)
     // Read data on dataBus if it is in read mode else set dataBus with last read value
     if (_readWrite == static_cast<bool>(ReadWrite::Read)) {
-        _bus.performRead();
+        //_bus.performRead();
     } else {
         _bus.setDataBus(_inputDataLatch);   // TODO: voir si ca n'a pas d'influence sur le open bus behaviour !!! (j'ai besoin de ca sinon les tests foirent)
     }
@@ -294,8 +315,9 @@ template <class TConfiguration>
 void Chip<TConfiguration>::fetchMemoryPhi2() {
     // dataBus is already filled with data since end of phi1, just put dataBus on internal registers
     if (_readWrite == static_cast<bool>(ReadWrite::Read)) {
-        _inputDataLatch = _bus.getDataBus();
-        _predecode = _inputDataLatch;
+        //_inputDataLatch = _bus.getDataBus();
+        //_predecode = _inputDataLatch;
+        _bus.performRead();
         
         return;
     }
@@ -526,19 +548,17 @@ void Chip<TConfiguration>::checkReset() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::checkNmi() {
-    // Nmi is requested if nmi line has transition from high to low
-    if (_nmiLinePrevious && (!_nmiLine)) {
-        _nmiRequested = true;
-    }
+    // Save previous nmi latched
+    _nmiLatchedPrevious = _nmiLatched;
     
-    // Save previous nmi signal
-    _nmiLinePrevious = _nmiLine;
+    // Because code which call nmi() can set the line low in phi1 and not call it in phi2, we need to check nmi line in phi2 with its current line value
+    nmi(_nmiLine);
 }
 
 template <class TConfiguration>
 void Chip<TConfiguration>::checkIrq() {
-    // Irq is requested if interrupts are not disabled and if irq line goes to low (and stay for one cycle)
-    _irqRequested = (!_flagsHelper.get<Flag::InterruptDisable>()) && (!_irqLine);
+    // Because code which call irq() can set the line low in phi1 and not call it in phi2, we need to check irq line in phi2 with its current line value
+    irq(_irqLine);
 }
 
 template <class TConfiguration>

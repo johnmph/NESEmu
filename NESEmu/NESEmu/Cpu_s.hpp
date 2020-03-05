@@ -43,6 +43,15 @@ void Chip<EModel, TBus>::clock() {
 
 template <Model EModel, class TBus>
 void Chip<EModel, TBus>::clockPhi1() {//TODO: peut etre a la place d'avoir tout ce bordel pour le dma, avoir un bool isInDma et si true alors on effectue le dma (read ou write) sinon on appelle InternalCpu::clockPhi1(); : a voir car il faut prendre en compte les phi1 phi2 a avoir, les check interrupts, ...
+    if (InternalCpu::_readWrite == static_cast<bool>(InternalCpu::ReadWrite::Read)) {
+        InternalCpu::_inputDataLatch = getDataBus();
+        InternalCpu::_predecode = InternalCpu::_inputDataLatch;
+    }
+    
+    // Check interrupts line (before phi1 begins)
+    InternalCpu::checkNmi();
+    InternalCpu::checkIrq();
+    
     // Start phi1
     this->_phi2 = false;
     
@@ -77,8 +86,8 @@ void Chip<EModel, TBus>::clockPhi2() {
     //InternalCpu::template checkReset<InternalCpu::ResetAccurate>();   // TODO: normalement pas besoin car initialisé avec une config performance
     
     // Check interrupts line
-    InternalCpu::checkNmi();
-    InternalCpu::checkIrq();
+    //InternalCpu::checkNmi();
+    //InternalCpu::checkIrq();
     
     // Check ready line
     InternalCpu::checkReady();
@@ -172,7 +181,7 @@ void Chip<EModel, TBus>::performRead() {
     
     // APU
     if (address == 0x4015) {
-        setDataBus(0x0); // TODO: changer
+        //setDataBus(0x0); // TODO: changer
     }
     // Controller 1
     // See https://wiki.nesdev.com/w/index.php/Controller_reading

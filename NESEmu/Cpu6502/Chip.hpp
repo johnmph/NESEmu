@@ -292,7 +292,8 @@ namespace Cpu6502 {
         bool _resetRequested;
         OpcodeInstruction _resetSavedInstruction;
         bool _nmiLine;
-        bool _nmiLinePrevious;
+        bool _nmiLatched;
+        bool _nmiLatchedPrevious;
         bool _nmiRequested;
         bool _irqLine;
         bool _irqRequested;

@@ -188,29 +188,41 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/SMB2.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Young Indiana Jones Chronicles.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Adventures of Lolo 2.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 32kb de chr-rom
+    //std::ifstream ifs("../UnitTestFiles/Crystalis.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Metroid.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/Final Fantasy.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/Zelda.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/Zelda 2.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom // TODO: bug mais peut etre parce que le mapper1 n'est pas complet (selon les versions du mapper !) deja c du chr-ram et ici c du chr-rom : oui en plus il y a 8ko dans le mapper1 et ici 128 !!!
+    //std::ifstream ifs("../UnitTestFiles/Simpsons - Bart Vs the Space Mutants.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom, pareil que zelda2 !!!
     //std::ifstream ifs("../UnitTestFiles/Bill & Ted's Excellent Video Game Adventure.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom // TODO : ne fonctionne pas car on doit gerer la double ecriture dans le MMC1
 
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/nestest.nes", std::ios::binary);  // 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/1.Branch_Basics.nes", std::ios::binary);  // 16kb de prg-rom, horizontal mirroring
-    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_misc/instr_misc.nes", std::ios::binary);  // 32kb de prg-rom, horizontal mirroring
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/2.Backward_Branch.nes", std::ios::binary);  // 16kb de prg-rom, horizontal mirroring
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/3.Forward_Branch.nes", std::ios::binary);  // 16kb de prg-rom, horizontal mirroring
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_misc/instr_misc.nes", std::ios::binary);  // Mapper1, 64kb de prg-rom, horizontal mirroring TODO: ne passe pas le 4eme car besoin de l'APU
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cputime.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, Horizontal mirroring // ?
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_timing/rom_singles/1-instr_timing.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // TODO: a voir une fois le APU frame counter terminé
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_exec_space/test_cpu_exec_space_apu.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring TODO: ok meme sans l'APU ?!
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_interrupts_v2/cpu_interrupts.nes", std::ios::binary);  // Mapper1, 80kb de prg-rom // TODO: ne passe pas normal, il faut implementer l'APU
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_dummy_writes/cpu_dummy_writes_ppumem.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // OK
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_reset/registers.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // OK
+    
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_test-v5/official_only.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom, vertical mirroring // TODO: ne foire que sur les instructions pas encore supportées
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/oam_read/oam_read.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_read_buffer/test_ppu_read_buffer.nes", std::ios::binary);  // Mapper3, 16kb de prg-rom, 32 de chr-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_hit/ppu_sprite_hit.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom, vertical mirroring
-    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_hit/rom_singles/09-timing.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
-    // TestROM/PPU/ppu_sprite_hit/rom_singles/ -> fail : 09 (timing)
     
-    //TODO: pour toutes les roms de timing qui foire, verifier les timing dans Visual2C02 (quel cycle exact il set et reset les flags !!!)
-    std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_vbl_nmi/ppu_vbl_nmi.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom, vertical mirroring
-    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_vbl_nmi/rom_singles/07-nmi_on_timing.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
-    // TestROM/PPU/ppu_vbl_nmi/rom_singles/ -> fail : 05 (timing), 06 (suppression), 07 (nmi on timing), 08 (nmi off timing), 10 (even odd timing)
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_vbl_nmi/ppu_vbl_nmi.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom, vertical mirroring OK !!!
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_overflow/ppu_sprite_overflow.nes", std::ios::binary);// Mapper1, 128kb de prg-rom, vertical mirroring
-    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_overflow/rom_singles/03-timing.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // Seul 03-timing foire : fonctionne si je reset les flags en pre render pixel 0 au lieu de pixel 1 !!!
+    std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_overflow/ppu_sprite_overflow.nes", std::ios::binary);// Mapper1, 128kb de prg-rom, vertical mirroring OK
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/sprdma_and_dmc_dma/sprdma_and_dmc_dma.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     
@@ -228,32 +240,20 @@ int main(int argc, const char * argv[]) {
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/sprite_overflow_tests/5.Emulator.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring // OK
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cputime.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, Horizontal mirroring // ?
-    
-    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_timing/rom_singles/1-instr_timing.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // TODO: a voir une fois le APU frame counter terminé
-    
-    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_exec_space/test_cpu_exec_space_apu.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
-    
-    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_interrupts_v2/cpu_interrupts.nes", std::ios::binary);  // Mapper1, 80kb de prg-rom // TODO: ne passe pas
-    
-    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_dummy_writes/cpu_dummy_writes_ppumem.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // OK
-    
-    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_reset/registers.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // OK
-    
-    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_misc/rom_singles/03-dummy_reads.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // OK
-    
-    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_test-v5/rom_singles/16-special.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // TODO: ne foire que sur les instructions pas encore supportées
-    
     //std::ifstream ifs("../UnitTestFiles/TestROM/Mapper/mmc3_test_2/rom_singles/4-scanline_timing.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 8kb de chr-rom  // TODO: foire sur 4 et 6 (je peux faire passer 6 en changeant la facon de lancer l'irq mais ca fait foirer 5, c'est surement parce que 6 alt teste le mapper3 alternatif : oui)
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/allpads.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, 8kb de chr-ram
+    //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/allpads.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, 8kb de chr-ram, Horizontal mirroring
     
     // Check that file exists
     assert(ifs.good());
     
     // Mapper for SMB
-    NESEmu::Cartridge::Mapper1<256, 8/*, NESEmu::Cartridge::MirroringType::Vertical*/> mapper0(ifs);
-    //NESEmu::Cartridge::Mapper0<32, 0, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
+    //NESEmu::Cartridge::Mapper0<32, 0, NESEmu::Cartridge::MirroringType::Horizontal> mapper0(ifs);
+    NESEmu::Cartridge::Mapper1<128, 8/*, NESEmu::Cartridge::MirroringType::Vertical*/> mapper0(ifs);
+    //NESEmu::Cartridge::Mapper2<128, 0, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
+    //NESEmu::Cartridge::Mapper3<16, 0, 32, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
+    //NESEmu::Cartridge::Mapper4<32, 8> mapper0(ifs);
+    //NESEmu::Cartridge::Mapper7<256, 0> mapper0(ifs);
     
     // Create NES with Mapper
     NESEmu::Nes<NESEmu::Model::Ntsc, decltype(mapper0), GraphicHardware> nes(mapper0, graphicHardware);
@@ -287,7 +287,8 @@ int main(int argc, const char * argv[]) {
             std::cout << "Reset end\n";
         }
         
-        nes.clock();
+        //nes.clock();
+        nes.clockFull();
     }
     
     // Clean up SDL

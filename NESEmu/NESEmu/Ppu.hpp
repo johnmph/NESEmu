@@ -66,6 +66,14 @@ namespace NESEmu { namespace Ppu {
         
         void checkReset();
         
+        void processIO();
+        void ioRead();
+        void ioWrite();
+        uint16_t _ioAddress;
+        uint8_t *_ioData;           // TODO: trouver un moyen pour se passer de ca !!!
+        bool _ioReadMode;
+        uint8_t _ioPending;
+        
         // VRAM access
         uint8_t read();
         void write(uint8_t data);
@@ -172,8 +180,6 @@ namespace NESEmu { namespace Ppu {
         unsigned int _currentScanline;
         bool _oddFrame;
         
-        bool _vBlankStartedLatch;
-        
         uint16_t _temporaryAddress;
         uint8_t _fineXScroll;
         bool _writeToggle;
@@ -230,6 +236,10 @@ namespace NESEmu { namespace Ppu {
         // Data read buffer
         // See https://wiki.nesdev.com/w/index.php/PPU_registers#PPUDATA
         uint8_t _dataReadBuffer;
+        
+        bool _skipClock;
+        
+        bool _vBlankStartedLatch;
     };
     
     #include "Ppu_s.hpp"

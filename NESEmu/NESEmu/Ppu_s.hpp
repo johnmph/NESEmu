@@ -23,7 +23,7 @@ struct Constants<Model::Ricoh2C02> {//TODO: + voir overscan (normalement c'est 2
     static constexpr unsigned int postRenderLengthInScanline = 1;
     static constexpr unsigned int vBlankLengthInScanline = 20;
     static constexpr unsigned int preRenderLengthInScanline = 1;
-};
+};//TODO: Early revisions cannot read back sprite or palette memory voir : https://wiki.nesdev.com/w/index.php/Cycle_reference_chart#Clock_rates
 
 template <>
 struct Constants<Model::Ricoh2C07> {
@@ -51,6 +51,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::powerUp() {
     // This flag is specified as often set in the doc but there is a problem with Donkey Kong if it is set because of the PPU warm up and the fact that Donkey Kong doesn't wait two VBlank in case of first VBlank wait loop passed immediatly due to the VBlank status flag set at power up
     // See http://forums.nesdev.com/viewtopic.php?f=3&t=19792
     _statusVBlankStarted = false;
+    _vBlankStartedLatch = false;
     
     // Reset OAMADDR
     _oamAddress = 0x0;
@@ -72,22 +73,67 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::powerUp() {
     
     // Do a reset
     reset(false);
+    
+    _ioPending = 0;//TODO: ici ou dans reset ?s
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processIO() {
+    // If no pending IO, exit
+    if (_ioPending == 0) {
+        return;
+    }
+    
+    // If time to process IO
+    if (_ioPending == 1) {
+        // Perform read IO
+        if (_ioReadMode) {
+            ioRead();
+        }
+        // Perform write IO
+        else {
+            ioWrite();
+        }
+    }
+    
+    // Count down time for processing IO
+    _ioPending >>= 1;
+    
+    /*
+    if ((_ioPending > 0) && (!_ioReadMode)) {//TODO: taper ca dans un processIO et utiliser l'écriture du haut
+        if (_ioPending == 1) {
+            writePerformed();
+        }
+        
+        _ioPending >>= 1;
+    }
+    
+    if ((_ioPending > 0) && (_ioReadMode)) {
+        if (_ioPending == 1) {
+            readPerformed();
+        }
+        
+        _ioPending >>= 1;
+    }
+*/
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clock() {
-    //checkInterrupt();//TODO: si je le met ici et que le ppu est clocké en 1er dans Nes, ca revient au meme (pour le test vbl_nmi) que si je le met a la fin de cette methode et que je met le PPu clock apres le cpu clock dans Nes !
-    
     // Process line
     processLine();
+    
+    // Process IO
+    processIO();
+    
+    // Check interrupt
+    checkInterrupt();
     
     // Update state
     updateState();
     
     // Check reset
-    checkReset();
-    
-    //checkInterrupt();
+    checkReset();//TODO: voir l'emplacement exact ici (si avant ou apres updateState)
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -105,10 +151,38 @@ template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHard
 template <class TConnectedBus>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readPerformed(TConnectedBus &connectedBus) {
     // Get address
-    uint8_t address = connectedBus.getAddressBus() & 0x7;
+    _ioAddress = connectedBus.getAddressBus() & 0x7;
     
+    // Get data address
+    _ioData = &connectedBus.getDataBus();
+    
+    // Set mode to read
+    _ioReadMode = true;
+    
+    // Set io pending
+    _ioPending = 1;
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+template <class TConnectedBus>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TConnectedBus &connectedBus) {
+    // Get address
+    _ioAddress = connectedBus.getAddressBus() & 0x7;
+    
+    // Get data address
+    _ioData = &connectedBus.getDataBus();
+    
+    // Set mode to write
+    _ioReadMode = false;
+    
+    // Set io pending
+    _ioPending = 1;
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioRead() {
     // Status register
-    if (address == 0x2) {
+    if (_ioAddress == 0x2) {
         // Unused data lines stay at capacitance latch value
         _dataBusCapacitanceLatch &= 0x1F;
         
@@ -118,18 +192,14 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readPerformed(TCo
         _dataBusCapacitanceLatch |= _statusVBlankStarted << 7;
         
         // Reset VBlank started flag
-        _statusVBlankStarted = false;
+        //_statusVBlankStarted = false;
         _vBlankStartedLatch = false;
-        
-        // Check for interrupt
-        //if ((_currentScanline == 241) && (_currentPixel > 0) && (_currentPixel <= 3))//TODO: nécessaire pour passer les tests nmi timing
-        checkInterrupt();
         
         // Reset write toggle
         _writeToggle = false;
     }
     // OAM data register
-    else if (address == 0x4) {
+    else if (_ioAddress == 0x4) {
         // Read OAM
         readObjectAttributeMemory();
         
@@ -139,7 +209,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readPerformed(TCo
         _dataBusCapacitanceLatch = _oamData;
     }
     // Data register
-    else if (address == 0x7) {// TODO: il parait que 2 read successif ignore le dernier read ??? a voir dans la doc
+    else if (_ioAddress == 0x7) {// TODO: il parait que 2 read successif ignore le dernier read ??? a voir dans la doc
         // Save data read buffer
         uint8_t oldDataReadBuffer = _dataReadBuffer;
         
@@ -168,23 +238,19 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readPerformed(TCo
     }
     
     // Set data
-    connectedBus.setDataBus(_dataBusCapacitanceLatch);
+    *_ioData = _dataBusCapacitanceLatch;
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-template <class TConnectedBus>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TConnectedBus &connectedBus) {
-    // Get address
-    uint8_t address = connectedBus.getAddressBus() & 0x7;
-    
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite() {
     // Get data
-    uint8_t data = connectedBus.getDataBus();
+    uint8_t data = *_ioData;
     
     // When data is written, data bus capacitance latch is filled with the value even if the write occurs on a read-only register
     _dataBusCapacitanceLatch = data;
     
     // Control register
-    if (address == 0x0) {
+    if (_ioAddress == 0x0) {
         _temporaryAddress = (_temporaryAddress & 0x73FF) | (data & 0x3) << 10;
         _controlAddressIncrementPerCpuAccess = ((data & 0x4) != 0x0) ? 32 : 1;//((data & 0x4) << 3) | (((data & 0x4) >> 2) ^ 0x1);
         _controlSpritePatternTableAddress = (data & 0x8) << 9;
@@ -192,12 +258,9 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TC
         _controlSpriteSize = ((data & 0x20) != 0x0) ? 16 : 8; // (((data & 0x20) >> 1) | (((data & 0x20) >> 2) ^ 0x8));
         _controlMasterSlaveSelect = data & 0x40;
         _controlGenerateNmiForVBlank = data & 0x80;
-        
-        // Check for interrupt
-        checkInterrupt();
     }
     // Mask register
-    else if (address == 0x1) {
+    else if (_ioAddress == 0x1) {
         _maskGrayscale = (data & 0x1) ? 0x30 : 0x3F;
         _maskShowBackgroundFirst8px = data & 0x2;
         _maskShowSpritesFirst8px = data & 0x4;
@@ -208,25 +271,25 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TC
         _maskEmphasizeBlue = data & 0x80;
     }
     // OAM address register
-    else if (address == 0x3) {
+    else if (_ioAddress == 0x3) {
         _oamAddress = data;
         
         // TODO: voir pour les bugs (2C02 seulement)
     }
     // OAM data register
-    else if (address == 0x4) {
+    else if (_ioAddress == 0x4) {
         // Can only be written during VBlank, see https://wiki.nesdev.com/w/index.php/PPU_registers
         /*if ((isRenderingEnabled()) && (_currentScanline < (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline))) {
-            // TODO: normalement ca fait des incrementations bizarres de oamAddress : voir les tests que j'ai fait avec Visual2C02, apparemment on écrit FF (a la place de data) a l'adresse _oamAddress si l'écriture s'est fait pendant un pixel pair (et si avant cycle 7 ou 6? mais ici un cycle PPU = 1 pixel tandis que le cycle en question est un 1/8 de cycle PPU) et on incrémente _oamAddress de 4 sauf si le cycle d'incrémentation tombe pendant les 2 1ers cycles (1/8 de cycle PPU) d'écriture IO car le second oam clear desactive l'incrementation de oamAddress
-            // TODO: si pendant le sprite evaluation, si l'écriture se fait pendant la lecture du Y byte et que l'évaluation incrémente de 4 car le sprite n'est pas dans le scanline, ca incrementera 2x de 4 donc de 8, et si le sprite est pris, on incremente de 2x 1 donc de 2 (c'est comme s'il y a un signal qui choisit si on incremente de 1 ou de 4 l'adresse et qu'ici c'est le signal d'incrémentation : peut etre que c'est pour ca qu'on incremente pas tjs dans le second oam clear, peut etre qu'il reset le signal d'incrementation qui etait setté ici ?
-            // TODO: il y a des fois aussi dans le sprite evaluation ou l'écriture qui etait censée se faire dans le second OAM se fait dans le OAM normal, il écrit donc la valeur lue juste avant (_oamData et pas data d'ici)
-            // TODO: trouvé le signal de choix d'incrementation (1 ou 4) dans visual2C02 (il vaut 1 quand increment de 4 et 0 quand increment de 1, a 1 pendant le second oam clear) : spr_addr_clear_low_bump_high_setup
-            // TODO: et le signal d'incrémentation est : spr_addr_load_next_value (avec spr_addr_next)
-            // TODO: attention : quand on incremente de 4, on doit etre aligné sur une adresse de 4, donc si par exemple l'addr est a 5, apres l'incrementation de 4 il sera a 8 et non a 9, faire _oamAddress = (_oamAddress & ~0x3) + 4; // Si incrementation == 4
-            // TODO: le meilleur moyen d'emuler ca est de retirer ce if, de laisser writeObjectAttributeMemory gérer l'écriture du FF (mais faire attention car en sprite evaluation ca n'ecrit pas) et avoir une methode pour incrementer oamAddress a la place de ++_oamAddress qui gérera l'incrementation par 1 ou par 4 : NON car ca ecrit aussi en sprite evaluation et il faut faire attention au pixel pair
-            // TODO: le meilleur moyen d'émuler ca et d'emuler les io en general c'est d'avoir les io qui sont actifs pour 3 cycles PPU ! car un cycle CPU qui lance un io prend 3 cycles PPU, il faudrait donc avoir dans les io des variables qui sont settées : io_ce qui vaut 3, et dès qu'on est dans le clock ici on regarde si io_ce > 0 et si oui on fait les operations io le temps que io_ce > 0 puis a la fin du clock if (io_ce > 0) --io_ce; (pendant le 1er cycle ca ne fait rien apparemment car dans visual2C02 io_ce est tjs a 1, puis il passe a 0 apres 8 cycles visual, donc 1 cycle PPU et il reste ainsi pour 15 cycles visual et le dernier cycle visual il repasse a 1)
-            return;
-        }*/
+         // TODO: normalement ca fait des incrementations bizarres de oamAddress : voir les tests que j'ai fait avec Visual2C02, apparemment on écrit FF (a la place de data) a l'adresse _oamAddress si l'écriture s'est fait pendant un pixel pair (et si avant cycle 7 ou 6? mais ici un cycle PPU = 1 pixel tandis que le cycle en question est un 1/8 de cycle PPU) et on incrémente _oamAddress de 4 sauf si le cycle d'incrémentation tombe pendant les 2 1ers cycles (1/8 de cycle PPU) d'écriture IO car le second oam clear desactive l'incrementation de oamAddress
+         // TODO: si pendant le sprite evaluation, si l'écriture se fait pendant la lecture du Y byte et que l'évaluation incrémente de 4 car le sprite n'est pas dans le scanline, ca incrementera 2x de 4 donc de 8, et si le sprite est pris, on incremente de 2x 1 donc de 2 (c'est comme s'il y a un signal qui choisit si on incremente de 1 ou de 4 l'adresse et qu'ici c'est le signal d'incrémentation : peut etre que c'est pour ca qu'on incremente pas tjs dans le second oam clear, peut etre qu'il reset le signal d'incrementation qui etait setté ici ?
+         // TODO: il y a des fois aussi dans le sprite evaluation ou l'écriture qui etait censée se faire dans le second OAM se fait dans le OAM normal, il écrit donc la valeur lue juste avant (_oamData et pas data d'ici)
+         // TODO: trouvé le signal de choix d'incrementation (1 ou 4) dans visual2C02 (il vaut 1 quand increment de 4 et 0 quand increment de 1, a 1 pendant le second oam clear) : spr_addr_clear_low_bump_high_setup
+         // TODO: et le signal d'incrémentation est : spr_addr_load_next_value (avec spr_addr_next)
+         // TODO: attention : quand on incremente de 4, on doit etre aligné sur une adresse de 4, donc si par exemple l'addr est a 5, apres l'incrementation de 4 il sera a 8 et non a 9, faire _oamAddress = (_oamAddress & ~0x3) + 4; // Si incrementation == 4
+         // TODO: le meilleur moyen d'emuler ca est de retirer ce if, de laisser writeObjectAttributeMemory gérer l'écriture du FF (mais faire attention car en sprite evaluation ca n'ecrit pas) et avoir une methode pour incrementer oamAddress a la place de ++_oamAddress qui gérera l'incrementation par 1 ou par 4 : NON car ca ecrit aussi en sprite evaluation et il faut faire attention au pixel pair
+         // TODO: le meilleur moyen d'émuler ca et d'emuler les io en general c'est d'avoir les io qui sont actifs pour 3 cycles PPU ! car un cycle CPU qui lance un io prend 3 cycles PPU, il faudrait donc avoir dans les io des variables qui sont settées : io_ce qui vaut 3, et dès qu'on est dans le clock ici on regarde si io_ce > 0 et si oui on fait les operations io le temps que io_ce > 0 puis a la fin du clock if (io_ce > 0) --io_ce; (pendant le 1er cycle ca ne fait rien apparemment car dans visual2C02 io_ce est tjs a 1, puis il passe a 0 apres 8 cycles visual, donc 1 cycle PPU et il reste ainsi pour 15 cycles visual et le dernier cycle visual il repasse a 1)
+         return;
+         }*/
         
         // Write data to OAM
         writeObjectAttributeMemory(data);
@@ -236,7 +299,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TC
         _needIncrementOAMAddress = true;// TODO: normalement incrementOamAddress(); mais voir quand reseter _oamAddressIncrement (le mettre a 1)
     }
     // Scroll register
-    else if (address == 0x5) {
+    else if (_ioAddress == 0x5) {
         // First write
         if (!_writeToggle) {
             // Set scroll X on temporary address
@@ -253,7 +316,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TC
         _writeToggle = !_writeToggle;
     }
     // Address register
-    else if (address == 0x6) {
+    else if (_ioAddress == 0x6) {
         // First write
         if (!_writeToggle) {
             // Set high byte address on temporary address
@@ -275,7 +338,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TC
         _writeToggle = !_writeToggle;
     }
     // Data register
-    else if (address == 0x7) {
+    else if (_ioAddress == 0x7) {
         // If palette index address, write to it
         if ((_address & 0x3FFF) > 0x3EFF) {
             // Write to palette memory
@@ -426,29 +489,9 @@ bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInSecondOAMClea
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processLine() {// TODO: a la place de faire ca (checker le current scanline), utiliser les methodes isInXXXPhase !!! : le meilleur serait d'avoir une methode qui rafraichirerait tous les signaux en fonction du currentPixel, du currentScanline et d'autres choses et ensuite (ou avant le rafraichissement des signaux ?) appeler la methode qui gere les io et qui elle aussi modifierai certains signaux et ensuite faire les operations d'apres ces signaux
+    
     // Idle on first pixel
     if (_currentPixel == 0) {
-        
-        // For the VBlank frame timing (the case when reading $2002 one PPU cycle before vblank flag is set)
-        // See : https://wiki.nesdev.com/w/index.php/PPU_frame_timing
-        if (_currentScanline == (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline)) {    // TOOD: il reste un probleme : comme les ioRead/Write ne dependent pas du PPU cycle (alors que je devrai le faire ainsi) si le cycle CPU du read $2002 est appelé avant le cycle PPU ici (scanline 241, pixel 0) ca va remettre ce flag a true et donc le flag vblank sera mis a true au cycle PPU d'apres alors qu'il ne le devrai pas !!, ca ne marche que si ce cycle PPU (scanline 241, pixel 0) est appelé avant le cycle CPU read $2002 (ainsi le flag est mis a false et au cycle PPU d'apres le vblank flag reste a false) : si c'est bon normalement car ca fait 2 cycles PPU avant le set vblank et donc il ne doit plus avoir d'effet (car j'apelle le clock du CPU apres celui du PPU dans NES::clock)
-            _vBlankStartedLatch = true;
-        }
-        
-        // Clear flags if necessary
-        if (_currentScanline == 261) {
-            //_statusSpriteOverflow = false;  // TODO: les 5 tests passent du sprite overflow si je le reset en pixel 0 !!!
-            //_statusSprite0Hit = false;
-            //_statusVBlankStarted = false;
-            
-            // Check for interrupt
-            //checkInterrupt();
-            
-            // Signal which is set when reset line is low and reset at the end of VBlank
-            // See https://wiki.nesdev.com/w/index.php/PPU_power_up_state
-            //_resetRequested = !_resetLine;
-        }
-        
         return;
     }
     
@@ -472,7 +515,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processLine() {//
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateState() {
-    // TODO: voir pour les IO aussi ici (ou dans une autre methode updateIO())
+    // Update status VBlank flag
+    _statusVBlankStarted = _vBlankStartedLatch;
     
     // Increment OAM address if necessary
     if (_needIncrementOAMAddress) {     // TODO: voir si laisser ici ou mettre ca dans le clock (vu qu'il est appelée par rapport au signal actif, pareil pour celui du bas (second OAM address)
@@ -508,11 +552,11 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processRenderLine
         processSprites(dataType);
     }
     
-    // Update sprite shift registers
-    updateSpriteShiftRegisters();
-    
     // Process pixel
     processPixel();
+    
+    // Update sprite shift registers
+    updateSpriteShiftRegisters();
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -522,12 +566,12 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPostRender
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processVBlankLine() {
-    // Set VBlank flag if necessary
     if ((_currentScanline == (Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline)) && (_currentPixel == 1)) {
-        _statusVBlankStarted = _vBlankStartedLatch;
+        // Set VBlank flag
+        _vBlankStartedLatch = true;
         
         // Check for interrupt
-        checkInterrupt();
+        //checkInterrupt();
         
         // Notify hardware that the VBlank has started
         _graphicHardware.notifyVBlankStarted();
@@ -540,14 +584,17 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPreRenderL
     if (_currentPixel == 1) {
         _statusSpriteOverflow = false;
         _statusSprite0Hit = false;
-        _statusVBlankStarted = false;
+        _vBlankStartedLatch = false;
         
         // Check for interrupt
-        checkInterrupt();
+        //checkInterrupt();
         
         // Signal which is set when reset line is low and reset at the end of VBlank
         // See https://wiki.nesdev.com/w/index.php/PPU_power_up_state
         _resetRequested = !_resetLine;
+    }
+    else if (_currentPixel == 339) {
+        _skipClock = (_oddFrame & isRenderingEnabled());    // TODO: j'ai mis ca pour passer la rom de test (car en fait le skip se fait de 339 a 0 et non de 340 a 1 comme je le fait
     }
     
     // Only VRAM access if rendering is enabled
@@ -809,6 +856,11 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clearSecondOAMAnd
             _oamData = _secondObjectAttributeMemory[_secondOAMAddress];
         }
         
+        // Status sprite overflow is set on the read cycle if overflow found on the previous write cycle
+        if (_spriteOverflow) {//TODO: voir si dans isInReadScanline ou non (spriteOverflow ne peut etre set que quand il est en render scanline mais imaginons qu'on desactive le rendu exactement a ce cycle, est ce que le status flag va etre set quand meme ?
+            _statusSpriteOverflow = true;
+        }
+        
         return;
     }
     
@@ -829,7 +881,6 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clearSecondOAMAnd
             // Check for sprite overflow
             if (_secondOAMAddressOverflow) {    // TODO: il y a un bug dans le 2C02 qui incremente _oamAddress de 5 si Y n'est pas dans le range, voir si ca incremente aussi _secondOAMAddress de 1 !!! : non _secondOAMAddress ne bouge pas et si le byte checké apres est dans le range ca incremente de 1 et une fois tout lu, _oamAddress n'incremente pas la derniere fois (pour garder la valeur alignée avec 4) pour etre plus précis il aligne la valeur incrémentée avec 4 et ne fait pas l'incrémentation de 4 apres. -> Ensuite il incremente de 4 a chaque fois (que le byte soit dans le range ou non)
                 // TODO: si le byte checké par après n'est pas dans le range, ca réincremente de 5 !!!
-                _statusSpriteOverflow = true;
                 _spriteOverflow = true;
             }
             
@@ -987,8 +1038,8 @@ uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getDataForFetc
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateSpriteShiftRegisters() {
-    // On pixel 1 and after 257 there is no shift registers operations (to be right the real shift period is 1-256 and not 2-257 but it start using the shift informations on pixel 2)
-    if ((_currentPixel < 2) || (_currentPixel > (Constants::visiblePixelsPerScanlineCount + 1))) {
+    // The sprite shift period is 1-256
+    if (_currentPixel > Constants::visiblePixelsPerScanlineCount) {
         return;
     }
     
@@ -1158,12 +1209,12 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementPosition
         return;
     }
     
+    // If start a new odd frame, skip first cycle
+    _currentPixel += _skipClock;//(_oddFrame & isRenderingEnabled());     // TODO: voir si c bon
+    
     // Start a new frame, reset scanline counter and toggle even/odd frame
     _currentScanline = 0;
-    _oddFrame = !_oddFrame;
-    
-    // If start a new odd frame, skip first cycle
-    _currentPixel += (_oddFrame & isRenderingEnabled());     // TODO: voir si c bon
+    _oddFrame = !_oddFrame; // TODO: dans les signaux de visual2C02, il est dit que c'est en 261 pixel 1 que ca agit (le meme signal qui reset les flags)
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -1189,7 +1240,7 @@ uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::calculatePixel
     }
     
     // No pixel has priority, use BG ($3F00)
-    return _extBackgroundIndex;  // TODO: voir si ok + SI le spPixel ou bgPixel == 0 (si la palette = 0) est ce qu'on retourne 0 ou bien _extBackgroundIndex ??? si on doi retourner _extBackgroundIndex, alors remettre 0 a la place de _extBackgroundIndex partout et dans getColorFromPalette checker si l'index 0 et si oui utiliser l'index _extBackgroundIndex
+    return _extBackgroundIndex;  // TODO: voir si ok + SI le spPixel ou bgPixel == 0 (si la palette = 0) est ce qu'on retourne 0 ou bien _extBackgroundIndex ??? si on doit retourner _extBackgroundIndex, alors remettre 0 a la place de _extBackgroundIndex partout et dans getColorFromPalette checker si l'index 0 et si oui utiliser l'index _extBackgroundIndex
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -1213,7 +1264,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkSprite0Hit(u
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkInterrupt() {
     // See https://wiki.nesdev.com/w/index.php/NMI
-    _interruptHardware.interrupt(!(_statusVBlankStarted && _controlGenerateNmiForVBlank));
+    _interruptHardware.interrupt(!(_vBlankStartedLatch && _controlGenerateNmiForVBlank));
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>

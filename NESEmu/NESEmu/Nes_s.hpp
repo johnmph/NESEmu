@@ -54,9 +54,16 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::se
     // Set address
     _address = address;
 }
-
+/*
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
 uint8_t Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::getDataBus() const {
+    // Get data with possibly open data bus latch on some or all lines
+    // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
+    return _data;
+}*/
+
+template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
+uint8_t &Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::getDataBus() {
     // Get data with possibly open data bus latch on some or all lines
     // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
     return _data;
@@ -88,7 +95,7 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::pe
         _nes._ppu.readPerformed(*this);
     }
     // Cartridge
-    else if (_address >= 0x4020) {   // TODO: est ce qu'un mapper peut gerer les address < 0x4020 non gérée par le CPU ($4000-$4014 or $4018-$4020) ??
+    else if (_address >= 0x4020) {   // TODO: est ce qu'un mapper peut gerer les address < 0x4020 non gérée par le CPU ($4000-$4014 or $4018-$4020) ?? voir http://forums.nesdev.com/viewtopic.php?f=9&t=14421
         // Read from cartridge
         _nes._cartridgeHardware.cpuReadPerformed(*this);
     }
@@ -215,9 +222,46 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::powerUp() {
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
+void Nes<EModel, TCartridgeHardware, TGraphicHardware>::clockFull() {   // TODO: gros gain de FPS ainsi !!!, surement rajouter clock (avec un template parameter pour choisir si PPU ou CPU en 1er s'il tombe en meme temps)
+    /*_cpu.clock(false);
+    _ppu.clock();
+    
+    // Update controllers
+    for (int i = 0; i < 2; ++i) {
+        _controllerPorts[i]->out(_cpu.getOutSignal() & 0x1);        // TODO: voir pour les performances ici
+    }
+    
+    _cartridgeHardware.clock(_ppuHardwareInterface, _cpuHardwareInterface);
+    _cpu.clockPhi1();
+    
+    _ppu.clock();
+    
+    _cpu.clockPhi2();
+    
+    _ppu.clock();
+    */
+    
+    // Update controllers
+    for (int i = 0; i < 2; ++i) {
+        _controllerPorts[i]->out(_cpu.getOutSignal() & 0x1);        // TODO: voir pour les performances ici
+    }
+    
+    _cartridgeHardware.clock(_ppuHardwareInterface, _cpuHardwareInterface);
+    _cpu.clockPhi1();
+    
+    _ppu.clock();
+    
+    _ppu.clock();
+    
+    _cpu.clockPhi2();
+    
+    _ppu.clock();
+}
+
+template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
 void Nes<EModel, TCartridgeHardware, TGraphicHardware>::clock() {
     static bool f = false;
-    static int cpuCycle = 0;
+    //static int cpuCycle = 0;
     
     
     // Perform a ppu clock if necessary
@@ -239,7 +283,7 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::clock() {
             _cpu.clockPhi1();
         } else {
             _cpu.clockPhi2();
-            ++cpuCycle;
+            //++cpuCycle;
         }
         _currentClockForCpu = Constants::cpuMasterClockDivider;
         f = !f;

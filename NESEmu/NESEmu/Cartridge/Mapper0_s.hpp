@@ -45,7 +45,7 @@ void Mapper0<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::cpuReadPerformed(TCo
         }
     }
     // Prg-Rom
-    else if (address >= 0x8000) {   // TODO: voir si nécessaire la condition (est ce qu'on peut etre en dessous de 0x6000 dans cette methode ? : oui nécessaire !!!
+    else if (address >= 0x8000) {   // TODO: voir si nécessaire la condition (est ce qu'on peut etre en dessous de 0x6000 dans cette methode ? : oui nécessaire !!! voir http://forums.nesdev.com/viewtopic.php?f=9&t=14421
         // Read Prg-Rom with possible mirrored address
         connectedBus.setDataBus(_prgRom[address & ((IPrgRomSizeInKb * 1024) - 1)]);
     }

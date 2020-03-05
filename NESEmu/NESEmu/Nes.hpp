@@ -35,6 +35,7 @@ namespace NESEmu {
         void powerUp();
         
         void clock();
+        void clockFull();
         
         void reset(bool high);
         
@@ -48,7 +49,8 @@ namespace NESEmu {
             uint16_t getAddressBus() const;
             void setAddressBus(uint16_t address);
             
-            uint8_t getDataBus() const;
+            //uint8_t getDataBus() const;
+            uint8_t &getDataBus();
             void setDataBus(uint8_t data);
             void setDataBus(uint8_t data, uint8_t mask);
             
