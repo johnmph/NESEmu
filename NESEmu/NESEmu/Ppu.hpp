@@ -64,20 +64,8 @@ namespace NESEmu { namespace Ppu {
             uint8_t xPosition;
         };
         
-        void checkReset();
         
-        void processIO();
-        void ioRead();
-        void ioWrite();
-        uint16_t _ioAddress;
-        uint8_t *_ioData;           // TODO: trouver un moyen pour se passer de ca !!!
-        bool _ioReadMode;
-        uint8_t _ioPending;
-        
-        // VRAM access
-        uint8_t read();
-        void write(uint8_t data);
-        
+        // Helper
         bool isInRenderScanline() const;
         bool isInPostRenderScanline() const;
         bool isInVBlankScanline() const;
@@ -86,22 +74,26 @@ namespace NESEmu { namespace Ppu {
         bool isInRenderingPeriod() const;
         bool isInSecondOAMClearPeriod() const;
         
-        void processLine();
+        // Main
+        void processRendering();
+        void processIO();
+        void checkInterrupt();
         void updateState();
+        void checkReset();
         
+        // Rendering
         void processRenderLine();
         void processPostRenderLine();
         void processVBlankLine();
         void processPreRenderLine();
         
-        void processPixel();
-        
+        // Tiles
         void processTiles(uint8_t dataType);
-        void processSprites(uint8_t dataType);
-        
         void fetchTiles(uint8_t dataType);
         void updateTileShiftRegisters(uint8_t dataType);
         
+        // Sprites
+        void processSprites(uint8_t dataType);
         void startClearSecondOAM();
         void clearSecondOAM();
         void startEvaluateSprites();
@@ -113,27 +105,35 @@ namespace NESEmu { namespace Ppu {
         uint8_t getDataForFetchSprites(uint8_t spriteNumber);
         void updateSpriteShiftRegisters();
         
+        // Pixel rendering
+        void processPixel();
+        uint8_t calculatePixel(uint8_t pixelNumber);
+        void checkSprite0Hit(uint8_t bgPixel, uint8_t spPixel);
+        
+        // State
         void incrementXOnAddress();
         void incrementYOnAddress();
         void copyXOnAddress();
         void copyYOnAddress();
-        
         void incrementOAMAddress();
         void resetSecondOAMAddress();
         void incrementSecondOAMAddress();
-        
         void incrementPositionCounters();
         
-        uint8_t calculatePixel(uint8_t pixelNumber);
-        void checkSprite0Hit(uint8_t bgPixel, uint8_t spPixel);
+        // IO
+        void ioRead();
+        void ioWrite();
         
+        // External memory
+        uint8_t read();
+        void write(uint8_t data);
+        
+        // Internal memory
         void readObjectAttributeMemory();
         void writeObjectAttributeMemory(uint8_t data);
-        
         uint8_t readPaletteIndexMemory(uint8_t address);
         void writePaletteIndexMemory(uint8_t address, uint8_t data);
         
-        void checkInterrupt();
         
         // OAM (64 x 4 bytes of sprites informations)
         std::vector<uint8_t> _objectAttributeMemory;
@@ -237,9 +237,14 @@ namespace NESEmu { namespace Ppu {
         // See https://wiki.nesdev.com/w/index.php/PPU_registers#PPUDATA
         uint8_t _dataReadBuffer;
         
-        bool _skipClock;
+        bool _needToSkipCycle;
         
         bool _vBlankStartedLatch;
+        
+        uint16_t _ioAddress;
+        uint8_t *_ioData;           // TODO: trouver un moyen pour se passer de ca !!!
+        bool _ioReadMode;
+        uint8_t _ioPending;
     };
     
     #include "Ppu_s.hpp"
