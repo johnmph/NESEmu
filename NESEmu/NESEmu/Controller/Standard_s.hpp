@@ -20,7 +20,7 @@ void Standard<TControllerHardware>::clock(uint8_t &data) {
     //update();//TODO: normalement pas besoin car ca se fait dans out mais voir si ok et si moyen d'optimiser, il faut des roms tests pour les controls
     
     // Get shifted bit out, it's for the D0 line, D1-D4 lines are unused here, they are driven high by pull-up resistor
-    data = (data & ~0x1) | 0x1E | (_buttonsShiftRegister & 0x1);
+    data = (data & 0xFE) | 0x1E | (_buttonsShiftRegister & 0x1);
     
     // Shift register
     _buttonsShiftRegister >>= 1;

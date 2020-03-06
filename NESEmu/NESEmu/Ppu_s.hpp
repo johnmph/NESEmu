@@ -9,11 +9,6 @@
 #ifndef NESEmu_Ppu_s_hpp
 #define NESEmu_Ppu_s_hpp
 
-// TODO: constantes a la place des valeurs ?
-// TODO: par apres uniformiser les operations logiques et binaires (tester si performance)
-// TODO: par apres, uniformiser les tests <= ou < et > ou >=
-// TODO: utiliser ~ sur les autres calculs aussi ?
-
 
 template <>
 struct ModelConstants<Model::Ricoh2C02> {//TODO: + voir overscan (normalement c'est 224 scanline la frame visible en NTSC)
@@ -107,6 +102,28 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::reset(bool high) 
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::exts(uint8_t data) {
+    // Don't get anything if PPU is in master mode
+    if (_controlMasterSlaveSelect) {
+        return;
+    }
+    
+    // Save exts indexed color
+    _extBackgroundIndex = data;
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getExts(uint8_t &data) const {
+    // Don't drive anything if PPU is in slave mode
+    if (!_controlMasterSlaveSelect) {
+        return;
+    }
+    
+    // Set data with current pixel index
+    data = _currentPixelIndex;
+}
+
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 template <class TConnectedBus>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readPerformed(TConnectedBus &connectedBus) {
     // Get bus
@@ -138,28 +155,6 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TC
     _ioPending = 1;
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::exts(uint8_t data) {
-    // Don't get anything if PPU is in master mode
-    if (_controlMasterSlaveSelect) {
-        return;
-    }
-    
-    // Save exts indexed color
-    _extBackgroundIndex = data;
-}
-
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getExts(uint8_t &data) const {
-    // Don't drive anything if PPU is in slave mode
-    if (!_controlMasterSlaveSelect) {
-        return;
-    }
-    
-    // Set data with current pixel index
-    data = _currentPixelIndex;
-}
-
 
 // *** Helper ***
 
@@ -185,7 +180,7 @@ bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInPreRenderScan
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isRenderingEnabled() const {
-    return _maskShowBackground | _maskShowSprites;
+    return _maskShowBackground || _maskShowSprites;
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -204,7 +199,7 @@ bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInSecondOAMClea
 // *** Main ***
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processRendering() {// TODO: a la place de faire ca (checker le current scanline), utiliser les methodes isInXXXPhase !!! : le meilleur serait d'avoir une methode qui rafraichirerait tous les signaux en fonction du currentPixel, du currentScanline et d'autres choses et ensuite (ou avant le rafraichissement des signaux ?) appeler la methode qui gere les io et qui elle aussi modifierai certains signaux et ensuite faire les operations d'apres ces signaux
+void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processRendering() {// TODO: a la place de faire ca (checker le current scanline), utiliser les methodes isInXXXPhase !!! : le meilleur serait d'avoir une methode qui rafraichirait tous les signaux en fonction du currentPixel, du currentScanline et d'autres choses et ensuite (ou avant le rafraichissement des signaux ?) appeler la methode qui gere les io et qui elle aussi modifierai certains signaux et ensuite faire les operations d'apres ces signaux
     
     // Exit if on idle pixel
     if (_currentPixel == Constants::idlePixel) {
@@ -380,7 +375,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPreRenderL
     }
     // On odd frame, PPU skip scanline 261 pixel 340 cycle, here for conveniency we skip scanline 0 pixel 0 (because it's an idle cycle, instead of 261 340 which fetch unused NT) but to be accurate we need to save the real skip cycle state because disabling the rendering exactly on this cycle disable the skip
     else if (_currentPixel == (Constants::totalPixelsPerScanlineCount - 2)) {//TODO: 338 si le iowrite est avant processRendering
-        _needToSkipCycle = (_oddFrame & isRenderingEnabled());
+        _needToSkipCycle = _oddFrame && isRenderingEnabled();
     }
     
     // Only VRAM access if rendering is enabled
@@ -408,18 +403,13 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPreRenderL
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processTiles(uint8_t dataType) {
-    // Exit if we are no more in process tiles period (+ 1 extra pixel for the update tile shift registers at 257)
-    if ((_currentPixel >= (Constants::firstSpritesFetchPeriodPixel + 1)) && (_currentPixel <= Constants::lastSpritesFetchPeriodPixel)) {
-        return;
-    }
-    
-    // Fetch tiles
-    if (_currentPixel != Constants::firstSpritesFetchPeriodPixel) {
+    // Fetch tiles if on the period (no need to check for first tile fetch first period and last tile fetch second period because there are in the boundary of _currentPixel)
+    if ((_currentPixel <= Constants::lastTileFetchFirstPeriodPixel) || (_currentPixel >= Constants::firstTileFetchSecondPeriodPixel)) {
         fetchTiles(dataType);
     }
     
-    // On pixel 1 and 321 (and after 337) there is no shift registers operations
-    if ((_currentPixel >= 2) && (_currentPixel != 321) && (_currentPixel <= 337)) {
+    // Period of tile shift registers is the same that process tiles period but 1 cycle later except that it stops after first unused NT fetch
+    if (((_currentPixel >= (Constants::firstTileFetchFirstPeriodPixel + 1)) && (_currentPixel <= (Constants::lastTileFetchFirstPeriodPixel + 1))) || ((_currentPixel >= (Constants::firstTileFetchSecondPeriodPixel + 1)) && (_currentPixel <= Constants::firstUnusedNTFetchPeriodPixel))) {
         updateTileShiftRegisters(dataType);
     }
 }
@@ -677,7 +667,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::startFetchSprites
     // Reset second OAM address
     resetSecondOAMAddress();
     
-    _sprite0Active = false;//TODO: voir si ainsi dans Visual2C02 car grace a ca, je reproduis le probleme du non sprite hit en 255
+    // This signal is reset on pixel 1 in Visual2C02 but here we using it differently so we reset it here to reproduce the sprite 0 hit bug at 255
+    _sprite0Active = false;
     
     // Copy X on address
     copyXOnAddress();
@@ -833,12 +824,12 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateSpriteShift
     }
     
     // If no sprite found
-    if (!spriteFound) {// TODO: peut etre que tout ce reset se fait en startFetchSprites ou pendant tout le fetchSprites? : dans Visual2C02 le signal sprite0Active est reseté en pixel 1 !!!
+    if (!spriteFound) {
         // Initialize sprite data with 0
         _spLowTileBitOut = 0;
         _spHighTileBitOut = 0;
         _spAttributeLatchActive = 0;
-        _sprite0Active = false;
+        //_sprite0Active = false;   // TODO: je le reset en 257 pour avoir le bug du sprite 0 hit en 255, le reste doit etre reset ici car il est possible de ne pas les mettre a 0 si pas de sprite trouvé dans le cas ou il y avait des sprites trouvés avant
     }
 }
 
@@ -879,7 +870,7 @@ uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::calculatePixel
     uint8_t bgPixel = (_maskShowBackground && (_maskShowBackgroundFirst8px || (pixelNumber >= 8))) ? ((_bgHighTileBitOut << 1) | _bgLowTileBitOut) : 0x0;  // TODO: on peut simplifier ce test en ayant une variable qui est le pixel min a commencer a afficher qui sera 0 si showBackground == true et 256 si showBackground = false et 8 si showBackground == true mais maskShowBackgroundFirst8px == false : cette variable devra etre initialisée dans le write du mask register car c'est lui qui contient les données
     
     // Get sprite pixel
-    uint8_t spPixel = (_maskShowSprites && (_maskShowSpritesFirst8px || (pixelNumber >= 8))) ? ((_spHighTileBitOut << 1) |_spLowTileBitOut) : 0x0; // TODO: pareil qu'au dessus
+    uint8_t spPixel = (_maskShowSprites && (_maskShowSpritesFirst8px || (pixelNumber >= 8))) ? ((_spHighTileBitOut << 1) | _spLowTileBitOut) : 0x0; // TODO: pareil qu'au dessus
     
     // Check for sprite 0 hit
     checkSprite0Hit(bgPixel, spPixel);
@@ -906,11 +897,6 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkSprite0Hit(u
         return;
     }
     
-    // TODO: n'est pas activé au pixel 255 !!! a voir : https://wiki.nesdev.com/w/index.php/PPU_OAM
-    /*if (_currentPixel == 257) {// TODO: nécessaire pour la rom 06-right_edge.nes mais voir si pas en rapport avec le fait qu'en 257 on commence a copier _sprite0OnCurrentScanline avec _sprite0OnNextScanline
-        return;
-    }*/
-    
     // A sprite 0 hit occurs if both pixels are non zero, _sprite0Active assume that current sprite pixel is from sprite 0 and is not transparent but we still need spPixel because spPixel take care of the mask register (show (8 first pixels) sprites)
     if ((bgPixel != 0x0) && (spPixel != 0x0)) {
         _statusSprite0Hit = true;
@@ -922,7 +908,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkSprite0Hit(u
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementXOnAddress() {
-    _address = ((_address & ~0x1F) | ((_address + 1) & 0x1F)) ^ ((((_address & 0x1F) + 1) & 0x20) << 5);
+    _address = ((_address & 0x7FE0) | ((_address + 1) & 0x1F)) ^ ((((_address & 0x1F) + 1) & 0x20) << 5);
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -954,7 +940,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementYOnAddre
     }
     
     // Correct address
-    _address = (_address & ~0x73E0) | coarseYScrollInAddress;
+    _address = (_address & 0x0C1F) | coarseYScrollInAddress;
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
@@ -1040,7 +1026,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementPosition
         return;
     }
     
-    // If start a new odd frame, skip first cycle
+    // If start a new odd frame, skip first cycle (safe to convert bool to int, false = 0, true = 1)
     _currentPixel += _needToSkipCycle;
     
     // Start a new frame, reset scanline counter
@@ -1134,7 +1120,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite() {
     
     // Control register
     if (address == IORegisters::Control) {
-        _temporaryAddress = (_temporaryAddress & 0x73FF) | (data & 0x3) << 10;
+        _temporaryAddress = (_temporaryAddress & 0x73FF) | ((data & 0x3) << 10);
         _controlAddressIncrementPerCpuAccess = ((data & 0x4) != 0x0) ? 32 : 1;//((data & 0x4) << 3) | (((data & 0x4) >> 2) ^ 0x1);
         _controlSpritePatternTableAddress = (data & 0x8) << 9;
         _controlBackgroundPatternTableAddress = (data & 0x10) << 8;
@@ -1246,6 +1232,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite() {
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 template <class TConnectedBus>
 TConnectedBus &Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioGetBus() const {
+    // Safe conversion because it is called by ioRead / ioWrite which contains the correct TConnectedBus type (because their saved method address are for this type)
     return *static_cast<TConnectedBus *>(_ioBus);
 }
 

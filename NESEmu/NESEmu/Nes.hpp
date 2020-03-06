@@ -37,7 +37,7 @@ namespace NESEmu {
         void clock();
         void clockFull();
         
-        void reset(bool high);
+        void reset(bool high);  // TODO: a la place d'avoir ca, peut etre avoir un template parameter TResetHardware qui aura une methode qui retourne un bool pour le reset (pour mieux decoupler ?), a voir (ca simule le fait d'avoir le bouton reset sur la Nes), ou peut etre laisser ainsi
         
         void connectController(unsigned int portNumber, std::unique_ptr<Controller::Interface> controller);
         

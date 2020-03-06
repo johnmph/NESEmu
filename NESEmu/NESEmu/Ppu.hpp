@@ -11,6 +11,7 @@
 
 // See https://wiki.nesdev.com/w/index.php/PPU
 // See https://wiki.nesdev.com/w/index.php/PPU_pin_out_and_signal_description
+// See http://www.qmtpro.com/~nes/chipimages/visual2c02
 // For palette generation, see https://bisqwit.iki.fi/utils/nespalette.php and http://drag.wootest.net/misc/palgen.html
 
 #include <cstdint>
@@ -54,6 +55,12 @@ namespace NESEmu { namespace Ppu {
         
         static constexpr unsigned int idlePixel = 0;
         static constexpr unsigned int firstActivePixel = 1;
+        
+        static constexpr unsigned int firstTileFetchFirstPeriodPixel = firstActivePixel;
+        static constexpr unsigned int lastTileFetchFirstPeriodPixel = 256;
+        
+        static constexpr unsigned int firstTileFetchSecondPeriodPixel = 321;
+        static constexpr unsigned int lastTileFetchSecondPeriodPixel = 340;
         
         static constexpr unsigned int firstSecondClearOamPeriodPixel = firstActivePixel;
         static constexpr unsigned int lastSecondClearOamPeriodPixel = 64;
@@ -105,11 +112,18 @@ namespace NESEmu { namespace Ppu {
         
         Chip(TBus &bus, TInterruptHardware &interruptHardware, TGraphicHardware &graphicHardware);
         
+        // Power pins
         void powerUp();
         
+        // Clock pin
         void clock();
         
+        // Reset pin
         void reset(bool high);
+        
+        // Ext pins
+        void exts(uint8_t data);
+        void getExts(uint8_t &data) const;
         
         // IO access
         template <class TConnectedBus>
@@ -117,10 +131,6 @@ namespace NESEmu { namespace Ppu {
         
         template <class TConnectedBus>
         void writePerformed(TConnectedBus &connectedBus);
-        
-        // Ext pins
-        void exts(uint8_t data);
-        void getExts(uint8_t &data) const;
         
     private:
         
