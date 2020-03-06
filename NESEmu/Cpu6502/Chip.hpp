@@ -123,7 +123,7 @@ namespace Cpu6502 {
         
         using Flag = _Detail::FlagsHelper::Flag;
         
-        enum class ReadWrite : bool {
+        enum class ReadWrite : bool {   // TODO: surement retirer le class pour eviter les static_cast
             Read = true,
             Write = false
         };

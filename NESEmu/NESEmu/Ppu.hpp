@@ -26,7 +26,79 @@ namespace NESEmu { namespace Ppu {
     };
     
     template <Model EModel>
-    struct Constants;
+    struct ModelConstants;
+    
+    template <Model EModel>
+    struct Constants {
+        static constexpr unsigned int visiblePixelsPerScanlineCount = ModelConstants<EModel>::visiblePixelsPerScanlineCount;
+        static constexpr unsigned int hBlankLengthInPixel = ModelConstants<EModel>::hBlankLengthInPixel;
+        static constexpr unsigned int visibleScanlinePerFrameCount = ModelConstants<EModel>::visibleScanlinePerFrameCount;
+        static constexpr unsigned int postRenderLengthInScanline = ModelConstants<EModel>::postRenderLengthInScanline;
+        static constexpr unsigned int vBlankLengthInScanline = ModelConstants<EModel>::vBlankLengthInScanline;
+        static constexpr unsigned int preRenderLengthInScanline = ModelConstants<EModel>::preRenderLengthInScanline;
+        
+        static constexpr unsigned int firstRenderPeriodScanline = 0;
+        static constexpr unsigned int lastRenderPeriodScanline = visibleScanlinePerFrameCount - 1;
+        
+        static constexpr unsigned int firstPostRenderPeriodScanline = lastRenderPeriodScanline + 1;
+        static constexpr unsigned int lastPostRenderPeriodScanline = (firstPostRenderPeriodScanline + postRenderLengthInScanline) - 1;
+        
+        static constexpr unsigned int firstVBlankPeriodScanline = lastPostRenderPeriodScanline + 1;
+        static constexpr unsigned int lastVBlankPeriodScanline = (firstVBlankPeriodScanline + vBlankLengthInScanline) - 1;
+        
+        static constexpr unsigned int firstPreRenderPeriodScanline = lastVBlankPeriodScanline + 1;
+        static constexpr unsigned int lastPreRenderPeriodScanline = (firstPreRenderPeriodScanline + preRenderLengthInScanline) - 1;
+        
+        static constexpr unsigned int totalPixelsPerScanlineCount = visiblePixelsPerScanlineCount + hBlankLengthInPixel;
+        static constexpr unsigned int totalScanlinePerFrameCount = lastPreRenderPeriodScanline + 1;
+        
+        static constexpr unsigned int idlePixel = 0;
+        static constexpr unsigned int firstActivePixel = 1;
+        
+        static constexpr unsigned int firstSecondClearOamPeriodPixel = firstActivePixel;
+        static constexpr unsigned int lastSecondClearOamPeriodPixel = 64;
+        
+        static constexpr unsigned int firstEvaluateSpritesPeriodPixel = lastSecondClearOamPeriodPixel + 1;
+        static constexpr unsigned int lastEvaluateSpritesPeriodPixel = 256;
+        
+        static constexpr unsigned int firstSpritesFetchPeriodPixel = lastEvaluateSpritesPeriodPixel + 1;
+        static constexpr unsigned int lastSpritesFetchPeriodPixel = 320;
+        
+        static constexpr unsigned int firstProcessPixelPeriodPixel = 2;
+        static constexpr unsigned int lastProcessPixelPeriodPixel = 257;
+        
+        static constexpr unsigned int firstYCopyAddressPeriodPixel = 280;
+        static constexpr unsigned int lastYCopyAddressPeriodPixel = 304;
+        
+        static constexpr unsigned int firstUnusedNTFetchPeriodPixel = 337;
+        static constexpr unsigned int incrementYAddressPixel = 256;
+    };
+    
+    namespace IORegisters {
+        enum : uint8_t {
+            Control,
+            Mask,
+            Status,
+            OamAddress,
+            OamData,
+            Scroll,
+            Address,
+            Data
+        };
+    }
+    
+    namespace FetchStep {
+        enum : uint8_t {
+            HighTileByteReadData,
+            NTByteSetAddress,
+            NTByteReadData,
+            ATByteSetAddress,
+            ATByteReadData,
+            LowTileByteSetAddress,
+            LowTileByteReadData,
+            HighTileByteSetAddress,
+        };
+    }
     
     template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
     struct Chip {
@@ -52,17 +124,8 @@ namespace NESEmu { namespace Ppu {
         
     private:
         
+        // Constants
         using Constants = Constants<EModel>;
-        
-        static constexpr int totalPixelsPerScanlineCount = Constants::visiblePixelsPerScanlineCount + Constants::hBlankLengthInPixel;
-        static constexpr int totalScanlinePerFrameCount = Constants::visibleScanlinePerFrameCount + Constants::postRenderLengthInScanline + Constants::vBlankLengthInScanline;
-        
-        struct ObjectAttribute {    // TODO: voir si besoin, peut etre plutot un enum avec des indexs?
-            uint8_t yPosition;
-            uint8_t tileIndex;
-            uint8_t attributes;
-            uint8_t xPosition;
-        };
         
         
         // Helper
@@ -128,16 +191,16 @@ namespace NESEmu { namespace Ppu {
         void ioWrite();
         
         template <class TConnectedBus>
-        TConnectedBus &ioGetBus();//TODO : voir si const
+        TConnectedBus &ioGetBus() const;
         
         // External memory
-        uint8_t read();
-        void write(uint8_t data);
+        uint8_t read() const;
+        void write(uint8_t data) const;
         
         // Internal memory
-        void readObjectAttributeMemory();
+        void readObjectAttributeMemory();   // TODO: voir pour le mettre const mais alors il faut sortir _oamData de la, voir comment generaliser pour les read write en differentes periodes (clear , evaluation, fetch), io, rendering on off, ...
         void writeObjectAttributeMemory(uint8_t data);
-        uint8_t readPaletteIndexMemory(uint8_t address);
+        uint8_t readPaletteIndexMemory(uint8_t address) const;
         void writePaletteIndexMemory(uint8_t address, uint8_t data);
         
         
