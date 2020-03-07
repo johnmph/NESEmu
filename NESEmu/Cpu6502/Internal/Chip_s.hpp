@@ -207,7 +207,7 @@ void Chip<TConfiguration>::clockPhi1() {
     //_dataOutput = 0xFF;
     
     // If rdy is low, wait before perform next read cycle
-    if ((!_readyWaitRequested) || (_readWrite != static_cast<bool>(ReadWrite::Read))) {
+    if ((!_readyWaitRequested) || (_readWrite != ReadWrite::Read)) {
         // Execute current stage
         (this->*_currentInstruction)();
     }
@@ -302,22 +302,24 @@ bool Chip<TConfiguration>::getM2Signal() const {
 // Memory
 
 template <class TConfiguration>
-void Chip<TConfiguration>::fetchMemoryPhi1() {// TODO: voir pour tout remettre comme avant (sauf les interrupts) pour repasser les tests et faire les changement dans le 2A03 plutot (car c'est lui qui a son timing modifié et c'est lui qui en a besoin)
-    // Read data on dataBus if it is in read mode else set dataBus with last read value
-    if (_readWrite == static_cast<bool>(ReadWrite::Read)) {
-        //_bus.performRead();
-    } else {
-        _bus.setDataBus(_inputDataLatch);   // TODO: voir si ca n'a pas d'influence sur le open bus behaviour !!! (j'ai besoin de ca sinon les tests foirent)
+void Chip<TConfiguration>::fetchMemoryPhi1() {
+    // Read data on dataBus if it is in read mode
+    if (_readWrite == ReadWrite::Read) {
+        _bus.performRead();
+        
+        return;
     }
+    
+    // Set dataBus with last read value in it is in write mode
+    _bus.setDataBus(_inputDataLatch);
 }
 
 template <class TConfiguration>
 void Chip<TConfiguration>::fetchMemoryPhi2() {
     // dataBus is already filled with data since end of phi1, just put dataBus on internal registers
-    if (_readWrite == static_cast<bool>(ReadWrite::Read)) {
-        //_inputDataLatch = _bus.getDataBus();
-        //_predecode = _inputDataLatch;
-        _bus.performRead();
+    if (_readWrite == ReadWrite::Read) {
+        _inputDataLatch = _bus.getDataBus();
+        _predecode = _inputDataLatch;
         
         return;
     }
@@ -337,7 +339,7 @@ void Chip<TConfiguration>::readDataBus(uint8_t low, uint8_t high) {
     _bus.setAddressBus((_addressBusHigh << 8) | _addressBusLow);
     
     // Set R/W to read
-    _readWrite = static_cast<bool>(ReadWrite::Read);
+    _readWrite = ReadWrite::Read;
 }
 
 template <class TConfiguration>
@@ -354,7 +356,7 @@ void Chip<TConfiguration>::writeDataBus(uint8_t low, uint8_t high, uint8_t data)
     _dataOutput = data;
     
     // Set R/W to write (unless it's in reset)
-    _readWrite = static_cast<bool>((_resetRequested) ? ReadWrite::Read : ReadWrite::Write);
+    _readWrite = (_resetRequested) ? ReadWrite::Read : ReadWrite::Write;
 }
 
 // Program flow

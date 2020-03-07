@@ -117,16 +117,19 @@ namespace Cpu6502 {
     template <class TBus, bool BDecimalSupported = false>
     using ConfigurationPerformance = Configuration<false, false, TBus, BDecimalSupported>;
     
-    template <class TConfiguration>
-    struct Chip {
-        using Bus = typename TConfiguration::Bus;
-        
-        using Flag = _Detail::FlagsHelper::Flag;
-        
-        enum class ReadWrite : bool {   // TODO: surement retirer le class pour eviter les static_cast
+    namespace ReadWrite {
+        enum : bool {
             Read = true,
             Write = false
         };
+    }
+    
+    template <class TConfiguration>
+    struct Chip {
+        
+        using Bus = typename TConfiguration::Bus;
+        using Flag = _Detail::FlagsHelper::Flag;
+        
         
         Chip(Bus &bus);
         

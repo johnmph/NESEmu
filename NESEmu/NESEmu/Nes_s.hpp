@@ -95,7 +95,7 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::pe
         _nes._ppu.readPerformed(*this);
     }
     // Cartridge
-    else if (_address >= 0x4020) {   // TODO: est ce qu'un mapper peut gerer les address < 0x4020 non gérée par le CPU ($4000-$4014 or $4018-$4020) ?? voir http://forums.nesdev.com/viewtopic.php?f=9&t=14421
+    else if (_address >= 0x4020) {   // TODO: est ce qu'un mapper peut gerer les address < 0x4020 non gérée par le CPU ($4000-$4014 or $4018-$4020) ?? voir http://forums.nesdev.com/viewtopic.php?f=9&t=14421 : OUI voir le MMC5 et le comment ci dessous en write
         // Read from cartridge
         _nes._cartridgeHardware.cpuReadPerformed(*this);
     }
@@ -115,7 +115,7 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::pe
     }
     // I/O is managed internally by CPU, so it is guaranteed that no 0x4000 - 0x401F address are here
     // Cartridge
-    else {
+    else {  // TODO: pas tout a fait vrai, en fait le MMC5 monitor ce qui est lu/ecrit dans le PPU donc surement pas de else ici !!!
         // Write to cartridge
         _nes._cartridgeHardware.cpuWritePerformed(*this);
     }

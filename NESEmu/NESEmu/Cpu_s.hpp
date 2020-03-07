@@ -43,10 +43,8 @@ void Chip<EModel, TBus>::clock() {
 
 template <Model EModel, class TBus>
 void Chip<EModel, TBus>::clockPhi1() {//TODO: peut etre a la place d'avoir tout ce bordel pour le dma, avoir un bool isInDma et si true alors on effectue le dma (read ou write) sinon on appelle InternalCpu::clockPhi1(); : a voir car il faut prendre en compte les phi1 phi2 a avoir, les check interrupts, ...
-    if (InternalCpu::_readWrite == static_cast<bool>(InternalCpu::ReadWrite::Read)) {
-        InternalCpu::_inputDataLatch = getDataBus();
-        InternalCpu::_predecode = InternalCpu::_inputDataLatch;
-    }
+    // Fetch memory for phi1
+    fetchMemoryPhi1();
     
     // Check interrupts line (before phi1 begins)
     InternalCpu::checkNmi();
@@ -68,13 +66,10 @@ void Chip<EModel, TBus>::clockPhi1() {//TODO: peut etre a la place d'avoir tout 
     bool needToForceExecute = checkDmaPhi1();
     
     // If rdy is low, wait before perform next read cycle (or write cycle if sync) unless we force execute
-    if ((!this->_readyWaitRequested) || ((!this->_sync) && (this->_readWrite != static_cast<bool>(InternalCpu::ReadWrite::Read))) || needToForceExecute) {
+    if ((!this->_readyWaitRequested) || ((!this->_sync) && (this->_readWrite != Cpu6502::ReadWrite::Read)) || needToForceExecute) {
         // Execute current stage
         (this->*(this->_currentInstruction))();
     }
-    
-    // Fetch memory for phi1
-    InternalCpu::fetchMemoryPhi1();
 }
 
 template <Model EModel, class TBus>
@@ -99,7 +94,7 @@ void Chip<EModel, TBus>::clockPhi2() {
     if (needToWrite) {
         _bus.performWrite();//TODO: optimisation en mettant _bus devant pour eviter le decodage de l'adresse ici car le dma ecrit tjs en $2004
     } else {
-        InternalCpu::fetchMemoryPhi2();
+        fetchMemoryPhi2();
     }
 }
 
@@ -145,6 +140,33 @@ bool Chip<EModel, TBus>::getOe2Signal() const { // TODO: pareil qu'au dessus
 template <Model EModel, class TBus>
 bool Chip<EModel, TBus>::getM2Signal() const {
     return InternalCpu::getM2Signal();
+}
+
+template <Model EModel, class TBus>
+void Chip<EModel, TBus>::fetchMemoryPhi1() {
+    // dataBus is already filled with data since end of previous phi2, just put dataBus on internal registers
+    if (this->_readWrite == Cpu6502::ReadWrite::Read) {
+        this->_inputDataLatch = getDataBus();
+        this->_predecode = this->_inputDataLatch;
+        
+        return;
+    }
+    
+    //setDataBus(this->_inputDataLatch);   // TODO: voir si ca n'a pas d'influence sur le open bus behaviour !!! (j'ai besoin de ca sinon les tests foirent)
+}
+
+template <Model EModel, class TBus>
+void Chip<EModel, TBus>::fetchMemoryPhi2() {
+    // Read data on dataBus if it is in read mode
+    if (this->_readWrite == Cpu6502::ReadWrite::Read) {
+        performRead();
+        
+        return;
+    }
+    
+    // Write data to dataBus if it is in write mode
+    setDataBus(this->_dataOutput);
+    performWrite();
 }
 
 template <Model EModel, class TBus>
@@ -264,13 +286,13 @@ bool Chip<EModel, TBus>::checkDmaPhi1() {
         
         // Read from dmaAddress (only inputDataLatch / predecode / RW from 6502 is affected)
         _bus.setAddressBus((_dmaAddress << 8) | (256 - _dmaCount));
-        this->_readWrite = static_cast<bool>(InternalCpu::ReadWrite::Read);
+        this->_readWrite = Cpu6502::ReadWrite::Read;
     }
     // If DMA is in write phase
     else {
         // Write to PPU (only RW from 6502 is affected)
         _bus.setAddressBus(0x2004);
-        this->_readWrite = static_cast<bool>(InternalCpu::ReadWrite::Write);
+        this->_readWrite = Cpu6502::ReadWrite::Write;
         
         // One byte copied
         --_dmaCount;
@@ -284,7 +306,7 @@ bool Chip<EModel, TBus>::checkDmaPhi1() {
 template <Model EModel, class TBus>
 bool Chip<EModel, TBus>::checkDmaPhi2() {
     // Need to write if DMA started and begin to read/write and in write mode
-    return (_dmaStarted && (_dmaCount <= 256) && (this->_readWrite == static_cast<bool>(InternalCpu::ReadWrite::Write)));
+    return (_dmaStarted && (_dmaCount <= 256) && (this->_readWrite == Cpu6502::ReadWrite::Write));
 }
 
 template <Model EModel, class TBus>
@@ -307,7 +329,7 @@ template <Model EModel, class TBus>
 void Chip<EModel, TBus>::stopDma() {
     // Restore CPU state
     _bus.setAddressBus((this->_addressBusHigh << 8) | this->_addressBusLow);
-    this->_readWrite = static_cast<bool>(InternalCpu::ReadWrite::Read);
+    this->_readWrite = Cpu6502::ReadWrite::Read;
     
     // Reenable CPU
     InternalCpu::ready(true);

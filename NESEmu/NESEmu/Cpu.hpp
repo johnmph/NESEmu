@@ -64,6 +64,10 @@ namespace NESEmu { namespace Cpu {
         // Set Cpu as friend to keep data bus methods private
         friend InternalCpu;
         
+        // Memory
+        void fetchMemoryPhi1();
+        void fetchMemoryPhi2();
+        
         // Bus intermediate
         uint16_t getAddressBus() const;
         void setAddressBus(uint16_t address);

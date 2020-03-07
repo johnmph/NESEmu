@@ -80,11 +80,11 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clock() {
     // Process IO
     processIO();
     
-    // Check interrupt
-    checkInterrupt();
-    
     // Update state
     updateState();
+    
+    // Check interrupt
+    checkInterrupt();
     
     // Check reset
     checkReset();
@@ -244,7 +244,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processIO() {
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkInterrupt() {
     // See https://wiki.nesdev.com/w/index.php/NMI
-    _interruptHardware.interrupt(!(_vBlankStartedLatch && _controlGenerateNmiForVBlank));
+    _interruptHardware.interrupt(!(_statusVBlankStarted && _controlGenerateNmiForVBlank));
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
