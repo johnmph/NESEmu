@@ -9,7 +9,7 @@
 #ifndef NESEmu_Cartridge_Mapper4_s_hpp
 #define NESEmu_Cartridge_Mapper4_s_hpp
 
-
+// TODO: avoir un enum version (comme le ppu, le cpu, ...) car il y a plusieurs versions du MMC3 avec une gestion differente de l'irq
 template <unsigned int IPrgRomSizeInKb, unsigned int IChrRomSizeInKb>
 Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::Mapper4(std::istream &istream) : _prgRom(IPrgRomSizeInKb * 1024), _prgRam(8 * 1024), _chrRom(IChrRomSizeInKb * 1024), _bankRegisterSelect(0), _prgRomBankMode(false), _chrRomBankMode(false), _nametableMirroring(false), _prgRamWriteProtection(false), _prgRamChipEnable(false), _lastA12(0), _irqEnable(false), _irqReload(false), _irqLatch(0), _irqCounter(0) {
     // TODO: voir si read via istream ici ou bien dans un factory a part et avoir directement ici les vectors a copier simplement : doit etre en dehors

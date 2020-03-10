@@ -54,16 +54,9 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::se
     // Set address
     _address = address;
 }
-/*
-template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-uint8_t Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::getDataBus() const {
-    // Get data with possibly open data bus latch on some or all lines
-    // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
-    return _data;
-}*/
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware>
-uint8_t &Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::getDataBus() {
+uint8_t Nes<EModel, TCartridgeHardware, TGraphicHardware>::CpuHardwareInterface::getDataBus() const {
     // Get data with possibly open data bus latch on some or all lines
     // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
     return _data;
