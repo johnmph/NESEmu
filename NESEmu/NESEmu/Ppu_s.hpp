@@ -201,11 +201,6 @@ bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInSecondOAMClea
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processRendering() {// TODO: a la place de faire ca (checker le current scanline), utiliser les methodes isInXXXPhase !!! : le meilleur serait d'avoir une methode qui rafraichirait tous les signaux en fonction du currentPixel, du currentScanline et d'autres choses et ensuite (ou avant le rafraichissement des signaux ?) appeler la methode qui gere les io et qui elle aussi modifierai certains signaux et ensuite faire les operations d'apres ces signaux
     
-    // Exit if on idle pixel
-    if (_currentPixel == Constants::idlePixel) {
-        return;
-    }
-    
     // Render line
     if (_currentScanline <= Constants::lastRenderPeriodScanline) {
         processRenderLine();
@@ -337,7 +332,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processRenderLine
     processPixel();
     
     // Update sprite shift registers only in visible pixels (1-256)
-    if (_currentPixel <= Constants::visiblePixelsPerScanlineCount) {
+    if ((_currentPixel >= Constants::firstActivePixel) && (_currentPixel <= Constants::visiblePixelsPerScanlineCount)) {
         updateSpriteShiftRegisters();
     }
 }
@@ -360,6 +355,23 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processVBlankLine
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPreRenderLine() {
+    // Only VRAM access if rendering is enabled
+    if (isRenderingEnabled()) {
+        // Complete tile data is 8 cycles
+        uint8_t dataType = _currentPixel & 0x7;
+        
+        // Process tiles
+        processTiles(dataType);
+        
+        // Process sprites
+        processSprites(dataType);
+        
+        // Check for Y address copy
+        if ((_currentPixel >= Constants::firstYCopyAddressPeriodPixel) && (_currentPixel <= Constants::lastYCopyAddressPeriodPixel)) {
+            copyYOnAddress();
+        }
+    }
+    
     // Clear flags if necessary
     if (_currentPixel == Constants::firstActivePixel) {
         _statusSpriteOverflow = false;
@@ -373,28 +385,10 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPreRenderL
         // Toggle odd / even frame (in Visual2C02 it is toggled on scanline 256 pixel 0 !!! but it's the same here and we don't lose performance for another check for 256, 0)
         _oddFrame = !_oddFrame;
     }
-    // On odd frame, PPU skip scanline 261 pixel 340 cycle, here for conveniency we skip scanline 0 pixel 0 (because it's an idle cycle, instead of 261 340 which fetch unused NT) but to be accurate we need to save the real skip cycle state because disabling the rendering exactly on this cycle disable the skip
-    else if (_currentPixel == (Constants::totalPixelsPerScanlineCount - 2)) {//TODO: 338 si le iowrite est avant processRendering
-        _needToSkipCycle = _oddFrame && isRenderingEnabled();
-    }
-    
-    // Only VRAM access if rendering is enabled
-    if (!isRenderingEnabled()) {
-        return;
-    }
-    
-    // Complete tile data is 8 cycles
-    uint8_t dataType = _currentPixel & 0x7;
-    
-    // Process tiles
-    processTiles(dataType);
-    
-    // Process sprites
-    processSprites(dataType);
-    
-    // Check for Y address copy
-    if ((_currentPixel >= Constants::firstYCopyAddressPeriodPixel) && (_currentPixel <= Constants::lastYCopyAddressPeriodPixel)) {
-        copyYOnAddress();
+    // On odd frame, PPU skip scanline 261 pixel 340 cycle
+    else if (_currentPixel == (Constants::totalPixelsPerScanlineCount - 2)) {//TODO: 338 si le iowrite est avant processRendering:pas sur maintenant
+        // Possibly skip last cycle (safe to convert bool to int, false = 0, true = 1)
+        _currentPixel += _oddFrame && isRenderingEnabled();
     }
 }
 
@@ -416,9 +410,13 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processTiles(uint
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchTiles(uint8_t dataType) {
+    // Correct dataType for first cycle (Unused low tile BG set address)
+    if (_currentPixel == Constants::idlePixel) {
+        dataType = FetchStep::LowTileByteSetAddress;
+    }
     // Correct dataType for last cycles (Unused NT fetches)
-    if (_currentPixel >= Constants::firstUnusedNTFetchPeriodPixel) {
-        dataType = ((dataType - 1) & 0x1) + 1;
+    else if (_currentPixel >= Constants::firstUnusedNTFetchPeriodPixel) {
+        dataType = ((dataType - 1) & 0x1) + 1;    // TODO: c'est a cause de ca que le test mmc3 scanline_timing foire, car en lisant ici a 0x2000 pour les cycles apres 336 ca refait un A12 = 0 assez longtemps pour que le MMC le prenne en compte, voir dans Visual2C02 ce que ca fait exactement durant ces cycles : en fait on dirait qu'il fait bien ca mais qu'apres au pixel 0 il fait le FetchStep::LowTileByteSetAddress, mais a confirmer et voir si ca le fait aussi en odd / even
     }
     // Increment Y address
     else if (_currentPixel == Constants::incrementYAddressPixel) {
@@ -503,7 +501,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateTileShiftRe
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processSprites(uint8_t dataType) {
     // Exit if we are no more in process sprites period
-    if (_currentPixel > Constants::lastSpritesFetchPeriodPixel) {
+    if ((_currentPixel < Constants::firstSecondClearOamPeriodPixel) || (_currentPixel > Constants::lastSpritesFetchPeriodPixel)) {
         return;
     }
     
@@ -702,8 +700,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchSprites(uint
     }
     // Garbage attribute table set address + load sprite attribute byte
     else if (dataType == FetchStep::ATByteSetAddress) {
-        //_bus.setAddressBus(0x2000 | (_address & 0x0FFF));
-        _bus.setAddressBus(0x23C0 | (_address & 0x0C00) | ((_address >> 4) & 0x38) | ((_address >> 2) & 0x7));
+        _bus.setAddressBus(0x2000 | (_address & 0x0FFF));//TODO: verifier que c bien cette adresse malgré que c un attribute table fetch
         
         _spAttributeLatches[spriteNumber] = _secondObjectAttributeMemory[_secondOAMAddress];
         _needIncrementSecondOAMAddress = true;
@@ -1026,9 +1023,6 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementPosition
     if (_currentScanline < Constants::totalScanlinePerFrameCount) {
         return;
     }
-    
-    // If start a new odd frame, skip first cycle (safe to convert bool to int, false = 0, true = 1)
-    _currentPixel += _needToSkipCycle;
     
     // Start a new frame, reset scanline counter
     _currentScanline = 0;

@@ -261,7 +261,6 @@ namespace NESEmu { namespace Ppu {
         
         unsigned int _currentScanline;
         unsigned int _currentPixel;
-        bool _needToSkipCycle;
         bool _oddFrame;
         
         uint16_t _temporaryAddress;

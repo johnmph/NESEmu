@@ -235,12 +235,14 @@ template <class TConnectedBus>
 void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::processIrqCounter(TConnectedBus &connectedBus, bool a12) {
     // Save A12 and filter it (only clock if A12 is high and was low for at least 3 CPU cycles before)
     bool savedLastA12 = _lastA12 != 0;
-    _lastA12 = (a12 << 2) | (_lastA12 >> 1);
+    _lastA12 = (a12 << 3) | (_lastA12 >> 1);//TODO: j'ai du rajouter une etape au filtre pour que la rom de test passe !!!
     
     // Check if IRQ clocked
     if (!(a12 && (!savedLastA12))) {
         return;
     }
+    
+    //std::cout << "scanline " << connectedBus._nes._ppu._currentScanline << ", pixel = " << connectedBus._nes._ppu._currentPixel << "\n";
     
     // Decrement counter or reload it if zero or forced
     if ((_irqCounter > 0) && (!_irqReload)) {
