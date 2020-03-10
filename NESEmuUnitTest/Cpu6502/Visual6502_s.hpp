@@ -277,62 +277,71 @@ void Analyzer<TCpu6502>::analyze(TCpu6502 &cpu6502, TFunction &&checkResult, int
         int resultFullCycle = std::stoi(result[0], 0, 10);
         
         while ((cycle <= (resultFullCycle * 2)) || (lastResultFullCycle == resultFullCycle)) {
-            // Check commands
-            for (auto const &resetLine : _command.resetLine) {
-                if (resetLine.first == cycle) {
-                    cpu6502.reset(false);
-                }
-                
-                if (resetLine.second == cycle) {
-                    cpu6502.reset(true);
-                }
+            // Execute CPU
+            if ((cycle & 0x1) == 0x0) {
+                cpu6502.startPhi1();
+            } else {
+                cpu6502.startPhi2();
             }
             
-            for (auto const &nmiLine : _command.nmiLine) {
-                if (nmiLine.first == cycle) {
-                    cpu6502.nmi(false);
+            // Check commands (not on cycle 0 like Visual6502)
+            if (cycle > 0) {
+                for (auto const &resetLine : _command.resetLine) {
+                    if (resetLine.first == cycle) {
+                        cpu6502.reset(false);
+                    }
+                    
+                    if (resetLine.second == cycle) {
+                        cpu6502.reset(true);
+                    }
                 }
                 
-                if (nmiLine.second == cycle) {
-                    cpu6502.nmi(true);
-                }
-            }
-            
-            for (auto const &irqLine : _command.irqLine) {
-                if (irqLine.first == cycle) {
-                    cpu6502.irq(false);
-                }
-                
-                if (irqLine.second == cycle) {
-                    cpu6502.irq(true);
-                }
-            }
-            
-            for (auto const &soLine : _command.soLine) {
-                if (soLine.first == cycle) {
-                    cpu6502.setOverflow(false);
+                for (auto const &nmiLine : _command.nmiLine) {
+                    if (nmiLine.first == cycle) {
+                        cpu6502.nmi(false);
+                    }
+                    
+                    if (nmiLine.second == cycle) {
+                        cpu6502.nmi(true);
+                    }
                 }
                 
-                if (soLine.second == cycle) {
-                    cpu6502.setOverflow(true);
-                }
-            }
-            
-            for (auto const &rdyLine : _command.rdyLine) {
-                if (rdyLine.first == cycle) {
-                    cpu6502.ready(false);
+                for (auto const &irqLine : _command.irqLine) {
+                    if (irqLine.first == cycle) {
+                        cpu6502.irq(false);
+                    }
+                    
+                    if (irqLine.second == cycle) {
+                        cpu6502.irq(true);
+                    }
                 }
                 
-                if (rdyLine.second == cycle) {
-                    cpu6502.ready(true);
+                for (auto const &soLine : _command.soLine) {
+                    if (soLine.first == cycle) {
+                        cpu6502.setOverflow(false);
+                    }
+                    
+                    if (soLine.second == cycle) {
+                        cpu6502.setOverflow(true);
+                    }
+                }
+                
+                for (auto const &rdyLine : _command.rdyLine) {
+                    if (rdyLine.first == cycle) {
+                        cpu6502.ready(false);
+                    }
+                    
+                    if (rdyLine.second == cycle) {
+                        cpu6502.ready(true);
+                    }
                 }
             }
             
             // Execute CPU
             if ((cycle & 0x1) == 0x0) {
-                cpu6502.clockPhi1();
+                cpu6502.endPhi1();
             } else {
-                cpu6502.clockPhi2();
+                cpu6502.endPhi2();
             }
             
             //std::cout << cycle << ") " << std::hex << cpu6502.getAddressBus() << ", " << static_cast<int>(cpu6502.getDataBus()) << "\n";

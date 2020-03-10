@@ -13,6 +13,12 @@
 template <class TConfiguration>
 template <bool BResetAccurate, typename std::enable_if<BResetAccurate, int>::type>
 void Chip<TConfiguration>::reset0() {
+    // If we are right after power on, add a extra step and exit
+    if (_resetSavedInstruction == nullptr) {
+        _currentInstruction = &Chip::reset1;
+        return;
+    }
+    
     // Execute saved instruction if it's not a fetchOpcode
     if (_resetSavedInstruction != static_cast<OpcodeInstruction>(&Chip::fetchOpcode)) {
         // Execute saved instruction
@@ -33,12 +39,11 @@ template <bool BResetAccurate, typename std::enable_if<!BResetAccurate, int>::ty
 void Chip<TConfiguration>::reset0() {
     // Stay in this step until reset goes high again
     if (_resetLine) {
-        _currentInstruction = &Chip::reset1<ResetAccurate>;
+        _currentInstruction = &Chip::reset1;
     }
 }
 
 template <class TConfiguration>
-template <bool BResetAccurate, typename std::enable_if<!BResetAccurate, int>::type>
 void Chip<TConfiguration>::reset1() {
     // Need this extra-step to sync number of clocks with the ResetAccurate version for exiting the reset state
     _currentInstruction = &Chip::fetchOpcode;

@@ -702,7 +702,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchSprites(uint
     }
     // Garbage attribute table set address + load sprite attribute byte
     else if (dataType == FetchStep::ATByteSetAddress) {
-        _bus.setAddressBus(0x2000 | (_address & 0x0FFF));
+        //_bus.setAddressBus(0x2000 | (_address & 0x0FFF));
+        _bus.setAddressBus(0x23C0 | (_address & 0x0C00) | ((_address >> 4) & 0x38) | ((_address >> 2) & 0x7));
         
         _spAttributeLatches[spriteNumber] = _secondObjectAttributeMemory[_secondOAMAddress];
         _needIncrementSecondOAMAddress = true;

@@ -160,8 +160,8 @@ void Chip<TConfiguration>::powerUp(uint16_t programCounter, uint8_t stackPointer
     
     _programCounterNeedsIncrement = false;
     
-    _setOverflowLine = false;
-    _setOverflowLinePrevious = false;
+    _setOverflowLine = true;
+    _setOverflowLinePrevious = true;
     _setOverflowRequested = false;
     
     _resetLine = true;
@@ -190,49 +190,85 @@ void Chip<TConfiguration>::clock() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::clockPhi1() {
-    // Check interrupts line (before phi1 begins)
-    checkNmi();
-    checkIrq();
+    // End phi2
+    endPhi2();
     
+    // Start phi1
+    startPhi1();
+}
+
+template <class TConfiguration>
+void Chip<TConfiguration>::clockPhi2() {
+    // End phi1
+    endPhi1();
+    
+    // Start phi2
+    startPhi2();
+}
+
+template <class TConfiguration>
+void Chip<TConfiguration>::startPhi1() {
     // Start phi1
     _phi2 = false;
     
     // Update PC
     updateProgramCounter();
     
-    // Check for overflow flag
-    checkSetOverflow<SetOverflowEnabled>();
-    
     // Initialize dataOutput to emulate possible bus conflict which cause a low level to win (it is like an AND operation)
     //_dataOutput = 0xFF;
     
     // If rdy is low, wait before perform next read cycle
-    if ((!_readyWaitRequested) || (_readWrite != ReadWrite::Read)) {
+    if ((!_readyWaitRequested) || (_readWrite != ReadWrite::Read)) {//TODO: voir car ready n'affecte pas le reset normalement
         // Execute current stage
         (this->*_currentInstruction)();
     }
-    
-    // Fetch memory for phi1
-    fetchMemoryPhi1();
 }
 
 template <class TConfiguration>
-void Chip<TConfiguration>::clockPhi2() {
+void Chip<TConfiguration>::endPhi1() {
+    // Read data on dataBus if it is in read mode
+    if (_readWrite == ReadWrite::Read) {
+        _bus.performRead();
+    }
+    // Set dataBus with last read value in it is in write mode
+    else {
+        _bus.setDataBus(_inputDataLatch);//TODO: a voir pq c'est nécessaire pour les tests
+    }
+    
+    // Check for overflow flag
+    checkSetOverflow<SetOverflowEnabled>();
+}
+
+template <class TConfiguration>
+void Chip<TConfiguration>::startPhi2() {
     // Start phi2
     _phi2 = true;
+    
+    // Write data on dataBus if it is in write mode
+    if (_readWrite == ReadWrite::Write) {
+        // Write data to dataBus
+        _bus.setDataBus(_dataOutput);
+        _bus.performWrite();
+    }
+}
+
+template <class TConfiguration>
+void Chip<TConfiguration>::endPhi2() {
+    // Copy data from dataBus on internal registers
+    if (_readWrite == ReadWrite::Read) {
+        _inputDataLatch = _bus.getDataBus();
+        _predecode = _inputDataLatch;
+    }
     
     // Check reset
     checkReset<ResetAccurate>();
     
     // Check interrupts line
-    //checkNmi();
-    //checkIrq();
+    checkNmi();
+    checkIrq();
     
     // Check ready line
     checkReady();
-    
-    // Fetch memory for phi2
-    fetchMemoryPhi2();
 }
 
 template <class TConfiguration>
@@ -242,7 +278,7 @@ void Chip<TConfiguration>::ready(bool high) {
 }
 
 template <class TConfiguration>
-void Chip<TConfiguration>::reset(bool high) {
+void Chip<TConfiguration>::reset(bool high) {//TODO: voir pour avoir la meme logique que nmi pour irq et reset (par rapport a la phase complete de phi2)
     reset<ResetAccurate>(high);
 }
 
@@ -271,7 +307,7 @@ void Chip<TConfiguration>::irq(bool high) {//TODO: voir pour avoir la meme logiq
     _irqLine = high;
     
     // Irq is requested if interrupts are not disabled and if irq line goes to low in phi2
-    _irqRequested = (!_flagsHelper.get<Flag::InterruptDisable>()) && (!_irqLine) && _phi2;
+    _irqRequested = (!_flagsHelper.get<Flag::InterruptDisable>()) && (!_irqLine) && _phi2;//TODO: voir si ce n'est pas un probleme que si on appelle irq meme avec high = false en phi1 on reset _irqRequested (normalement non car on fait le checkIrq apres mais bon voir pour etre sur et mettre un comment pour notifier ca)
 }
 
 template <class TConfiguration>
@@ -300,34 +336,6 @@ bool Chip<TConfiguration>::getM2Signal() const {
 }
 
 // Memory
-
-template <class TConfiguration>
-void Chip<TConfiguration>::fetchMemoryPhi1() {
-    // Read data on dataBus if it is in read mode
-    if (_readWrite == ReadWrite::Read) {
-        _bus.performRead();
-        
-        return;
-    }
-    
-    // Set dataBus with last read value in it is in write mode
-    _bus.setDataBus(_inputDataLatch);
-}
-
-template <class TConfiguration>
-void Chip<TConfiguration>::fetchMemoryPhi2() {
-    // dataBus is already filled with data since end of phi1, just put dataBus on internal registers
-    if (_readWrite == ReadWrite::Read) {
-        _inputDataLatch = _bus.getDataBus();
-        _predecode = _inputDataLatch;
-        
-        return;
-    }
-    
-    // Write data to dataBus
-    _bus.setDataBus(_dataOutput);
-    _bus.performWrite();
-}
 
 template <class TConfiguration>
 void Chip<TConfiguration>::readDataBus(uint8_t low, uint8_t high) {
@@ -469,13 +477,8 @@ void Chip<TConfiguration>::checkSetOverflow() {
 
 template <class TConfiguration>
 void Chip<TConfiguration>::checkReady() {
-    // Next instruction is fetchOpcode but need to check if resetRequested is still true in case of reset in interrupt
-    /*if (_readyWaitRequested && _readyLine && _resetRequested) { // TODO : besoin de ca pour reussir le testNmiInDma mais ca doit cacher un bug de reset
-        _currentInstruction = &Chip::fetchOpcode;
-    }*/
-    
     // A ready wait is requested if the ready line is low
-    _readyWaitRequested = !_readyLine;
+    _readyWaitRequested = !_readyLine && _resetLine;// TODO: voir si ok avec le reset
 }
 
 // Reset
@@ -483,12 +486,11 @@ void Chip<TConfiguration>::checkReady() {
 template <class TConfiguration>
 template <bool BResetAccurate, typename std::enable_if<BResetAccurate, int>::type>
 void Chip<TConfiguration>::resetAfterPowerUp() {
-    // Set current instruction because reset will save it in _resetSavedInstruction to execute it later
-    _currentInstruction = &Chip::fetchOpcode;
+    // Reset current instruction
+    _currentInstruction = nullptr;
     
-    // Reset by pulling line down and calling checkReset two times because detection is delayed
+    // Reset by pulling line down and calling checkReset to detect reset
     reset(false);
-    checkReset<ResetAccurate>();
     checkReset<ResetAccurate>();
 }
 

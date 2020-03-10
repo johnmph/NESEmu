@@ -18,7 +18,6 @@ void reset0();
 template <bool BResetAccurate, typename std::enable_if<!BResetAccurate, int>::type = 0>
 void reset0();
 
-template <bool BResetAccurate, typename std::enable_if<!BResetAccurate, int>::type = 0>
 void reset1();
 
 void brk0();

@@ -138,6 +138,10 @@ namespace Cpu6502 {
         void clock();
         void clockPhi1();
         void clockPhi2();
+        void startPhi1();
+        void endPhi1();
+        void startPhi2();
+        void endPhi2();
         void ready(bool high);
         
         void reset(bool high);
@@ -166,8 +170,6 @@ namespace Cpu6502 {
         };
         
         // Memory
-        void fetchMemoryPhi1();
-        void fetchMemoryPhi2();
         void readDataBus(uint8_t low, uint8_t high);
         void writeDataBus(uint8_t low, uint8_t high, uint8_t data);
         

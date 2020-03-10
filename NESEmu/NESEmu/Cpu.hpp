@@ -40,6 +40,10 @@ namespace NESEmu { namespace Cpu {
         void clock();
         void clockPhi1();
         void clockPhi2();
+        void startPhi1();
+        void endPhi1();
+        void startPhi2();
+        void endPhi2();
         
         void reset(bool high);
         void nmi(bool high);
@@ -63,10 +67,6 @@ namespace NESEmu { namespace Cpu {
         
         // Set Cpu as friend to keep data bus methods private
         friend InternalCpu;
-        
-        // Memory
-        void fetchMemoryPhi1();
-        void fetchMemoryPhi2();
         
         // Bus intermediate
         uint16_t getAddressBus() const;
