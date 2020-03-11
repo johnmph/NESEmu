@@ -6,8 +6,8 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Cartridge_Mapper3_s_hpp
-#define NESEmu_Cartridge_Mapper3_s_hpp
+#ifndef NESEmu_Mapper_Mapper3_s_hpp
+#define NESEmu_Mapper_Mapper3_s_hpp
 
 // TODO: apparemment pas de prg-ram
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, unsigned int IChrRomSizeInKb, MirroringType EMirroring>
@@ -111,4 +111,4 @@ void Mapper3<IPrgRomSizeInKb, IPrgRamSizeInKb, IChrRomSizeInKb, EMirroring>::ppu
     }
 }
 
-#endif /* NESEmu_Cartridge_Mapper3_s_hpp */
+#endif /* NESEmu_Mapper_Mapper3_s_hpp */

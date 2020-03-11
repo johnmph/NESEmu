@@ -6,8 +6,8 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Cartridge_Mapper4_hpp
-#define NESEmu_Cartridge_Mapper4_hpp
+#ifndef NESEmu_Mapper_Mapper4_hpp
+#define NESEmu_Mapper_Mapper4_hpp
 
 #include <istream>
 #include "Common.hpp"
@@ -15,7 +15,7 @@
 // See https://wiki.nesdev.com/w/index.php/MMC3
 // See https://forums.nesdev.com/viewtopic.php?f=9&t=14072
 
-namespace NESEmu { namespace Cartridge {
+namespace NESEmu { namespace Mapper {
     
     template <unsigned int IPrgRomSizeInKb, unsigned int IChrRomSizeInKb>
     struct Mapper4 {
@@ -66,4 +66,4 @@ namespace NESEmu { namespace Cartridge {
     
 } }
 
-#endif /* NESEmu_Cartridge_Mapper4_hpp */
+#endif /* NESEmu_Mapper_Mapper4_hpp */

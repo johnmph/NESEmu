@@ -6,8 +6,8 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Cartridge_Mapper4_s_hpp
-#define NESEmu_Cartridge_Mapper4_s_hpp
+#ifndef NESEmu_Mapper_Mapper4_s_hpp
+#define NESEmu_Mapper_Mapper4_s_hpp
 
 // TODO: avoir un enum version (comme le ppu, le cpu, ...) car il y a plusieurs versions du MMC3 avec une gestion differente de l'irq
 template <unsigned int IPrgRomSizeInKb, unsigned int IChrRomSizeInKb>
@@ -258,4 +258,4 @@ void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::processIrqCounter(TConnectedBus 
     }
 }
 
-#endif /* NESEmu_Cartridge_Mapper4_s_hpp */
+#endif /* NESEmu_Mapper_Mapper4_s_hpp */

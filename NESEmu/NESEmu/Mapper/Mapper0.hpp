@@ -6,15 +6,15 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Cartridge_Mapper0_hpp
-#define NESEmu_Cartridge_Mapper0_hpp
+#ifndef NESEmu_Mapper_Mapper0_hpp
+#define NESEmu_Mapper_Mapper0_hpp
 
 #include <istream>
 #include "Common.hpp"
 
 // See https://wiki.nesdev.com/w/index.php/NROM
 // TODO: par apres, factoriser le code commun des mappers
-namespace NESEmu { namespace Cartridge {
+namespace NESEmu { namespace Mapper {
     
     /*
      
@@ -62,4 +62,4 @@ namespace NESEmu { namespace Cartridge {
     
 } }
 
-#endif /* NESEmu_Cartridge_Mapper0_hpp */
+#endif /* NESEmu_Mapper_Mapper0_hpp */

@@ -6,8 +6,8 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Cartridge_Mapper1_s_hpp
-#define NESEmu_Cartridge_Mapper1_s_hpp
+#ifndef NESEmu_Mapper_Mapper1_s_hpp
+#define NESEmu_Mapper_Mapper1_s_hpp
 
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
@@ -199,4 +199,4 @@ uint16_t Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::getVramAddress(uint16_t addr
     return getMirroredAddress<MirroringType::Horizontal>(address);
 }
 
-#endif /* NESEmu_Cartridge_Mapper1_s_hpp */
+#endif /* NESEmu_Mapper_Mapper1_s_hpp */

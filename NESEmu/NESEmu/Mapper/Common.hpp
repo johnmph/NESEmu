@@ -6,8 +6,8 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Cartridge_Common_hpp
-#define NESEmu_Cartridge_Common_hpp
+#ifndef NESEmu_Mapper_Common_hpp
+#define NESEmu_Mapper_Common_hpp
 
 // See https://wiki.nesdev.com/w/index.php/INES // TODO: deplacer ce comment dans le fichier factory qui créera la nes avec la cartridge/mapper correcte
 // See https://wiki.nesdev.com/w/index.php/CPU_memory_map
@@ -17,7 +17,7 @@
 #include <cstdint>
 
 
-namespace NESEmu { namespace Cartridge {
+namespace NESEmu { namespace Mapper {
     
     // See https://wiki.nesdev.com/w/index.php/Mirroring
     enum class MirroringType {
@@ -45,4 +45,4 @@ namespace NESEmu { namespace Cartridge {
     
 } }
 
-#endif /* NESEmu_Cartridge_Common_hpp */
+#endif /* NESEmu_Mapper_Common_hpp */

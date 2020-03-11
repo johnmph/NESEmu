@@ -1,26 +1,25 @@
 //
-//  Mapper1.hpp
+//  Mapper7.hpp
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 12/02/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Cartridge_Mapper1_hpp
-#define NESEmu_Cartridge_Mapper1_hpp
-
-// See https://wiki.nesdev.com/w/index.php/MMC1
+#ifndef NESEmu_Mapper_Mapper7_hpp
+#define NESEmu_Mapper_Mapper7_hpp
 
 #include <istream>
 #include "Common.hpp"
 
-// TODO: a faire :
-namespace NESEmu { namespace Cartridge {
+// See https://wiki.nesdev.com/w/index.php/AxROM
+// TODO: par apres, factoriser le code commun des mappers
+namespace NESEmu { namespace Mapper {
     
     template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
-    struct Mapper1 {
+    struct Mapper7 {
         
-        Mapper1(std::istream &istream);
+        Mapper7(std::istream &istream);
         
         template <class TConnectedBus, class TInterruptHardware>
         void clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware);
@@ -40,20 +39,16 @@ namespace NESEmu { namespace Cartridge {
         void ppuWritePerformed(TConnectedBus &connectedBus);
         
     private:
-        uint16_t getChrRamAddress(uint16_t address);
-        uint16_t getVramAddress(uint16_t address);
-        
         std::vector<uint8_t> _prgRom;
         std::vector<uint8_t> _prgRam;
         std::vector<uint8_t> _chrRam;
         
-        uint8_t _shiftRegister;
-        uint8_t _shiftCount;
-        uint8_t _internalRegisters[4];
+        uint8_t _prgRomBankSelect;
+        uint8_t _vramBankSelect;
     };
     
-    #include "Mapper1_s.hpp"
+    #include "Mapper7_s.hpp"
     
 } }
 
-#endif /* NESEmu_Cartridge_Mapper1_hpp */
+#endif /* NESEmu_Mapper_Mapper7_hpp */

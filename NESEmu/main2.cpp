@@ -9,13 +9,8 @@
 #include <iostream>
 #include <fstream>
 #include <SDL.h>
-#include "Nes.hpp"
-#include "NESEmu/Cartridge/Mapper0.hpp"
-#include "NESEmu/Cartridge/Mapper1.hpp"
-#include "NESEmu/Cartridge/Mapper2.hpp"
-#include "NESEmu/Cartridge/Mapper3.hpp"
-#include "NESEmu/Cartridge/Mapper4.hpp"
-#include "NESEmu/Cartridge/Mapper7.hpp"
+#include "NESEmu/Cartridge/Loader/INes.hpp"
+#include "NESEmu/Nes.hpp"
 #include "NESEmu/Controller/Standard.hpp"
 
 
@@ -164,6 +159,37 @@ private:
 };
 
 
+struct LoopManager {
+    
+    LoopManager(SDL_Event &event) : _event(event), _resetState(false) {
+    }
+    
+    template <class TNes>
+    bool needToStop(TNes &nes) {
+        if (_event.type == SDL_QUIT) {
+            return true;
+        }
+        
+        if ((_event.type == SDL_KEYDOWN) && (_event.key.keysym.scancode == SDL_SCANCODE_R) && (_resetState == false)) {
+            nes.reset(false);
+            _resetState = true;
+            std::cout << "Reset start\n";
+        }
+        
+        if ((_event.type == SDL_KEYUP) && (_event.key.keysym.scancode == SDL_SCANCODE_R) && (_resetState == true)) {
+            nes.reset(true);
+            _resetState = false;
+            std::cout << "Reset end\n";
+        }
+        
+        return false;
+    }
+    
+private:
+    SDL_Event &_event;
+    bool _resetState;
+};
+
 int main(int argc, const char * argv[]) {
     // Init SDL
     SDL_Init(SDL_INIT_EVENTS);
@@ -175,7 +201,7 @@ int main(int argc, const char * argv[]) {
     auto controller = std::make_unique<NESEmu::Controller::Standard<ControllerHardware>>(controllerHardware);
     
     // Open ROM
-    //std::ifstream ifs("../UnitTestFiles/SMB.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
+    std::ifstream ifs("../UnitTestFiles/SMB.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/Spelunker.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/Ms. Pac-Man (Tengen).nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/DK.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
@@ -244,7 +270,7 @@ int main(int argc, const char * argv[]) {
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/sprite_overflow_tests/5.Emulator.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring // OK
     
-    std::ifstream ifs("../UnitTestFiles/TestROM/Mapper/mmc3_test_2/rom_singles/4-scanline_timing.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 8kb de chr-rom  // TODO: foire sur 4 et 6 (je peux faire passer 6 en changeant la facon de lancer l'irq mais ca fait foirer 5, c'est surement parce que 6 alt teste le mapper3 alternatif : oui)
+    //std::ifstream ifs("../UnitTestFiles/TestROM/Mapper/mmc3_test_2/rom_singles/4-scanline_timing.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 8kb de chr-rom  // TODO: foire sur 4 et 6 (je peux faire passer 6 en changeant la facon de lancer l'irq mais ca fait foirer 5, c'est surement parce que 6 alt teste le mapper3 alternatif : oui)
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/allpads.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, 8kb de chr-ram, Horizontal mirroring
     
@@ -252,15 +278,27 @@ int main(int argc, const char * argv[]) {
     assert(ifs.good());
     
     // Mapper for SMB
-    //NESEmu::Cartridge::Mapper0<32, 0, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
-    //NESEmu::Cartridge::Mapper1<128, 8/*, NESEmu::Cartridge::MirroringType::Vertical*/> mapper0(ifs);
-    //NESEmu::Cartridge::Mapper2<128, 0, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
-    //NESEmu::Cartridge::Mapper3<16, 0, 32, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
-    NESEmu::Cartridge::Mapper4<32, 8> mapper0(ifs);
-    //NESEmu::Cartridge::Mapper7<256, 0> mapper0(ifs);
+    //NESEmu::Mapper::Mapper0<32, 0, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
+    //NESEmu::Mapper::Mapper1<128, 8/*, NESEmu::Cartridge::MirroringType::Vertical*/> mapper0(ifs);
+    //NESEmu::Mapper::Mapper2<128, 0, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
+    //NESEmu::Mapper::Mapper3<16, 0, 32, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
+    //NESEmu::Mapper::Mapper4<32, 8> mapper0(ifs);
+    //NESEmu::Mapper::Mapper7<256, 0> mapper0(ifs);
+    
+    // Loop manager
+    LoopManager loopManager(event);
+    
+    // Cartridge loader
+    NESEmu::Cartridge::Loader::INes<NESEmu::Model::Ntsc, GraphicHardware, LoopManager> inesLoader;
+    
+    // Create cartridge
+    auto cartridge = inesLoader.createCartridgeFromStream(ifs);
     
     // Create NES with Mapper
-    NESEmu::Nes<NESEmu::Model::Ntsc, decltype(mapper0), GraphicHardware> nes(mapper0, graphicHardware);
+    NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware, LoopManager> nes(graphicHardware, loopManager);
+    
+    // Insert cartridge
+    nes.insertCartridge(*cartridge);
     
     // Connect controller
     nes.connectController(0, std::move(controller));
@@ -270,7 +308,7 @@ int main(int argc, const char * argv[]) {
     
     // Release reset to start NES
     nes.reset(true);
-    
+    /*
     // Clock loop
     bool resetState = false;
     
@@ -293,7 +331,9 @@ int main(int argc, const char * argv[]) {
         
         //nes.clock();
         nes.clockFull();
-    }
+    }*/
+    
+    nes.run();
     
     // Clean up SDL
     SDL_Quit();

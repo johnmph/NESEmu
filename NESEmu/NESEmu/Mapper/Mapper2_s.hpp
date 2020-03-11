@@ -6,8 +6,8 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Cartridge_Mapper2_s_hpp
-#define NESEmu_Cartridge_Mapper2_s_hpp
+#ifndef NESEmu_Mapper_Mapper2_s_hpp
+#define NESEmu_Mapper_Mapper2_s_hpp
 
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
@@ -119,4 +119,4 @@ void Mapper2<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::ppuWritePerformed(TC
     }
 }
 
-#endif /* NESEmu_Cartridge_Mapper2_s_hpp */
+#endif /* NESEmu_Mapper_Mapper2_s_hpp */

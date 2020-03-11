@@ -6,8 +6,8 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Cartridge_Mapper7_s_hpp
-#define NESEmu_Cartridge_Mapper7_s_hpp
+#ifndef NESEmu_Mapper_Mapper7_s_hpp
+#define NESEmu_Mapper_Mapper7_s_hpp
 
 
 template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
@@ -115,4 +115,4 @@ void Mapper7<IPrgRomSizeInKb, IPrgRamSizeInKb>::ppuWritePerformed(TConnectedBus 
     }
 }
 
-#endif /* NESEmu_Cartridge_Mapper7_s_hpp */
+#endif /* NESEmu_Mapper_Mapper7_s_hpp */

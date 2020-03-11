@@ -1,25 +1,18 @@
 //
-//  Mapper3.hpp
+//  Nothing.hpp
 //  NESEmu
 //
-//  Created by Jonathan Baliko on 25/02/20.
+//  Created by Jonathan Baliko on 11/03/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Cartridge_Mapper3_hpp
-#define NESEmu_Cartridge_Mapper3_hpp
+#ifndef NESEmu_Mapper_Nothing_hpp
+#define NESEmu_Mapper_Nothing_hpp
 
-#include <istream>
-#include "Common.hpp"
 
-// See https://wiki.nesdev.com/w/index.php/INES_Mapper_003
-
-namespace NESEmu { namespace Cartridge {
+namespace NESEmu { namespace Mapper {
     
-    template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, unsigned int IChrRomSizeInKb, MirroringType EMirroring>
-    struct Mapper3 {
-        
-        Mapper3(std::istream &istream);
+    struct NoMapper {
         
         template <class TConnectedBus, class TInterruptHardware>
         void clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware);
@@ -37,17 +30,10 @@ namespace NESEmu { namespace Cartridge {
         
         template <class TConnectedBus>
         void ppuWritePerformed(TConnectedBus &connectedBus);
-        
-    private:
-        std::vector<uint8_t> _prgRom;
-        std::vector<uint8_t> _prgRam;
-        std::vector<uint8_t> _chrRom;
-        
-        uint8_t _chrRomBankSelect;
     };
     
-    #include "Mapper3_s.hpp"
+    #include "Nothing_s.hpp"
     
 } }
 
-#endif /* NESEmu_Cartridge_Mapper3_hpp */
+#endif /* NESEmu_Mapper_Nothing_hpp */
