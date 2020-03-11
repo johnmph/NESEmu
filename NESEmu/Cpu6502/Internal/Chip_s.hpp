@@ -492,12 +492,19 @@ void Chip<TConfiguration>::resetAfterPowerUp() {
     // Reset by pulling line down and calling checkReset to detect reset
     reset(false);
     checkReset<ResetAccurate>();
+    
+    // Release reset
+    reset(true);
 }
 
 template <class TConfiguration>
 template <bool BResetAccurate, typename std::enable_if<!BResetAccurate, int>::type>
 void Chip<TConfiguration>::resetAfterPowerUp() {
+    // Reset by pulling line down
     reset(false);
+    
+    // Release reset
+    reset(true);
 }
 
 template <class TConfiguration>

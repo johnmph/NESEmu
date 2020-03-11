@@ -289,8 +289,9 @@ int main(int argc, const char * argv[]) {
     LoopManager loopManager(event);
     
     // Cartridge loader
-    NESEmu::Cartridge::Loader::INes<NESEmu::Model::Ntsc, GraphicHardware, LoopManager> inesLoader;//TODO: a la place d'avoir plusieurs loaders qui vont créer la cartridge (ines, ines2, tnes, ...), avoir un seul CartridgeFactory qui crée les cartridges (ne les crée meme pas, on fait cartridgeFactory.insertCartridgeIntoNes(Nes, std::istream) et les loaders vont seulement retourner une information sur la rom (num de mapper, nombre de banque, ...) donc le cartridgeFactory ne devra pas avoir de methodes virtuelles et donc pas de soucis d'avoir la methode template et donc plus de redondance de template parameter comme cette solution que j'ai pour l'instant
+    NESEmu::Cartridge::Loader::INes<NESEmu::Model::Ntsc, GraphicHardware, LoopManager> inesLoader;//TODO: a la place d'avoir plusieurs loaders qui vont créer la cartridge (ines, ines2, tnes, ...), avoir un seul CartridgeFactory qui crée les cartridges (ne les crée meme pas, on fait cartridgeFactory.insertCartridgeIntoNes(Nes, std::istream) et les loaders vont seulement retourner une information sur la rom (num de mapper, nombre de banque, la mémoire des banques, ...) donc le cartridgeFactory ne devra pas avoir de methodes virtuelles et donc pas de soucis d'avoir la methode template et donc plus de redondance de template parameter comme cette solution que j'ai pour l'instant
     // TODO: et pour que le factory choisisse correctement le loader, il y a des priorités entre loader + une methode qui dit s'il supporte la rom ou non (bool isSupported(std::istream) const et int getPriority() const)
+    // TODO: on peut combiner les 2 solutions (ce que j'ai mis en comm au dessus avec la solution deja faite pour le coté d'inserer des cartridge), on aurait juste plus besoin de specifier les template parameter dans le loader car ce serait une methode template (mais a voir car comment faire si Cartridge n'a plus les template parameters ?)
     
     // Create cartridge
     auto cartridge = inesLoader.createCartridgeFromStream(ifs);
@@ -308,32 +309,9 @@ int main(int argc, const char * argv[]) {
     nes.powerUp();
     
     // Release reset to start NES
-    nes.reset(true);
-    /*
-    // Clock loop
-    bool resetState = false;
+    //nes.reset(true);
     
-    for (;;) {
-        if (event.type == SDL_QUIT) {
-            break;
-        }
-        
-        if ((event.type == SDL_KEYDOWN) && (event.key.keysym.scancode == SDL_SCANCODE_R) && (resetState == false)) {
-            nes.reset(false);
-            resetState = true;
-            std::cout << "Reset start\n";
-        }
-        
-        if ((event.type == SDL_KEYUP) && (event.key.keysym.scancode == SDL_SCANCODE_R) && (resetState == true)) {
-            nes.reset(true);
-            resetState = false;
-            std::cout << "Reset end\n";
-        }
-        
-        //nes.clock();
-        nes.clockFull();
-    }*/
-    
+    // Run NES
     nes.run();
     
     // Clean up SDL
@@ -341,4 +319,3 @@ int main(int argc, const char * argv[]) {
     
     return 0;
 }
-

@@ -184,7 +184,7 @@ namespace {
     bus.write(0xFFFD, 0xC0);
     
     // Release reset to start cpu
-    cpu6502.reset(true);
+    //cpu6502.reset(true);
     
     // We need to sync with nestest.log by adding three first clocks to exit the reset state (2 clocks to exit early reset and 1 clock for the fetchOpcode (the last 7 clocks for reset are in the first line of log))
     cpu6502.clock();

@@ -68,8 +68,11 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::powerUp() {
     
     _ioPending = 0;
     
-    // Do a reset
+    // Reset by pulling line down
     reset(false);
+    
+    // Release reset
+    reset(true);
 }
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>

@@ -102,7 +102,7 @@ namespace {
     Visual6502::Analyzer<Cpu6502FullAccess<Cpu6502::ConfigurationAccurate<Bus>>> visual6502Analyzer(ifsLog, [](uint16_t address, uint8_t data) { bus.write(address, data); });
     
     // Release reset to start cpu
-    cpu6502.reset(true);
+    //cpu6502.reset(true);
     
     // We need to sync with Visual6502 by adding nine first clocks to exit the reset state
     for (int i = 0; i < 9; ++i) {
