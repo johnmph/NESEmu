@@ -133,7 +133,6 @@ namespace NESEmu { namespace Implementation {
         int _currentClockForCpu;
         int _currentClockForPpu;
         
-        // TODO: il faut aussi une classe Cartridge qui prendra en compte les mappers, et une classe CartridgeLoader qui convertira une rom en cartridge (qui aura le bon mapper) (peut etre meme que CartridgeLoader retournera une Nes complete pour pouvoir avoir les read/write au compile time plutot qu'en polymorphisme dynamique (voir EmulatorDesign)
         // TODO: pour les joysticks, avoir des methodes pour "brancher" un joystick, qui communiquera via les OUT0/2 OE1 et OE2 du CPU
     };
     

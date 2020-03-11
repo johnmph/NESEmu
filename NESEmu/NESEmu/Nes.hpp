@@ -22,6 +22,7 @@ namespace NESEmu {
         
         template <class TCartridge>
         void insertCartridge(TCartridge &cartridge);
+        // TODO: un remove cartridge aussi ?
         
         void powerUp();
         
