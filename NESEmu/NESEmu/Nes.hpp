@@ -20,8 +20,9 @@ namespace NESEmu {
         
         Nes(TGraphicHardware &graphicHardware, TLoopManager &loopManager);
         
-        template <class TCartridge>
-        void insertCartridge(TCartridge &cartridge);
+        //template <class TCartridge>
+        //void insertCartridge(TCartridge &cartridge);
+        void insertCartridge(std::unique_ptr<Cartridge::Interface<EModel, TGraphicHardware, TLoopManager>> cartridge);
         // TODO: un remove cartridge aussi ?
         
         void powerUp();
@@ -38,6 +39,7 @@ namespace NESEmu {
         // Internals
         TGraphicHardware &_graphicHardware;
         TLoopManager &_loopManager;
+        std::unique_ptr<Cartridge::Interface<EModel, TGraphicHardware, TLoopManager>> _cartridge;
         std::unique_ptr<Implementation::Interface> _nesImplementation;
     };
     

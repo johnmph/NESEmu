@@ -34,8 +34,8 @@ namespace NESEmu { namespace Implementation {
     template <Model EModel, class TCartridgeHardware, class TGraphicHardware, class TLoopManager>
     struct Nes : Interface {
         
-        //Nes(TCartridgeHardware &cartridgeHardware, TGraphicHardware &graphicHardware, TLoopManager &loopManager);
-        Nes(TCartridgeHardware const &cartridgeHardware, TGraphicHardware &graphicHardware, TLoopManager &loopManager);
+        Nes(TCartridgeHardware &cartridgeHardware, TGraphicHardware &graphicHardware, TLoopManager &loopManager);
+        //Nes(TCartridgeHardware const &cartridgeHardware, TGraphicHardware &graphicHardware, TLoopManager &loopManager);
         
         void powerUp() override;
         
@@ -124,8 +124,8 @@ namespace NESEmu { namespace Implementation {
         std::unique_ptr<Controller::Interface> _controllerPorts[2];    // TODO: 2 controllers ports, voir si mettre 2 dans un const
         
         // Internals
-        //TCartridgeHardware &_cartridgeHardware;
-        TCartridgeHardware _cartridgeHardware;
+        TCartridgeHardware &_cartridgeHardware;
+        //TCartridgeHardware _cartridgeHardware;
         TLoopManager &_loopManager;
         CpuHardwareInterface _cpuHardwareInterface;
         PpuHardwareInterface _ppuHardwareInterface;

@@ -289,7 +289,8 @@ int main(int argc, const char * argv[]) {
     LoopManager loopManager(event);
     
     // Cartridge loader
-    NESEmu::Cartridge::Loader::INes<NESEmu::Model::Ntsc, GraphicHardware, LoopManager> inesLoader;
+    NESEmu::Cartridge::Loader::INes<NESEmu::Model::Ntsc, GraphicHardware, LoopManager> inesLoader;//TODO: a la place d'avoir plusieurs loaders qui vont créer la cartridge (ines, ines2, tnes, ...), avoir un seul CartridgeFactory qui crée les cartridges (ne les crée meme pas, on fait cartridgeFactory.insertCartridgeIntoNes(Nes, std::istream) et les loaders vont seulement retourner une information sur la rom (num de mapper, nombre de banque, ...) donc le cartridgeFactory ne devra pas avoir de methodes virtuelles et donc pas de soucis d'avoir la methode template et donc plus de redondance de template parameter comme cette solution que j'ai pour l'instant
+    // TODO: et pour que le factory choisisse correctement le loader, il y a des priorités entre loader + une methode qui dit s'il supporte la rom ou non (bool isSupported(std::istream) const et int getPriority() const)
     
     // Create cartridge
     auto cartridge = inesLoader.createCartridgeFromStream(ifs);
@@ -298,7 +299,7 @@ int main(int argc, const char * argv[]) {
     NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware, LoopManager> nes(graphicHardware, loopManager);
     
     // Insert cartridge
-    nes.insertCartridge(*cartridge);
+    nes.insertCartridge(std::move(cartridge));
     
     // Connect controller
     nes.connectController(0, std::move(controller));

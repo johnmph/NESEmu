@@ -199,7 +199,7 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware, TLoopManager>::PpuHardwar
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware, class TLoopManager>
-Nes<EModel, TCartridgeHardware, TGraphicHardware, TLoopManager>::Nes(TCartridgeHardware const &cartridgeHardware, TGraphicHardware &graphicHardware, TLoopManager &loopManager) : _cartridgeHardware(cartridgeHardware), _loopManager(loopManager), _cpuHardwareInterface(*this), _ppuHardwareInterface(*this), _cpu(_cpuHardwareInterface), _ppu(_ppuHardwareInterface, _ppuHardwareInterface, graphicHardware), _ram(2 * 1024), _vram(2 * 1024), _currentClockForCpu(0), _currentClockForPpu(0) {
+Nes<EModel, TCartridgeHardware, TGraphicHardware, TLoopManager>::Nes(TCartridgeHardware &cartridgeHardware, TGraphicHardware &graphicHardware, TLoopManager &loopManager) : _cartridgeHardware(cartridgeHardware), _loopManager(loopManager), _cpuHardwareInterface(*this), _ppuHardwareInterface(*this), _cpu(_cpuHardwareInterface), _ppu(_ppuHardwareInterface, _ppuHardwareInterface, graphicHardware), _ram(2 * 1024), _vram(2 * 1024), _currentClockForCpu(0), _currentClockForPpu(0) {
     // Begin with no controller
     disconnectController(0);
     disconnectController(1);

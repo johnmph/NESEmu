@@ -13,21 +13,25 @@
 template <Model EModel, class TGraphicHardware, class TLoopManager>
 Nes<EModel, TGraphicHardware, TLoopManager>::Nes(TGraphicHardware &graphicHardware, TLoopManager &loopManager) : _graphicHardware(graphicHardware), _loopManager(loopManager) {
     // Start with No cartridge
-    Cartridge::Nothing<EModel, TGraphicHardware, TLoopManager> cartridge;
-    _nesImplementation = std::move(cartridge.createNesImplementation(_graphicHardware, _loopManager));
+    _cartridge = std::make_unique<Cartridge::Nothing<EModel, TGraphicHardware, TLoopManager>>();
+    _nesImplementation = std::move(_cartridge->createNesImplementation(_graphicHardware, _loopManager));
 }
 
 template <Model EModel, class TGraphicHardware, class TLoopManager>
-template <class TCartridge>
-void Nes<EModel, TGraphicHardware, TLoopManager>::insertCartridge(TCartridge &cartridge) {//TODO: const &cartridge ?
+//template <class TCartridge>
+//void Nes<EModel, TGraphicHardware, TLoopManager>::insertCartridge(TCartridge &cartridge) {//TODO: const &cartridge ?
+void Nes<EModel, TGraphicHardware, TLoopManager>::insertCartridge(std::unique_ptr<Cartridge::Interface<EModel, TGraphicHardware, TLoopManager>> cartridge) {
     // Get controllers from current nes implementation
     std::unique_ptr<Controller::Interface> controllers[2];
     
     controllers[0] = _nesImplementation->disconnectController(0);
     controllers[1] = _nesImplementation->disconnectController(1);
     
+    // Save cartridge because nes uses its mapper
+    _cartridge = std::move(cartridge);
+    
     // Get a nes implementation from cartridge and set nes implementation with
-    _nesImplementation = std::move(cartridge.createNesImplementation(_graphicHardware, _loopManager));
+    _nesImplementation = std::move(_cartridge->createNesImplementation(_graphicHardware, _loopManager));
     
     // Reconnect controllers to new implementation
     _nesImplementation->connectController(0, std::move(controllers[0]));
