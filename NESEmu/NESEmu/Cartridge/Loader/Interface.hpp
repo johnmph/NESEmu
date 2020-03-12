@@ -9,24 +9,20 @@
 #ifndef NESEmu_Cartridge_Loader_Interface_hpp
 #define NESEmu_Cartridge_Loader_Interface_hpp
 
-#include <memory>
 #include <istream>
-#include "../Cartridge.hpp"
-#include "../../Mapper/Mapper0.hpp"//TODO: inclure les autres
+#include "Data.hpp"
 
 
 namespace NESEmu { namespace Cartridge { namespace Loader {
     
-    template <Model EModel, class TGraphicHardware, class TLoopManager>
     struct Interface {
         
         virtual ~Interface() = 0;
         
-        virtual std::unique_ptr<::NESEmu::Cartridge::Interface<EModel, TGraphicHardware, TLoopManager>> createCartridgeFromStream(std::istream &istream) = 0;
+        virtual bool isCartridgeSupported(std::istream &istream) = 0;
+        virtual Data getCartridgeDataFromStream(std::istream &istream) = 0;
         
     };
-    
-    #include "Interface_s.hpp"
     
 } } }
 

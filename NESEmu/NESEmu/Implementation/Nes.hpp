@@ -110,6 +110,9 @@ namespace NESEmu { namespace Implementation {
         // PPU interrupt hardware
         void ppuInterrupt(bool high);
         
+        // Cartridge interrupt hardware
+        void cartridgeInterrupt(bool high);
+        
         // Chips
         Cpu::Chip<Constants::cpuModel, CpuHardwareInterface> _cpu;
         Ppu::Chip<Constants::ppuModel, PpuHardwareInterface, PpuHardwareInterface, TGraphicHardware> _ppu;

@@ -53,7 +53,7 @@ namespace NESEmu { namespace Cpu {
         // TODO: exposer tous ce qu'il y a dans les pins
         //bool getAd1Signal() const;
         //bool getAd2Signal() const;
-        bool getReadWriteSignal() const;
+        Cpu6502::ReadWrite getReadWriteSignal() const;
         uint8_t getOutSignal() const;
         bool getOe1Signal() const;
         bool getOe2Signal() const;

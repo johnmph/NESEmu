@@ -117,12 +117,10 @@ namespace Cpu6502 {
     template <class TBus, bool BDecimalSupported = false>
     using ConfigurationPerformance = Configuration<false, false, TBus, BDecimalSupported>;
     
-    namespace ReadWrite {
-        enum : bool {
-            Read = true,
-            Write = false
-        };
-    }
+    enum class ReadWrite : bool {
+        Read = true,
+        Write = false
+    };
     
     template <class TConfiguration>
     struct Chip {
@@ -150,7 +148,7 @@ namespace Cpu6502 {
         
         void setOverflow(bool high);
         
-        bool getReadWriteSignal() const;
+        ReadWrite getReadWriteSignal() const;
         bool getSyncSignal() const;
         bool getM1Signal() const;
         bool getM2Signal() const;
@@ -278,7 +276,7 @@ namespace Cpu6502 {
         bool _readyLine;
         bool _readyWaitRequested;
         bool _sync;
-        bool _readWrite;
+        ReadWrite _readWrite;
         bool _phi2;
         
         bool _programCounterNeedsIncrement;

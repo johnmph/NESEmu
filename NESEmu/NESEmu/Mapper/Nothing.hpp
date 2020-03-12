@@ -12,7 +12,7 @@
 
 namespace NESEmu { namespace Mapper {
     
-    struct NoMapper {
+    struct NoMapper {//TODO: renommer Nothing ?
         
         template <class TConnectedBus, class TInterruptHardware>
         void clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware);

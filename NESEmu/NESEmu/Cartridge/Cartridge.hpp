@@ -17,7 +17,7 @@ namespace NESEmu { namespace Cartridge {
     template <Model EModel, class TGraphicHardware, class TLoopManager, class TMapper>
     struct Cartridge : Interface<EModel, TGraphicHardware, TLoopManager> {
         
-        Cartridge(TMapper const &mapper);
+        Cartridge(TMapper mapper);
         
         std::unique_ptr<Implementation::Interface> createNesImplementation(TGraphicHardware &graphicHardware, TLoopManager &loopManager) override;
         

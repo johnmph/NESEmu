@@ -9,19 +9,19 @@
 #ifndef NESEmu_Cartridge_Loader_INes_hpp
 #define NESEmu_Cartridge_Loader_INes_hpp
 
+// See https://wiki.nesdev.com/w/index.php/INES
+
 #include "Interface.hpp"
 
 
 namespace NESEmu { namespace Cartridge { namespace Loader {
     
-    template <Model EModel, class TGraphicHardware, class TLoopManager>
-    struct INes : Interface<EModel, TGraphicHardware, TLoopManager> {
+    struct INes : Interface {
         
-        std::unique_ptr<::NESEmu::Cartridge::Interface<EModel, TGraphicHardware, TLoopManager>> createCartridgeFromStream(std::istream &istream) override;
+        bool isCartridgeSupported(std::istream &istream) override;
+        Data getCartridgeDataFromStream(std::istream &istream) override;
         
     };
-    
-    #include "INes_s.hpp"
     
 } } }
 

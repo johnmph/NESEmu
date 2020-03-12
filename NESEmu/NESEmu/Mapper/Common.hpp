@@ -9,7 +9,6 @@
 #ifndef NESEmu_Mapper_Common_hpp
 #define NESEmu_Mapper_Common_hpp
 
-// See https://wiki.nesdev.com/w/index.php/INES // TODO: deplacer ce comment dans le fichier factory qui créera la nes avec la cartridge/mapper correcte
 // See https://wiki.nesdev.com/w/index.php/CPU_memory_map
 // See https://wiki.nesdev.com/w/index.php/PPU_memory_map
 // See https://wiki.nesdev.com/w/index.php/Cartridge_connector

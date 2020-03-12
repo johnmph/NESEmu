@@ -89,7 +89,7 @@ void AttributeRw<TCpu6502>::setValue(std::string const &value) {
 
 template <class TCpu6502>
 bool AttributeRw<TCpu6502>::check(TCpu6502 &cpu6502) {
-    return cpu6502.getReadWriteSignal() == _rw;
+    return static_cast<bool>(cpu6502.getReadWriteSignal()) == _rw;
 }
 
 template <class TCpu6502>

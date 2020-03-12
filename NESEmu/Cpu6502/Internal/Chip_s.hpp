@@ -156,7 +156,7 @@ void Chip<TConfiguration>::powerUp(uint16_t programCounter, uint8_t stackPointer
     _readyLine = true;
     _readyWaitRequested = false;
     _sync = false;
-    _readWrite = true;
+    _readWrite = ReadWrite::Read;
     
     _programCounterNeedsIncrement = false;
     
@@ -316,7 +316,7 @@ void Chip<TConfiguration>::setOverflow(bool high) {
 }
 
 template <class TConfiguration>
-bool Chip<TConfiguration>::getReadWriteSignal() const {
+ReadWrite Chip<TConfiguration>::getReadWriteSignal() const {
     return _readWrite;
 }
 

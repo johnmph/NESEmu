@@ -10,18 +10,11 @@
 #define NESEmu_Mapper_Mapper1_s_hpp
 
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
-Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::Mapper1(std::istream &istream) : _prgRom(IPrgRomSizeInKb * 1024), _prgRam(IPrgRamSizeInKb * 1024), _chrRam(8 * 1024), _shiftRegister(0x10), _shiftCount(0) {//TODO: a voir pour les valeurs des registres
-    // TODO: voir si read via istream ici ou bien dans un factory a part et avoir directement ici les vectors a copier simplement : doit etre en dehors
-    // TODO: pour tests :
-    // Skip header
-    istream.seekg(0x10);
-    
-    // Read Prg-Rom
-    istream.read(reinterpret_cast<char *>(_prgRom.data()), IPrgRomSizeInKb * 1024);
-    
-    // Read Chr-Ram
-    istream.read(reinterpret_cast<char *>(_chrRam.data()), 8 * 1024);
+template <Model EModel>
+Chip<EModel>::Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> prgRam) : _prgRom(std::move(prgRom)), _prgRam(/*std::move(prgRam)*/8 * 1024), _chrRam(8 * 1024), _shiftRegister(0x10), _shiftCount(0) {//TODO: a voir pour les valeurs des registres
+    // Calculate sizes
+    _prgRomSize = _prgRom.size();
+    _prgRamSize = _prgRam.size();
     
     // Set internal registers
     _internalRegisters[0] = 0xC;        // TODO a voir
@@ -30,15 +23,15 @@ Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::Mapper1(std::istream &istream) : _prg
     _internalRegisters[3] = 0x0;
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
+template <Model EModel>
 template <class TConnectedBus, class TInterruptHardware>
-void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware) {
+void Chip<EModel>::clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware) {
     // Does nothing
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
+template <Model EModel>
 template <class TConnectedBus>
-void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::cpuReadPerformed(TConnectedBus &connectedBus) {
+void Chip<EModel>::cpuReadPerformed(TConnectedBus &connectedBus) {
     // Get address
     uint16_t address = connectedBus.getAddressBus();
     
@@ -47,7 +40,7 @@ void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::cpuReadPerformed(TConnectedBus &
         // If Prg-Ram enabled
         if ((_internalRegisters[3] & 0x10) == 0x0) {
             // Read Prg-Ram with possible mirrored address
-            connectedBus.setDataBus(_prgRam[address & ((IPrgRamSizeInKb * 1024) - 1)]);
+            connectedBus.setDataBus(_prgRam[address & (_prgRamSize - 1)]);
         }
     }
     // Prg-Rom
@@ -69,7 +62,7 @@ void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::cpuReadPerformed(TConnectedBus &
         // First 16kb switch
         else {
             mask = 0x3FFF;
-            bank = (address < 0xC000) ? _internalRegisters[3] : ((IPrgRomSizeInKb >> 4) - 1);
+            bank = (address < 0xC000) ? _internalRegisters[3] : ((_prgRomSize >> 14) - 1);
         }
         
         // Read Prg-Rom
@@ -77,9 +70,9 @@ void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::cpuReadPerformed(TConnectedBus &
     }
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
+template <Model EModel>
 template <class TConnectedBus>
-void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::cpuWritePerformed(TConnectedBus &connectedBus) {
+void Chip<EModel>::cpuWritePerformed(TConnectedBus &connectedBus) {
     // Get address
     uint16_t address = connectedBus.getAddressBus();
     
@@ -91,7 +84,7 @@ void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::cpuWritePerformed(TConnectedBus 
         // If Prg-Ram enabled
         if ((_internalRegisters[3] & 0x10) == 0x0) {
             // Write Prg-Ram with possible mirrored address
-            _prgRam[address & ((IPrgRamSizeInKb * 1024) - 1)] = data;
+            _prgRam[address & (_prgRamSize - 1)] = data;
         }
     }
     // Shift register
@@ -121,9 +114,9 @@ void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::cpuWritePerformed(TConnectedBus 
     }
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
+template <Model EModel>
 template <class TConnectedBus>
-void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::ppuReadPerformed(TConnectedBus &connectedBus) {
+void Chip<EModel>::ppuReadPerformed(TConnectedBus &connectedBus) {
     // Get address
     uint16_t address = connectedBus.getAddressBus();
     
@@ -139,9 +132,9 @@ void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::ppuReadPerformed(TConnectedBus &
     }
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
+template <Model EModel>
 template <class TConnectedBus>
-void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::ppuWritePerformed(TConnectedBus &connectedBus) {
+void Chip<EModel>::ppuWritePerformed(TConnectedBus &connectedBus) {
     // Get address
     uint16_t address = connectedBus.getAddressBus();
     
@@ -160,8 +153,8 @@ void Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::ppuWritePerformed(TConnectedBus 
     }
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
-uint16_t Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::getChrRamAddress(uint16_t address) {
+template <Model EModel>
+uint16_t Chip<EModel>::getChrRamAddress(uint16_t address) {
     uint16_t mask;
     uint8_t bank;
     
@@ -179,8 +172,8 @@ uint16_t Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::getChrRamAddress(uint16_t ad
     return (bank << 12) | (address & mask);
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
-uint16_t Mapper1<IPrgRomSizeInKb, IPrgRamSizeInKb>::getVramAddress(uint16_t address) {
+template <Model EModel>
+uint16_t Chip<EModel>::getVramAddress(uint16_t address) {
     switch (_internalRegisters[0] & 0x3) {
         case 0x0 :
             return getMirroredAddress<MirroringType::SingleScreen>(address);

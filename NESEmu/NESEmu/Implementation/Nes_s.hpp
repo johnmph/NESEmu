@@ -131,8 +131,7 @@ void Nes<EModel, TCartridgeHardware, TGraphicHardware, TLoopManager>::CpuHardwar
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware, class TLoopManager>
 void Nes<EModel, TCartridgeHardware, TGraphicHardware, TLoopManager>::CpuHardwareInterface::irq(bool high) {
-    //_nes.mapperInterrupt(high);//TODO: ca ou directement _nes._cpu.irq(high); ?
-    _nes._cpu.irq(high);
+    _nes.cartridgeInterrupt(high);
 }
 
 template <Model EModel, class TCartridgeHardware, class TGraphicHardware, class TLoopManager>
@@ -349,6 +348,12 @@ template <Model EModel, class TCartridgeHardware, class TGraphicHardware, class 
 void Nes<EModel, TCartridgeHardware, TGraphicHardware, TLoopManager>::ppuInterrupt(bool high) {
     // PPU interrupt is connected to CPU NMI
     _cpu.nmi(high);
+}
+
+template <Model EModel, class TCartridgeHardware, class TGraphicHardware, class TLoopManager>
+void Nes<EModel, TCartridgeHardware, TGraphicHardware, TLoopManager>::cartridgeInterrupt(bool high) {
+    // Cartridge interrupt is connected to CPU IRQ
+    _cpu.irq(high);
 }
 
 #endif /* NESEmu_Implementation_Nes_s_hpp */

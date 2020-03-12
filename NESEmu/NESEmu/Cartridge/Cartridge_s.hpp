@@ -11,7 +11,7 @@
 
 
 template <Model EModel, class TGraphicHardware, class TLoopManager, class TMapper>
-Cartridge<EModel, TGraphicHardware, TLoopManager, TMapper>::Cartridge(TMapper const &mapper) : _mapper(mapper) {
+Cartridge<EModel, TGraphicHardware, TLoopManager, TMapper>::Cartridge(TMapper mapper) : _mapper(std::move(mapper)) {
 }
 
 template <Model EModel, class TGraphicHardware, class TLoopManager, class TMapper>

@@ -15,12 +15,20 @@
 #include "Common.hpp"
 
 // TODO: a faire :
-namespace NESEmu { namespace Mapper {
+namespace NESEmu { namespace Mapper { namespace Mapper1 {
     
-    template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb>
-    struct Mapper1 {
+    enum class Model {
+        SNROM,
+        SOROM,
+        SUROM,
+        SXROM,
+        SZROM
+    };
+    
+    template <Model EModel>
+    struct Chip {
         
-        Mapper1(std::istream &istream);
+        Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> prgRam);
         
         template <class TConnectedBus, class TInterruptHardware>
         void clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware);
@@ -47,6 +55,9 @@ namespace NESEmu { namespace Mapper {
         std::vector<uint8_t> _prgRam;
         std::vector<uint8_t> _chrRam;
         
+        unsigned int _prgRomSize;
+        unsigned int _prgRamSize;
+        
         uint8_t _shiftRegister;
         uint8_t _shiftCount;
         uint8_t _internalRegisters[4];
@@ -54,6 +65,6 @@ namespace NESEmu { namespace Mapper {
     
     #include "Mapper1_s.hpp"
     
-} }
+} } }
 
 #endif /* NESEmu_Mapper_Mapper1_hpp */

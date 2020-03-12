@@ -9,16 +9,16 @@
 #ifndef NESEmu_Cartridge_Nothing_hpp
 #define NESEmu_Cartridge_Nothing_hpp
 
-#include "Interface.hpp"
+#include "Cartridge.hpp"
 #include "../Mapper/Nothing.hpp"
 
 
 namespace NESEmu { namespace Cartridge {
     
     template <Model EModel, class TGraphicHardware, class TLoopManager>
-    struct Nothing : Interface<EModel, TGraphicHardware, TLoopManager> {
+    struct Nothing : Cartridge<EModel, TGraphicHardware, TLoopManager, Mapper::NoMapper> {
         
-        std::unique_ptr<Implementation::Interface> createNesImplementation(TGraphicHardware &graphicHardware, TLoopManager &loopManager) override;
+        Nothing();
         
     };
     

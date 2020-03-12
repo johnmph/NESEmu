@@ -10,6 +10,7 @@
 #include <fstream>
 #include <SDL.h>
 #include "NESEmu/Cartridge/Loader/INes.hpp"
+#include "NESEmu/Cartridge/Factory.hpp"
 #include "NESEmu/Nes.hpp"
 #include "NESEmu/Controller/Standard.hpp"
 
@@ -289,14 +290,19 @@ int main(int argc, const char * argv[]) {
     LoopManager loopManager(event);
     
     // Cartridge loader
-    NESEmu::Cartridge::Loader::INes<NESEmu::Model::Ntsc, GraphicHardware, LoopManager> inesLoader;//TODO: a la place d'avoir plusieurs loaders qui vont créer la cartridge (ines, ines2, tnes, ...), avoir un seul CartridgeFactory qui crée les cartridges (ne les crée meme pas, on fait cartridgeFactory.insertCartridgeIntoNes(Nes, std::istream) et les loaders vont seulement retourner une information sur la rom (num de mapper, nombre de banque, la mémoire des banques, ...) donc le cartridgeFactory ne devra pas avoir de methodes virtuelles et donc pas de soucis d'avoir la methode template et donc plus de redondance de template parameter comme cette solution que j'ai pour l'instant
+    //NESEmu::Cartridge::Loader::INes inesLoader;//TODO: a la place d'avoir plusieurs loaders qui vont créer la cartridge (ines, ines2, tnes, ...), avoir un seul CartridgeFactory qui crée les cartridges (ne les crée meme pas, on fait cartridgeFactory.insertCartridgeIntoNes(Nes, std::istream) et les loaders vont seulement retourner une information sur la rom (num de mapper, nombre de banque, la mémoire des banques, ...) donc le cartridgeFactory ne devra pas avoir de methodes virtuelles et donc pas de soucis d'avoir la methode template et donc plus de redondance de template parameter comme cette solution que j'ai pour l'instant
     // TODO: et pour que le factory choisisse correctement le loader, il y a des priorités entre loader + une methode qui dit s'il supporte la rom ou non (bool isSupported(std::istream) const et int getPriority() const)
     // TODO: on peut combiner les 2 solutions (ce que j'ai mis en comm au dessus avec la solution deja faite pour le coté d'inserer des cartridge), on aurait juste plus besoin de specifier les template parameter dans le loader car ce serait une methode template (mais a voir car comment faire si Cartridge n'a plus les template parameters ?)
     
-    // Create cartridge
-    auto cartridge = inesLoader.createCartridgeFromStream(ifs);
+    // TODO: comme les mappers sont resolus au compile-time, a chaque mapper ajouté dans le code, il faut l'instantier (dans Factory) et donc il va avoir une duplication de NesImplementation pour chaque mapper, ca va augmenter la taille du code a fond et peut etre foutre la merde dans l'instruction cache ? si ca tombe la version avec virtual dispatch (runtime) sera au final plus rapide car moins de code meme si les appels de methodes sont indirects !!! A TESTER
     
-    // Create NES with Mapper
+    NESEmu::Cartridge::Factory cartridgeFactory;
+    cartridgeFactory.registerLoader(std::shared_ptr<NESEmu::Cartridge::Loader::Interface>(new NESEmu::Cartridge::Loader::INes()));
+    
+    // Create cartridge
+    auto cartridge = cartridgeFactory.createCartridgeFromStream<NESEmu::Model::Ntsc, GraphicHardware, LoopManager>(ifs);
+    
+    // Create NES
     NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware, LoopManager> nes(graphicHardware, loopManager);
     
     // Insert cartridge

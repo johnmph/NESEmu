@@ -156,7 +156,7 @@ void Chip<EModel, TBus>::irq(bool high) {
 }
 
 template <Model EModel, class TBus>
-bool Chip<EModel, TBus>::getReadWriteSignal() const {
+Cpu6502::ReadWrite Chip<EModel, TBus>::getReadWriteSignal() const {
     return InternalCpu::getReadWriteSignal();
 }
 

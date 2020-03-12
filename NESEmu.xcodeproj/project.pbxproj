@@ -22,6 +22,12 @@
 		4DD1EB872404047900018E52 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD1EB862404047900018E52 /* SDL2.framework */; };
 		4DD7179223FEAADC00005D8C /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD7179023FEAADC00005D8C /* Common.cpp */; };
 		4DD7179323FEAADC00005D8C /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD7179023FEAADC00005D8C /* Common.cpp */; };
+		4DFE480624193FA4006B7DAB /* Factory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFE480524193FA4006B7DAB /* Factory.cpp */; };
+		4DFE480724193FA9006B7DAB /* Factory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFE480524193FA4006B7DAB /* Factory.cpp */; };
+		4DFE480A24194264006B7DAB /* Interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFE480924194264006B7DAB /* Interface.cpp */; };
+		4DFE480B241942C1006B7DAB /* Interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFE480924194264006B7DAB /* Interface.cpp */; };
+		4DFE480D241942FF006B7DAB /* INes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFE480C241942FF006B7DAB /* INes.cpp */; };
+		4DFE480E241942FF006B7DAB /* INes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFE480C241942FF006B7DAB /* INes.cpp */; };
 		4DFF4622241876B7005D3F21 /* Interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFF4621241876B7005D3F21 /* Interface.cpp */; };
 		4DFF4623241876B7005D3F21 /* Interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFF4621241876B7005D3F21 /* Interface.cpp */; };
 /* End PBXBuildFile section */
@@ -109,10 +115,17 @@
 		4DE643F423BAE2EC00CFFE4E /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		4DE643FB23BAE5CE00CFFE4E /* Chip.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Chip.hpp; sourceTree = "<group>"; };
 		4DE643FC23BAF12400CFFE4E /* Chip_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Chip_s.hpp; sourceTree = "<group>"; };
+		4DFE480324193D55006B7DAB /* Factory.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Factory.hpp; sourceTree = "<group>"; };
+		4DFE480424193F4E006B7DAB /* Factory_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Factory_s.hpp; sourceTree = "<group>"; };
+		4DFE480524193FA4006B7DAB /* Factory.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Factory.cpp; sourceTree = "<group>"; };
+		4DFE4808241941D2006B7DAB /* Data.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Data.hpp; sourceTree = "<group>"; };
+		4DFE480924194264006B7DAB /* Interface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Interface.cpp; sourceTree = "<group>"; };
+		4DFE480C241942FF006B7DAB /* INes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = INes.cpp; sourceTree = "<group>"; };
+		4DFE480F241951FD006B7DAB /* Model.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Model.hpp; sourceTree = "<group>"; };
+		4DFE481024199D5B006B7DAB /* Nothing_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Nothing_s.hpp; sourceTree = "<group>"; };
 		4DFF461124184AF0005D3F21 /* Nothing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Nothing.hpp; sourceTree = "<group>"; };
 		4DFF461424184C6D005D3F21 /* Nes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Nes.hpp; sourceTree = "<group>"; };
 		4DFF461524184D0B005D3F21 /* Nes_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Nes_s.hpp; sourceTree = "<group>"; };
-		4DFF461624184E16005D3F21 /* Nothing_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Nothing_s.hpp; sourceTree = "<group>"; };
 		4DFF46182418648F005D3F21 /* Nothing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Nothing.hpp; sourceTree = "<group>"; };
 		4DFF4619241864A8005D3F21 /* Nothing_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Nothing_s.hpp; sourceTree = "<group>"; };
 		4DFF461A241865FF005D3F21 /* Interface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Interface.hpp; sourceTree = "<group>"; };
@@ -120,10 +133,8 @@
 		4DFF461C24186834005D3F21 /* Cartridge_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cartridge_s.hpp; sourceTree = "<group>"; };
 		4DFF461E241868C9005D3F21 /* Interface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Interface.hpp; sourceTree = "<group>"; };
 		4DFF461F24186A74005D3F21 /* INes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = INes.hpp; sourceTree = "<group>"; };
-		4DFF462024186B07005D3F21 /* INes_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = INes_s.hpp; sourceTree = "<group>"; };
 		4DFF4621241876B7005D3F21 /* Interface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Interface.cpp; sourceTree = "<group>"; };
 		4DFF46272418778C005D3F21 /* Interface_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Interface_s.hpp; sourceTree = "<group>"; };
-		4DFF4628241877C1005D3F21 /* Interface_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Interface_s.hpp; sourceTree = "<group>"; };
 		4DFF462A2418797E005D3F21 /* Interface.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Interface.hpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -253,8 +264,11 @@
 				4DFF461B241867A5005D3F21 /* Cartridge.hpp */,
 				4DFF461C24186834005D3F21 /* Cartridge_s.hpp */,
 				4DFF461124184AF0005D3F21 /* Nothing.hpp */,
-				4DFF461624184E16005D3F21 /* Nothing_s.hpp */,
+				4DFE481024199D5B006B7DAB /* Nothing_s.hpp */,
 				4DFF461D241868AF005D3F21 /* Loader */,
+				4DFE480324193D55006B7DAB /* Factory.hpp */,
+				4DFE480424193F4E006B7DAB /* Factory_s.hpp */,
+				4DFE480524193FA4006B7DAB /* Factory.cpp */,
 			);
 			path = Cartridge;
 			sourceTree = "<group>";
@@ -300,6 +314,7 @@
 		4DFF46172418639A005D3F21 /* Mapper */ = {
 			isa = PBXGroup;
 			children = (
+				4DFE480F241951FD006B7DAB /* Model.hpp */,
 				4DD1EB7F2403911B00018E52 /* Common.hpp */,
 				4DD1EB7E2403911B00018E52 /* Common.cpp */,
 				4DFF46182418648F005D3F21 /* Nothing.hpp */,
@@ -323,10 +338,11 @@
 		4DFF461D241868AF005D3F21 /* Loader */ = {
 			isa = PBXGroup;
 			children = (
+				4DFE4808241941D2006B7DAB /* Data.hpp */,
 				4DFF461E241868C9005D3F21 /* Interface.hpp */,
-				4DFF4628241877C1005D3F21 /* Interface_s.hpp */,
+				4DFE480924194264006B7DAB /* Interface.cpp */,
 				4DFF461F24186A74005D3F21 /* INes.hpp */,
-				4DFF462024186B07005D3F21 /* INes_s.hpp */,
+				4DFE480C241942FF006B7DAB /* INes.cpp */,
 			);
 			path = Loader;
 			sourceTree = "<group>";
@@ -431,10 +447,13 @@
 			files = (
 				4DFF4623241876B7005D3F21 /* Interface.cpp in Sources */,
 				4D6B9C2223E2310D000889C3 /* ChipVisual6502UnitTest.mm in Sources */,
+				4DFE480724193FA9006B7DAB /* Factory.cpp in Sources */,
+				4DFE480B241942C1006B7DAB /* Interface.cpp in Sources */,
 				4D1137F323CD3EEC0056AAAD /* NESEmuUnitTest.mm in Sources */,
 				4DD1EB812403911B00018E52 /* Common.cpp in Sources */,
 				4D6FAB3123ECBF9C009977EE /* Visual6502.cpp in Sources */,
 				4D70474F2402FAF1005A56B1 /* Nothing.cpp in Sources */,
+				4DFE480E241942FF006B7DAB /* INes.cpp in Sources */,
 				4D1137FD23CD403E0056AAAD /* ChipNestestUnitTest.mm in Sources */,
 				4D11382C23D534280056AAAD /* Chip.cpp in Sources */,
 				4DD7179323FEAADC00005D8C /* Common.cpp in Sources */,
@@ -446,12 +465,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4DFE480D241942FF006B7DAB /* INes.cpp in Sources */,
 				4DD1EB832403FD1700018E52 /* main2.cpp in Sources */,
 				4D11382B23D533E70056AAAD /* Chip.cpp in Sources */,
+				4DFE480624193FA4006B7DAB /* Factory.cpp in Sources */,
 				4DD7179223FEAADC00005D8C /* Common.cpp in Sources */,
 				4DD1EB802403911B00018E52 /* Common.cpp in Sources */,
 				4DFF4622241876B7005D3F21 /* Interface.cpp in Sources */,
 				4D70474E2402FAF1005A56B1 /* Nothing.cpp in Sources */,
+				4DFE480A24194264006B7DAB /* Interface.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
