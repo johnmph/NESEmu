@@ -9,7 +9,7 @@
 #ifndef NESEmu_Mapper_Mapper0_hpp
 #define NESEmu_Mapper_Mapper0_hpp
 
-#include <istream>
+#include <vector>
 #include "Common.hpp"
 
 // See https://wiki.nesdev.com/w/index.php/NROM

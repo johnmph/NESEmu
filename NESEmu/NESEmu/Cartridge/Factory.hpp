@@ -15,6 +15,7 @@
 #include "Cartridge.hpp"
 #include "Nothing.hpp"
 #include "../Mapper/Mapper0.hpp"
+#include "../Mapper/Mapper0n.hpp"
 #include "../Mapper/Mapper1.hpp"
 #include "../Mapper/Mapper2.hpp"
 // TODO: les mettre tous

@@ -12,7 +12,7 @@
 #include "Implementation/Nes.hpp"
 #include "Cartridge/Nothing.hpp"
 
-
+//TODO: voir pour noexcept sur les methodes
 namespace NESEmu {
     
     template <Model EModel, class TGraphicHardware, class TLoopManager>//TODO: trouver un autre nom que TLoopManager

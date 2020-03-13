@@ -2,7 +2,7 @@
 //  Nothing_s.hpp
 //  NESEmu
 //
-//  Created by Jonathan Baliko on 10/03/20.
+//  Created by Jonathan Baliko on 11/03/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
@@ -11,10 +11,7 @@
 
 
 template <Model EModel, class TGraphicHardware, class TLoopManager>
-std::unique_ptr<Implementation::Interface> Nothing<EModel, TGraphicHardware, TLoopManager>::createNesImplementation(TGraphicHardware &graphicHardware, TLoopManager &loopManager) {
-    Mapper::NoMapper noMapper;
-    
-    return std::make_unique<Implementation::Nes<EModel, Mapper::NoMapper, TGraphicHardware, TLoopManager>>(noMapper, graphicHardware, loopManager);
+Nothing<EModel, TGraphicHardware, TLoopManager>::Nothing() : Cartridge<EModel, TGraphicHardware, TLoopManager, Mapper::NoMapper>(Mapper::NoMapper()) {
 }
 
 #endif /* NESEmu_Cartridge_Nothing_s_hpp */
