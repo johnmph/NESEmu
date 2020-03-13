@@ -49,10 +49,10 @@ std::unique_ptr<Interface<EModel, TGraphicHardware, TLoopManager>> Factory::conv
                 cartridge = std::make_unique<Cartridge<EModel, TGraphicHardware, TLoopManager, decltype(mapper)>>(std::move(mapper));
             }
             else if (data.mirroringType == Mapper::MirroringType::Vertical) {
-                //Mapper::Mapper0::Chip<Mapper::MirroringType::Vertical> mapper(std::move(data.prgRom), std::move(data.chrRom));
-                //cartridge = std::make_unique<Cartridge<EModel, TGraphicHardware, TLoopManager, decltype(mapper)>>(std::move(mapper));
+                /*Mapper::Mapper0::Chip<Mapper::MirroringType::Vertical> mapper(std::move(data.prgRom), std::move(data.chrRom));
+                cartridge = std::make_unique<Cartridge<EModel, TGraphicHardware, TLoopManager, decltype(mapper)>>(std::move(mapper));*/
                 
-                Mapper::Mapper0n::Chip<Mapper::MirroringType::Vertical, std::tuple<Mapper::Mapper0n::PrgRom>, std::tuple<Mapper::Mapper0n::ChrRom>> mapper(std::tuple<Mapper::Mapper0n::PrgRom>(std::move(data.prgRom)), std::tuple<Mapper::Mapper0n::ChrRom>(std::move(data.chrRom)));
+                Mapper::Mapper0n::Chip<Mapper::Mapper0n::PrgRom, Mapper::Mapper0n::ChrRom, Mapper::Mapper0n::InternalVRam<Mapper::MirroringType::Vertical>> mapper(std::tuple<Mapper::Mapper0n::PrgRom, Mapper::Mapper0n::ChrRom, Mapper::Mapper0n::InternalVRam<Mapper::MirroringType::Vertical>>(std::move(data.prgRom), std::move(data.chrRom)));
                 cartridge = std::make_unique<Cartridge<EModel, TGraphicHardware, TLoopManager, decltype(mapper)>>(std::move(mapper));
             }
         }

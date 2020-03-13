@@ -28,10 +28,41 @@ namespace NESEmu { namespace Mapper { namespace Mapper0n {
      
      TODO: surement couper en differentes parties (policy) qui emule les chips ROM, RAM, ... ainsi on peut composer un mapper avec ces chips (comme Zelda 1 qui est un MMC1 avec 8ko de chr-ram et Zelda 2 qui est aussi un MMC1 mais avec 128ko de chr-rom)
      
+     TODO: d'apres les tests, les profiling et les comparaisons d'asm, ce code avec les policy, tuple, ... revient bien au meme qu'en direct, donc utiliser ce systeme car plus de flexibilité sans perte de performances
+     
      Audio : a voir
      Bus Conflit : a voir
      
      */
+    
+    // Traits to know if a class has a cpuReadPerformed method
+    template <class TConnectedBus, typename T, bool = true>
+    struct HasCpuReadPerformed : std::false_type {};
+    
+    template <class TConnectedBus, typename T>
+    struct HasCpuReadPerformed<TConnectedBus, T, (sizeof(decltype(&T::template cpuReadPerformed<TConnectedBus>)) >= 0)> : std::true_type {};
+    
+    // Traits to know if a class has a cpuWritePerformed method
+    template <class TConnectedBus, typename T, bool = true>
+    struct HasCpuWritePerformed : std::false_type {};
+    
+    template <class TConnectedBus, typename T>
+    struct HasCpuWritePerformed<TConnectedBus, T, (sizeof(decltype(&T::template cpuWritePerformed<TConnectedBus>)) >= 0)> : std::true_type {};
+    
+    // Traits to know if a class has a ppuReadPerformed method
+    template <class TConnectedBus, typename T, bool = true>
+    struct HasPpuReadPerformed : std::false_type {};
+    
+    template <class TConnectedBus, typename T>
+    struct HasPpuReadPerformed<TConnectedBus, T, (sizeof(decltype(&T::template ppuReadPerformed<TConnectedBus>)) >= 0)> : std::true_type {};
+    
+    // Traits to know if a class has a ppuWritePerformed method
+    template <class TConnectedBus, typename T, bool = true>
+    struct HasPpuWritePerformed : std::false_type {};
+    
+    template <class TConnectedBus, typename T>
+    struct HasPpuWritePerformed<TConnectedBus, T, (sizeof(decltype(&T::template ppuWritePerformed<TConnectedBus>)) >= 0)> : std::true_type {};
+    
     
     struct PrgRom {
         
@@ -40,10 +71,7 @@ namespace NESEmu { namespace Mapper { namespace Mapper0n {
         
         // Cpu memory bus
         template <class TConnectedBus>
-        void cpuReadPerformed(TConnectedBus &connectedBus, uint16_t address) const;
-        /*
-        template <class TConnectedBus>
-        void cpuWritePerformed(TConnectedBus &connectedBus, uint16_t address);*/
+        void cpuReadPerformed(TConnectedBus &connectedBus) const;
         
     private:
         std::vector<uint8_t> const _data;
@@ -57,10 +85,10 @@ namespace NESEmu { namespace Mapper { namespace Mapper0n {
         
         // Cpu memory bus
         template <class TConnectedBus>
-        void cpuReadPerformed(TConnectedBus &connectedBus, uint16_t address) const;
+        void cpuReadPerformed(TConnectedBus &connectedBus) const;
         
         template <class TConnectedBus>
-        void cpuWritePerformed(TConnectedBus &connectedBus, uint16_t address);
+        void cpuWritePerformed(TConnectedBus &connectedBus);
         
     private:
         std::vector<uint8_t> _data;
@@ -74,10 +102,7 @@ namespace NESEmu { namespace Mapper { namespace Mapper0n {
         
         // Ppu memory bus
         template <class TConnectedBus>
-        void ppuReadPerformed(TConnectedBus &connectedBus, uint16_t address) const;
-        
-        template <class TConnectedBus>
-        void ppuWritePerformed(TConnectedBus &connectedBus, uint16_t address);
+        void ppuReadPerformed(TConnectedBus &connectedBus) const;
         
     private:
         std::vector<uint8_t> const _data;
@@ -91,21 +116,32 @@ namespace NESEmu { namespace Mapper { namespace Mapper0n {
         
         // Ppu memory bus
         template <class TConnectedBus>
-        void ppuReadPerformed(TConnectedBus &connectedBus, uint16_t address) const;
+        void ppuReadPerformed(TConnectedBus &connectedBus) const;
         
         template <class TConnectedBus>
-        void ppuWritePerformed(TConnectedBus &connectedBus, uint16_t address);
+        void ppuWritePerformed(TConnectedBus &connectedBus);
         
     private:
         std::vector<uint8_t> _data;
         uint16_t const _addressMask;
     };
     
+    template <MirroringType EMirroring>
+    struct InternalVRam {
+        
+        // Ppu memory bus
+        template <class TConnectedBus>
+        void ppuReadPerformed(TConnectedBus &connectedBus) const;
+        
+        template <class TConnectedBus>
+        void ppuWritePerformed(TConnectedBus &connectedBus);
+    };
+    
 
-    template <MirroringType EMirroring, class TCpuChips, class TPpuChips>
+    template <class ...TChips>
     struct Chip {
         
-        Chip(TCpuChips cpuChips, TPpuChips ppuChips);
+        Chip(std::tuple<TChips...> chips);
         
         template <class TConnectedBus, class TInterruptHardware>
         void clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware);   // TODO: voir si moyen de desactiver l'appel au compile time (cad que sur les mappers ou on a pas besoin de clock il n'y aurait pas d'appels de clock), seulement sur les mappers qui en ont besoin, ainsi on evite des pertes de performances (ou si l'optimisation suffit pour ne pas appeler la methode si elle est vide) !
@@ -125,29 +161,46 @@ namespace NESEmu { namespace Mapper { namespace Mapper0n {
         void ppuWritePerformed(TConnectedBus &connectedBus);
         
     private:
-        template <class TConnectedBus, class ...TChips>
-        void cpuReadPerformed(std::tuple<TChips...> &chipsList, TConnectedBus &connectedBus, uint16_t address);
         
-        template <class TConnectedBus, class ...TChips>
-        void cpuWritePerformed(std::tuple<TChips...> &chipsList, TConnectedBus &connectedBus, uint16_t address);
+        template <class TConnectedBus>
+        void chipCpuReadPerformed(TConnectedBus &connectedBus);
         
-        template <class TConnectedBus, class ...TChips>
-        void ppuReadPerformed(std::tuple<TChips...> &chipsList, TConnectedBus &connectedBus, uint16_t address);
+        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<HasCpuReadPerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
+        void chipCpuReadPerformed(TConnectedBus &connectedBus);
         
-        template <class TConnectedBus, class ...TChips>
-        void ppuWritePerformed(std::tuple<TChips...> &chipsList, TConnectedBus &connectedBus, uint16_t address);
+        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<!HasCpuReadPerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
+        void chipCpuReadPerformed(TConnectedBus &connectedBus);
         
-        //std::tuple<TChips...> _chips;
-        TCpuChips _cpuChips;
-        TPpuChips _ppuChips;
+        template <class TConnectedBus>
+        void chipCpuWritePerformed(TConnectedBus &connectedBus);
+        
+        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<HasCpuWritePerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
+        void chipCpuWritePerformed(TConnectedBus &connectedBus);
+        
+        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<!HasCpuWritePerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
+        void chipCpuWritePerformed(TConnectedBus &connectedBus);
+        
+        template <class TConnectedBus>
+        void chipPpuReadPerformed(TConnectedBus &connectedBus);
+        
+        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<HasPpuReadPerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
+        void chipPpuReadPerformed(TConnectedBus &connectedBus);
+        
+        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<!HasPpuReadPerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
+        void chipPpuReadPerformed(TConnectedBus &connectedBus);
+        
+        template <class TConnectedBus>
+        void chipPpuWritePerformed(TConnectedBus &connectedBus);
+        
+        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<HasPpuWritePerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
+        void chipPpuWritePerformed(TConnectedBus &connectedBus);
+        
+        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<!HasPpuWritePerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
+        void chipPpuWritePerformed(TConnectedBus &connectedBus);
+        
+        
+        std::tuple<TChips...> _chips;
     };
-    
-    // Mapper 0 has only Horizontal or Vertical mirroring
-    /*template<>
-    struct Chip<MirroringType::SingleScreen>;
-    
-    template<>
-    struct Chip<MirroringType::FourScreen>;*/
     
     #include "Mapper0n_s.hpp"
     

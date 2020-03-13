@@ -167,7 +167,8 @@ struct LoopManager {
     
     template <class TNes>
     bool needToStop(TNes &nes) {
-        if (_event.type == SDL_QUIT) {
+        --_x;
+        if ((_event.type == SDL_QUIT) || (_x == 0)) {
             return true;
         }
         
@@ -187,6 +188,7 @@ struct LoopManager {
     }
     
 private:
+    unsigned int _x = 35795460;
     SDL_Event &_event;
     bool _resetState;
 };
