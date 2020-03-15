@@ -14,6 +14,7 @@
 // See https://wiki.nesdev.com/w/index.php/Cartridge_connector
 
 #include <cstdint>
+#include <vector>
 
 
 namespace NESEmu { namespace Mapper {
@@ -41,6 +42,82 @@ namespace NESEmu { namespace Mapper {
     
     template <>
     uint16_t getMirroredAddress<MirroringType::FourScreen>(uint16_t address);
+    
+    
+    template <class TMMC>
+    struct PrgRom {
+        
+        PrgRom(std::vector<uint8_t> data);
+        
+        // Cpu memory bus
+        template <class TConnectedBus>
+        void cpuReadPerformed(TMMC const &mmc, TConnectedBus &connectedBus) const;
+        
+    private:
+        std::vector<uint8_t> const _data;
+        //uint16_t const _addressMask;
+    };
+    
+    template <class TMMC>
+    struct PrgRam {
+        
+        PrgRam(std::vector<uint8_t> data);
+        
+        // Cpu memory bus
+        template <class TConnectedBus>
+        void cpuReadPerformed(TMMC const &mmc, TConnectedBus &connectedBus) const;
+        
+        template <class TConnectedBus>
+        void cpuWritePerformed(TMMC const &mmc, TConnectedBus &connectedBus);
+        
+    private:
+        std::vector<uint8_t> _data;
+        //uint16_t const _addressMask;
+    };
+    
+    template <class TMMC>
+    struct ChrRom {
+        
+        ChrRom(std::vector<uint8_t> data);
+        
+        // Ppu memory bus
+        template <class TConnectedBus>
+        void ppuReadPerformed(TMMC const &mmc, TConnectedBus &connectedBus) const;
+        
+    private:
+        std::vector<uint8_t> const _data;
+        //uint16_t const _addressMask;
+    };
+    
+    template <class TMMC>
+    struct ChrRam {
+        
+        ChrRam(std::vector<uint8_t> data);
+        
+        // Ppu memory bus
+        template <class TConnectedBus>
+        void ppuReadPerformed(TMMC const &mmc, TConnectedBus &connectedBus) const;
+        
+        template <class TConnectedBus>
+        void ppuWritePerformed(TMMC const &mmc, TConnectedBus &connectedBus);
+        
+    private:
+        std::vector<uint8_t> _data;
+        //uint16_t const _addressMask;
+    };
+    
+    template <class TMMC>
+    struct InternalVRam {
+        
+        // Ppu memory bus
+        template <class TConnectedBus>
+        void ppuReadPerformed(TMMC const &mmc, TConnectedBus &connectedBus) const;
+        
+        template <class TConnectedBus>
+        void ppuWritePerformed(TMMC const &mmc, TConnectedBus &connectedBus);
+    };
+    
+    #include "Common_s.hpp"
     
 } }
 

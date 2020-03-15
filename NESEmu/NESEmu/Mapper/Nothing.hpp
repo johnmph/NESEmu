@@ -10,9 +10,9 @@
 #define NESEmu_Mapper_Nothing_hpp
 
 
-namespace NESEmu { namespace Mapper {
+namespace NESEmu { namespace Mapper { namespace Nothing {
     
-    struct NoMapper {//TODO: renommer Nothing ?
+    struct Chip {
         
         template <class TConnectedBus, class TInterruptHardware>
         void clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware);
@@ -34,6 +34,6 @@ namespace NESEmu { namespace Mapper {
     
     #include "Nothing_s.hpp"
     
-} }
+} } }
 
 #endif /* NESEmu_Mapper_Nothing_hpp */

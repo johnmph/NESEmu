@@ -11,6 +11,44 @@
 
 
 template <MirroringType EMirroring>
+bool NRom<EMirroring>::isPrgRamReadEnabled() const {
+    // Always enabled
+    return true;
+}
+
+template <MirroringType EMirroring>
+bool NRom<EMirroring>::isPrgRamWriteEnabled() const {
+    // Always enabled
+    return true;
+}
+
+template <MirroringType EMirroring>
+std::size_t NRom<EMirroring>::getPrgRomAddress(uint16_t address, std::size_t size) const {
+    return address & (size - 1);
+}
+
+template <MirroringType EMirroring>
+std::size_t NRom<EMirroring>::getPrgRamAddress(uint16_t address, std::size_t size) const {
+    return address & (size - 1);
+}
+
+template <MirroringType EMirroring>
+std::size_t NRom<EMirroring>::getChrRomAddress(uint16_t address, std::size_t size) const {
+    return address & (size - 1);
+}
+
+template <MirroringType EMirroring>
+std::size_t NRom<EMirroring>::getChrRamAddress(uint16_t address, std::size_t size) const {
+    return address & (size - 1);
+}
+
+template <MirroringType EMirroring>
+uint16_t NRom<EMirroring>::getMirroredVRamAddress(uint16_t address) const {
+    return getMirroredAddress<EMirroring>(address);
+}
+
+
+template <MirroringType EMirroring>
 Chip<EMirroring>::Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> chrRom) : _prgRom(std::move(prgRom)), _chrRom(std::move(chrRom)) {
     // 16 or 32kb of prg-rom only
     assert((_prgRom.size() == (16 * 1024)) || (_prgRom.size() == (32 * 1024)));

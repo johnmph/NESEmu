@@ -33,6 +33,20 @@ namespace NESEmu { namespace Mapper { namespace Mapper0 {
      */
     
     template <MirroringType EMirroring>
+    struct NRom {
+        
+        bool isPrgRamReadEnabled() const;
+        bool isPrgRamWriteEnabled() const;
+        std::size_t getPrgRomAddress(uint16_t address, std::size_t size) const;
+        std::size_t getPrgRamAddress(uint16_t address, std::size_t size) const;
+        std::size_t getChrRomAddress(uint16_t address, std::size_t size) const;
+        std::size_t getChrRamAddress(uint16_t address, std::size_t size) const;
+        uint16_t getMirroredVRamAddress(uint16_t address) const;
+        
+    };
+    
+    
+    template <MirroringType EMirroring>
     struct Chip {
         
         Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> chrRom);

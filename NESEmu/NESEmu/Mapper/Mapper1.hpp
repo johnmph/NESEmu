@@ -25,6 +25,29 @@ namespace NESEmu { namespace Mapper { namespace Mapper1 {
         SZROM
     };
     
+    struct MMC1 {
+        
+        MMC1();
+        
+        bool isPrgRamReadEnabled() const;
+        bool isPrgRamWriteEnabled() const;
+        std::size_t getPrgRomAddress(uint16_t address, std::size_t size) const;
+        std::size_t getPrgRamAddress(uint16_t address, std::size_t size) const;
+        std::size_t getChrRomAddress(uint16_t address, std::size_t size) const;
+        std::size_t getChrRamAddress(uint16_t address, std::size_t size) const;
+        uint16_t getMirroredVRamAddress(uint16_t address) const;
+        
+        // Cpu memory bus
+        template <class TConnectedBus>
+        void cpuWritePerformed(MMC1 const &mmc, TConnectedBus &connectedBus);
+        
+    private:
+        uint8_t _shiftRegister;
+        uint8_t _shiftCount;
+        uint8_t _internalRegisters[4];
+    };
+    
+    
     template <Model EModel>
     struct Chip {
         

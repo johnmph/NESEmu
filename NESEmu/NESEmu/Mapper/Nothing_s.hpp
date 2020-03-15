@@ -11,23 +11,23 @@
 
 
 template <class TConnectedBus, class TInterruptHardware>
-void NoMapper::clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware) {
+void Chip::clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware) {
 }
 
 template <class TConnectedBus>
-void NoMapper::cpuReadPerformed(TConnectedBus &connectedBus) {
+void Chip::cpuReadPerformed(TConnectedBus &connectedBus) {
 }
 
 template <class TConnectedBus>
-void NoMapper::cpuWritePerformed(TConnectedBus &connectedBus) {
+void Chip::cpuWritePerformed(TConnectedBus &connectedBus) {
 }
 
 template <class TConnectedBus>
-void NoMapper::ppuReadPerformed(TConnectedBus &connectedBus) {
+void Chip::ppuReadPerformed(TConnectedBus &connectedBus) {
 }
 
 template <class TConnectedBus>
-void NoMapper::ppuWritePerformed(TConnectedBus &connectedBus) {
+void Chip::ppuWritePerformed(TConnectedBus &connectedBus) {
 }
 
 #endif /* NESEmu_Mapper_Nothing_s_hpp */

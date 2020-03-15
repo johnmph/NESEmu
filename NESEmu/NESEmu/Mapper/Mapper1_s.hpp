@@ -10,6 +10,43 @@
 #define NESEmu_Mapper_Mapper1_s_hpp
 
 
+template <class TConnectedBus>
+void MMC1::cpuWritePerformed(MMC1 const &mmc, TConnectedBus &connectedBus) {
+    // Get address
+    uint16_t address = connectedBus.getAddressBus();
+    
+    // Shift register
+    if (address >= 0x8000) {//TODO: attention, si 2 writes consecutifs, il n'y a que le 1er qui est pris en compte (a implementer surement avec clock en sauvant le rw signal du cpu et en le checkant ici (voir https://wiki.nesdev.com/w/index.php/MMC1 ) a tester avec Bill & Ted's Excellent Adventure
+        // Get data
+        uint8_t data = connectedBus.getDataBus();
+        
+        // Clear registers
+        if ((data & 0x80) != 0x0) {
+            _shiftRegister = 0x10;
+            _shiftCount = 0;
+            _internalRegisters[0] |= 0xC0;
+            
+            return;
+        }
+        
+        // Shift register and load LSB in shift register MSB
+        _shiftRegister >>= 1;
+        _shiftRegister |= (data & 0x1) << 4;
+        ++_shiftCount;
+        
+        // If last shift
+        if (_shiftCount >= 5) {
+            _internalRegisters[(address >> 13) & 0x3] = _shiftRegister;
+            
+            // Reset shift registers
+            _shiftRegister = 0x10;
+            _shiftCount = 0;
+        }
+    }
+}
+
+
+
 template <Model EModel>
 Chip<EModel>::Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> prgRam) : _prgRom(std::move(prgRom)), _prgRam(/*std::move(prgRam)*/8 * 1024), _chrRam(8 * 1024), _shiftRegister(0x10), _shiftCount(0) {//TODO: a voir pour les valeurs des registres
     // Calculate sizes

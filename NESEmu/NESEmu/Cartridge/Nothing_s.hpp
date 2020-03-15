@@ -11,7 +11,7 @@
 
 
 template <Model EModel, class TGraphicHardware, class TLoopManager>
-Nothing<EModel, TGraphicHardware, TLoopManager>::Nothing() : Cartridge<EModel, TGraphicHardware, TLoopManager, Mapper::NoMapper>(Mapper::NoMapper()) {
+Nothing<EModel, TGraphicHardware, TLoopManager>::Nothing() : Cartridge<EModel, TGraphicHardware, TLoopManager, Mapper::Nothing::Chip>(Mapper::Nothing::Chip()) {
 }
 
 #endif /* NESEmu_Cartridge_Nothing_s_hpp */

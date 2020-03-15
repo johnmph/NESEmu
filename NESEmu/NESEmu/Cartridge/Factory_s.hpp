@@ -52,14 +52,18 @@ std::unique_ptr<Interface<EModel, TGraphicHardware, TLoopManager>> Factory::conv
                 /*Mapper::Mapper0::Chip<Mapper::MirroringType::Vertical> mapper(std::move(data.prgRom), std::move(data.chrRom));
                 cartridge = std::make_unique<Cartridge<EModel, TGraphicHardware, TLoopManager, decltype(mapper)>>(std::move(mapper));*/
                 
-                Mapper::Mapper0n::Chip<Mapper::Mapper0n::PrgRom, Mapper::Mapper0n::ChrRom, Mapper::Mapper0n::InternalVRam<Mapper::MirroringType::Vertical>> mapper(std::tuple<Mapper::Mapper0n::PrgRom, Mapper::Mapper0n::ChrRom, Mapper::Mapper0n::InternalVRam<Mapper::MirroringType::Vertical>>(std::move(data.prgRom), std::move(data.chrRom)));
+                //Mapper::Mapper0n::Chip<Mapper::Mapper0n::PrgRom, Mapper::Mapper0n::ChrRom, Mapper::Mapper0n::InternalVRam<Mapper::MirroringType::Vertical>> mapper(std::tuple<Mapper::Mapper0n::PrgRom, Mapper::Mapper0n::ChrRom, Mapper::Mapper0n::InternalVRam<Mapper::MirroringType::Vertical>>(std::move(data.prgRom), std::move(data.chrRom)));
+                Mapper::Board<Mapper::Mapper0::NRom<Mapper::MirroringType::Vertical>, Mapper::PrgRom, Mapper::ChrRom, Mapper::InternalVRam> mapper({{}, std::move(data.prgRom), std::move(data.chrRom), {}});
+                
                 cartridge = std::make_unique<Cartridge<EModel, TGraphicHardware, TLoopManager, decltype(mapper)>>(std::move(mapper));
             }
         }
         break;
         
         case Mapper::Model::MMC1 : {
-            Mapper::Mapper1::Chip<Mapper::Mapper1::Model::SNROM> mapper(std::move(data.prgRom), std::vector<uint8_t>());
+            //Mapper::Mapper1::Chip<Mapper::Mapper1::Model::SNROM> mapper(std::move(data.prgRom), std::vector<uint8_t>());
+            Mapper::Board<Mapper::Mapper1::MMC1, Mapper::PrgRom, Mapper::PrgRam, Mapper::ChrRom, Mapper::InternalVRam> mapper({{}, std::move(data.prgRom), std::vector<uint8_t>(8 * 1024), /*std::vector<uint8_t>(8 * 1024)*/std::move(data.chrRom), {}});
+            
             cartridge = std::make_unique<Cartridge<EModel, TGraphicHardware, TLoopManager, decltype(mapper)>>(std::move(mapper));
         }
         break;

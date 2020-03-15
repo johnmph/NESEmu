@@ -16,7 +16,7 @@
 namespace NESEmu { namespace Cartridge {
     
     template <Model EModel, class TGraphicHardware, class TLoopManager>
-    struct Nothing : Cartridge<EModel, TGraphicHardware, TLoopManager, Mapper::NoMapper> {
+    struct Nothing : Cartridge<EModel, TGraphicHardware, TLoopManager, Mapper::Nothing::Chip> {
         
         Nothing();
         
