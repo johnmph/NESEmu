@@ -105,7 +105,8 @@ template <class TConnectedBus>
 void InternalVRam<TMMC>::ppuReadPerformed(TMMC const &mmc, TConnectedBus &connectedBus) const {
     uint16_t address = connectedBus.getAddressBus();
     
-    if ((address >= 0x2000) && (address < 0x4000)) {    // TODO: pas besoin de la condition car le mask & 0x3FFF est mis via le PPU
+    // Internal VRAM (PPU address is always < 0x4000)
+    if (address >= 0x2000) {
         // Read VRAM with mirrored address
         connectedBus.setDataBus(connectedBus.getVram()[mmc.getMirroredVRamAddress(address)]);
     }
@@ -116,8 +117,8 @@ template <class TConnectedBus>
 void InternalVRam<TMMC>::ppuWritePerformed(TMMC const &mmc, TConnectedBus &connectedBus) {
     uint16_t address = connectedBus.getAddressBus();
     
-    // Internal VRAM
-    if ((address >= 0x2000) && (address < 0x4000)) {    // TODO: pas besoin de la condition car le mask & 0x3FFF est mis via le PPU
+    // Internal VRAM (PPU address is always < 0x4000)
+    if (address >= 0x2000) {
         // Write VRAM with mirrored address
         connectedBus.getVram()[mmc.getMirroredVRamAddress(address)] = connectedBus.getDataBus();
     }

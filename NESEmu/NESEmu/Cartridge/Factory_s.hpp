@@ -60,10 +60,16 @@ std::unique_ptr<Interface<EModel, TGraphicHardware, TLoopManager>> Factory::conv
         break;
         
         case Mapper::Model::MMC1 : {
+            if (data.chrRom.size() > 0) {
+                Mapper::Board<Mapper::Mapper1::MMC1, Mapper::PrgRom, Mapper::PrgRam, Mapper::ChrRom, Mapper::InternalVRam> mapper({{}, std::move(data.prgRom), std::vector<uint8_t>(8 * 1024), std::move(data.chrRom), {}});
+                
+                cartridge = std::make_unique<Cartridge<EModel, TGraphicHardware, TLoopManager, decltype(mapper)>>(std::move(mapper));
+            } else {
+                Mapper::Board<Mapper::Mapper1::MMC1, Mapper::PrgRom, Mapper::PrgRam, Mapper::ChrRam, Mapper::InternalVRam> mapper({{}, std::move(data.prgRom), std::vector<uint8_t>(8 * 1024), std::vector<uint8_t>(8 * 1024), {}});
+                
+                cartridge = std::make_unique<Cartridge<EModel, TGraphicHardware, TLoopManager, decltype(mapper)>>(std::move(mapper));
+            }
             //Mapper::Mapper1::Chip<Mapper::Mapper1::Model::SNROM> mapper(std::move(data.prgRom), std::vector<uint8_t>());
-            Mapper::Board<Mapper::Mapper1::MMC1, Mapper::PrgRom, Mapper::PrgRam, Mapper::ChrRom, Mapper::InternalVRam> mapper({{}, std::move(data.prgRom), std::vector<uint8_t>(8 * 1024), /*std::vector<uint8_t>(8 * 1024)*/std::move(data.chrRom), {}});
-            
-            cartridge = std::make_unique<Cartridge<EModel, TGraphicHardware, TLoopManager, decltype(mapper)>>(std::move(mapper));
         }
         break;
         

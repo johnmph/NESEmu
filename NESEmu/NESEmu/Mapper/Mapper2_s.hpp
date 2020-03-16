@@ -90,8 +90,8 @@ void Mapper2<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::ppuReadPerformed(TCo
         // Read Chr-Rom
         connectedBus.setDataBus(_chrRom[address]);
     }
-    // Internal VRAM
-    else if (address < 0x4000) {
+    // Internal VRAM (PPU address is always < 0x4000)
+    else {
         // Read VRAM with mirrored address
         connectedBus.setDataBus(connectedBus.getVram()[getMirroredAddress<EMirroring>(address)]);
     }
@@ -110,10 +110,9 @@ void Mapper2<IPrgRomSizeInKb, IPrgRamSizeInKb, EMirroring>::ppuWritePerformed(TC
     if (address < 0x2000) {//TODO: j'ai mis ca pour supporter le chr-ram pour certaines rom tests, voir comment bien l'integrer dans ce mapper (via les template parameters) TODO: quand je met ca, dans donkeykong, le sprite mario deconne (bizarre car il ne devrait pas ecrire dans le chr-rom) : normalement ok maintenant
      // Write Chr-Rom
      _chrRom[address] = data;
-     }else
-    
-    // Internal VRAM
-    if ((address >= 0x2000) && (address < 0x4000)) {
+     }
+    // Internal VRAM (PPU address is always < 0x4000)
+    else {
         // Write VRAM with mirrored address
         connectedBus.getVram()[getMirroredAddress<EMirroring>(address)] = data;
     }

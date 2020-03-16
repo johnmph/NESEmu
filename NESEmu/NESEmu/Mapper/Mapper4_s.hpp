@@ -138,7 +138,7 @@ void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::cpuWritePerformed(TConnectedBus 
         }
     }
     // IRQ disable / enable
-    else {
+    else if (address >= 0xE000) {
         _irqEnable = (address & 0x1) != 0x0;
         
         // Put the irq line high if disabled
@@ -200,8 +200,8 @@ void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::ppuReadPerformed(TConnectedBus &
         // Read Chr-Rom
         connectedBus.setDataBus(_chrRom[(bank << 10) | (address & mask)]);
     }
-    // Internal VRAM
-    else if (address < 0x4000) {
+    // Internal VRAM (PPU address is always < 0x4000)
+    else {
         // Get mirrored address TODO peut etre changer ca par un nametableMirroring qui est une reference de methode, voir si plus rapide : en tout cas mettre ca dans une methode a part getMirroredVramAddress car le meme qu'en dessous
         uint16_t mirroredAddress = (_nametableMirroring) ? getMirroredAddress<MirroringType::Horizontal>(address) : getMirroredAddress<MirroringType::Vertical>(address);
         
@@ -220,8 +220,8 @@ void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::ppuWritePerformed(TConnectedBus 
     uint8_t data = connectedBus.getDataBus();
     
     // Nothing for Chr-Rom (Can't write to a ROM)
-    // Internal VRAM
-    if ((address >= 0x2000) && (address < 0x4000)) {
+    // Internal VRAM (PPU address is always < 0x4000)
+    if (address >= 0x2000) {
         // Get mirrored address TODO peut etre changer ca par un nametableMirroring qui est une reference de methode, voir si plus rapide
         uint16_t mirroredAddress = (_nametableMirroring) ? getMirroredAddress<MirroringType::Horizontal>(address) : getMirroredAddress<MirroringType::Vertical>(address);
         

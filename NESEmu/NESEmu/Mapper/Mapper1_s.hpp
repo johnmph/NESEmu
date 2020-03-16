@@ -177,8 +177,8 @@ void Chip<EModel>::ppuReadPerformed(TConnectedBus &connectedBus) {
         // Read Chr-Ram
         connectedBus.setDataBus(_chrRam[getChrRamAddress(address)]);
     }
-    // Internal VRAM
-    else if (address < 0x4000) {
+    // Internal VRAM (PPU address is always < 0x4000)
+    else {
         // Read VRAM with mirrored address
         connectedBus.setDataBus(connectedBus.getVram()[getVramAddress(address)]);
     }
@@ -198,8 +198,8 @@ void Chip<EModel>::ppuWritePerformed(TConnectedBus &connectedBus) {
         // Write Chr-Ram
         _chrRam[getChrRamAddress(address)] = data;
     }
-    // Internal VRAM
-    else if (address < 0x4000) {
+    // Internal VRAM (PPU address is always < 0x4000)
+    else {
         // Write VRAM with mirrored address
         connectedBus.getVram()[getVramAddress(address)] = data;
     }

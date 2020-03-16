@@ -86,8 +86,8 @@ void Mapper7<IPrgRomSizeInKb, IPrgRamSizeInKb>::ppuReadPerformed(TConnectedBus &
         // Read Chr-Ram
         connectedBus.setDataBus(_chrRam[address]);
     }
-    // Internal VRAM
-    else if (address < 0x4000) {
+    // Internal VRAM (PPU address is always < 0x4000)
+    else {
         // Read VRAM with mirrored address
         connectedBus.setDataBus(connectedBus.getVram()[(_vramBankSelect << 6) | getMirroredAddress<MirroringType::SingleScreen>(address)]);
     }
@@ -106,10 +106,9 @@ void Mapper7<IPrgRomSizeInKb, IPrgRamSizeInKb>::ppuWritePerformed(TConnectedBus 
     if (address < 0x2000) {
         // Write Chr-Ram
         _chrRam[address] = data;
-    }else
-    
-    // Internal VRAM
-    if ((address >= 0x2000) && (address < 0x4000)) {
+    }
+    // Internal VRAM (PPU address is always < 0x4000)
+    else {
         // Write VRAM with mirrored address
         connectedBus.getVram()[(_vramBankSelect << 6) | getMirroredAddress<MirroringType::SingleScreen>(address)] = data;
     }

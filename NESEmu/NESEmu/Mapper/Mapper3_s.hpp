@@ -87,8 +87,8 @@ void Mapper3<IPrgRomSizeInKb, IPrgRamSizeInKb, IChrRomSizeInKb, EMirroring>::ppu
         // Read Chr-Rom
         connectedBus.setDataBus(_chrRom[(_chrRomBankSelect << 13) | address]);
     }
-    // Internal VRAM
-    else if (address < 0x4000) {
+    // Internal VRAM (PPU address is always < 0x4000)
+    else {
         // Read VRAM with mirrored address
         connectedBus.setDataBus(connectedBus.getVram()[getMirroredAddress<EMirroring>(address)]);
     }
@@ -104,8 +104,8 @@ void Mapper3<IPrgRomSizeInKb, IPrgRamSizeInKb, IChrRomSizeInKb, EMirroring>::ppu
     uint8_t data = connectedBus.getDataBus();
     
     // Nothing for Chr-Rom (Can't write to a ROM)
-    // Internal VRAM
-    if ((address >= 0x2000) && (address < 0x4000)) {
+    // Internal VRAM (PPU address is always < 0x4000)
+    if (address >= 0x2000) {
         // Write VRAM with mirrored address
         connectedBus.getVram()[getMirroredAddress<EMirroring>(address)] = data;
     }

@@ -64,19 +64,6 @@ Chip<EMirroring>::Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> prgRam,
 template <MirroringType EMirroring>
 Chip<EMirroring>::Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> prgRam, std::size_t chrRamSize) : _prgRom(std::move(prgRom)), _prgRam(std::move(prgRam)), _chrRam(chrRamSize), _prgRomAddressMask(_prgRom.size() - 1), _prgRamAddressMask(_prgRam.size() - 1), _chrRomOrRamAddressMask(_chrRam.size() - 1), _hasChrRam(true) {
 }
-/*
-template <MirroringType EMirroring>
-Chip<EMirroring>::Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> chrRom) : _prgRom(std::move(prgRom)), _chrRom(std::move(chrRom)) {
-    // 16 or 32kb of prg-rom only
-    assert((_prgRom.size() == (16 * 1024)) || (_prgRom.size() == (32 * 1024)));
-    
-    // Always 8kb of chr-rom
-    assert(_chrRom.size() == (8 * 1024));
-    
-    // Calculate masks
-    _prgRomAddressMask = _prgRom.size() - 1;
-    _prgRamAddressMask = _prgRam.size() - 1;
-}*/
 
 template <MirroringType EMirroring>
 template <class TConnectedBus, class TInterruptHardware>
@@ -136,8 +123,8 @@ void Chip<EMirroring>::ppuReadPerformed(TConnectedBus &connectedBus) {
         // Read Chr-Rom / Ram
         connectedBus.setDataBus((_hasChrRam) ? _chrRam[address] : _chrRom[address]);
     }
-    // Internal VRAM
-    else if (address < 0x4000) {    // TODO: pas besoin de la condition car le mask & 0x3FFF est mis via le PPU
+    // Internal VRAM (PPU address is always < 0x4000)
+    else {
         // Read VRAM with mirrored address
         connectedBus.setDataBus(connectedBus.getVram()[getMirroredAddress<EMirroring>(address)]);
     }
@@ -159,8 +146,8 @@ void Chip<EMirroring>::ppuWritePerformed(TConnectedBus &connectedBus) {
             _chrRam[address] = data;
         }
     }
-    // Internal VRAM
-    else if (address < 0x4000) {    // TODO: pas besoin de la condition car le mask & 0x3FFF est mis via le PPU
+    // Internal VRAM (PPU address is always < 0x4000)
+    else {
         // Write VRAM with mirrored address
         connectedBus.getVram()[getMirroredAddress<EMirroring>(address)] = data;
     }
