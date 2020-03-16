@@ -39,12 +39,16 @@ namespace NESEmu { namespace Mapper { namespace Mapper1 {
         
         // Cpu memory bus
         template <class TConnectedBus>
+        void cpuReadPerformed(MMC1 const &mmc, TConnectedBus &connectedBus);
+        
+        template <class TConnectedBus>
         void cpuWritePerformed(MMC1 const &mmc, TConnectedBus &connectedBus);
         
     private:
         uint8_t _shiftRegister;
         uint8_t _shiftCount;
         uint8_t _internalRegisters[4];
+        bool _lastCycleWasWrite;
     };
     
     
@@ -84,6 +88,7 @@ namespace NESEmu { namespace Mapper { namespace Mapper1 {
         uint8_t _shiftRegister;
         uint8_t _shiftCount;
         uint8_t _internalRegisters[4];
+        bool _lastCycleWasWrite;
     };
     
     #include "Mapper1_s.hpp"

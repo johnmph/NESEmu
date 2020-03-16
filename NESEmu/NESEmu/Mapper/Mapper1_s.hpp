@@ -11,14 +11,23 @@
 
 
 template <class TConnectedBus>
+void MMC1::cpuReadPerformed(MMC1 const &mmc, TConnectedBus &connectedBus) {
+    // A read is performed so we reset the _lastCycleWasWrite flag
+    _lastCycleWasWrite = false;
+}
+
+template <class TConnectedBus>
 void MMC1::cpuWritePerformed(MMC1 const &mmc, TConnectedBus &connectedBus) {
     // Get address
     uint16_t address = connectedBus.getAddressBus();
     
-    // Shift register
-    if (address >= 0x8000) {//TODO: attention, si 2 writes consecutifs, il n'y a que le 1er qui est pris en compte (a implementer surement avec clock en sauvant le rw signal du cpu et en le checkant ici (voir https://wiki.nesdev.com/w/index.php/MMC1 ) a tester avec Bill & Ted's Excellent Adventure
+    // If we write to rom and if it's the first write of consecutives writes
+    if ((address >= 0x8000) && (!_lastCycleWasWrite)) {
         // Get data
         uint8_t data = connectedBus.getDataBus();
+        
+        // We perform a write, so we set _lastCycleWasWrite flag
+        _lastCycleWasWrite = true;
         
         // Clear registers
         if ((data & 0x80) != 0x0) {
@@ -105,6 +114,9 @@ void Chip<EModel>::cpuReadPerformed(TConnectedBus &connectedBus) {
         // Read Prg-Rom
         connectedBus.setDataBus(_prgRom[(bank << 14) | (address & mask)]);
     }
+    
+    // A read is performed so we reset the _lastCycleWasWrite flag
+    _lastCycleWasWrite = false;
 }
 
 template <Model EModel>
@@ -124,8 +136,11 @@ void Chip<EModel>::cpuWritePerformed(TConnectedBus &connectedBus) {
             _prgRam[address & (_prgRamSize - 1)] = data;
         }
     }
-    // Shift register
-    else if (address >= 0x8000) {//TODO: attention, si 2 writes consecutifs, il n'y a que le 1er qui est pris en compte (a implementer surement avec clock en sauvant le rw signal du cpu et en le checkant ici (voir https://wiki.nesdev.com/w/index.php/MMC1 ) a tester avec Bill & Ted's Excellent Adventure
+    // If we write to rom and if it's the first write of consecutives writes
+    else if ((address >= 0x8000) && (!_lastCycleWasWrite)) {
+        // We perform a write, so we set _lastCycleWasWrite flag
+        _lastCycleWasWrite = true;
+        
         // Clear registers
         if ((data & 0x80) != 0x0) {
             _shiftRegister = 0x10;

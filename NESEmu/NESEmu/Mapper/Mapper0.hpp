@@ -46,10 +46,13 @@ namespace NESEmu { namespace Mapper { namespace Mapper0 {
     };
     
     
-    template <MirroringType EMirroring>
+    template <MirroringType EMirroring>//TODO: ca aussi en parametre normal const ?
     struct Chip {
         
         Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> chrRom);
+        Chip(std::vector<uint8_t> prgRom, std::size_t chrRamSize);
+        Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> prgRam, std::vector<uint8_t> chrRom);
+        Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> prgRam, std::size_t chrRamSize);
         
         template <class TConnectedBus, class TInterruptHardware>
         void clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware);   // TODO: voir si moyen de desactiver l'appel au compile time (cad que sur les mappers ou on a pas besoin de clock il n'y aurait pas d'appels de clock), seulement sur les mappers qui en ont besoin, ainsi on evite des pertes de performances (ou si l'optimisation suffit pour ne pas appeler la methode si elle est vide) !
@@ -69,11 +72,14 @@ namespace NESEmu { namespace Mapper { namespace Mapper0 {
         void ppuWritePerformed(TConnectedBus &connectedBus);
         
     private:
-        std::vector<uint8_t> _prgRom;
+        std::vector<uint8_t> const _prgRom;
         std::vector<uint8_t> _prgRam;
-        std::vector<uint8_t> _chrRom;
-        uint16_t _prgRomAddressMask;
-        uint16_t _prgRamAddressMask;
+        std::vector<uint8_t> const _chrRom;
+        std::vector<uint8_t> _chrRam;
+        uint16_t const _prgRomAddressMask;
+        uint16_t const _prgRamAddressMask;
+        uint16_t const _chrRomOrRamAddressMask;
+        bool const _hasChrRam;
     };
     
     // Mapper 0 has only Horizontal or Vertical mirroring

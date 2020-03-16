@@ -88,66 +88,41 @@ namespace NESEmu { namespace Mapper {
         
         template <class TConnectedBus>
         void chipCpuReadPerformed(TConnectedBus &connectedBus);
-        /*
-        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<std::is_same<TFirstChip, TMMC>::value && HasCpuReadPerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
+        
+        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<HasCpuReadPerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
         void chipCpuReadPerformed(TConnectedBus &connectedBus);
         
-        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<std::is_same<TFirstChip, TMMC>::value && !HasCpuReadPerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
-        void chipCpuReadPerformed(TConnectedBus &connectedBus);
-        */
-        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if</*!std::is_same<TFirstChip, TMMC>::value && */HasCpuReadPerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
-        void chipCpuReadPerformed(TConnectedBus &connectedBus);
-        
-        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if</*!std::is_same<TFirstChip, TMMC>::value && */!HasCpuReadPerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
+        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<!HasCpuReadPerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
         void chipCpuReadPerformed(TConnectedBus &connectedBus);
         
         template <class TConnectedBus>
         void chipCpuWritePerformed(TConnectedBus &connectedBus);
-        /*
-        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<std::is_same<TFirstChip, TMMC>::value && HasCpuWritePerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
+        
+        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<HasCpuWritePerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
         void chipCpuWritePerformed(TConnectedBus &connectedBus);
         
-        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<std::is_same<TFirstChip, TMMC>::value && !HasCpuWritePerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
-        void chipCpuWritePerformed(TConnectedBus &connectedBus);
-        */
-        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if</*!std::is_same<TFirstChip, TMMC>::value && */HasCpuWritePerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
-        void chipCpuWritePerformed(TConnectedBus &connectedBus);
-        
-        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if</*!std::is_same<TFirstChip, TMMC>::value && */!HasCpuWritePerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
+        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<!HasCpuWritePerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
         void chipCpuWritePerformed(TConnectedBus &connectedBus);
         
         template <class TConnectedBus>
         void chipPpuReadPerformed(TConnectedBus &connectedBus);
-        /*
-        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<std::is_same<TFirstChip, TMMC>::value && HasPpuReadPerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
+        
+        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<HasPpuReadPerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
         void chipPpuReadPerformed(TConnectedBus &connectedBus);
         
-        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<std::is_same<TFirstChip, TMMC>::value && !HasPpuReadPerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
-        void chipPpuReadPerformed(TConnectedBus &connectedBus);
-        */
-        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if</*!std::is_same<TFirstChip, TMMC>::value && */HasPpuReadPerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
-        void chipPpuReadPerformed(TConnectedBus &connectedBus);
-        
-        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if</*!std::is_same<TFirstChip, TMMC>::value && */!HasPpuReadPerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
+        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<!HasPpuReadPerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
         void chipPpuReadPerformed(TConnectedBus &connectedBus);
         
         template <class TConnectedBus>
         void chipPpuWritePerformed(TConnectedBus &connectedBus);
-        /*
-        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<std::is_same<TFirstChip, TMMC>::value && HasPpuWritePerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
+        
+        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<HasPpuWritePerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
         void chipPpuWritePerformed(TConnectedBus &connectedBus);
         
-        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<std::is_same<TFirstChip, TMMC>::value && !HasPpuWritePerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
-        void chipPpuWritePerformed(TConnectedBus &connectedBus);
-        */
-        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if</*!std::is_same<TFirstChip, TMMC>::value && */HasPpuWritePerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
-        void chipPpuWritePerformed(TConnectedBus &connectedBus);
-        
-        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if</*!std::is_same<TFirstChip, TMMC>::value && */!HasPpuWritePerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
+        template <class TConnectedBus, class TFirstChip, class ...TOtherChips, typename std::enable_if<!HasPpuWritePerformed<TConnectedBus, TFirstChip>::value, int>::type = 0>
         void chipPpuWritePerformed(TConnectedBus &connectedBus);
         
         
-        //TMMC _mmc;
         std::tuple<TMMC, TChips<TMMC>...> _chips;
     };
     
