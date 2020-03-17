@@ -15,7 +15,10 @@
 #include "Nothing.hpp"
 #include "Mapper0.hpp"
 #include "Mapper1.hpp"
-//#include "Mapper2.hpp"
+#include "Mapper2.hpp"
+#include "Mapper3.hpp"
+#include "Mapper4.hpp"
+#include "Mapper7.hpp"
 // TODO: les mettre tous
 
 

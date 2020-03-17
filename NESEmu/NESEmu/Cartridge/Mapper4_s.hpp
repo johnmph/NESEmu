@@ -6,89 +6,74 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Mapper_Mapper4_s_hpp
-#define NESEmu_Mapper_Mapper4_s_hpp
+#ifndef NESEmu_Cartridge_Mapper4_s_hpp
+#define NESEmu_Cartridge_Mapper4_s_hpp
 
 // TODO: avoir un enum version (comme le ppu, le cpu, ...) car il y a plusieurs versions du MMC3 avec une gestion differente de l'irq
-template <unsigned int IPrgRomSizeInKb, unsigned int IChrRomSizeInKb>
-Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::Mapper4(std::istream &istream) : _prgRom(IPrgRomSizeInKb * 1024), _prgRam(8 * 1024), _chrRom(IChrRomSizeInKb * 1024), _bankRegisterSelect(0), _prgRomBankMode(false), _chrRomBankMode(false), _nametableMirroring(false), _prgRamWriteProtection(false), _prgRamChipEnable(false), _lastA12(0), _irqEnable(false), _irqReload(false), _irqLatch(0), _irqCounter(0) {
-    // TODO: voir si read via istream ici ou bien dans un factory a part et avoir directement ici les vectors a copier simplement : doit etre en dehors
-    // TODO: pour tests :
-    // Skip header
-    istream.seekg(0x10);
-    
-    // Read Prg-Rom
-    istream.read(reinterpret_cast<char *>(_prgRom.data()), IPrgRomSizeInKb * 1024);
-    
-    // Read Chr-Rom
-    istream.read(reinterpret_cast<char *>(_chrRom.data()), IChrRomSizeInKb * 1024);
-    
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+Chip<TCpuHardwareInterface, TPpuHardwareInterface>::Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> prgRam, std::vector<uint8_t> chrRom, MirroringType mirroringType) : _prgRom(std::move(prgRom)), _prgRam(std::move(prgRam)), _chrRom(std::move(chrRom)), _prgRomSize(_prgRom.size()), _prgRamSize(_prgRam.size()), _chrRomSize(_chrRom.size()), _mirroringType(mirroringType), _bankRegisterSelect(0), _prgRomBankMode(false), _chrRomBankMode(false), _nametableMirroring(false), _prgRamWriteProtection(false), _prgRamChipEnable(false), _lastA12(0), _irqEnable(false), _irqReload(false), _irqLatch(0), _irqCounter(0) {
     // TODO: reseter aussi les _bankSelect ?
     //memset(_bankSelect, 0, sizeof(_bankSelect[0]) * 8);
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IChrRomSizeInKb>
-template <class TConnectedBus, class TInterruptHardware>
-void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware) {
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::clock(TCpuHardwareInterface &cpuHardwareInterface, TPpuHardwareInterface &ppuHardwareInterface) {
     // Get address
-    uint16_t address = connectedBus.getAddressBus();
+    uint16_t address = ppuHardwareInterface.getAddressBus();
     
     // Process IRQ counter
-    processIrqCounter(interruptHardware, (address & 0x1000) != 0x0);
+    processIrqCounter(cpuHardwareInterface, (address & 0x1000) != 0x0);
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IChrRomSizeInKb>
-template <class TConnectedBus>
-void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::cpuReadPerformed(TConnectedBus &connectedBus) {
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuReadPerformed(TCpuHardwareInterface &cpuHardwareInterface) {
     // Get address
-    uint16_t address = connectedBus.getAddressBus();
+    uint16_t address = cpuHardwareInterface.getAddressBus();
     
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
         // If Prg-Ram enabled
         if (_prgRamChipEnable) {
             // Read Prg-Ram
-            connectedBus.setDataBus(_prgRam[address & 0x1FFF]);
+            cpuHardwareInterface.setDataBus(_prgRam[address & (_prgRamSize - 1)]);
         }
     }
     // Prg-Rom
-    else if (address >= 0x8000) {   // TODO: voir si nécessaire la condition (est ce qu'on peut etre en dessous de 0x6000 dans cette methode ? : oui nécessaire !!!
-        
+    else if (address >= 0x8000) {
         uint8_t bank;
         
         if (address < 0xA000) {
-            bank = (_prgRomBankMode) ? ((IPrgRomSizeInKb >> 3) - 2)  : _bankSelect[6];
+            bank = (_prgRomBankMode) ? ((_prgRomSize >> 13) - 2)  : _bankSelect[6];
         }
         else if (address < 0xC000) {
             bank = _bankSelect[7];
         }
         else if (address < 0xE000) {
-            bank = (_prgRomBankMode) ? _bankSelect[6] : ((IPrgRomSizeInKb >> 3) - 2);
+            bank = (_prgRomBankMode) ? _bankSelect[6] : ((_prgRomSize >> 13) - 2);
         }
         else {
-            bank = (IPrgRomSizeInKb >> 3) - 1;
+            bank = (_prgRomSize >> 13) - 1;
         }
         
         // Read Prg-Rom
-        connectedBus.setDataBus(_prgRom[(bank << 13) | (address & 0x1FFF)]);
+        cpuHardwareInterface.setDataBus(_prgRom[((bank << 13) | (address & 0x1FFF)) & (_prgRomSize - 1)]);
     }
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IChrRomSizeInKb>
-template <class TConnectedBus>
-void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::cpuWritePerformed(TConnectedBus &connectedBus) {
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuWritePerformed(TCpuHardwareInterface &cpuHardwareInterface) {
     // Get address
-    uint16_t address = connectedBus.getAddressBus();
+    uint16_t address = cpuHardwareInterface.getAddressBus();
     
     // Get data
-    uint8_t data = connectedBus.getDataBus();
+    uint8_t data = cpuHardwareInterface.getDataBus();
     
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
         // If Prg-Ram enabled and write enabled
         if (_prgRamChipEnable && !_prgRamWriteProtection) {
             // Write Prg-Ram
-            _prgRam[address & 0x1FFF] = data;
+            _prgRam[address & (_prgRamSize - 1)] = data;
         }
     }
     // Bank select / data
@@ -118,7 +103,7 @@ void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::cpuWritePerformed(TConnectedBus 
     else if ((address >= 0xA000) && (address < 0xC000)) {
         // Nametable mirroring
         if ((address & 0x1) == 0x0) {
-            _nametableMirroring = (data & 0x1) != 0x0;  // TODO: voir pour les four-screen cartridge !!
+            _nametableMirroring = (data & 0x1) != 0x0;
         }
         // Prg-Ram protect
         else {
@@ -143,16 +128,15 @@ void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::cpuWritePerformed(TConnectedBus 
         
         // Put the irq line high if disabled
         if (!_irqEnable) {
-            connectedBus.irq(true);
+            cpuHardwareInterface.irq(true);
         }
     }
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IChrRomSizeInKb>
-template <class TConnectedBus>
-void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::ppuReadPerformed(TConnectedBus &connectedBus) {
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuReadPerformed(TPpuHardwareInterface &ppuHardwareInterface) {
     // Get address
-    uint16_t address = connectedBus.getAddressBus();
+    uint16_t address = ppuHardwareInterface.getAddressBus();
     
     // Chr-Rom
     if (address < 0x2000) {
@@ -198,41 +182,44 @@ void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::ppuReadPerformed(TConnectedBus &
         }
         
         // Read Chr-Rom
-        connectedBus.setDataBus(_chrRom[(bank << 10) | (address & mask)]);
+        ppuHardwareInterface.setDataBus(_chrRom[((bank << 10) | (address & mask)) & (_chrRomSize - 1)]);
     }
     // Internal VRAM (PPU address is always < 0x4000)
     else {
-        // Get mirrored address TODO peut etre changer ca par un nametableMirroring qui est une reference de methode, voir si plus rapide : en tout cas mettre ca dans une methode a part getMirroredVramAddress car le meme qu'en dessous
-        uint16_t mirroredAddress = (_nametableMirroring) ? getMirroredAddress<MirroringType::Horizontal>(address) : getMirroredAddress<MirroringType::Vertical>(address);
-        
         // Read VRAM with mirrored address
-        connectedBus.setDataBus(connectedBus.getVram()[mirroredAddress]);
+        ppuHardwareInterface.setDataBus(ppuHardwareInterface.getVram()[getVramAddress(address)]);
     }
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IChrRomSizeInKb>
-template <class TConnectedBus>
-void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::ppuWritePerformed(TConnectedBus &connectedBus) {
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuWritePerformed(TPpuHardwareInterface &ppuHardwareInterface) {
     // Get address
-    uint16_t address = connectedBus.getAddressBus();
+    uint16_t address = ppuHardwareInterface.getAddressBus();
     
     // Get data
-    uint8_t data = connectedBus.getDataBus();
+    uint8_t data = ppuHardwareInterface.getDataBus();
     
     // Nothing for Chr-Rom (Can't write to a ROM)
     // Internal VRAM (PPU address is always < 0x4000)
     if (address >= 0x2000) {
-        // Get mirrored address TODO peut etre changer ca par un nametableMirroring qui est une reference de methode, voir si plus rapide
-        uint16_t mirroredAddress = (_nametableMirroring) ? getMirroredAddress<MirroringType::Horizontal>(address) : getMirroredAddress<MirroringType::Vertical>(address);
-        
         // Write VRAM with mirrored address
-        connectedBus.getVram()[mirroredAddress] = data;
+        ppuHardwareInterface.getVram()[getVramAddress(address)] = data;
     }
 }
 
-template <unsigned int IPrgRomSizeInKb, unsigned int IChrRomSizeInKb>
-template <class TConnectedBus>
-void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::processIrqCounter(TConnectedBus &connectedBus, bool a12) {
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+uint16_t Chip<TCpuHardwareInterface, TPpuHardwareInterface>::getVramAddress(uint16_t address) {
+    // If hardwired four screen
+    if (_mirroringType == MirroringType::FourScreen) {
+        return getMirroredAddress<MirroringType::FourScreen>(address);
+    }
+    
+    // Depend of mirroring register
+    return (_nametableMirroring) ? getMirroredAddress<MirroringType::Horizontal>(address) : getMirroredAddress<MirroringType::Vertical>(address);
+}
+
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::processIrqCounter(TCpuHardwareInterface &cpuHardwareInterface, bool a12) {
     // Save A12 and filter it (only clock if A12 is high and was low for at least 3 CPU cycles before)
     bool savedLastA12 = _lastA12 != 0;
     _lastA12 = (a12 << 3) | (_lastA12 >> 1);//TODO: j'ai du rajouter une etape au filtre pour que la rom de test passe !!!
@@ -241,8 +228,6 @@ void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::processIrqCounter(TConnectedBus 
     if (!(a12 && (!savedLastA12))) {
         return;
     }
-    
-    //std::cout << "scanline " << connectedBus._nes._ppu._currentScanline << ", pixel = " << connectedBus._nes._ppu._currentPixel << "\n";
     
     // Decrement counter or reload it if zero or forced
     if ((_irqCounter > 0) && (!_irqReload)) {
@@ -254,8 +239,8 @@ void Mapper4<IPrgRomSizeInKb, IChrRomSizeInKb>::processIrqCounter(TConnectedBus 
     
     // Generate an IRQ if needed
     if (_irqEnable && (_irqCounter == 0)) {
-        connectedBus.irq(false);
+        cpuHardwareInterface.irq(false);
     }
 }
 
-#endif /* NESEmu_Mapper_Mapper4_s_hpp */
+#endif /* NESEmu_Cartridge_Mapper4_s_hpp */

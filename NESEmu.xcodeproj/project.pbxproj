@@ -225,7 +225,6 @@
 				4D6B9C1C23D6AC08000889C3 /* Ppu.hpp */,
 				4D6B9C1E23D92987000889C3 /* Ppu_s.hpp */,
 				4D7047482401FC80005A56B1 /* Controller */,
-				4DFF46172418639A005D3F21 /* Mapper */,
 				4D70474A240202D9005A56B1 /* Cartridge */,
 				4DFF461424184C6D005D3F21 /* Nes.hpp */,
 				4DFF461524184D0B005D3F21 /* Nes_s.hpp */,
@@ -259,6 +258,14 @@
 				4DD1EB7D240373DB00018E52 /* Mapper0_s.hpp */,
 				4D6E33172406015900749F24 /* Mapper1.hpp */,
 				4D6E33182406017500749F24 /* Mapper1_s.hpp */,
+				4D09C9DA24082EB30035AE0C /* Mapper2.hpp */,
+				4D09C9DB24082EC10035AE0C /* Mapper2_s.hpp */,
+				4D6E33152405CE1400749F24 /* Mapper3.hpp */,
+				4D6E33162405CEC000749F24 /* Mapper3_s.hpp */,
+				4D09C9DE2408DFE30035AE0C /* Mapper4.hpp */,
+				4D09C9DF2408DFF30035AE0C /* Mapper4_s.hpp */,
+				4D09C9DC24083FEB0035AE0C /* Mapper7.hpp */,
+				4D09C9DD24083FFF0035AE0C /* Mapper7_s.hpp */,
 				4DFF461D241868AF005D3F21 /* Loader */,
 				4DFE480324193D55006B7DAB /* Factory.hpp */,
 				4DFE480424193F4E006B7DAB /* Factory_s.hpp */,
@@ -303,21 +310,6 @@
 				4DD1EB822403FD1700018E52 /* main2.cpp */,
 			);
 			path = NESEmu;
-			sourceTree = "<group>";
-		};
-		4DFF46172418639A005D3F21 /* Mapper */ = {
-			isa = PBXGroup;
-			children = (
-				4D09C9DA24082EB30035AE0C /* Mapper2.hpp */,
-				4D09C9DB24082EC10035AE0C /* Mapper2_s.hpp */,
-				4D6E33152405CE1400749F24 /* Mapper3.hpp */,
-				4D6E33162405CEC000749F24 /* Mapper3_s.hpp */,
-				4D09C9DE2408DFE30035AE0C /* Mapper4.hpp */,
-				4D09C9DF2408DFF30035AE0C /* Mapper4_s.hpp */,
-				4D09C9DC24083FEB0035AE0C /* Mapper7.hpp */,
-				4D09C9DD24083FFF0035AE0C /* Mapper7_s.hpp */,
-			);
-			path = Mapper;
 			sourceTree = "<group>";
 		};
 		4DFF461D241868AF005D3F21 /* Loader */ = {

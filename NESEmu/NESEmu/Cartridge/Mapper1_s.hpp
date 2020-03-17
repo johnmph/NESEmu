@@ -55,7 +55,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::cpuReadPerforme
         }
         
         // Read Prg-Rom
-        cpuHardwareInterface.setDataBus(_prgRom[(bank << 14) | (address & mask)]);
+        cpuHardwareInterface.setDataBus(_prgRom[((bank << 14) | (address & mask)) & (_prgRomSize - 1)]);
     }
     
     // A read is performed so we reset the _lastCycleWasWrite flag

@@ -53,6 +53,26 @@ std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> Factory
         }
         break;
         
+        case Model::UxROM : {
+            cartridge = std::make_unique<Mapper2::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), std::vector<uint8_t>(), std::move(data.chrRom), data.chrRamSize, data.mirroringType);
+        }
+        break;
+        
+        case Model::CNROM : {
+            cartridge = std::make_unique<Mapper3::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), std::vector<uint8_t>(), std::move(data.chrRom), data.mirroringType);
+        }
+        break;
+        
+        case Model::MMC3 : {
+            cartridge = std::make_unique<Mapper4::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), std::vector<uint8_t>(8 * 1024), std::move(data.chrRom), data.mirroringType);
+        }
+        break;
+        
+        case Model::AxROM : {
+            cartridge = std::make_unique<Mapper7::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), data.chrRamSize);
+        }
+        break;
+        
         default: {
             // Mapper not supported
             cartridge = std::make_unique<Nothing<TCpuHardwareInterface, TPpuHardwareInterface>>();
