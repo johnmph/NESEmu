@@ -6,62 +6,12 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Mapper_Mapper1_s_hpp
-#define NESEmu_Mapper_Mapper1_s_hpp
+#ifndef NESEmu_Cartridge_Mapper1_s_hpp
+#define NESEmu_Cartridge_Mapper1_s_hpp
 
 
-template <class TConnectedBus>
-void MMC1::cpuReadPerformed(MMC1 const &mmc, TConnectedBus &connectedBus) {
-    // A read is performed so we reset the _lastCycleWasWrite flag
-    _lastCycleWasWrite = false;
-}
-
-template <class TConnectedBus>
-void MMC1::cpuWritePerformed(MMC1 const &mmc, TConnectedBus &connectedBus) {
-    // Get address
-    uint16_t address = connectedBus.getAddressBus();
-    
-    // If we write to rom and if it's the first write of consecutives writes
-    if ((address >= 0x8000) && (!_lastCycleWasWrite)) {
-        // Get data
-        uint8_t data = connectedBus.getDataBus();
-        
-        // We perform a write, so we set _lastCycleWasWrite flag
-        _lastCycleWasWrite = true;
-        
-        // Clear registers
-        if ((data & 0x80) != 0x0) {
-            _shiftRegister = 0x10;
-            _shiftCount = 0;
-            _internalRegisters[0] |= 0xC0;
-            
-            return;
-        }
-        
-        // Shift register and load LSB in shift register MSB
-        _shiftRegister >>= 1;
-        _shiftRegister |= (data & 0x1) << 4;
-        ++_shiftCount;
-        
-        // If last shift
-        if (_shiftCount >= 5) {
-            _internalRegisters[(address >> 13) & 0x3] = _shiftRegister;
-            
-            // Reset shift registers
-            _shiftRegister = 0x10;
-            _shiftCount = 0;
-        }
-    }
-}
-
-
-
-template <Model EModel>
-Chip<EModel>::Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> prgRam) : _prgRom(std::move(prgRom)), _prgRam(/*std::move(prgRam)*/8 * 1024), _chrRam(8 * 1024), _shiftRegister(0x10), _shiftCount(0) {//TODO: a voir pour les valeurs des registres
-    // Calculate sizes
-    _prgRomSize = _prgRom.size();
-    _prgRamSize = _prgRam.size();
-    
+template <class TCpuHardwareInterface, class TPpuHardwareInterface, Model EModel>
+Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> prgRam, std::vector<uint8_t> chrRom, std::size_t chrRamSize) : _prgRom(std::move(prgRom)), _prgRam(std::move(prgRam)), _chrRom(std::move(chrRom)), _chrRam(chrRamSize), _prgRomSize(_prgRom.size()), _prgRamSize(_prgRam.size()), _hasChrRam(_chrRam.size() > 0), _chrRomOrRamSize((_hasChrRam) ? _chrRam.size() : _chrRom.size()), _shiftRegister(0x10), _shiftCount(0) {//TODO: a voir pour les valeurs des registres
     // Set internal registers
     _internalRegisters[0] = 0xC;        // TODO a voir
     _internalRegisters[1] = 0x0;
@@ -69,24 +19,17 @@ Chip<EModel>::Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> prgRam) : _
     _internalRegisters[3] = 0x0;
 }
 
-template <Model EModel>
-template <class TConnectedBus, class TInterruptHardware>
-void Chip<EModel>::clock(TConnectedBus &connectedBus, TInterruptHardware &interruptHardware) {
-    // Does nothing
-}
-
-template <Model EModel>
-template <class TConnectedBus>
-void Chip<EModel>::cpuReadPerformed(TConnectedBus &connectedBus) {
+template <class TCpuHardwareInterface, class TPpuHardwareInterface, Model EModel>
+void Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::cpuReadPerformed(TCpuHardwareInterface &cpuHardwareInterface) {
     // Get address
-    uint16_t address = connectedBus.getAddressBus();
+    uint16_t address = cpuHardwareInterface.getAddressBus();
     
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
-        // If Prg-Ram enabled
-        if ((_internalRegisters[3] & 0x10) == 0x0) {
+        // If has Prg-Ram and enabled
+        if ((_prgRamSize > 0) && ((_internalRegisters[3] & 0x10) == 0x0)) {
             // Read Prg-Ram with possible mirrored address
-            connectedBus.setDataBus(_prgRam[address & (_prgRamSize - 1)]);
+            cpuHardwareInterface.setDataBus(_prgRam[address & (_prgRamSize - 1)]);
         }
     }
     // Prg-Rom
@@ -112,26 +55,25 @@ void Chip<EModel>::cpuReadPerformed(TConnectedBus &connectedBus) {
         }
         
         // Read Prg-Rom
-        connectedBus.setDataBus(_prgRom[(bank << 14) | (address & mask)]);
+        cpuHardwareInterface.setDataBus(_prgRom[(bank << 14) | (address & mask)]);
     }
     
     // A read is performed so we reset the _lastCycleWasWrite flag
     _lastCycleWasWrite = false;
 }
 
-template <Model EModel>
-template <class TConnectedBus>
-void Chip<EModel>::cpuWritePerformed(TConnectedBus &connectedBus) {
+template <class TCpuHardwareInterface, class TPpuHardwareInterface, Model EModel>
+void Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::cpuWritePerformed(TCpuHardwareInterface &cpuHardwareInterface) {
     // Get address
-    uint16_t address = connectedBus.getAddressBus();
+    uint16_t address = cpuHardwareInterface.getAddressBus();
     
     // Get data
-    uint8_t data = connectedBus.getDataBus();
+    uint8_t data = cpuHardwareInterface.getDataBus();
     
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
-        // If Prg-Ram enabled
-        if ((_internalRegisters[3] & 0x10) == 0x0) {
+        // If has Prg-Ram and enabled
+        if ((_prgRamSize > 0) && ((_internalRegisters[3] & 0x10) == 0x0)) {
             // Write Prg-Ram with possible mirrored address
             _prgRam[address & (_prgRamSize - 1)] = data;
         }
@@ -139,7 +81,7 @@ void Chip<EModel>::cpuWritePerformed(TConnectedBus &connectedBus) {
     // If we write to rom and if it's the first write of consecutives writes
     else if ((address >= 0x8000) && (!_lastCycleWasWrite)) {
         // We perform a write, so we set _lastCycleWasWrite flag
-        _lastCycleWasWrite = true;
+        _lastCycleWasWrite = true;//TODO: voir si ici ou en dehors du if
         
         // Clear registers
         if ((data & 0x80) != 0x0) {
@@ -166,47 +108,47 @@ void Chip<EModel>::cpuWritePerformed(TConnectedBus &connectedBus) {
     }
 }
 
-template <Model EModel>
-template <class TConnectedBus>
-void Chip<EModel>::ppuReadPerformed(TConnectedBus &connectedBus) {
+template <class TCpuHardwareInterface, class TPpuHardwareInterface, Model EModel>
+void Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::ppuReadPerformed(TPpuHardwareInterface &ppuHardwareInterface) {
     // Get address
-    uint16_t address = connectedBus.getAddressBus();
+    uint16_t address = ppuHardwareInterface.getAddressBus();
     
-    // Chr-Ram
+    // Chr-Rom / Ram
     if (address < 0x2000) {
-        // Read Chr-Ram
-        connectedBus.setDataBus(_chrRam[getChrRamAddress(address)]);
+        // Read Chr-Rom / Ram
+        ppuHardwareInterface.setDataBus((_hasChrRam) ? _chrRam[getChrRamAddress(address) & (_chrRomOrRamSize - 1)] : _chrRom[getChrRamAddress(address) & (_chrRomOrRamSize - 1)]);
     }
     // Internal VRAM (PPU address is always < 0x4000)
     else {
         // Read VRAM with mirrored address
-        connectedBus.setDataBus(connectedBus.getVram()[getVramAddress(address)]);
+        ppuHardwareInterface.setDataBus(ppuHardwareInterface.getVram()[getVramAddress(address)]);
     }
 }
 
-template <Model EModel>
-template <class TConnectedBus>
-void Chip<EModel>::ppuWritePerformed(TConnectedBus &connectedBus) {
+template <class TCpuHardwareInterface, class TPpuHardwareInterface, Model EModel>
+void Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::ppuWritePerformed(TPpuHardwareInterface &ppuHardwareInterface) {
     // Get address
-    uint16_t address = connectedBus.getAddressBus();
+    uint16_t address = ppuHardwareInterface.getAddressBus();
     
     // Get data
-    uint8_t data = connectedBus.getDataBus();
+    uint8_t data = ppuHardwareInterface.getDataBus();
     
     // Chr-Ram
     if (address < 0x2000) {
-        // Write Chr-Ram
-        _chrRam[getChrRamAddress(address)] = data;
+        // Write Chr-Ram if exist
+        if (_hasChrRam) {
+            _chrRam[getChrRamAddress(address) & (_chrRomOrRamSize - 1)] = data;
+        }
     }
     // Internal VRAM (PPU address is always < 0x4000)
     else {
         // Write VRAM with mirrored address
-        connectedBus.getVram()[getVramAddress(address)] = data;
+        ppuHardwareInterface.getVram()[getVramAddress(address)] = data;
     }
 }
 
-template <Model EModel>
-uint16_t Chip<EModel>::getChrRamAddress(uint16_t address) {
+template <class TCpuHardwareInterface, class TPpuHardwareInterface, Model EModel>
+std::size_t Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::getChrRamAddress(uint16_t address) {
     uint16_t mask;
     uint8_t bank;
     
@@ -224,8 +166,8 @@ uint16_t Chip<EModel>::getChrRamAddress(uint16_t address) {
     return (bank << 12) | (address & mask);
 }
 
-template <Model EModel>
-uint16_t Chip<EModel>::getVramAddress(uint16_t address) {
+template <class TCpuHardwareInterface, class TPpuHardwareInterface, Model EModel>
+uint16_t Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::getVramAddress(uint16_t address) {
     switch (_internalRegisters[0] & 0x3) {
         case 0x0 :
             return getMirroredAddress<MirroringType::SingleScreen>(address);
@@ -244,4 +186,4 @@ uint16_t Chip<EModel>::getVramAddress(uint16_t address) {
     return getMirroredAddress<MirroringType::Horizontal>(address);
 }
 
-#endif /* NESEmu_Mapper_Mapper1_s_hpp */
+#endif /* NESEmu_Cartridge_Mapper1_s_hpp */

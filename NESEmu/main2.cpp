@@ -298,11 +298,13 @@ int main(int argc, const char * argv[]) {
     
     // TODO: comme les mappers sont resolus au compile-time, a chaque mapper ajouté dans le code, il faut l'instantier (dans Factory) et donc il va avoir une duplication de NesImplementation pour chaque mapper, ca va augmenter la taille du code a fond et peut etre foutre la merde dans l'instruction cache ? si ca tombe la version avec virtual dispatch (runtime) sera au final plus rapide car moins de code meme si les appels de methodes sont indirects !!! A TESTER
     
-    NESEmu::Cartridge::Factory cartridgeFactory;
+    NESEmu::Cartridge::Factory cartridgeFactory;//TODO: recuperer le factory de la classe Nes ? car ainsi il sait les template parameters a appliquer
     cartridgeFactory.registerLoader(std::shared_ptr<NESEmu::Cartridge::Loader::Interface>(new NESEmu::Cartridge::Loader::INes()));
     
     // Create cartridge
-    auto cartridge = cartridgeFactory.createCartridgeFromStream<NESEmu::Model::Ntsc, GraphicHardware, LoopManager>(ifs);
+    using CpuHardwareInterface = NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware, LoopManager>::CpuHardwareInterface;
+    using PpuHardwareInterface = NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware, LoopManager>::PpuHardwareInterface;
+    auto cartridge = cartridgeFactory.createCartridgeFromStream<CpuHardwareInterface, PpuHardwareInterface>(ifs);
     
     // Create NES
     NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware, LoopManager> nes(graphicHardware, loopManager);

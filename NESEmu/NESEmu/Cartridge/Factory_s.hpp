@@ -10,8 +10,8 @@
 #define NESEmu_Cartridge_Factory_s_hpp
 
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-std::unique_ptr<Interface<EModel, TGraphicHardware, TLoopManager>> Factory::createCartridgeFromStream(std::istream &istream) {
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> Factory::createCartridgeFromStream(std::istream &istream) {
     // TODO: browse chaque loader jusqu'a ce qu'un loader prenne en charge cette rom puis decoder et recuperer les infos via ce loader et ensuite créer la cartridge avec ces informations
     
     // Browse loaders
@@ -31,51 +31,31 @@ std::unique_ptr<Interface<EModel, TGraphicHardware, TLoopManager>> Factory::crea
         auto data = loader->getCartridgeDataFromStream(istream);
         
         // Convert data to cartridge
-        return convertDataToCartridge<EModel, TGraphicHardware, TLoopManager>(std::move(data));
+        return convertDataToCartridge<TCpuHardwareInterface, TPpuHardwareInterface>(std::move(data));
     }
     
     // Rom unsupported by all registered loaders
     return nullptr;
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-std::unique_ptr<Interface<EModel, TGraphicHardware, TLoopManager>> Factory::convertDataToCartridge(Loader::Data data) {
-    std::unique_ptr<Interface<EModel, TGraphicHardware, TLoopManager>> cartridge;
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> Factory::convertDataToCartridge(Loader::Data data) {
+    std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> cartridge;
     
     switch (data.mapperModel) {
-        case Mapper::Model::NROM : {
-            if (data.mirroringType == Mapper::MirroringType::Horizontal) {
-                Mapper::Mapper0::Chip<Mapper::MirroringType::Horizontal> mapper(std::move(data.prgRom), std::move(data.chrRom));
-                cartridge = std::make_unique<Cartridge<EModel, TGraphicHardware, TLoopManager, decltype(mapper)>>(std::move(mapper));
-            }
-            else if (data.mirroringType == Mapper::MirroringType::Vertical) {
-                Mapper::Mapper0::Chip<Mapper::MirroringType::Vertical> mapper(std::move(data.prgRom), std::move(data.chrRom));
-                cartridge = std::make_unique<Cartridge<EModel, TGraphicHardware, TLoopManager, decltype(mapper)>>(std::move(mapper));
-                
-                //Mapper::Board<Mapper::Mapper0::NRom<Mapper::MirroringType::Vertical>, Mapper::PrgRom, Mapper::ChrRom, Mapper::InternalVRam> mapper({{}, std::move(data.prgRom), std::move(data.chrRom), {}});
-                
-                cartridge = std::make_unique<Cartridge<EModel, TGraphicHardware, TLoopManager, decltype(mapper)>>(std::move(mapper));
-            }
+        case Model::NROM : {
+            cartridge = std::make_unique<Mapper0::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), std::vector<uint8_t>(8 * 1024), std::move(data.chrRom), data.chrRamSize, data.mirroringType);
         }
         break;
         
-        case Mapper::Model::MMC1 : {
-            if (data.chrRom.size() > 0) {
-                Mapper::Board<Mapper::Mapper1::MMC1, Mapper::PrgRom, Mapper::PrgRam, Mapper::ChrRom, Mapper::InternalVRam> mapper({{}, std::move(data.prgRom), std::vector<uint8_t>(8 * 1024), std::move(data.chrRom), {}});
-                
-                cartridge = std::make_unique<Cartridge<EModel, TGraphicHardware, TLoopManager, decltype(mapper)>>(std::move(mapper));
-            } else {
-                Mapper::Board<Mapper::Mapper1::MMC1, Mapper::PrgRom, Mapper::PrgRam, Mapper::ChrRam, Mapper::InternalVRam> mapper({{}, std::move(data.prgRom), std::vector<uint8_t>(8 * 1024), std::vector<uint8_t>(8 * 1024), {}});
-                
-                cartridge = std::make_unique<Cartridge<EModel, TGraphicHardware, TLoopManager, decltype(mapper)>>(std::move(mapper));
-            }
-            //Mapper::Mapper1::Chip<Mapper::Mapper1::Model::SNROM> mapper(std::move(data.prgRom), std::vector<uint8_t>());
+        case Model::MMC1 : {
+            cartridge = std::make_unique<Mapper1::Chip<TCpuHardwareInterface, TPpuHardwareInterface, Mapper1::Model::SNROM>>(std::move(data.prgRom), std::vector<uint8_t>(8 * 1024), std::move(data.chrRom), data.chrRamSize);
         }
         break;
         
         default: {
             // Mapper not supported
-            cartridge = std::make_unique<Nothing<EModel, TGraphicHardware, TLoopManager>>();
+            cartridge = std::make_unique<Nothing<TCpuHardwareInterface, TPpuHardwareInterface>>();
         }
         break;
     }

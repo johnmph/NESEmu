@@ -10,8 +10,20 @@
 #define NESEmu_Cartridge_Nothing_s_hpp
 
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-Nothing<EModel, TGraphicHardware, TLoopManager>::Nothing() : Cartridge<EModel, TGraphicHardware, TLoopManager, Mapper::Nothing::Chip>(Mapper::Nothing::Chip()) {
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+void Nothing<TCpuHardwareInterface, TPpuHardwareInterface>::cpuReadPerformed(TCpuHardwareInterface &cpuHardwareInterface) {
+}
+
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+void Nothing<TCpuHardwareInterface, TPpuHardwareInterface>::cpuWritePerformed(TCpuHardwareInterface &cpuHardwareInterface) {
+}
+
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+void Nothing<TCpuHardwareInterface, TPpuHardwareInterface>::ppuReadPerformed(TPpuHardwareInterface &ppuHardwareInterface) {
+}
+
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+void Nothing<TCpuHardwareInterface, TPpuHardwareInterface>::ppuWritePerformed(TPpuHardwareInterface &ppuHardwareInterface) {
 }
 
 #endif /* NESEmu_Cartridge_Nothing_s_hpp */

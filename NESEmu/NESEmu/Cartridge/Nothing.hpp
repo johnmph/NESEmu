@@ -9,16 +9,21 @@
 #ifndef NESEmu_Cartridge_Nothing_hpp
 #define NESEmu_Cartridge_Nothing_hpp
 
-#include "Cartridge.hpp"
-#include "../Mapper/Nothing.hpp"
+#include "Interface.hpp"
 
 
 namespace NESEmu { namespace Cartridge {
     
-    template <Model EModel, class TGraphicHardware, class TLoopManager>
-    struct Nothing : Cartridge<EModel, TGraphicHardware, TLoopManager, Mapper::Nothing::Chip> {
+    template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+    struct Nothing : Interface<TCpuHardwareInterface, TPpuHardwareInterface> {
         
-        Nothing();
+        // Cpu memory bus
+        void cpuReadPerformed(TCpuHardwareInterface &cpuHardwareInterface) override;
+        void cpuWritePerformed(TCpuHardwareInterface &cpuHardwareInterface) override;
+        
+        // Ppu memory bus
+        void ppuReadPerformed(TPpuHardwareInterface &ppuHardwareInterface) override;
+        void ppuWritePerformed(TPpuHardwareInterface &ppuHardwareInterface) override;
         
     };
     

@@ -6,11 +6,11 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Mapper_Model_hpp
-#define NESEmu_Mapper_Model_hpp
+#ifndef NESEmu_Cartridge_Model_hpp
+#define NESEmu_Cartridge_Model_hpp
 
 
-namespace NESEmu { namespace Mapper {
+namespace NESEmu { namespace Cartridge {
     
     enum class Model {
         NROM,
@@ -26,4 +26,4 @@ namespace NESEmu { namespace Mapper {
     
 } }
 
-#endif /* NESEmu_Mapper_Model_hpp */
+#endif /* NESEmu_Cartridge_Model_hpp */

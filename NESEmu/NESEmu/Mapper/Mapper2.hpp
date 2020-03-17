@@ -6,15 +6,15 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Mapper_Mapper2_hpp
-#define NESEmu_Mapper_Mapper2_hpp
+#ifndef NESEmu_Cartridge_Mapper2_hpp
+#define NESEmu_Cartridge_Mapper2_hpp
 
 #include <istream>
 #include "Common.hpp"
 
 // See https://wiki.nesdev.com/w/index.php/UxROM
 
-namespace NESEmu { namespace Mapper {
+namespace NESEmu { namespace Cartridge {
     
     template <unsigned int IPrgRomSizeInKb, unsigned int IPrgRamSizeInKb, MirroringType EMirroring>
     struct Mapper2 {
@@ -50,4 +50,4 @@ namespace NESEmu { namespace Mapper {
     
 } }
 
-#endif /* NESEmu_Mapper_Mapper2_hpp */
+#endif /* NESEmu_Cartridge_Mapper2_hpp */

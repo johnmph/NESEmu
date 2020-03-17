@@ -10,8 +10,12 @@
 #define NESEmu_Cartridge_Interface_s_hpp
 
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-Interface<EModel, TGraphicHardware, TLoopManager>::~Interface() {
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+Interface<TCpuHardwareInterface, TPpuHardwareInterface>::~Interface() {
+}
+
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+void Interface<TCpuHardwareInterface, TPpuHardwareInterface>::clock(TCpuHardwareInterface &cpuHardwareInterface, TPpuHardwareInterface &ppuHardwareInterface) {
 }
 
 #endif /* NESEmu_Cartridge_Interface_s_hpp */

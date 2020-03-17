@@ -9,7 +9,7 @@
 #include "Common.hpp"
 
 
-namespace NESEmu { namespace Mapper {
+namespace NESEmu { namespace Cartridge {
     
     template <>
     uint16_t getMirroredAddress<MirroringType::Horizontal>(uint16_t address) {

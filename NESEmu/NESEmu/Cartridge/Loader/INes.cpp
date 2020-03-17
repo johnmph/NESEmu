@@ -12,15 +12,15 @@
 
 namespace NESEmu { namespace Cartridge { namespace Loader {
     
-    static Mapper::Model mapperModels[] = {
-        Mapper::Model::NROM,
-        Mapper::Model::MMC1,
-        Mapper::Model::UxROM,
-        Mapper::Model::CNROM,
-        Mapper::Model::MMC3,
-        Mapper::Model::MMC5,
-        Mapper::Model::FFE,
-        Mapper::Model::AxROM
+    static Model mapperModels[] = {
+        Model::NROM,
+        Model::MMC1,
+        Model::UxROM,
+        Model::CNROM,
+        Model::MMC3,
+        Model::MMC5,
+        Model::FFE,
+        Model::AxROM
         //TODO: continuer
     };
     
@@ -57,7 +57,7 @@ namespace NESEmu { namespace Cartridge { namespace Loader {
         bool hasTrainer = flags6 & 0x4;
         
         // Get mirroring type
-        data.mirroringType = ((flags6 & 0x8) != 0) ? Mapper::MirroringType::FourScreen : (((flags6 & 0x1) != 0) ? Mapper::MirroringType::Vertical : Mapper::MirroringType::Horizontal);
+        data.mirroringType = ((flags6 & 0x8) != 0) ? MirroringType::FourScreen : (((flags6 & 0x1) != 0) ? MirroringType::Vertical : MirroringType::Horizontal);
         
         // Get mapper model
         data.mapperModel = mapperModels[(flags7 & 0xF0) | (flags6 >> 4)];//TODO: gerer si le mapper n'est pas dans l'array !
@@ -75,6 +75,12 @@ namespace NESEmu { namespace Cartridge { namespace Loader {
             unsigned int chrRomSize = chrRomSizeIn8Kb * 8 * 1024;
             data.chrRom.resize(chrRomSize);
             istream.read(reinterpret_cast<char *>(data.chrRom.data()), chrRomSize);
+            
+            // No chr-ram if chr-rom
+            data.chrRamSize = 0;
+        } else {
+            // There is no information about size of chr-ram in INes 1.0 so we assume that it is 8kb
+            data.chrRamSize = 8 * 1024;
         }
         
         return data;
