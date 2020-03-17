@@ -11,7 +11,7 @@
 
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-Chip<TCpuHardwareInterface, TPpuHardwareInterface>::Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> prgRam, std::vector<uint8_t> chrRom, std::size_t chrRamSize, MirroringType mirroringType) : _prgRom(std::move(prgRom)), _prgRam(std::move(prgRam)), _chrRom(std::move(chrRom)), _chrRam(chrRamSize), _prgRomSize(_prgRom.size()), _prgRamSize(_prgRam.size()), _hasChrRam(_chrRam.size() > 0), _chrRomOrRamSize((_hasChrRam) ? _chrRam.size() : _chrRom.size()), _mirroringType(mirroringType), _prgRomBankSelect(0) {
+Chip<TCpuHardwareInterface, TPpuHardwareInterface>::Chip(std::vector<uint8_t> prgRom, std::size_t prgRamSize, std::vector<uint8_t> chrRom, std::size_t chrRamSize, MirroringType mirroringType) : Interface<TCpuHardwareInterface, TPpuHardwareInterface>(std::move(prgRom), prgRamSize, std::move(chrRom), chrRamSize), _mirroringType(mirroringType), _prgRomBankSelect(0) {
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
@@ -22,20 +22,20 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuReadPerformed(TCpuHa
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
         // If has Prg-Ram
-        if (_prgRamSize > 0) {
+        if (this->_prgRamSize > 0) {
             // Read Prg-Ram with possible mirrored address
-            cpuHardwareInterface.setDataBus(_prgRam[address & (_prgRamSize - 1)]);
+            cpuHardwareInterface.setDataBus(this->_prgRam[address & (this->_prgRamSize - 1)]);
         }
     }
     // Prg-Rom (first bank)
     else if ((address >= 0x8000) && (address < 0xC000)) {
         // Read Prg-Rom selected bank
-        cpuHardwareInterface.setDataBus(_prgRom[((_prgRomBankSelect << 14) | (address & 0x3FFF)) & (_prgRomSize - 1)]);
+        cpuHardwareInterface.setDataBus(this->_prgRom[((_prgRomBankSelect << 14) | (address & 0x3FFF)) & (this->_prgRomSize - 1)]);
     }
     // Prg-Rom (last bank)
     else if (address >= 0xC000) {
         // Read last Prg-Rom bank
-        cpuHardwareInterface.setDataBus(_prgRom[(_prgRomSize - (16 * 1024)) | (address & 0x3FFF)]);
+        cpuHardwareInterface.setDataBus(this->_prgRom[(this->_prgRomSize - (16 * 1024)) | (address & 0x3FFF)]);
     }
 }
 
@@ -50,9 +50,9 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuWritePerformed(TCpuH
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
         // If has Prg-Ram
-        if (_prgRamSize > 0) {
+        if (this->_prgRamSize > 0) {
             // Write Prg-Ram with possible mirrored address
-            _prgRam[address & (_prgRamSize - 1)] = data;
+            this->_prgRam[address & (this->_prgRamSize - 1)] = data;
         }
     }
     // Writing to Prg-Rom select the Prg-rom bank
@@ -69,7 +69,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuReadPerformed(TPpuHa
     // Chr-Rom / Ram
     if (address < 0x2000) {
         // Read Chr-Rom / Ram
-        ppuHardwareInterface.setDataBus((_hasChrRam) ? _chrRam[address & (_chrRomOrRamSize - 1)] : _chrRom[address & (_chrRomOrRamSize - 1)]);
+        ppuHardwareInterface.setDataBus((this->_chrRamSize > 0) ? this->_chrRam[address & (this->_chrRamSize - 1)] : this->_chrRom[address & (this->_chrRomSize - 1)]);
     }
     // Internal VRAM (PPU address is always < 0x4000)
     else {
@@ -89,8 +89,8 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuWritePerformed(TPpuH
     // Chr-Ram
     if (address < 0x2000) {
         // Write Chr-Ram if exist
-        if (_hasChrRam) {
-            _chrRam[address & (_chrRomOrRamSize - 1)] = data;
+        if (this->_chrRamSize > 0) {
+            this->_chrRam[address & (this->_chrRamSize - 1)] = data;
         }
      }
     // Internal VRAM (PPU address is always < 0x4000)

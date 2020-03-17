@@ -24,16 +24,15 @@
 
 namespace NESEmu { namespace Cartridge {
     
+    template <class TCpuHardwareInterface, class TPpuHardwareInterface>
     struct Factory {
         
         void registerLoader(std::shared_ptr<Loader::Interface> loader, int priority = 0);   // TODO: créer une autre methode sans le parametre loader mais avec un parametre template pour le créer ici (mais il faut un enable_if pour checker que le type derive bien de Loader::Interface) : a voir car par exemple le loader avec database et checksum devra avoir un constructor parametrisé avec la base de données et donc on ne peut pas le créer ici, il devra etre créé a l'exterieur et passé ici comme on le fait maintenant
         
-        template <class TCpuHardwareInterface, class TPpuHardwareInterface>
         std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> createCartridgeFromStream(std::istream &istream);
         
     private:
         
-        template <class TCpuHardwareInterface, class TPpuHardwareInterface>
         std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> convertDataToCartridge(Loader::Data data);
         
         std::vector<std::shared_ptr<Loader::Interface>> _loaders;

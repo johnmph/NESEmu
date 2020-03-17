@@ -20,13 +20,9 @@ namespace NESEmu { namespace Cartridge { namespace Loader {
         
         Model mapperModel;
         std::vector<uint8_t> prgRom;
-        std::vector<uint8_t> prgRam;
+        std::size_t prgRamSize;
         std::vector<uint8_t> chrRom;
         std::size_t chrRamSize;
-        /*unsigned int prgRomSizeInKb;
-        unsigned int prgRamSizeInKb;
-        unsigned int chrRomSizeInKb;
-        unsigned int chrRamSizeInKb;*/
         MirroringType mirroringType;
     };
     

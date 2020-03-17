@@ -21,7 +21,7 @@ namespace NESEmu { namespace Cartridge { namespace Mapper4 {
     template <class TCpuHardwareInterface, class TPpuHardwareInterface>
     struct Chip : Interface<TCpuHardwareInterface, TPpuHardwareInterface> {
         
-        Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> prgRam, std::vector<uint8_t> chrRom, MirroringType mirroringType);
+        Chip(std::vector<uint8_t> prgRom, std::size_t prgRamSize, std::vector<uint8_t> chrRom, MirroringType mirroringType);
         
         void clock(TCpuHardwareInterface &cpuHardwareInterface, TPpuHardwareInterface &ppuHardwareInterface) override;
         
@@ -39,12 +39,6 @@ namespace NESEmu { namespace Cartridge { namespace Mapper4 {
         void processIrqCounter(TCpuHardwareInterface &cpuHardwareInterface, bool a12);
         
         
-        std::vector<uint8_t> const _prgRom;
-        std::vector<uint8_t> _prgRam;
-        std::vector<uint8_t> const _chrRom;
-        std::size_t const _prgRomSize;
-        std::size_t const _prgRamSize;
-        std::size_t const _chrRomSize;
         MirroringType const _mirroringType;
         
         uint8_t _bankRegisterSelect;

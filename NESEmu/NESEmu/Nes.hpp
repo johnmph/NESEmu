@@ -90,7 +90,7 @@ namespace NESEmu {
     public:
         
         // Keep Hardware interface classes private but allow external code to get their types for Cartridge::Interface type
-        using CpuHardwareInterface = CpuHardwareInterface;
+        using CpuHardwareInterface = CpuHardwareInterface;//TODO: voir si ok ce genre de code
         using PpuHardwareInterface = PpuHardwareInterface;
         
         

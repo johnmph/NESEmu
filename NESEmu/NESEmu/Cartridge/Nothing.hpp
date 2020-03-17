@@ -17,6 +17,8 @@ namespace NESEmu { namespace Cartridge {
     template <class TCpuHardwareInterface, class TPpuHardwareInterface>
     struct Nothing : Interface<TCpuHardwareInterface, TPpuHardwareInterface> {
         
+        Nothing();
+        
         // Cpu memory bus
         void cpuReadPerformed(TCpuHardwareInterface &cpuHardwareInterface) override;
         void cpuWritePerformed(TCpuHardwareInterface &cpuHardwareInterface) override;

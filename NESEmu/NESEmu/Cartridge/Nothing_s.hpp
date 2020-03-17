@@ -11,6 +11,10 @@
 
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+Nothing<TCpuHardwareInterface, TPpuHardwareInterface>::Nothing() : Interface<TCpuHardwareInterface, TPpuHardwareInterface>(std::vector<uint8_t>(), 0, std::vector<uint8_t>(), 0) {
+}
+
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
 void Nothing<TCpuHardwareInterface, TPpuHardwareInterface>::cpuReadPerformed(TCpuHardwareInterface &cpuHardwareInterface) {
 }
 

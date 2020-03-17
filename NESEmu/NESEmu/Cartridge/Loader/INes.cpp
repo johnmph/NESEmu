@@ -50,8 +50,11 @@ namespace NESEmu { namespace Cartridge { namespace Loader {
         // Read Flags 7
         uint8_t flags7 = istream.get();
         
+        // Read Flags 8
+        uint8_t flags8 = istream.get();
+        
         // Get prg-ram flag
-        bool hasPrgRam = flags6 & 0x2;//TODO: voir pour ca
+        bool hasPrgRam = flags6 & 0x2;
         
         // Get trainer flag
         bool hasTrainer = flags6 & 0x4;
@@ -63,12 +66,17 @@ namespace NESEmu { namespace Cartridge { namespace Loader {
         data.mapperModel = mapperModels[(flags7 & 0xF0) | (flags6 >> 4)];//TODO: gerer si le mapper n'est pas dans l'array !
         
         // Exit header and trainer if present
-        istream.seekg(8 + ((hasTrainer) ? 512 : 0), std::ios::seekdir::cur);
+        istream.seekg(16 + ((hasTrainer) ? 512 : 0), std::ios::seekdir::beg);
         
         // Read prg-rom
         unsigned int prgRomSize = prgRomSizeIn16Kb * 16 * 1024;
         data.prgRom.resize(prgRomSize);
         istream.read(reinterpret_cast<char *>(data.prgRom.data()), prgRomSize);
+        
+        // If has prg-ram, flags8 may contain prg-ram size (if 0, we assume there is 8kb)
+        if (hasPrgRam) {
+            data.prgRamSize = ((flags8 > 0) ? flags8 : 1) * (8 * 1024);
+        }
         
         // Read chr-rom if present
         if (chrRomSizeIn8Kb > 0) {
@@ -79,7 +87,7 @@ namespace NESEmu { namespace Cartridge { namespace Loader {
             // No chr-ram if chr-rom
             data.chrRamSize = 0;
         } else {
-            // There is no information about size of chr-ram in INes 1.0 so we assume that it is 8kb
+            // There is no information about size of chr-ram size in INes 1.0 so we assume that it is 8kb
             data.chrRamSize = 8 * 1024;
         }
         

@@ -11,8 +11,13 @@
 
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> Factory::createCartridgeFromStream(std::istream &istream) {
-    // TODO: browse chaque loader jusqu'a ce qu'un loader prenne en charge cette rom puis decoder et recuperer les infos via ce loader et ensuite créer la cartridge avec ces informations
+void Factory<TCpuHardwareInterface, TPpuHardwareInterface>::registerLoader(std::shared_ptr<Loader::Interface> loader, int priority) {
+    _loaders.insert(_loaders.begin() + priority, loader);
+}
+
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> Factory<TCpuHardwareInterface, TPpuHardwareInterface>::createCartridgeFromStream(std::istream &istream) {
+    assert(istream.good());
     
     // Browse loaders
     for (auto &loader : _loaders) {
@@ -31,42 +36,52 @@ std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> Factory
         auto data = loader->getCartridgeDataFromStream(istream);
         
         // Convert data to cartridge
-        return convertDataToCartridge<TCpuHardwareInterface, TPpuHardwareInterface>(std::move(data));
+        return convertDataToCartridge(std::move(data));
     }
     
     // Rom unsupported by all registered loaders
-    return nullptr;
+    return std::make_unique<Nothing<TCpuHardwareInterface, TPpuHardwareInterface>>();
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> Factory::convertDataToCartridge(Loader::Data data) {
+std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> Factory<TCpuHardwareInterface, TPpuHardwareInterface>::convertDataToCartridge(Loader::Data data) {
     std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> cartridge;
     
     switch (data.mapperModel) {
         case Model::NROM : {
-            cartridge = std::make_unique<Mapper0::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), std::vector<uint8_t>(8 * 1024), std::move(data.chrRom), data.chrRamSize, data.mirroringType);
+            cartridge = std::make_unique<Mapper0::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), data.prgRamSize, std::move(data.chrRom), data.chrRamSize, data.mirroringType);
         }
         break;
         
         case Model::MMC1 : {
-            cartridge = std::make_unique<Mapper1::Chip<TCpuHardwareInterface, TPpuHardwareInterface, Mapper1::Model::SNROM>>(std::move(data.prgRom), std::vector<uint8_t>(8 * 1024), std::move(data.chrRom), data.chrRamSize);
+            cartridge = std::make_unique<Mapper1::Chip<TCpuHardwareInterface, TPpuHardwareInterface, Mapper1::Model::SNROM>>(std::move(data.prgRom), data.prgRamSize, std::move(data.chrRom), data.chrRamSize);
         }
         break;
         
         case Model::UxROM : {
-            cartridge = std::make_unique<Mapper2::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), std::vector<uint8_t>(), std::move(data.chrRom), data.chrRamSize, data.mirroringType);
+            cartridge = std::make_unique<Mapper2::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), data.prgRamSize, std::move(data.chrRom), data.chrRamSize, data.mirroringType);
         }
         break;
         
         case Model::CNROM : {
-            cartridge = std::make_unique<Mapper3::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), std::vector<uint8_t>(), std::move(data.chrRom), data.mirroringType);
+            cartridge = std::make_unique<Mapper3::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), data.prgRamSize, std::move(data.chrRom), data.mirroringType);
         }
         break;
         
         case Model::MMC3 : {
-            cartridge = std::make_unique<Mapper4::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), std::vector<uint8_t>(8 * 1024), std::move(data.chrRom), data.mirroringType);
+            cartridge = std::make_unique<Mapper4::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), data.prgRamSize, std::move(data.chrRom), data.mirroringType);
         }
         break;
+        /*
+        case Model::MMC5 : {
+            
+        }
+        break;
+        
+        case Model::FFE : {
+            
+        }
+        break;*/
         
         case Model::AxROM : {
             cartridge = std::make_unique<Mapper7::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), data.chrRamSize);

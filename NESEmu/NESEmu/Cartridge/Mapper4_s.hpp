@@ -11,7 +11,7 @@
 
 // TODO: avoir un enum version (comme le ppu, le cpu, ...) car il y a plusieurs versions du MMC3 avec une gestion differente de l'irq
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-Chip<TCpuHardwareInterface, TPpuHardwareInterface>::Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> prgRam, std::vector<uint8_t> chrRom, MirroringType mirroringType) : _prgRom(std::move(prgRom)), _prgRam(std::move(prgRam)), _chrRom(std::move(chrRom)), _prgRomSize(_prgRom.size()), _prgRamSize(_prgRam.size()), _chrRomSize(_chrRom.size()), _mirroringType(mirroringType), _bankRegisterSelect(0), _prgRomBankMode(false), _chrRomBankMode(false), _nametableMirroring(false), _prgRamWriteProtection(false), _prgRamChipEnable(false), _lastA12(0), _irqEnable(false), _irqReload(false), _irqLatch(0), _irqCounter(0) {
+Chip<TCpuHardwareInterface, TPpuHardwareInterface>::Chip(std::vector<uint8_t> prgRom, std::size_t prgRamSize, std::vector<uint8_t> chrRom, MirroringType mirroringType) : Interface<TCpuHardwareInterface, TPpuHardwareInterface>(std::move(prgRom), prgRamSize, std::move(chrRom), 0), _mirroringType(mirroringType), _bankRegisterSelect(0), _prgRomBankMode(false), _chrRomBankMode(false), _nametableMirroring(false), _prgRamWriteProtection(false), _prgRamChipEnable(false), _lastA12(0), _irqEnable(false), _irqReload(false), _irqLatch(0), _irqCounter(0) {
     // TODO: reseter aussi les _bankSelect ?
     //memset(_bankSelect, 0, sizeof(_bankSelect[0]) * 8);
 }
@@ -35,7 +35,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuReadPerformed(TCpuHa
         // If Prg-Ram enabled
         if (_prgRamChipEnable) {
             // Read Prg-Ram
-            cpuHardwareInterface.setDataBus(_prgRam[address & (_prgRamSize - 1)]);
+            cpuHardwareInterface.setDataBus(this->_prgRam[address & (this->_prgRamSize - 1)]);
         }
     }
     // Prg-Rom
@@ -43,20 +43,20 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuReadPerformed(TCpuHa
         uint8_t bank;
         
         if (address < 0xA000) {
-            bank = (_prgRomBankMode) ? ((_prgRomSize >> 13) - 2)  : _bankSelect[6];
+            bank = (_prgRomBankMode) ? ((this->_prgRomSize >> 13) - 2)  : _bankSelect[6];
         }
         else if (address < 0xC000) {
             bank = _bankSelect[7];
         }
         else if (address < 0xE000) {
-            bank = (_prgRomBankMode) ? _bankSelect[6] : ((_prgRomSize >> 13) - 2);
+            bank = (_prgRomBankMode) ? _bankSelect[6] : ((this->_prgRomSize >> 13) - 2);
         }
         else {
-            bank = (_prgRomSize >> 13) - 1;
+            bank = (this->_prgRomSize >> 13) - 1;
         }
         
         // Read Prg-Rom
-        cpuHardwareInterface.setDataBus(_prgRom[((bank << 13) | (address & 0x1FFF)) & (_prgRomSize - 1)]);
+        cpuHardwareInterface.setDataBus(this->_prgRom[((bank << 13) | (address & 0x1FFF)) & (this->_prgRomSize - 1)]);
     }
 }
 
@@ -73,7 +73,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuWritePerformed(TCpuH
         // If Prg-Ram enabled and write enabled
         if (_prgRamChipEnable && !_prgRamWriteProtection) {
             // Write Prg-Ram
-            _prgRam[address & (_prgRamSize - 1)] = data;
+            this->_prgRam[address & (this->_prgRamSize - 1)] = data;
         }
     }
     // Bank select / data
@@ -182,7 +182,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuReadPerformed(TPpuHa
         }
         
         // Read Chr-Rom
-        ppuHardwareInterface.setDataBus(_chrRom[((bank << 10) | (address & mask)) & (_chrRomSize - 1)]);
+        ppuHardwareInterface.setDataBus(this->_chrRom[((bank << 10) | (address & mask)) & (this->_chrRomSize - 1)]);
     }
     // Internal VRAM (PPU address is always < 0x4000)
     else {

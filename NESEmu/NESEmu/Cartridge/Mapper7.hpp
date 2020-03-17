@@ -31,11 +31,6 @@ namespace NESEmu { namespace Cartridge { namespace Mapper7 {
         void ppuWritePerformed(TPpuHardwareInterface &ppuHardwareInterface) override;
         
     private:
-        std::vector<uint8_t> const _prgRom;
-        std::vector<uint8_t> _chrRam;
-        std::size_t const _prgRomSize;
-        std::size_t const _chrRamSize;
-        
         uint8_t _prgRomBankSelect;
         uint8_t _vramBankSelect;
     };

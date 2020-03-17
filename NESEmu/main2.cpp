@@ -209,7 +209,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Ms. Pac-Man (Tengen).nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/DK.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/Castlevania.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
-    std::ifstream ifs("../UnitTestFiles/Duck Tales.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
+    //std::ifstream ifs("../UnitTestFiles/Duck Tales.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Battletoads.nes", std::ios::binary);  // Mapper7, 256kb de prg-rom, single screen mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Paperboy.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/Huge Insect.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, vertical mirroring
@@ -220,7 +220,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Crystalis.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Metroid.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/Final Fantasy.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom
-    //std::ifstream ifs("../UnitTestFiles/Zelda.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom
+    std::ifstream ifs("../UnitTestFiles/Zelda.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/Zelda 2.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom // TODO: bug mais peut etre parce que le mapper1 n'est pas complet (selon les versions du mapper !) deja c du chr-ram et ici c du chr-rom : oui en plus il y a 8ko dans le mapper1 et ici 128 !!! : OK
     //std::ifstream ifs("../UnitTestFiles/Simpsons - Bart Vs the Space Mutants.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom, IL Y A LE BUG DU SCOREBAR QUI SHAKE UN PEU, a voir (timing ppu ?)
     //std::ifstream ifs("../UnitTestFiles/Bill & Ted's Excellent Video Game Adventure.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom // TODO : ne fonctionne pas car on doit gerer la double ecriture dans le MMC1 : ok
@@ -298,16 +298,29 @@ int main(int argc, const char * argv[]) {
     
     // TODO: comme les mappers sont resolus au compile-time, a chaque mapper ajouté dans le code, il faut l'instantier (dans Factory) et donc il va avoir une duplication de NesImplementation pour chaque mapper, ca va augmenter la taille du code a fond et peut etre foutre la merde dans l'instruction cache ? si ca tombe la version avec virtual dispatch (runtime) sera au final plus rapide car moins de code meme si les appels de methodes sont indirects !!! A TESTER
     
-    NESEmu::Cartridge::Factory cartridgeFactory;//TODO: recuperer le factory de la classe Nes ? car ainsi il sait les template parameters a appliquer
+    using Nes = NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware, LoopManager>;
+    
+    NESEmu::Cartridge::Factory<Nes::CpuHardwareInterface, Nes::PpuHardwareInterface> cartridgeFactory;
     cartridgeFactory.registerLoader(std::shared_ptr<NESEmu::Cartridge::Loader::Interface>(new NESEmu::Cartridge::Loader::INes()));
     
     // Create cartridge
-    using CpuHardwareInterface = NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware, LoopManager>::CpuHardwareInterface;
-    using PpuHardwareInterface = NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware, LoopManager>::PpuHardwareInterface;
-    auto cartridge = cartridgeFactory.createCartridgeFromStream<CpuHardwareInterface, PpuHardwareInterface>(ifs);
+    auto cartridge = cartridgeFactory.createCartridgeFromStream(ifs);
+    
+    // Read prg-ram if necessary
+    if (cartridge->getPrgRam().size() > 0) {
+        std::ifstream ifs("../prgRam.dat", std::ios::binary);
+        
+        if (ifs.good()) {
+            // Get prg-ram
+            auto &prgRam = cartridge->getPrgRam();
+            
+            // Read from file
+            ifs.read(reinterpret_cast<char *>(prgRam.data()), prgRam.size());
+        }
+    }
     
     // Create NES
-    NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware, LoopManager> nes(graphicHardware, loopManager);
+    Nes nes(graphicHardware, loopManager);
     
     // Insert cartridge
     nes.insertCartridge(std::move(cartridge));
@@ -323,6 +336,22 @@ int main(int argc, const char * argv[]) {
     
     // Run NES
     nes.run();
+    
+    // Remove cartridge
+    cartridge = nes.removeCartridge();
+    
+    // Save prg-ram if necessary
+    if (cartridge->getPrgRam().size() > 0) {
+        std::ofstream ofs("../prgRam.dat", std::ios::binary);
+        
+        if (ofs.good()) {
+            // Get prg-ram
+            auto const &prgRam = cartridge->getPrgRam();
+            
+            // Write to file
+            ofs.write(reinterpret_cast<char const *>(prgRam.data()), prgRam.size());
+        }
+    }
     
     // Clean up SDL
     SDL_Quit();

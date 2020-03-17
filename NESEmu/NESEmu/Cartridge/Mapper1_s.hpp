@@ -11,7 +11,7 @@
 
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface, Model EModel>
-Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> prgRam, std::vector<uint8_t> chrRom, std::size_t chrRamSize) : _prgRom(std::move(prgRom)), _prgRam(std::move(prgRam)), _chrRom(std::move(chrRom)), _chrRam(chrRamSize), _prgRomSize(_prgRom.size()), _prgRamSize(_prgRam.size()), _hasChrRam(_chrRam.size() > 0), _chrRomOrRamSize((_hasChrRam) ? _chrRam.size() : _chrRom.size()), _shiftRegister(0x10), _shiftCount(0) {//TODO: a voir pour les valeurs des registres
+Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::Chip(std::vector<uint8_t> prgRom, std::size_t prgRamSize, std::vector<uint8_t> chrRom, std::size_t chrRamSize) : Interface<TCpuHardwareInterface, TPpuHardwareInterface>(std::move(prgRom), prgRamSize, std::move(chrRom), chrRamSize), _shiftRegister(0x10), _shiftCount(0) {//TODO: a voir pour les valeurs des registres
     // Set internal registers
     _internalRegisters[0] = 0xC;        // TODO a voir
     _internalRegisters[1] = 0x0;
@@ -27,9 +27,9 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::cpuReadPerforme
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
         // If has Prg-Ram and enabled
-        if ((_prgRamSize > 0) && ((_internalRegisters[3] & 0x10) == 0x0)) {
+        if ((this->_prgRamSize > 0) && ((_internalRegisters[3] & 0x10) == 0x0)) {
             // Read Prg-Ram with possible mirrored address
-            cpuHardwareInterface.setDataBus(_prgRam[address & (_prgRamSize - 1)]);
+            cpuHardwareInterface.setDataBus(this->_prgRam[address & (this->_prgRamSize - 1)]);
         }
     }
     // Prg-Rom
@@ -51,11 +51,11 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::cpuReadPerforme
         // First 16kb switch
         else {
             mask = 0x3FFF;
-            bank = (address < 0xC000) ? _internalRegisters[3] : ((_prgRomSize >> 14) - 1);
+            bank = (address < 0xC000) ? _internalRegisters[3] : ((this->_prgRomSize >> 14) - 1);
         }
         
         // Read Prg-Rom
-        cpuHardwareInterface.setDataBus(_prgRom[((bank << 14) | (address & mask)) & (_prgRomSize - 1)]);
+        cpuHardwareInterface.setDataBus(this->_prgRom[((bank << 14) | (address & mask)) & (this->_prgRomSize - 1)]);
     }
     
     // A read is performed so we reset the _lastCycleWasWrite flag
@@ -73,9 +73,9 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::cpuWritePerform
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
         // If has Prg-Ram and enabled
-        if ((_prgRamSize > 0) && ((_internalRegisters[3] & 0x10) == 0x0)) {
+        if ((this->_prgRamSize > 0) && ((_internalRegisters[3] & 0x10) == 0x0)) {
             // Write Prg-Ram with possible mirrored address
-            _prgRam[address & (_prgRamSize - 1)] = data;
+            this->_prgRam[address & (this->_prgRamSize - 1)] = data;
         }
     }
     // If we write to rom and if it's the first write of consecutives writes
@@ -116,7 +116,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::ppuReadPerforme
     // Chr-Rom / Ram
     if (address < 0x2000) {
         // Read Chr-Rom / Ram
-        ppuHardwareInterface.setDataBus((_hasChrRam) ? _chrRam[getChrRamAddress(address) & (_chrRomOrRamSize - 1)] : _chrRom[getChrRamAddress(address) & (_chrRomOrRamSize - 1)]);
+        ppuHardwareInterface.setDataBus((this->_chrRamSize > 0) ? this->_chrRam[getChrRamAddress(address) & (this->_chrRamSize - 1)] : this->_chrRom[getChrRamAddress(address) & (this->_chrRomSize - 1)]);
     }
     // Internal VRAM (PPU address is always < 0x4000)
     else {
@@ -136,8 +136,8 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::ppuWritePerform
     // Chr-Ram
     if (address < 0x2000) {
         // Write Chr-Ram if exist
-        if (_hasChrRam) {
-            _chrRam[getChrRamAddress(address) & (_chrRomOrRamSize - 1)] = data;
+        if (this->_chrRamSize > 0) {
+            this->_chrRam[getChrRamAddress(address) & (this->_chrRamSize - 1)] = data;
         }
     }
     // Internal VRAM (PPU address is always < 0x4000)

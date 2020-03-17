@@ -11,7 +11,7 @@
 
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-Chip<TCpuHardwareInterface, TPpuHardwareInterface>::Chip(std::vector<uint8_t> prgRom, std::size_t chrRamSize) : _prgRom(std::move(prgRom)), _chrRam(chrRamSize), _prgRomSize(_prgRom.size()), _chrRamSize(_chrRam.size()), _prgRomBankSelect(0), _vramBankSelect(0) {
+Chip<TCpuHardwareInterface, TPpuHardwareInterface>::Chip(std::vector<uint8_t> prgRom, std::size_t chrRamSize) : Interface<TCpuHardwareInterface, TPpuHardwareInterface>(std::move(prgRom), 0, std::vector<uint8_t>(), chrRamSize), _prgRomBankSelect(0), _vramBankSelect(0) {
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
@@ -22,7 +22,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuReadPerformed(TCpuHa
     // Prg-Rom
     if (address >= 0x8000) {
         // Read Prg-Rom selected bank
-        cpuHardwareInterface.setDataBus(_prgRom[((_prgRomBankSelect << 15) | (address & 0x7FFF)) & (_prgRomSize - 1)]);
+        cpuHardwareInterface.setDataBus(this->_prgRom[((_prgRomBankSelect << 15) | (address & 0x7FFF)) & (this->_prgRomSize - 1)]);
     }
 }
 
@@ -49,7 +49,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuReadPerformed(TPpuHa
     // Chr-Ram
     if (address < 0x2000) {
         // Read Chr-Ram
-        ppuHardwareInterface.setDataBus(_chrRam[address & (_chrRamSize - 1)]);
+        ppuHardwareInterface.setDataBus(this->_chrRam[address & (this->_chrRamSize - 1)]);
     }
     // Internal VRAM (PPU address is always < 0x4000)
     else {
@@ -69,7 +69,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuWritePerformed(TPpuH
     // Chr-Ram
     if (address < 0x2000) {
         // Write Chr-Ram
-        _chrRam[address & (_chrRamSize - 1)] = data;
+        this->_chrRam[address & (this->_chrRamSize - 1)] = data;
     }
     // Internal VRAM (PPU address is always < 0x4000)
     else {

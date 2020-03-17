@@ -22,8 +22,6 @@
 		4DD1EB872404047900018E52 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD1EB862404047900018E52 /* SDL2.framework */; };
 		4DD7179223FEAADC00005D8C /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD7179023FEAADC00005D8C /* Common.cpp */; };
 		4DD7179323FEAADC00005D8C /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD7179023FEAADC00005D8C /* Common.cpp */; };
-		4DFE480624193FA4006B7DAB /* Factory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFE480524193FA4006B7DAB /* Factory.cpp */; };
-		4DFE480724193FA9006B7DAB /* Factory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFE480524193FA4006B7DAB /* Factory.cpp */; };
 		4DFE480A24194264006B7DAB /* Interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFE480924194264006B7DAB /* Interface.cpp */; };
 		4DFE480B241942C1006B7DAB /* Interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFE480924194264006B7DAB /* Interface.cpp */; };
 		4DFE480D241942FF006B7DAB /* INes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFE480C241942FF006B7DAB /* INes.cpp */; };
@@ -113,7 +111,6 @@
 		4DE643FC23BAF12400CFFE4E /* Chip_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Chip_s.hpp; sourceTree = "<group>"; };
 		4DFE480324193D55006B7DAB /* Factory.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Factory.hpp; sourceTree = "<group>"; };
 		4DFE480424193F4E006B7DAB /* Factory_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Factory_s.hpp; sourceTree = "<group>"; };
-		4DFE480524193FA4006B7DAB /* Factory.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Factory.cpp; sourceTree = "<group>"; };
 		4DFE4808241941D2006B7DAB /* Data.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Data.hpp; sourceTree = "<group>"; };
 		4DFE480924194264006B7DAB /* Interface.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Interface.cpp; sourceTree = "<group>"; };
 		4DFE480C241942FF006B7DAB /* INes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = INes.cpp; sourceTree = "<group>"; };
@@ -269,7 +266,6 @@
 				4DFF461D241868AF005D3F21 /* Loader */,
 				4DFE480324193D55006B7DAB /* Factory.hpp */,
 				4DFE480424193F4E006B7DAB /* Factory_s.hpp */,
-				4DFE480524193FA4006B7DAB /* Factory.cpp */,
 			);
 			path = Cartridge;
 			sourceTree = "<group>";
@@ -412,7 +408,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D6B9C2223E2310D000889C3 /* ChipVisual6502UnitTest.mm in Sources */,
-				4DFE480724193FA9006B7DAB /* Factory.cpp in Sources */,
 				4DFE480B241942C1006B7DAB /* Interface.cpp in Sources */,
 				4D1137F323CD3EEC0056AAAD /* NESEmuUnitTest.mm in Sources */,
 				4DD1EB812403911B00018E52 /* Common.cpp in Sources */,
@@ -433,7 +428,6 @@
 				4DFE480D241942FF006B7DAB /* INes.cpp in Sources */,
 				4DD1EB832403FD1700018E52 /* main2.cpp in Sources */,
 				4D11382B23D533E70056AAAD /* Chip.cpp in Sources */,
-				4DFE480624193FA4006B7DAB /* Factory.cpp in Sources */,
 				4DD7179223FEAADC00005D8C /* Common.cpp in Sources */,
 				4DD1EB802403911B00018E52 /* Common.cpp in Sources */,
 				4D70474E2402FAF1005A56B1 /* Nothing.cpp in Sources */,

@@ -10,6 +10,7 @@
 #define NESEmu_Cartridge_Interface_hpp
 
 #include <cstdint>
+#include <vector>
 
 
 namespace NESEmu { namespace Cartridge {
@@ -17,9 +18,14 @@ namespace NESEmu { namespace Cartridge {
     template <class TCpuHardwareInterface, class TPpuHardwareInterface>
     struct Interface {
         
+        Interface(std::vector<uint8_t> prgRom, std::size_t prgRamSize, std::vector<uint8_t> chrRom, std::size_t chrRamSize);
         virtual ~Interface() = 0;
         
-        virtual void clock(TCpuHardwareInterface &cpuHardwareInterface, TPpuHardwareInterface &ppuHardwareInterface);   // TODO: voir si moyen de desactiver l'appel au compile time (cad que sur les mappers ou on a pas besoin de clock il n'y aurait pas d'appels de clock), seulement sur les mappers qui en ont besoin, ainsi on evite des pertes de performances (ou si l'optimisation suffit pour ne pas appeler la methode si elle est vide) !
+        // Prg-ram
+        std::vector<uint8_t> &getPrgRam();
+        
+        // Clock
+        virtual void clock(TCpuHardwareInterface &cpuHardwareInterface, TPpuHardwareInterface &ppuHardwareInterface);
         
         // Cpu memory bus
         virtual void cpuReadPerformed(TCpuHardwareInterface &cpuHardwareInterface) = 0;
@@ -29,6 +35,15 @@ namespace NESEmu { namespace Cartridge {
         virtual void ppuReadPerformed(TPpuHardwareInterface &ppuHardwareInterface) = 0;
         virtual void ppuWritePerformed(TPpuHardwareInterface &ppuHardwareInterface) = 0;
         
+    protected:
+        std::vector<uint8_t> const _prgRom;
+        std::vector<uint8_t> _prgRam;
+        std::vector<uint8_t> const _chrRom;
+        std::vector<uint8_t> _chrRam;
+        std::size_t const _prgRomSize;
+        std::size_t const _prgRamSize;
+        std::size_t const _chrRomSize;
+        std::size_t const _chrRamSize;
     };
     
     #include "Interface_s.hpp"
