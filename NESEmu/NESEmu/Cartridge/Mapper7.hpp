@@ -14,7 +14,7 @@
 #include "Common.hpp"
 
 // See https://wiki.nesdev.com/w/index.php/AxROM
-// TODO: par apres, factoriser le code commun des mappers
+
 namespace NESEmu { namespace Cartridge { namespace Mapper7 {
     
     template <class TCpuHardwareInterface, class TPpuHardwareInterface>

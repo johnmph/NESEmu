@@ -39,44 +39,44 @@ struct Constants<Model::Pal> {
 };
 
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-Nes<EModel, TGraphicHardware, TLoopManager>::CpuHardwareInterface::CpuHardwareInterface(Nes &nes) : _nes(nes) {
+template <Model EModel, class TGraphicHardware>
+Nes<EModel, TGraphicHardware>::CpuHardwareInterface::CpuHardwareInterface(Nes &nes) : _nes(nes) {
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-uint16_t Nes<EModel, TGraphicHardware, TLoopManager>::CpuHardwareInterface::getAddressBus() const {
+template <Model EModel, class TGraphicHardware>
+uint16_t Nes<EModel, TGraphicHardware>::CpuHardwareInterface::getAddressBus() const {
     // Get address
     return _address;
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::CpuHardwareInterface::setAddressBus(uint16_t address) {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::CpuHardwareInterface::setAddressBus(uint16_t address) {
     // Set address
     _address = address;
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-uint8_t Nes<EModel, TGraphicHardware, TLoopManager>::CpuHardwareInterface::getDataBus() const {
+template <Model EModel, class TGraphicHardware>
+uint8_t Nes<EModel, TGraphicHardware>::CpuHardwareInterface::getDataBus() const {
     // Get data with possibly open data bus latch on some or all lines
     // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
     return _data;
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::CpuHardwareInterface::setDataBus(uint8_t data) {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::CpuHardwareInterface::setDataBus(uint8_t data) {
     // Set data
     _data = data;
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::CpuHardwareInterface::setDataBus(uint8_t data, uint8_t mask) {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::CpuHardwareInterface::setDataBus(uint8_t data, uint8_t mask) {
     // Set data with possibly open data bus latch on some or all lines
     // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
     _data = (_data & ~mask) | (data & mask);
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::CpuHardwareInterface::performRead() {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::CpuHardwareInterface::performRead() {
     // RAM
     if (_address < 0x2000) {
         // RAM is mirrored each 0x800 bytes
@@ -94,8 +94,8 @@ void Nes<EModel, TGraphicHardware, TLoopManager>::CpuHardwareInterface::performR
     //}
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::CpuHardwareInterface::performWrite() {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::CpuHardwareInterface::performWrite() {
     // RAM
     if (_address < 0x2000) {
         // RAM is mirrored each 0x800 bytes
@@ -114,8 +114,8 @@ void Nes<EModel, TGraphicHardware, TLoopManager>::CpuHardwareInterface::performW
     //}
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::CpuHardwareInterface::readControllerPort(unsigned int number) {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::CpuHardwareInterface::readControllerPort(unsigned int number) {
     // Get current data bus
     uint8_t data = getDataBus();
     
@@ -129,23 +129,23 @@ void Nes<EModel, TGraphicHardware, TLoopManager>::CpuHardwareInterface::readCont
     setDataBus(~data);
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::CpuHardwareInterface::irq(bool high) {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::CpuHardwareInterface::irq(bool high) {
     _nes.cartridgeInterrupt(high);
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-Nes<EModel, TGraphicHardware, TLoopManager>::PpuHardwareInterface::PpuHardwareInterface(Nes &nes) : _nes(nes) {
+template <Model EModel, class TGraphicHardware>
+Nes<EModel, TGraphicHardware>::PpuHardwareInterface::PpuHardwareInterface(Nes &nes) : _nes(nes) {
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-uint16_t Nes<EModel, TGraphicHardware, TLoopManager>::PpuHardwareInterface::getAddressBus() const {
+template <Model EModel, class TGraphicHardware>
+uint16_t Nes<EModel, TGraphicHardware>::PpuHardwareInterface::getAddressBus() const {
     // Get address
     return (_address & 0xFF00) | _externalOctalLatch;
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::PpuHardwareInterface::setAddressBus(uint16_t address) {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::PpuHardwareInterface::setAddressBus(uint16_t address) {
     // Set address (Only 14 bits)
     _address = address & 0x3FFF;
     
@@ -153,59 +153,59 @@ void Nes<EModel, TGraphicHardware, TLoopManager>::PpuHardwareInterface::setAddre
     _externalOctalLatch = _address & 0xFF;
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-uint8_t Nes<EModel, TGraphicHardware, TLoopManager>::PpuHardwareInterface::getDataBus() const {
+template <Model EModel, class TGraphicHardware>
+uint8_t Nes<EModel, TGraphicHardware>::PpuHardwareInterface::getDataBus() const {
     // Get data with possibly open data bus latch on some or all lines
     // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
     return _address & 0xFF;
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::PpuHardwareInterface::setDataBus(uint8_t data) {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::PpuHardwareInterface::setDataBus(uint8_t data) {
     // Set data
     _address = (_address & 0xFF00) | data;
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::PpuHardwareInterface::setDataBus(uint8_t data, uint8_t mask) {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::PpuHardwareInterface::setDataBus(uint8_t data, uint8_t mask) {
     // Set data with possibly open data bus latch on some or all lines
     // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
     uint16_t mask16Bits = mask;
     _address = (_address & ~mask16Bits) | (data & mask);
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::PpuHardwareInterface::performRead() {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::PpuHardwareInterface::performRead() {
     // Read from cartridge
     _nes._cartridge->ppuReadPerformed(*this);
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::PpuHardwareInterface::performWrite() {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::PpuHardwareInterface::performWrite() {
     // Write to cartridge
     _nes._cartridge->ppuWritePerformed(*this);
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-std::vector<uint8_t> &Nes<EModel, TGraphicHardware, TLoopManager>::PpuHardwareInterface::getVram() {    // TODO: est ce qu'on peut mettre const (car meme si on modifie vram, ca n'est pas dans cet objet (mais a voir comme c'est un sous-objet))
+template <Model EModel, class TGraphicHardware>
+std::vector<uint8_t> &Nes<EModel, TGraphicHardware>::PpuHardwareInterface::getVram() {    // TODO: est ce qu'on peut mettre const (car meme si on modifie vram, ca n'est pas dans cet objet (mais a voir comme c'est un sous-objet))
     // Get vram
     return _nes._vram;
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::PpuHardwareInterface::interrupt(bool high) {
-    _nes.ppuInterrupt(high);//TODO: ca ou directement _nes._cpu.nmi(high); ?
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::PpuHardwareInterface::interrupt(bool high) {
+    _nes.ppuInterrupt(high);
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-Nes<EModel, TGraphicHardware, TLoopManager>::Nes(TGraphicHardware &graphicHardware, TLoopManager &loopManager) : _loopManager(loopManager), _cpuHardwareInterface(*this), _ppuHardwareInterface(*this), _cpu(_cpuHardwareInterface), _ppu(_ppuHardwareInterface, _ppuHardwareInterface, graphicHardware), _ram(2 * 1024), _vram(2 * 1024), _currentClockForCpu(0), _currentClockForPpu(0) {
+template <Model EModel, class TGraphicHardware>
+Nes<EModel, TGraphicHardware>::Nes(TGraphicHardware &graphicHardware) : _cpuHardwareInterface(*this), _ppuHardwareInterface(*this), _cpu(_cpuHardwareInterface), _ppu(_ppuHardwareInterface, _ppuHardwareInterface, graphicHardware), _ram(2 * 1024), _vram(2 * 1024), _currentClockForCpu(0), _currentClockForPpu(0), _isCpuPhi2(false) {
     // Begin with no controller
     disconnectController(0);
     disconnectController(1);
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::powerUp() {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::powerUp() {
     // Power up CPU
     _cpu.powerUp();
     
@@ -213,8 +213,8 @@ void Nes<EModel, TGraphicHardware, TLoopManager>::powerUp() {
     _ppu.powerUp();
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::reset(bool high) {  // TODO: a voir et a terminer
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::reset(bool high) {  // TODO: a voir et a terminer
     // Reset CPU
     _cpu.reset(high);
     
@@ -222,8 +222,8 @@ void Nes<EModel, TGraphicHardware, TLoopManager>::reset(bool high) {  // TODO: a
     _ppu.reset(high);
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::connectController(unsigned int portNumber, std::unique_ptr<Controller::Interface> controller) {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::connectController(unsigned int portNumber, std::unique_ptr<Controller::Interface> controller) {
     assert(portNumber < 2);
     assert(controller != nullptr);
     
@@ -231,12 +231,12 @@ void Nes<EModel, TGraphicHardware, TLoopManager>::connectController(unsigned int
     _controllerPorts[portNumber] = std::move(controller);
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-std::unique_ptr<Controller::Interface> Nes<EModel, TGraphicHardware, TLoopManager>::disconnectController(unsigned int portNumber) {
+template <Model EModel, class TGraphicHardware>
+std::unique_ptr<Controller::Interface> Nes<EModel, TGraphicHardware>::disconnectController(unsigned int portNumber) {
     assert(portNumber < 2);
     
     // Get connected controller
-    auto controller = std::move(_controllerPorts[portNumber]);//TODO: voir si ok
+    auto controller = std::move(_controllerPorts[portNumber]);
     
     // Disconnect the controller by setting it with Controller::Nothing
     _controllerPorts[portNumber] = std::make_unique<Controller::Nothing>();
@@ -244,15 +244,15 @@ std::unique_ptr<Controller::Interface> Nes<EModel, TGraphicHardware, TLoopManage
     return controller;
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::insertCartridge(std::unique_ptr<Cartridge::Interface<CpuHardwareInterface, PpuHardwareInterface>> cartridge) {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::insertCartridge(std::unique_ptr<Cartridge::Interface<CpuHardwareInterface, PpuHardwareInterface>> cartridge) {
     assert(cartridge != nullptr);
     
     _cartridge = std::move(cartridge);
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-auto Nes<EModel, TGraphicHardware, TLoopManager>::removeCartridge() -> std::unique_ptr<Cartridge::Interface<CpuHardwareInterface, PpuHardwareInterface>> {
+template <Model EModel, class TGraphicHardware>
+auto Nes<EModel, TGraphicHardware>::removeCartridge() -> std::unique_ptr<Cartridge::Interface<CpuHardwareInterface, PpuHardwareInterface>> {
     // Get inserted cartridge
     auto cartridge = std::move(_cartridge);
     
@@ -262,22 +262,23 @@ auto Nes<EModel, TGraphicHardware, TLoopManager>::removeCartridge() -> std::uniq
     return cartridge;
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::run() {
+template <Model EModel, class TGraphicHardware>
+template <class TLoopFunction>
+void Nes<EModel, TGraphicHardware>::run(TLoopFunction &&loopFunction) {
     // Run loop
     for (;;) {
         // Do a full cycle
-        clockFull();// TODO: si je met le code de cette fonction ici plutot que de l'appeler je gagne 1-2 fps
+        clockFull();
         
         // Check if need to stop
-        if (_loopManager.needToStop(*this)) {
+        if (loopFunction(*this)) {
             break;
         }
     }
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::clockFull() {   // TODO: gros gain de FPS ainsi !!!, surement rajouter clock (avec un template parameter pour choisir si PPU ou CPU en 1er s'il tombe en meme temps)
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::clockFull() {   // TODO: gros gain de FPS ainsi !!!, surement rajouter clock (avec un template parameter pour choisir si PPU ou CPU en 1er s'il tombe en meme temps)
     /*_cpu.clock(false);
      _ppu.clock();
      
@@ -297,79 +298,75 @@ void Nes<EModel, TGraphicHardware, TLoopManager>::clockFull() {   // TODO: gros 
      */
     
     // Update controllers
-    for (int i = 0; i < 2; ++i) {
+    /*for (int i = 0; i < 2; ++i) {
         _controllerPorts[i]->out(_cpu.getOutSignal() & 0x1);        // TODO: voir pour les performances ici
-    }
+    }*/
     
+    // Clock cartridge
     _cartridge->clock(_cpuHardwareInterface, _ppuHardwareInterface);
+    
+    // Clock cpu phi1
     _cpu.clockPhi1();
     
+    // Clock ppu twice
+    _ppu.clock();
     _ppu.clock();
     
-    _ppu.clock();
-    
+    // Clock cpu phi2
     _cpu.clockPhi2();
     
+    // Clock ppu
     _ppu.clock();
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::clock() {
-    static bool f = false;
-    //static int cpuCycle = 0;
-    
-    
-    // Perform a ppu clock if necessary
-    if (_currentClockForPpu <= 0) {
-        _ppu.clock();
-        _currentClockForPpu = Constants::ppuMasterClockDivider;
-    }
-    
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::clock() {
     // Perform a cpu clock if necessary
     if (_currentClockForCpu <= 0) {
-        if (!f) {
+        // If in cpu phi1
+        if (!_isCpuPhi2) {
             // Update controllers
             for (int i = 0; i < 2; ++i) {
                 _controllerPorts[i]->out(_cpu.getOutSignal() & 0x1);        // TODO: voir pour les performances ici
             }
             
+            // Clock cartridge
             _cartridge->clock(_cpuHardwareInterface, _ppuHardwareInterface);
             
+            // Clock cpu phi1
             _cpu.clockPhi1();
         } else {
+            // Clock cpu phi2
             _cpu.clockPhi2();
-            //++cpuCycle;
         }
+        
+        // Update state
         _currentClockForCpu = Constants::cpuMasterClockDivider;
-        f = !f;
-        /*
-         // Update controllers
-         for (int i = 0; i < 2; ++i) {
-         _controllerPorts[i]->out(_cpu.getOutSignal() & 0x1);        // TODO: voir pour les performances ici
-         }
-         
-         _cartridge->clock(_cpuHardwareInterface, _ppuHardwareInterface);
-         _cpu.clock();
-         _currentClockForCpu = 0;*/
-        /*++cpuCycle;
-         
-         if (cpuCycle == 29658) {
-         int x = 0;
-         }*/
+        _isCpuPhi2 = !_isCpuPhi2;
     }
     
+    // Perform a ppu clock if necessary
+    if (_currentClockForPpu <= 0) {
+        // Clock ppu
+        _ppu.clock();
+        
+        // Update state
+        _currentClockForPpu = Constants::ppuMasterClockDivider;
+    }
+    
+    // Decrement clock counters
     --_currentClockForCpu;
     --_currentClockForPpu;
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::ppuInterrupt(bool high) {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::ppuInterrupt(bool high) {
     // PPU interrupt is connected to CPU NMI
     _cpu.nmi(high);
 }
 
-template <Model EModel, class TGraphicHardware, class TLoopManager>
-void Nes<EModel, TGraphicHardware, TLoopManager>::cartridgeInterrupt(bool high) {
+template <Model EModel, class TGraphicHardware>
+void Nes<EModel, TGraphicHardware>::cartridgeInterrupt(bool high) {
     // Cartridge interrupt is connected to CPU IRQ
     _cpu.irq(high);
 }

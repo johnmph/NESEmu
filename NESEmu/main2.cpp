@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <functional>
 #include <SDL.h>
 #include "NESEmu/Cartridge/Loader/INes.hpp"
 #include "NESEmu/Cartridge/Factory.hpp"
@@ -166,6 +167,11 @@ struct LoopManager {
     }
     
     template <class TNes>
+    bool operator()(TNes &nes) {
+        return needToStop(nes);
+    }
+    
+    template <class TNes>
     bool needToStop(TNes &nes) {
         --_x;
         if ((_event.type == SDL_QUIT) || (_x == 0)) {
@@ -193,6 +199,46 @@ private:
     bool _resetState;
 };
 
+template <class TNes>
+bool nesLoopNeedToStop(TNes &nes) {
+    static unsigned int x = 35795460;
+    
+    --x;
+    if (x == 0) {
+        return true;
+    }
+    
+    return false;
+}
+
+template <class TNes>
+void runNes(TNes &nes, SDL_Event &event) {
+    unsigned int _x = 35795460;
+    bool resetState = false;
+    
+    for (;;) {
+        nes.clockFull();
+        //nes.clock();
+        
+        --_x;
+        if ((event.type == SDL_QUIT) || (_x == 0)) {
+            return;
+        }
+        
+        if ((event.type == SDL_KEYDOWN) && (event.key.keysym.scancode == SDL_SCANCODE_R) && (resetState == false)) {
+            nes.reset(false);
+            resetState = true;
+            std::cout << "Reset start\n";
+        }
+        
+        if ((event.type == SDL_KEYUP) && (event.key.keysym.scancode == SDL_SCANCODE_R) && (resetState == true)) {
+            nes.reset(true);
+            resetState = false;
+            std::cout << "Reset end\n";
+        }
+    }
+}
+
 int main(int argc, const char * argv[]) {
     // Init SDL
     SDL_Init(SDL_INIT_EVENTS);
@@ -204,7 +250,7 @@ int main(int argc, const char * argv[]) {
     auto controller = std::make_unique<NESEmu::Controller::Standard<ControllerHardware>>(controllerHardware);
     
     // Open ROM
-    //std::ifstream ifs("../UnitTestFiles/SMB.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
+    std::ifstream ifs("../UnitTestFiles/SMB.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/Spelunker.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/Ms. Pac-Man (Tengen).nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/DK.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
@@ -220,7 +266,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Crystalis.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Metroid.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/Final Fantasy.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom
-    std::ifstream ifs("../UnitTestFiles/Zelda.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom
+    //std::ifstream ifs("../UnitTestFiles/Zelda.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/Zelda 2.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom // TODO: bug mais peut etre parce que le mapper1 n'est pas complet (selon les versions du mapper !) deja c du chr-ram et ici c du chr-rom : oui en plus il y a 8ko dans le mapper1 et ici 128 !!! : OK
     //std::ifstream ifs("../UnitTestFiles/Simpsons - Bart Vs the Space Mutants.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom, IL Y A LE BUG DU SCOREBAR QUI SHAKE UN PEU, a voir (timing ppu ?)
     //std::ifstream ifs("../UnitTestFiles/Bill & Ted's Excellent Video Game Adventure.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom // TODO : ne fonctionne pas car on doit gerer la double ecriture dans le MMC1 : ok
@@ -298,7 +344,7 @@ int main(int argc, const char * argv[]) {
     
     // TODO: comme les mappers sont resolus au compile-time, a chaque mapper ajouté dans le code, il faut l'instantier (dans Factory) et donc il va avoir une duplication de NesImplementation pour chaque mapper, ca va augmenter la taille du code a fond et peut etre foutre la merde dans l'instruction cache ? si ca tombe la version avec virtual dispatch (runtime) sera au final plus rapide car moins de code meme si les appels de methodes sont indirects !!! A TESTER
     
-    using Nes = NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware, LoopManager>;
+    using Nes = NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware>;
     
     NESEmu::Cartridge::Factory<Nes::CpuHardwareInterface, Nes::PpuHardwareInterface> cartridgeFactory;
     cartridgeFactory.registerLoader(std::shared_ptr<NESEmu::Cartridge::Loader::Interface>(new NESEmu::Cartridge::Loader::INes()));
@@ -320,7 +366,7 @@ int main(int argc, const char * argv[]) {
     }
     
     // Create NES
-    Nes nes(graphicHardware, loopManager);
+    Nes nes(graphicHardware);
     
     // Insert cartridge
     nes.insertCartridge(std::move(cartridge));
@@ -335,7 +381,11 @@ int main(int argc, const char * argv[]) {
     //nes.reset(true);
     
     // Run NES
-    nes.run();
+    //nes.run([&loopManager](Nes &nes){ return loopManager.needToStop(nes); });              // With lambda
+    //nes.run(nesLoopNeedToStop<Nes>);                                                       // With function
+    //nes.run(loopManager);                                                                  // With functor
+    //nes.run(std::bind(&LoopManager::needToStop<Nes>, loopManager, std::placeholders::_1)); // With method (via bind)
+    runNes(nes, event);                                                                    // Custom loop
     
     // Remove cartridge
     cartridge = nes.removeCartridge();

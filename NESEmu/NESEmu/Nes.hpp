@@ -33,7 +33,7 @@ namespace NESEmu {
     template <Model EModel>
     struct Constants;
     
-    template <Model EModel, class TGraphicHardware, class TLoopManager>
+    template <Model EModel, class TGraphicHardware>
     struct Nes {
         
     private:
@@ -94,7 +94,7 @@ namespace NESEmu {
         using PpuHardwareInterface = PpuHardwareInterface;
         
         
-        Nes(TGraphicHardware &graphicHardware, TLoopManager &loopManager);
+        Nes(TGraphicHardware &graphicHardware);
         
         void powerUp();
         
@@ -106,14 +106,16 @@ namespace NESEmu {
         void insertCartridge(std::unique_ptr<Cartridge::Interface<CpuHardwareInterface, PpuHardwareInterface>> cartridge);
         std::unique_ptr<Cartridge::Interface<CpuHardwareInterface, PpuHardwareInterface>> removeCartridge();
         
-        void run();
+        template <class TLoopFunction>
+        void run(TLoopFunction &&loopFunction);
         
-        void clock();
         void clockFull();
+        void clock();
         
     private:
         
         using Constants = Constants<EModel>;
+        
         
         // PPU memory bus
         uint8_t ppuRead(uint16_t address);
@@ -140,14 +142,12 @@ namespace NESEmu {
         
         // Internals
         std::unique_ptr<Cartridge::Interface<CpuHardwareInterface, PpuHardwareInterface>> _cartridge;
-        TLoopManager &_loopManager;
         CpuHardwareInterface _cpuHardwareInterface;
         PpuHardwareInterface _ppuHardwareInterface;
         
         int _currentClockForCpu;
         int _currentClockForPpu;
-        
-        // TODO: pour les joysticks, avoir des methodes pour "brancher" un joystick, qui communiquera via les OUT0/2 OE1 et OE2 du CPU
+        bool _isCpuPhi2;
     };
     
     #include "Nes_s.hpp"

@@ -247,7 +247,7 @@ void Chip<EModel, TBus>::performWrite() {
     // Controller 1 / 2
     // See https://wiki.nesdev.com/w/index.php/Controller_reading
     // See https://wiki.nesdev.com/w/index.php/Controller_reading_code
-    else if (address == 0x4016) {   // TODO: il faut aussi notifier les manettes qu'on a ecrit ca en appelant leur out(_outLatch & 0x1) !!! : je l'ai mis dans le clock nes cpu, voir si pas moyen de faire mieux optimisé que ca !!
+    else if (address == 0x4016) {
         _outLatch = data & 0x7;
     }
     // APU frame counter
