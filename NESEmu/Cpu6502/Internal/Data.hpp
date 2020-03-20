@@ -35,7 +35,7 @@
  */
 
 template <class TConfiguration>
-const typename Chip<TConfiguration>::OpcodeInstruction Chip<TConfiguration>::_opcodeInstructionFuncs[256] = {
+typename Chip<TConfiguration>::OpcodeInstruction const Chip<TConfiguration>::_opcodeInstructionFuncs[256] = {
     // $00 -> Brk
     &Chip::brk0,
     // $01 -> ORA ($az, X)
@@ -296,8 +296,8 @@ const typename Chip<TConfiguration>::OpcodeInstruction Chip<TConfiguration>::_op
     &Chip::nopImm0,
     // $81 -> STA ($az, X)
     &Chip::staIndX0,
-    // $82 -> NOP*
-    &Chip::nop0,
+    // $82 -> NOP* #$da
+    &Chip::nopImm0,
     // $83 -> AXS* ($az, X)
     &Chip::axsIndX0,
     // $84 -> STY $az
@@ -310,8 +310,8 @@ const typename Chip<TConfiguration>::OpcodeInstruction Chip<TConfiguration>::_op
     &Chip::axsZp0,
     // $88 -> DEY
     &Chip::dey0,
-    // $89 -> NOP*
-    &Chip::nop0,
+    // $89 -> NOP* #$da
+    &Chip::nopImm0,
     // $8A -> TXA
     &Chip::txa0,
     // $8B -> ?
@@ -424,8 +424,8 @@ const typename Chip<TConfiguration>::OpcodeInstruction Chip<TConfiguration>::_op
     &Chip::cpyImm0,
     // $C1 -> CMP ($az, X)
     &Chip::cmpIndX0,
-    // $C2 -> NOP*
-    &Chip::nop0,
+    // $C2 -> NOP* #$da
+    &Chip::nopImm0,
     // $C3 -> DCM* ($az, X)
     &Chip::dcmIndX0,
     // $C4 -> CPY $az
@@ -488,8 +488,8 @@ const typename Chip<TConfiguration>::OpcodeInstruction Chip<TConfiguration>::_op
     &Chip::cpxImm0,
     // $E1 -> SBC ($az, X)
     &Chip::sbcIndX0,
-    // $E2 -> NOP*
-    &Chip::nop0,
+    // $E2 -> NOP* #$da
+    &Chip::nopImm0,
     // $E3 -> INS* ($az, X)
     &Chip::insIndX0,
     // $E4 -> CPX $az
@@ -551,13 +551,13 @@ const typename Chip<TConfiguration>::OpcodeInstruction Chip<TConfiguration>::_op
 };
 
 template <class TConfiguration>
-const uint8_t Chip<TConfiguration>::_interruptVectors[3][2] = {
+uint8_t const Chip<TConfiguration>::_interruptVectors[3][2] = {
     0xFA, 0xFF,     // NMI (Prior over IRQ/BRK but not Reset)
     0xFC, 0xFF,     // Reset (Higher priority)
     0xFE, 0xFF,     // IRQ, BRK (Lower priority)
 };
 
 template <class TConfiguration>
-const uint8_t Chip<TConfiguration>::_stackPageNumber = 0x1;
+uint8_t const Chip<TConfiguration>::_stackPageNumber = 0x1;
 
 #endif /* Cpu6502_Internal_Data_hpp */

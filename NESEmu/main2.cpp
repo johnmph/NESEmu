@@ -118,6 +118,10 @@ private:
     uint32_t _fpsFrames;
 };
 
+struct SoundHardware {
+    
+};
+
 struct ControllerHardware {
     
     void update() {
@@ -221,7 +225,7 @@ void runNes(TNes &nes, SDL_Event &event) {
         //nes.clock();
         
         --_x;
-        if ((event.type == SDL_QUIT) || (_x == 0)) {
+        if ((event.type == SDL_QUIT)/* || (_x == 0)*/) {
             return;
         }
         
@@ -246,11 +250,12 @@ int main(int argc, const char * argv[]) {
     SDL_Event event;
     
     GraphicHardware graphicHardware(event);
+    SoundHardware soundHardware;
     ControllerHardware controllerHardware;
     auto controller = std::make_unique<NESEmu::Controller::Standard<ControllerHardware>>(controllerHardware);
     
     // Open ROM
-    std::ifstream ifs("../UnitTestFiles/SMB.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
+    //std::ifstream ifs("../UnitTestFiles/SMB.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/Spelunker.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/Ms. Pac-Man (Tengen).nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/DK.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
@@ -275,15 +280,15 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/1.Branch_Basics.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/2.Backward_Branch.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/3.Forward_Branch.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
-    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_misc/instr_misc.nes", std::ios::binary);  // Mapper1, 64kb de prg-rom, horizontal mirroring TODO: ne passe pas le 4eme car besoin de l'APU
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_misc/instr_misc.nes", std::ios::binary);  // Mapper1, 64kb de prg-rom, horizontal mirroring TODO: ne passe pas le 4eme car besoin de l'APU : ne va tjs pas pour le 4eme avec le frame counter implementé !!! -> peut etre parce qu'il teste des unofficial opcode que je n'ai pas encore implementé ?
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cputime.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, Horizontal mirroring // ?
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_timing/rom_singles/1-instr_timing.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // TODO: a voir une fois le APU frame counter terminé
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_timing/rom_singles/1-instr_timing.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // TODO: a voir une fois le APU length counter terminé : ok sauf pour les unofficial opcodes non implementé
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_exec_space/test_cpu_exec_space_apu.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring TODO: ok meme sans l'APU ?!
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_interrupts_v2/cpu_interrupts.nes", std::ios::binary);  // Mapper1, 80kb de prg-rom // TODO: ne passe pas normal, il faut implementer l'APU
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_interrupts_v2/cpu_interrupts.nes", std::ios::binary);  // Mapper1, 80kb de prg-rom // TODO: ne passe pas normal, il faut implementer l'APU : ok mais voir car debut de l'apu frame counter
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_dummy_writes/cpu_dummy_writes_ppumem.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // OK
     
@@ -323,6 +328,9 @@ int main(int argc, const char * argv[]) {
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/allpads.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, 8kb de chr-ram, Horizontal mirroring
     
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_test/apu_test.nes", std::ios::binary);
+    std::ifstream ifs("../UnitTestFiles/TestRom/APU/blargg_apu_2005.07.30/11.len_reload_timing.nes", std::ios::binary);//TODO: foire sur 10 et 11
+    
     // Check that file exists
     assert(ifs.good());
     
@@ -344,7 +352,7 @@ int main(int argc, const char * argv[]) {
     
     // TODO: comme les mappers sont resolus au compile-time, a chaque mapper ajouté dans le code, il faut l'instantier (dans Factory) et donc il va avoir une duplication de NesImplementation pour chaque mapper, ca va augmenter la taille du code a fond et peut etre foutre la merde dans l'instruction cache ? si ca tombe la version avec virtual dispatch (runtime) sera au final plus rapide car moins de code meme si les appels de methodes sont indirects !!! A TESTER
     
-    using Nes = NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware>;
+    using Nes = NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware, SoundHardware>;
     
     NESEmu::Cartridge::Factory<Nes::CpuHardwareInterface, Nes::PpuHardwareInterface> cartridgeFactory;
     cartridgeFactory.registerLoader(std::shared_ptr<NESEmu::Cartridge::Loader::Interface>(new NESEmu::Cartridge::Loader::INes()));
@@ -366,7 +374,7 @@ int main(int argc, const char * argv[]) {
     }
     
     // Create NES
-    Nes nes(graphicHardware);
+    Nes nes(graphicHardware, soundHardware);
     
     // Insert cartridge
     nes.insertCartridge(std::move(cartridge));

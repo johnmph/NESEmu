@@ -116,6 +116,8 @@
 		4DFE480C241942FF006B7DAB /* INes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = INes.cpp; sourceTree = "<group>"; };
 		4DFE480F241951FD006B7DAB /* Model.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Model.hpp; sourceTree = "<group>"; };
 		4DFE481024199D5B006B7DAB /* Nothing_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Nothing_s.hpp; sourceTree = "<group>"; };
+		4DFE48192422D126006B7DAB /* Apu.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Apu.hpp; sourceTree = "<group>"; };
+		4DFE481A2422D149006B7DAB /* Apu_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Apu_s.hpp; sourceTree = "<group>"; };
 		4DFF461124184AF0005D3F21 /* Nothing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Nothing.hpp; sourceTree = "<group>"; };
 		4DFF461424184C6D005D3F21 /* Nes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Nes.hpp; sourceTree = "<group>"; };
 		4DFF461524184D0B005D3F21 /* Nes_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Nes_s.hpp; sourceTree = "<group>"; };
@@ -217,6 +219,8 @@
 			children = (
 				4DD7179123FEAADC00005D8C /* Common.hpp */,
 				4DD7179023FEAADC00005D8C /* Common.cpp */,
+				4DFE48192422D126006B7DAB /* Apu.hpp */,
+				4DFE481A2422D149006B7DAB /* Apu_s.hpp */,
 				4D6B9C1F23D92C32000889C3 /* Cpu.hpp */,
 				4D6B9C2023D92D25000889C3 /* Cpu_s.hpp */,
 				4D6B9C1C23D6AC08000889C3 /* Ppu.hpp */,

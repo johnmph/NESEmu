@@ -14,6 +14,7 @@
 
 #include <cstdint>
 #include "Cpu6502/Chip.hpp"
+#include "Apu.hpp"
 
 
 namespace NESEmu { namespace Cpu {
@@ -26,10 +27,10 @@ namespace NESEmu { namespace Cpu {
     template <Model EModel>
     struct Constants;
     
-    template <Model EModel, class TBus>
-    struct Chip : protected Cpu6502::Chip<Cpu6502::ConfigurationPerformance<Chip<EModel, TBus>, false>> {
+    template <Model EModel, class TBus, class TSoundHardware>
+    struct Chip : protected Cpu6502::Chip<Cpu6502::ConfigurationPerformance<Chip<EModel, TBus, TSoundHardware>, false>> {
         
-        Chip(TBus &bus);
+        Chip(TBus &bus, TSoundHardware &soundHardware);
         
         void powerUp(uint16_t programCounter = 0x100F, uint8_t stackPointer = 0x0, uint8_t accumulator = 0x0, uint8_t xIndex = 0x0, uint8_t yIndex = 0x0, uint8_t statusFlags = 0x34);  // TODO: d'apres la rom de tests ce sont les valeurs que ca doit avoir au power up, a verifier (pour le pc je ne sais pas)
         
@@ -89,6 +90,8 @@ namespace NESEmu { namespace Cpu {
         bool _dmaToggle;
         
         uint8_t _outLatch;
+        
+        Apu::Chip<Chip, TSoundHardware> _apu;
     };
     
     #include "Cpu_s.hpp"

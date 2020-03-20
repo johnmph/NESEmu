@@ -33,7 +33,7 @@ namespace NESEmu {
     template <Model EModel>
     struct Constants;
     
-    template <Model EModel, class TGraphicHardware>
+    template <Model EModel, class TGraphicHardware, class TSoundHardware>
     struct Nes {
         
     private:
@@ -94,7 +94,7 @@ namespace NESEmu {
         using PpuHardwareInterface = PpuHardwareInterface;
         
         
-        Nes(TGraphicHardware &graphicHardware);
+        Nes(TGraphicHardware &graphicHardware, TSoundHardware &soundHardware);
         
         void powerUp();
         
@@ -128,7 +128,7 @@ namespace NESEmu {
         void cartridgeInterrupt(bool high);
         
         // Chips
-        Cpu::Chip<Constants::cpuModel, CpuHardwareInterface> _cpu;
+        Cpu::Chip<Constants::cpuModel, CpuHardwareInterface, TSoundHardware> _cpu;
         Ppu::Chip<Constants::ppuModel, PpuHardwareInterface, PpuHardwareInterface, TGraphicHardware> _ppu;
         
         // 2kb of RAM

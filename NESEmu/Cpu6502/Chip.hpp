@@ -262,9 +262,9 @@ namespace Cpu6502 {
         // Internal
         _Detail::FlagsHelper _flagsHelper;
         Bus &_bus;
-        static const OpcodeInstruction _opcodeInstructionFuncs[256];
-        static const uint8_t _interruptVectors[3][2];
-        static const uint8_t _stackPageNumber;
+        static OpcodeInstruction const _opcodeInstructionFuncs[256];
+        static uint8_t const _interruptVectors[3][2];
+        static uint8_t const _stackPageNumber;
         
         OpcodeInstruction _currentInstruction;
         int _interruptVectorsIndex;
