@@ -51,8 +51,10 @@ namespace NESEmu { namespace Apu {
             
             void start();
             
+            // Output
             uint8_t getVolume() const;
             
+            // Parameters
             void setDividerPeriodOrConstantVolume(uint8_t value);
             void setLoopMode(bool loopMode);
             void setConstantVolumeMode(bool constantVolumeMode);
@@ -72,21 +74,26 @@ namespace NESEmu { namespace Apu {
         //template <bool BNegateOneComplement>
         struct SweepUnit {
             
-            SweepUnit(bool oneComplementMode);
+            SweepUnit(bool oneComplementMode, uint16_t &channelPeriod);
             
             void clock();
             
-            void updateChannelPeriod();
+            void reload();
             
+            // Output
+            bool getOutput() const;
+            uint16_t getTargetPeriod() const;
+            
+            // Properties
             void setPeriod(uint8_t period);
             void setShiftCount(uint8_t shiftCount);
             void setEnabled(bool enabled);
             void setNegate(bool negate);
             
-            void reload();
-            
         private:
             
+            uint16_t &_channelPeriod;
+            uint8_t _counter;
             uint8_t _period;
             uint8_t _shiftCount;
             bool const _oneComplementMode;
@@ -101,8 +108,10 @@ namespace NESEmu { namespace Apu {
             
             void clock();
             
-            uint8_t getValue() const;
+            // Output
+            bool getOutput() const;
             
+            // Properties
             void setEnabled(bool enabled);
             void setHalt(bool halt);
             void setValueIndex(uint8_t index);
@@ -124,13 +133,14 @@ namespace NESEmu { namespace Apu {
             
             void clock();
             
+            void requestReset();
+            
+            // Properties
             bool getInterrupt() const;
             void resetInterrupt();
             
             void setDisableInterrupt(bool disableInterrupt);
             void setSequence5StepMode(bool sequence5StepMode);
-            
-            void requestReset();
             
         private:
             
@@ -152,16 +162,37 @@ namespace NESEmu { namespace Apu {
         
         // See https://wiki.nesdev.com/w/index.php/APU_Pulse
         
-        struct Pulse {
+        struct Pulse {  // TODO: dans des classes en dehors ? dans d'autres fichiers ? (Avec un dossier Apu)
             
             Pulse(bool sweepOneComplementMode);
             
-            uint8_t duty;
-            uint16_t timer;
+            void clock();
             
-            EnvelopeUnit envelopeUnit;
-            SweepUnit sweepUnit;
-            LengthCounter lengthCounter;
+            void clockFrameCounterQuarterFrame();
+            void clockFrameCounterHalfFrame();
+            
+            void reset();
+            
+            // Output
+            uint8_t getOutput() const;
+            
+            // Register
+            void setRegister(uint8_t registerNumber, uint8_t data);
+            
+            bool getLengthCounterOutput() const;
+            void setLengthCounterEnabled(bool enabled);
+            
+        private:
+            
+            static uint8_t const _dutyWaveforms[4];
+            
+            EnvelopeUnit _envelopeUnit;
+            SweepUnit _sweepUnit;
+            LengthCounter _lengthCounter;
+            uint16_t _timer;
+            uint16_t _counter;
+            uint8_t _currentStep;  // TODO: voir par apres pour l'implementer avec un shift register plutot (a chaque sequence on shift a droite et on recupere le bit sorti comme etant la sequence courante)
+            uint8_t _waveform;
         };
         
         // See https://wiki.nesdev.com/w/index.php/APU_Triangle
@@ -180,6 +211,12 @@ namespace NESEmu { namespace Apu {
         // See https://wiki.nesdev.com/w/index.php/APU_DMC
         
         struct Dmc {
+            
+        };
+        
+        // See https://wiki.nesdev.com/w/index.php/APU_Mixer
+        
+        struct Mixer {
             
         };
         
@@ -210,6 +247,7 @@ namespace NESEmu { namespace Apu {
         // Internals
         TInterruptHardware &_interruptHardware;
         TSoundHardware &_soundHardware;
+        bool _oddCycle;
         
     };
     

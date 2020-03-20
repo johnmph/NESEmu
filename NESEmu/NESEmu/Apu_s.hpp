@@ -86,17 +86,47 @@ void Chip<TInterruptHardware, TSoundHardware>::EnvelopeUnit::setConstantVolumeMo
 // Sweep unit
 
 template <class TInterruptHardware, class TSoundHardware>
-Chip<TInterruptHardware, TSoundHardware>::SweepUnit::SweepUnit(bool oneComplementMode) : _oneComplementMode(oneComplementMode) {
+Chip<TInterruptHardware, TSoundHardware>::SweepUnit::SweepUnit(bool oneComplementMode, uint16_t &channelPeriod) : _oneComplementMode(oneComplementMode), _channelPeriod(channelPeriod) {
 }
 
 template <class TInterruptHardware, class TSoundHardware>
 void Chip<TInterruptHardware, TSoundHardware>::SweepUnit::clock() {
+    // Update channel period if allowed
+    if ((_counter == 0) && _enabled && getOutput()) {
+        _channelPeriod = getTargetPeriod();
+    }
     
+    // If need to reload counter
+    if ((_counter == 0) || (_reloadFlag)) {
+        // Reload counter and reset reload flag
+        _counter = _period;
+        _reloadFlag = false;
+        
+        return;
+    }
+    
+    // Decrement counter
+    --_counter;
 }
 
 template <class TInterruptHardware, class TSoundHardware>
-void Chip<TInterruptHardware, TSoundHardware>::SweepUnit::updateChannelPeriod() {
+uint16_t Chip<TInterruptHardware, TSoundHardware>::SweepUnit::getTargetPeriod() const {
+    // Shift right
+    uint16_t amount = _channelPeriod >> _shiftCount;
     
+    // Negate if necessary
+    if (_negate) {
+        amount = (_oneComplementMode) ? ~amount : -amount;
+    }
+    
+    // Add to channel period
+    return _channelPeriod + amount;
+}
+
+template <class TInterruptHardware, class TSoundHardware>
+bool Chip<TInterruptHardware, TSoundHardware>::SweepUnit::getOutput() const {
+    // Output only if not overflow (11 bits timer) and channel period is not less than 8
+    return (getTargetPeriod() < 0x800) && (_channelPeriod > 7);
 }
 
 template <class TInterruptHardware, class TSoundHardware>
@@ -146,8 +176,9 @@ void Chip<TInterruptHardware, TSoundHardware>::LengthCounter::clock() {
 }
 
 template <class TInterruptHardware, class TSoundHardware>
-uint8_t Chip<TInterruptHardware, TSoundHardware>::LengthCounter::getValue() const {
-    return _counter;
+bool Chip<TInterruptHardware, TSoundHardware>::LengthCounter::getOutput() const {
+    // Output enabled while counter has not reached 0
+    return _counter > 0;
 }
 
 template <class TInterruptHardware, class TSoundHardware>
@@ -324,8 +355,134 @@ void Chip<TInterruptHardware, TSoundHardware>::FrameCounter::clockHalfFrame() {
 // Pulse
 
 template <class TInterruptHardware, class TSoundHardware>
-Chip<TInterruptHardware, TSoundHardware>::Pulse::Pulse(bool sweepOneComplementMode) : sweepUnit(sweepOneComplementMode) {
+Chip<TInterruptHardware, TSoundHardware>::Pulse::Pulse(bool sweepOneComplementMode) : _sweepUnit(sweepOneComplementMode, _timer) {
 }
+
+template <class TInterruptHardware, class TSoundHardware>
+void Chip<TInterruptHardware, TSoundHardware>::Pulse::clock() {
+    // If counter reached 0
+    if (_counter == 0) {
+        // Reload counter
+        _counter = _timer;
+        
+        // Decrement current step
+        _currentStep = (_currentStep > 0) ? (_currentStep - 1) : 7;
+    }
+    
+    // Decrement counter
+    --_counter;
+}
+
+template <class TInterruptHardware, class TSoundHardware>
+void Chip<TInterruptHardware, TSoundHardware>::Pulse::clockFrameCounterQuarterFrame() {
+    // Clock envelope
+    _envelopeUnit.clock();
+}
+
+template <class TInterruptHardware, class TSoundHardware>
+void Chip<TInterruptHardware, TSoundHardware>::Pulse::clockFrameCounterHalfFrame() {
+    // Clock length counter
+    _lengthCounter.clock();
+    
+    // Clock sweep unit
+    _sweepUnit.clock();
+}
+
+template <class TInterruptHardware, class TSoundHardware>
+void Chip<TInterruptHardware, TSoundHardware>::Pulse::reset() {
+    _lengthCounter.setEnabled(false);
+}
+
+template <class TInterruptHardware, class TSoundHardware>
+uint8_t Chip<TInterruptHardware, TSoundHardware>::Pulse::getOutput() const {
+    /*
+                           Sweep -----> Timer
+                             |            |
+                             |            |
+                             |            v
+                             |        Sequencer   Length Counter
+                             |            |             |
+                             |            |             |
+                             v            v             v
+          Envelope -------> Gate -----> Gate -------> Gate --->(to mixer)
+     
+     */
+    return ((_sweepUnit.getOutput()) && (((_waveform >> _currentStep) & 0x1) != 0) && (_lengthCounter.getOutput())) ? _envelopeUnit.getVolume() : 0;
+}
+
+template <class TInterruptHardware, class TSoundHardware>
+void Chip<TInterruptHardware, TSoundHardware>::Pulse::setRegister(uint8_t registerNumber, uint8_t data) {
+    // Duty, envelope loop / length counter halt, constant volume, volume/envelope
+    if (registerNumber == 0x0) {
+        // Envelope divider period or constant volume
+        _envelopeUnit.setDividerPeriodOrConstantVolume(data & 0xF);
+        
+        // Envelope constant volume mode
+        _envelopeUnit.setConstantVolumeMode((data & 0x10) != 0);
+        
+        // Envelope loop mode
+        _envelopeUnit.setLoopMode((data & 0x20) != 0);
+        
+        // Length counter halt
+        _lengthCounter.setHalt((data & 0x20) != 0);
+        
+        // Duty cycle
+        _waveform = _dutyWaveforms[data >> 6];
+    }
+    // Sweep unit: enabled, period, negate, shift
+    else if (registerNumber == 0x1) {
+        // Shift count
+        _sweepUnit.setShiftCount(data & 0x7);
+        
+        // Negate
+        _sweepUnit.setEnabled((data & 0x8) != 0);
+        
+        // Period
+        _sweepUnit.setPeriod((data >> 4) & 0x7);
+        
+        // Enabled flag
+        _sweepUnit.setEnabled((data & 0x80) != 0);
+        
+        // Reload sweep unit
+        _sweepUnit.reload();
+    }
+    // Timer low
+    else if (registerNumber == 0x2) {
+        _timer = (_timer & 0x700) | data;
+    }
+    // Length counter load, timer high
+    else if (registerNumber == 0x3) {
+        // Start envelope
+        _envelopeUnit.start();
+        
+        // Length counter load
+        _lengthCounter.setValueIndex(data >> 3);
+        
+        // Timer high
+        _timer = ((data & 0x7) << 8) | (_timer & 0xFF);
+        
+        // Reset current step
+        _currentStep = 0;
+    }
+}
+
+template <class TInterruptHardware, class TSoundHardware>
+bool Chip<TInterruptHardware, TSoundHardware>::Pulse::getLengthCounterOutput() const {
+    return _lengthCounter.getOutput();
+}
+
+template <class TInterruptHardware, class TSoundHardware>
+void Chip<TInterruptHardware, TSoundHardware>::Pulse::setLengthCounterEnabled(bool enabled) {
+    _lengthCounter.setEnabled(enabled);
+}
+
+template <class TInterruptHardware, class TSoundHardware>
+uint8_t const Chip<TInterruptHardware, TSoundHardware>::Pulse::_dutyWaveforms[4] = {
+    0b00000001,     // 12.5%
+    0b00000011,     // 25%
+    0b00001111,     // 50%
+    0b11111100      // 75%
+};
 
 // Chip
 
@@ -339,6 +496,15 @@ void Chip<TInterruptHardware, TSoundHardware>::powerUp() {
 
 template <class TInterruptHardware, class TSoundHardware>
 void Chip<TInterruptHardware, TSoundHardware>::clock() {
+    // Clock pulse channels on APU cycle
+    if (_oddCycle) {
+        _pulse[0].clock();
+        _pulse[1].clock();
+    }
+    
+    // Toggle flag
+    _oddCycle = !_oddCycle;
+    
     // Clock frame counter
     _frameCounter.clock();
     
@@ -354,8 +520,8 @@ void Chip<TInterruptHardware, TSoundHardware>::reset(bool high) {
     }
     
     // Reset status register
-    _pulse[0].lengthCounter.setEnabled(false);
-    _pulse[1].lengthCounter.setEnabled(false);
+    _pulse[0].reset();
+    _pulse[1].reset();
     _triangle.lengthCounter.setEnabled(false);
     _noise.lengthCounter.setEnabled(false);
     _statusEnableDmc = false;
@@ -386,10 +552,10 @@ uint8_t Chip<TInterruptHardware, TSoundHardware>::getStatusRegister() {
     uint8_t data = (false << 7) |
                    (_frameCounter.getInterrupt() << 6) |
                    (false << 4) |
-                   ((_noise.lengthCounter.getValue() > 0) << 3) |
-                   ((_triangle.lengthCounter.getValue() > 0) << 2) |
-                   ((_pulse[1].lengthCounter.getValue() > 0) << 1) |
-                   (_pulse[0].lengthCounter.getValue() > 0);//TODO : continuer (DMC)
+                   (_noise.lengthCounter.getOutput() << 3) |
+                   (_triangle.lengthCounter.getOutput() << 2) |
+                   (_pulse[1].getLengthCounterOutput() << 1) |
+                   _pulse[0].getLengthCounterOutput();//TODO : continuer (DMC)
     
     // Reset frame counter interrupt
     _frameCounter.resetInterrupt();
@@ -402,8 +568,8 @@ uint8_t Chip<TInterruptHardware, TSoundHardware>::getStatusRegister() {
 template <class TInterruptHardware, class TSoundHardware>
 void Chip<TInterruptHardware, TSoundHardware>::setStatusRegister(uint8_t data) {
     // Get channels enable flags
-    _pulse[0].lengthCounter.setEnabled((data & 0x1) != 0);
-    _pulse[1].lengthCounter.setEnabled((data & 0x2) != 0);
+    _pulse[0].setLengthCounterEnabled((data & 0x1) != 0);
+    _pulse[1].setLengthCounterEnabled((data & 0x2) != 0);
     _triangle.lengthCounter.setEnabled((data & 0x4) != 0);
     _noise.lengthCounter.setEnabled((data & 0x8) != 0);
     _statusEnableDmc = data & 0x10;
@@ -421,49 +587,8 @@ void Chip<TInterruptHardware, TSoundHardware>::setFrameCounterRegister(uint8_t d
 
 template <class TInterruptHardware, class TSoundHardware>
 void Chip<TInterruptHardware, TSoundHardware>::setPulseChannelRegister(uint8_t pulseChannelNumber, uint8_t registerNumber, uint8_t data) {
-    // Duty, envelope loop / length counter halt, constant volume, volume/envelope
-    if (registerNumber == 0x0) {
-        // Envelope divider period or constant volume
-        _pulse[pulseChannelNumber].envelopeUnit.setDividerPeriodOrConstantVolume(data & 0xF);
-        
-        // Envelope constant volume mode
-        _pulse[pulseChannelNumber].envelopeUnit.setConstantVolumeMode((data & 0x10) != 0);
-        
-        // Envelope loop mode
-        _pulse[pulseChannelNumber].envelopeUnit.setLoopMode((data & 0x20) != 0);
-        
-        // Length counter halt
-        _pulse[pulseChannelNumber].lengthCounter.setHalt((data & 0x20) != 0);
-    }
-    // Sweep unit: enabled, period, negate, shift
-    else if (registerNumber == 0x1) {
-        // Shift count
-        _pulse[pulseChannelNumber].sweepUnit.setShiftCount(data & 0x7);
-        
-        // Negate
-        _pulse[pulseChannelNumber].sweepUnit.setEnabled((data & 0x8) != 0);
-        
-        // Period
-        _pulse[pulseChannelNumber].sweepUnit.setPeriod((data >> 4) & 0x7);
-        
-        // Enabled flag
-        _pulse[pulseChannelNumber].sweepUnit.setEnabled((data & 0x80) != 0);
-        
-        // Reload sweep unit
-        _pulse[pulseChannelNumber].sweepUnit.reload();
-    }
-    // Timer low
-    else if (registerNumber == 0x2) {
-        
-    }
-    // Length counter load, timer high
-    else if (registerNumber == 0x3) {
-        // Start envelope
-        _pulse[pulseChannelNumber].envelopeUnit.start();
-        
-        // Length counter load
-        _pulse[pulseChannelNumber].lengthCounter.setValueIndex(data >> 3);
-    }
+    // Set register
+    _pulse[pulseChannelNumber].setRegister(registerNumber, data);
 }
 
 template <class TInterruptHardware, class TSoundHardware>
@@ -537,23 +662,19 @@ void Chip<TInterruptHardware, TSoundHardware>::setDmcChannelRegister(uint8_t reg
 
 template <class TInterruptHardware, class TSoundHardware>
 void Chip<TInterruptHardware, TSoundHardware>::clockFrameCounterQuarterFrame() {
-    // Clock envelope channels
-    _pulse[0].envelopeUnit.clock();
-    _pulse[1].envelopeUnit.clock();
+    // Clock channels
+    _pulse[0].clockFrameCounterQuarterFrame();
+    _pulse[1].clockFrameCounterQuarterFrame();
     _noise.envelopeUnit.clock();
 }
 
 template <class TInterruptHardware, class TSoundHardware>
 void Chip<TInterruptHardware, TSoundHardware>::clockFrameCounterHalfFrame() {
     // Clock length counter channels
-    _pulse[0].lengthCounter.clock();
-    _pulse[1].lengthCounter.clock();
+    _pulse[0].clockFrameCounterHalfFrame();
+    _pulse[1].clockFrameCounterHalfFrame();
     _triangle.lengthCounter.clock();
     _noise.lengthCounter.clock();
-    
-    // Clock sweep unit channels
-    _pulse[0].sweepUnit.clock();
-    _pulse[1].sweepUnit.clock();
 }
 
 template <class TInterruptHardware, class TSoundHardware>
