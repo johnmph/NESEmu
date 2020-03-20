@@ -74,9 +74,7 @@ namespace NESEmu { namespace Cartridge { namespace Loader {
         istream.read(reinterpret_cast<char *>(data.prgRom.data()), prgRomSize);
         
         // If has prg-ram, flags8 may contain prg-ram size (if 0, we assume there is 8kb)
-        if (hasPrgRam) {
-            data.prgRamSize = ((flags8 > 0) ? flags8 : 1) * (8 * 1024);
-        }
+        data.prgRamSize = (hasPrgRam) ? (((flags8 > 0) ? flags8 : 1) * (8 * 1024)) : 0;
         
         // Read chr-rom if present
         if (chrRomSizeIn8Kb > 0) {

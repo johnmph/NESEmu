@@ -120,6 +120,80 @@ private:
 
 struct SoundHardware {
     
+    SoundHardware() {
+        _counter = 0;
+        
+        _currentBufferIndex = 0;
+        _buffer.resize(1024);
+        
+        SDL_InitSubSystem(SDL_INIT_AUDIO);
+        std::cout << SDL_GetError() << "\n";
+        
+        SDL_memset(&_audioSpec, 0, sizeof(_audioSpec));
+        
+        _audioSpec.freq = 44100; // 4 100 Hz, 48 000 Hz, 96 000 Hz, 192 000 Hz (standard)
+        _audioSpec.format = AUDIO_F32SYS;
+        _audioSpec.channels = 1;
+        _audioSpec.samples = 1024; // Oublier pas que ce sa doit être en puissance de deux 2^n
+        _audioSpec.callback = [] (void *param, Uint8 *stream, int len) {
+            static_cast<SoundHardware *>(param)->fillBuffer(stream, len);
+        };
+        _audioSpec.userdata = this;
+        
+        _audioDeviceID = SDL_OpenAudioDevice(nullptr, 0, &_audioSpec, &_audioSpec, /*SDL_AUDIO_ALLOW_FREQUENCY_CHANGE*/0);
+        SDL_PauseAudioDevice(_audioDeviceID, SDL_FALSE);
+    }
+    
+    ~SoundHardware() {
+        SDL_CloseAudioDevice(_audioDeviceID);
+        SDL_QuitSubSystem(SDL_INIT_AUDIO);
+    }
+    
+    void fillBuffer(Uint8 *stream, int len) {
+        //int samples = len / sizeof(float);
+        
+        int start = _currentBufferIndex * sizeof(float);
+        int size = len - start;
+        
+        memcpy(stream, reinterpret_cast<Uint8 *>(&(_buffer.data()[_currentBufferIndex])), size);
+        memcpy(&stream[size], reinterpret_cast<Uint8 *>(_buffer.data()), start);
+        
+        //memcpy(stream, reinterpret_cast<Uint8 *>(_buffer.data()), len);
+    }
+    
+    void addData(float value) {
+        ++_counter;
+        
+        // 1789773 (CPU frequency) / 44100 (Audio frequency) = 40.58
+        if (_counter < 40) {
+            return;
+        }
+        
+        _counter = 0;
+        
+        SDL_LockAudioDevice(_audioDeviceID);
+        
+        _buffer[_currentBufferIndex] = value - 0.5f;//TODO: -0.5f ou pas ?
+        
+        ++_currentBufferIndex;
+        
+        if (_currentBufferIndex >= _buffer.size()) {
+            _currentBufferIndex = 0;
+        }
+        
+        SDL_UnlockAudioDevice(_audioDeviceID);
+        
+        /*value -= 0.5f;
+        SDL_QueueAudio(_audioDeviceID, &value, 4);*/
+    }
+    
+private:
+    SDL_AudioSpec _audioSpec;
+    SDL_AudioDeviceID _audioDeviceID;
+    std::vector<float> _buffer;
+    unsigned int _currentBufferIndex;
+    
+    unsigned int _counter;
 };
 
 struct ControllerHardware {
@@ -259,7 +333,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Spelunker.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/Ms. Pac-Man (Tengen).nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/DK.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
-    //std::ifstream ifs("../UnitTestFiles/Castlevania.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
+    std::ifstream ifs("../UnitTestFiles/Castlevania.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Duck Tales.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Battletoads.nes", std::ios::binary);  // Mapper7, 256kb de prg-rom, single screen mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Paperboy.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, horizontal mirroring
@@ -329,7 +403,9 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/allpads.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, 8kb de chr-ram, Horizontal mirroring
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_test/apu_test.nes", std::ios::binary);
-    std::ifstream ifs("../UnitTestFiles/TestRom/APU/blargg_apu_2005.07.30/11.len_reload_timing.nes", std::ios::binary);//TODO: foire sur 10 et 11
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/blargg_apu_2005.07.30/11.len_reload_timing.nes", std::ios::binary);//TODO: foire sur 10 et 11
+    
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_env/test_apu_env.nes", std::ios::binary);
     
     // Check that file exists
     assert(ifs.good());

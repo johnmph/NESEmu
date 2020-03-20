@@ -198,12 +198,18 @@ namespace NESEmu { namespace Apu {
         // See https://wiki.nesdev.com/w/index.php/APU_Triangle
         
         struct Triangle {
+            // Output
+            uint8_t getOutput() const;
+            
             LengthCounter lengthCounter;
         };
         
         // See https://wiki.nesdev.com/w/index.php/APU_Noise
         
         struct Noise {
+            // Output
+            uint8_t getOutput() const;
+            
             EnvelopeUnit envelopeUnit;
             LengthCounter lengthCounter;
         };
@@ -212,14 +218,13 @@ namespace NESEmu { namespace Apu {
         
         struct Dmc {
             
-        };
-        
-        // See https://wiki.nesdev.com/w/index.php/APU_Mixer
-        
-        struct Mixer {
+            // Output
+            uint8_t getOutput() const;
             
         };
         
+        // See https://wiki.nesdev.com/w/index.php/APU_Mixer
+        float getMixedOutput() const;
         
         void setPulseChannelRegister(uint8_t pulseChannelNumber, uint8_t registerNumber, uint8_t data);
         void setTriangleChannelRegister(uint8_t registerNumber, uint8_t data);

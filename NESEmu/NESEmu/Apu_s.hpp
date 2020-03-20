@@ -367,6 +367,8 @@ void Chip<TInterruptHardware, TSoundHardware>::Pulse::clock() {
         
         // Decrement current step
         _currentStep = (_currentStep > 0) ? (_currentStep - 1) : 7;
+        
+        return;//TODO: a voir
     }
     
     // Decrement counter
@@ -484,6 +486,27 @@ uint8_t const Chip<TInterruptHardware, TSoundHardware>::Pulse::_dutyWaveforms[4]
     0b11111100      // 75%
 };
 
+// Triangle
+
+template <class TInterruptHardware, class TSoundHardware>
+uint8_t Chip<TInterruptHardware, TSoundHardware>::Triangle::getOutput() const {
+    return 0;// TODO: a faire
+}
+
+// Noise
+
+template <class TInterruptHardware, class TSoundHardware>
+uint8_t Chip<TInterruptHardware, TSoundHardware>::Noise::getOutput() const {
+    return 0;// TODO: a faire
+}
+
+// DMC
+
+template <class TInterruptHardware, class TSoundHardware>
+uint8_t Chip<TInterruptHardware, TSoundHardware>::Dmc::getOutput() const {
+    return 0;// TODO: a faire
+}
+
 // Chip
 
 template <class TInterruptHardware, class TSoundHardware>
@@ -510,6 +533,9 @@ void Chip<TInterruptHardware, TSoundHardware>::clock() {
     
     // Check interrupt
     checkInterrupt();
+    
+    // Add data to sound hardware
+    _soundHardware.addData(getMixedOutput());//TODO: a voir
 }
 
 template <class TInterruptHardware, class TSoundHardware>
@@ -583,6 +609,24 @@ void Chip<TInterruptHardware, TSoundHardware>::setFrameCounterRegister(uint8_t d
     _frameCounter.setSequence5StepMode(data & 0x80);
     
     _frameCounter.requestReset();
+}
+
+template <class TInterruptHardware, class TSoundHardware>
+float Chip<TInterruptHardware, TSoundHardware>::getMixedOutput() const {
+    // Sum pulse channels (need this in case of division by 0, uint8_t is enough because pulse channels output no more than 15)
+    uint8_t pulseSum = _pulse[0].getOutput() + _pulse[1].getOutput();
+    
+    // Get pulse channels mixed output
+    float pulseOut = (pulseSum > 0) ? (95.88f / ((8128.0f / pulseSum) + 100.0f)) : 0;
+    
+    // Sum other channels (need this in case of division by 0)
+    float triangleNoiseDmcMixedSum = (_triangle.getOutput() / 8227.0f) + (_noise.getOutput() / 12241.0f) + (_dmc.getOutput() / 22638.0f);
+    
+    // Get triangle, noise and DMC mixed output
+    float triangleNoiseDmcOut = (triangleNoiseDmcMixedSum > 0) ? (159.79f / ((1.0f / triangleNoiseDmcMixedSum) + 100.0f)) : 0;
+    
+    // Get mixed output
+    return pulseOut + triangleNoiseDmcOut;
 }
 
 template <class TInterruptHardware, class TSoundHardware>
