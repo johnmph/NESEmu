@@ -398,6 +398,7 @@ void Chip<TInterruptHardware, TSoundHardware>::Pulse::reset() {
 template <class TInterruptHardware, class TSoundHardware>
 uint8_t Chip<TInterruptHardware, TSoundHardware>::Pulse::getOutput() const {
     /*
+     
                            Sweep -----> Timer
                              |            |
                              |            |
@@ -535,7 +536,7 @@ void Chip<TInterruptHardware, TSoundHardware>::clock() {
     checkInterrupt();
     
     // Add data to sound hardware if necessary
-    if (_soundHardware.canAddSample()) {
+    if (_soundHardware.askForAddingSample()) {
         _soundHardware.addSample(getMixedOutput());
     }
 }

@@ -20,8 +20,8 @@ struct Constants<Model::Ntsc> {
     
     // Clock
     static constexpr int masterClockSpeedInHz = 21477272;// / 4;   // TODO: / 4 pour optimiser la clock principale (gain de +- 14 fps en release)
-    static constexpr int cpuMasterClockDivider = 6;//12 / 4;//6
-    static constexpr int ppuMasterClockDivider = 4;//4 / 4;
+    static constexpr int cpuMasterClockDivider = 12;// / 4
+    static constexpr int ppuMasterClockDivider = 4;// / 4;
 };
 
 template <>
@@ -202,6 +202,9 @@ Nes<EModel, TGraphicHardware, TSoundHardware>::Nes(TGraphicHardware &graphicHard
     // Begin with no controller
     disconnectController(0);
     disconnectController(1);
+    
+    // Set sound hardware sampler frequency to cpu frequency (because apu is clocked each time cpu is clocked)
+    soundHardware.setSamplerFrequency(Constants::masterClockSpeedInHz / Constants::cpuMasterClockDivider);
 }
 
 template <Model EModel, class TGraphicHardware, class TSoundHardware>
@@ -341,7 +344,7 @@ void Nes<EModel, TGraphicHardware, TSoundHardware>::clock() {
         }
         
         // Update state
-        _currentClockForCpu = Constants::cpuMasterClockDivider;
+        _currentClockForCpu = Constants::cpuMasterClockDivider / 2;//TODO: mettre ca dans une constante cpuMasterHalfClockDivider dans Nes
         _isCpuPhi2 = !_isCpuPhi2;
     }
     

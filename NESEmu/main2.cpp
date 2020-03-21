@@ -9,6 +9,8 @@
 #include <iostream>
 #include <fstream>
 #include <functional>
+#include <algorithm>//TODO: pour le filtre audio
+#include <cmath>//TODO: pour le filtre audio
 #include <SDL.h>
 #include "NESEmu/Cartridge/Loader/INes.hpp"
 #include "NESEmu/Cartridge/Factory.hpp"
@@ -120,64 +122,74 @@ private:
 
 struct SoundHardware {
     
-    SoundHardware() {
-        _counter = 0;
+    SoundHardware(unsigned int frequency, std::size_t bufferSize) : _counter(0), _currentBufferIndex(0) {
+        // TODO: bufferSize doit etre une puissance de 2
         
-        _currentBufferIndex = 0;
-        _buffer.resize(1024);
+        // Set buffer size
+        _buffer.resize(bufferSize);
         
+        // Initialize audio
         SDL_InitSubSystem(SDL_INIT_AUDIO);
         std::cout << SDL_GetError() << "\n";
         
+        // Set audio spec
         SDL_memset(&_audioSpec, 0, sizeof(_audioSpec));
         
-        _audioSpec.freq = 44100; // 4 100 Hz, 48 000 Hz, 96 000 Hz, 192 000 Hz (standard)
-        _audioSpec.format = AUDIO_F32SYS;
+        _audioSpec.freq = frequency;
+        _audioSpec.format = /*AUDIO_U8;*/AUDIO_F32SYS;
         _audioSpec.channels = 1;
-        _audioSpec.samples = 1024; // Oublier pas que ce sa doit être en puissance de deux 2^n
+        _audioSpec.samples = bufferSize; // TODO: Oublier pas que ce sa doit être en puissance de deux 2^n
         _audioSpec.callback = [] (void *param, Uint8 *stream, int len) {
             static_cast<SoundHardware *>(param)->fillBuffer(stream, len);
         };
         _audioSpec.userdata = this;
         
+        // Open audio device
         _audioDeviceID = SDL_OpenAudioDevice(nullptr, 0, &_audioSpec, &_audioSpec, /*SDL_AUDIO_ALLOW_FREQUENCY_CHANGE*/0);
+        
+        // Unpause audio device
         SDL_PauseAudioDevice(_audioDeviceID, SDL_FALSE);
     }
     
     ~SoundHardware() {
+        // Close audio device
         SDL_CloseAudioDevice(_audioDeviceID);
+        
+        // Uninitialize audio
         SDL_QuitSubSystem(SDL_INIT_AUDIO);
     }
     
-    void fillBuffer(Uint8 *stream, int len) {
-        //int samples = len / sizeof(float);
-        
-        int start = _currentBufferIndex * sizeof(float);
-        int size = len - start;
-        
-        memcpy(stream, reinterpret_cast<Uint8 *>(&(_buffer.data()[_currentBufferIndex])), size);
-        memcpy(&stream[size], reinterpret_cast<Uint8 *>(_buffer.data()), start);
-        
-        //memcpy(stream, reinterpret_cast<Uint8 *>(_buffer.data()), len);
+    void setSamplerFrequency(unsigned int frequency) {
+        _frequencyRatio = static_cast<float>(frequency) / _audioSpec.freq;
     }
     
-    bool canAddSample() {
+    bool askForAddingSample() {
+        // Increment counter
         ++_counter;
         
-        // 1789773 (CPU frequency) / 44100 (Audio frequency) = 40.58
-        if (_counter < 40) {//TODO: a calculer dans le constructor
+        // Check if counter reached frequency ratio
+        if (_counter < _frequencyRatio) {
             return false;
         }
         
-        _counter -= 40;
+        // Update counter
+        _counter -= _frequencyRatio;
         
         return true;
     }
     
     void addSample(float value) {
+        // Lock audio device
         SDL_LockAudioDevice(_audioDeviceID);
         
-        _buffer[_currentBufferIndex] = value - 0.5f;//TODO: -0.5f ou pas ?
+        // Avoir la possibilité de filtrer la value ? (style de shader audio) :
+        /*std::size_t previousBufferIndex = ((_currentBufferIndex > 0) ? _currentBufferIndex : _buffer.size()) - 1;
+         float absDiff = std::fabs(value - (_buffer[previousBufferIndex] + 0.5f));
+         if (absDiff > (_buffer[previousBufferIndex] * 2)) {
+         value /= 2.0f;
+         }*/
+        
+        _buffer[_currentBufferIndex] = /*(255 * value);/*/value - 0.5f;//TODO: -0.5f ou pas ? // TODO: aussi essayer avec uint8_t !!!
         
         ++_currentBufferIndex;
         
@@ -185,19 +197,55 @@ struct SoundHardware {
             _currentBufferIndex = 0;
         }
         
+        // Unlock audio device
         SDL_UnlockAudioDevice(_audioDeviceID);
         
         /*value -= 0.5f;
-        SDL_QueueAudio(_audioDeviceID, &value, 4);*/
+         SDL_QueueAudio(_audioDeviceID, &value, 4);*/
     }
     
 private:
+    
+    void fillBuffer(Uint8 *stream, int len) {
+        // Method 1 : avec memcpy
+        auto start = _currentBufferIndex * sizeof(float/*uint8_t*/);
+        auto size = len - start;
+        
+        memcpy(stream, reinterpret_cast<Uint8 *>(&(_buffer.data()[_currentBufferIndex])), size);
+        memcpy(&stream[size], reinterpret_cast<Uint8 *>(_buffer.data()), start);
+        
+        // Method 2 : avec loop sur Uint8
+        /*int start = _currentBufferIndex * sizeof(float);
+        Uint8 *buffer = reinterpret_cast<Uint8 *>(_buffer.data());
+        for (int i = 0, i2 = start; i < len; ++i, ++i2) {
+            if (i2 >= len) {
+                i2 = 0;
+            }
+            
+            stream[i] = buffer[i2];
+        }*/
+        /*
+        // Method 3 : avec loop sur float
+        int size = len / sizeof(float);
+        float *streamFloat = reinterpret_cast<float *>(stream);
+        float *buffer = _buffer.data();
+        for (int i = 0, i2 = _currentBufferIndex; i < size; ++i, ++i2) {
+            if (i2 >= size) {
+                i2 = 0;
+            }
+            
+            streamFloat[i] = buffer[i2];
+        }*/
+    }
+    
+    
     SDL_AudioSpec _audioSpec;
     SDL_AudioDeviceID _audioDeviceID;
-    std::vector<float> _buffer;
-    unsigned int _currentBufferIndex;
+    std::vector<float/*uint8_t*/> _buffer;
+    std::size_t _currentBufferIndex;
     
-    unsigned int _counter;
+    float _counter;
+    float _frequencyRatio;
 };
 
 struct ControllerHardware {
@@ -328,12 +376,12 @@ int main(int argc, const char * argv[]) {
     SDL_Event event;
     
     GraphicHardware graphicHardware(event);
-    SoundHardware soundHardware;
+    SoundHardware soundHardware(44100, 1024);
     ControllerHardware controllerHardware;
     auto controller = std::make_unique<NESEmu::Controller::Standard<ControllerHardware>>(controllerHardware);
     
     // Open ROM
-    //std::ifstream ifs("../UnitTestFiles/SMB.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
+    std::ifstream ifs("../UnitTestFiles/SMB.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/Spelunker.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/Ms. Pac-Man (Tengen).nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/DK.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
@@ -342,11 +390,12 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Battletoads.nes", std::ios::binary);  // Mapper7, 256kb de prg-rom, single screen mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Paperboy.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/Huge Insect.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, vertical mirroring
-    std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
+    //std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/SMB2.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Young Indiana Jones Chronicles.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Adventures of Lolo 2.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 32kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Crystalis.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
+    //std::ifstream ifs("../UnitTestFiles/Silver Surfer.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 256kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Metroid.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/Final Fantasy.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/Zelda.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom
@@ -409,7 +458,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_test/apu_test.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/blargg_apu_2005.07.30/11.len_reload_timing.nes", std::ios::binary);//TODO: foire sur 10 et 11
     
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_env/test_apu_env.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_2/test_10.nes", std::ios::binary);
     
     // Check that file exists
     assert(ifs.good());

@@ -54,7 +54,9 @@ std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> Factory
         break;
         
         case Model::MMC1 : {
-            cartridge = std::make_unique<Mapper1::Chip<TCpuHardwareInterface, TPpuHardwareInterface, Mapper1::Model::SNROM>>(std::move(data.prgRom), data.prgRamSize, std::move(data.chrRom), data.chrRamSize);
+            std::size_t prgRamSize = (data.prgRamSize > 0) ? data.prgRamSize : (8 * 1024);//TODO: si je met pas ca, metroid deconne !!! a voir : c'est le meme probleme qu'en dessous (mmc3) c'est parce que le bit du flags 6 dans INES n'indique pas si de la prg-ram est presente mais si la prg-ram est battery-backed (sauvée), c'est le flags 10 qui indique si de la prg-ram est presente (mais il n'est pas utilisé dans les rom dumpée car ajouté apres et pas dans la specification officielle), il faut donc assumer qu'il y a tjs de la prg-ram avec un header ines
+            
+            cartridge = std::make_unique<Mapper1::Chip<TCpuHardwareInterface, TPpuHardwareInterface, Mapper1::Model::SNROM>>(std::move(data.prgRom), prgRamSize, std::move(data.chrRom), data.chrRamSize);
         }
         break;
         

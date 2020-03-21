@@ -83,7 +83,7 @@ void Chip<EModel, TBus, TSoundHardware>::startPhi1() {
     }
     
     // Clock APU
-    _apu.clock();//TODO: voir si ok
+    _apu.clock();//TODO: voir si ok, peut etre le mettre au debut (voir les roms de tests)
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
