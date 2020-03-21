@@ -161,16 +161,20 @@ struct SoundHardware {
         //memcpy(stream, reinterpret_cast<Uint8 *>(_buffer.data()), len);
     }
     
-    void addData(float value) {
+    bool canAddSample() {
         ++_counter;
         
         // 1789773 (CPU frequency) / 44100 (Audio frequency) = 40.58
-        if (_counter < 40) {
-            return;
+        if (_counter < 40) {//TODO: a calculer dans le constructor
+            return false;
         }
         
-        _counter = 0;
+        _counter -= 40;
         
+        return true;
+    }
+    
+    void addSample(float value) {
         SDL_LockAudioDevice(_audioDeviceID);
         
         _buffer[_currentBufferIndex] = value - 0.5f;//TODO: -0.5f ou pas ?
@@ -299,7 +303,7 @@ void runNes(TNes &nes, SDL_Event &event) {
         //nes.clock();
         
         --_x;
-        if ((event.type == SDL_QUIT)/* || (_x == 0)*/) {
+        if ((event.type == SDL_QUIT) || (_x == 0)) {
             return;
         }
         
@@ -333,12 +337,12 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Spelunker.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/Ms. Pac-Man (Tengen).nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/DK.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
-    std::ifstream ifs("../UnitTestFiles/Castlevania.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
+    //std::ifstream ifs("../UnitTestFiles/Castlevania.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Duck Tales.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Battletoads.nes", std::ios::binary);  // Mapper7, 256kb de prg-rom, single screen mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Paperboy.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/Huge Insect.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, vertical mirroring
-    //std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
+    std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/SMB2.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Young Indiana Jones Chronicles.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Adventures of Lolo 2.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 32kb de chr-rom

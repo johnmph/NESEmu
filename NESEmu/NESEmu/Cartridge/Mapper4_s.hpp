@@ -32,8 +32,8 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuReadPerformed(TCpuHa
     
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
-        // If Prg-Ram enabled
-        if (_prgRamChipEnable) {
+        // If has Prg-Ram and enabled
+        if ((this->_prgRamSize > 0) && _prgRamChipEnable) {
             // Read Prg-Ram
             cpuHardwareInterface.setDataBus(this->_prgRam[address & (this->_prgRamSize - 1)]);
         }
@@ -70,8 +70,8 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuWritePerformed(TCpuH
     
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
-        // If Prg-Ram enabled and write enabled
-        if (_prgRamChipEnable && !_prgRamWriteProtection) {
+        // If has Prg-Ram and enabled and write enabled
+        if ((this->_prgRamSize > 0) && _prgRamChipEnable && !_prgRamWriteProtection) {
             // Write Prg-Ram
             this->_prgRam[address & (this->_prgRamSize - 1)] = data;
         }

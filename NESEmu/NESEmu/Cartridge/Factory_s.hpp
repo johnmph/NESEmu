@@ -69,7 +69,9 @@ std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> Factory
         break;
         
         case Model::MMC3 : {
-            cartridge = std::make_unique<Mapper4::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), data.prgRamSize, std::move(data.chrRom), data.mirroringType);
+            std::size_t prgRamSize = (data.prgRamSize > 0) ? data.prgRamSize : (8 * 1024);//TODO: si je met pas 8192 mario 3 foire car il a de la prg ram alors que le header dit qu'il en a pas, a voir !!!
+            
+            cartridge = std::make_unique<Mapper4::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), prgRamSize, std::move(data.chrRom), data.mirroringType);
         }
         break;
         /*
