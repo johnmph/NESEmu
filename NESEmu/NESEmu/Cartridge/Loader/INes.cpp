@@ -35,50 +35,39 @@ namespace NESEmu { namespace Cartridge { namespace Loader {
     Data INes::getCartridgeDataFromStream(std::istream &istream) {
         Data data;
         
-        // Skip signature
-        istream.seekg(4);
+        // Read flags
+        char flags[16];
+        istream.read(flags, sizeof(flags));
         
-        // Read prg-rom size (16KB units)
-        uint8_t prgRomSizeIn16Kb = istream.get();
-        
-        // Read chr-rom size (8KB units)
-        uint8_t chrRomSizeIn8Kb = istream.get();
-        
-        // Read Flags 6
-        uint8_t flags6 = istream.get();
-        
-        // Read Flags 7
-        uint8_t flags7 = istream.get();
-        
-        // Read Flags 8
-        uint8_t flags8 = istream.get();
-        
-        // Get prg-ram flag
-        bool hasPrgRam = flags6 & 0x2;
+        // Get persistent memory flag
+        data.hasPersistentMemory = (flags[6] & 0x2) != 0;
         
         // Get trainer flag
-        bool hasTrainer = flags6 & 0x4;
+        bool hasTrainer = (flags[6] & 0x4) != 0;
         
         // Get mirroring type
-        data.mirroringType = ((flags6 & 0x8) != 0) ? MirroringType::FourScreen : (((flags6 & 0x1) != 0) ? MirroringType::Vertical : MirroringType::Horizontal);
+        data.mirroringType = ((flags[6] & 0x8) != 0) ? MirroringType::FourScreen : (((flags[6] & 0x1) != 0) ? MirroringType::Vertical : MirroringType::Horizontal);
         
         // Get mapper model
-        data.mapperModel = mapperModels[(flags7 & 0xF0) | (flags6 >> 4)];//TODO: gerer si le mapper n'est pas dans l'array !
+        data.mapperModel = mapperModels[(flags[7] & 0xF0) | (flags[6] >> 4)];//TODO: gerer si le mapper n'est pas dans l'array ! : pas besoin si on les mets tous dans l'array (256)
         
         // Exit header and trainer if present
         istream.seekg(16 + ((hasTrainer) ? 512 : 0), std::ios::seekdir::beg);
         
         // Read prg-rom
-        unsigned int prgRomSize = prgRomSizeIn16Kb * 16 * 1024;
+        unsigned int prgRomSize = flags[4] * 16 * 1024;
         data.prgRom.resize(prgRomSize);
         istream.read(reinterpret_cast<char *>(data.prgRom.data()), prgRomSize);
         
+        // Get hasPrgRam flag
+        bool hasPrgRam = (flags[10] & 0x10) == 0;
+        
         // If has prg-ram, flags8 may contain prg-ram size (if 0, we assume there is 8kb)
-        data.prgRamSize = (hasPrgRam) ? (((flags8 > 0) ? flags8 : 1) * (8 * 1024)) : 0;
+        data.prgRamSize = (hasPrgRam) ? (((flags[8] > 0) ? flags[8] : 1) * (8 * 1024)) : 0;
         
         // Read chr-rom if present
-        if (chrRomSizeIn8Kb > 0) {
-            unsigned int chrRomSize = chrRomSizeIn8Kb * 8 * 1024;
+        if (flags[5] > 0) {
+            unsigned int chrRomSize = flags[5] * 8 * 1024;
             data.chrRom.resize(chrRomSize);
             istream.read(reinterpret_cast<char *>(data.chrRom.data()), chrRomSize);
             

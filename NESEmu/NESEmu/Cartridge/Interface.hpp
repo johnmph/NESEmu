@@ -21,8 +21,9 @@ namespace NESEmu { namespace Cartridge {
         Interface(std::vector<uint8_t> prgRom, std::size_t prgRamSize, std::vector<uint8_t> chrRom, std::size_t chrRamSize);
         virtual ~Interface() = 0;
         
-        // Prg-ram
-        std::vector<uint8_t> &getPrgRam();
+        // Persistent memory
+        bool hasPersistentMemory() const;
+        std::vector<uint8_t> &getPersistentMemory();// TODO: renommer getPersistentMemory() et mettre en pure virtual car selon le mapper ca peut etre autre chose que la prg-ram ? (et surement le retourner en copie et pas en reference sinon les mappers qui n'en n'ont pas ne seront rien retourner comme reference !!) + un setPersistentMemory : OU BIEN avoir un setPersistentMemoryHandler qui sauvera une fonction (std::function) qui sera appelée par la cartridge si elle a une persistent memory (mais dans ce cas il faudra aussi des methodes notifyInserted et notifyRemoved pour savoir quand lire et ecrire la persistent memory via la function sauvée)
         
         // Clock
         virtual void clock(TCpuHardwareInterface &cpuHardwareInterface, TPpuHardwareInterface &ppuHardwareInterface);

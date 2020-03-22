@@ -381,7 +381,7 @@ int main(int argc, const char * argv[]) {
     auto controller = std::make_unique<NESEmu::Controller::Standard<ControllerHardware>>(controllerHardware);
     
     // Open ROM
-    std::ifstream ifs("../UnitTestFiles/SMB.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
+    //std::ifstream ifs("../UnitTestFiles/SMB.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/Spelunker.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/Ms. Pac-Man (Tengen).nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/DK.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
@@ -390,7 +390,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Battletoads.nes", std::ios::binary);  // Mapper7, 256kb de prg-rom, single screen mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Paperboy.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/Huge Insect.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, vertical mirroring
-    //std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
+    std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/SMB2.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Young Indiana Jones Chronicles.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Adventures of Lolo 2.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 32kb de chr-rom
@@ -489,16 +489,16 @@ int main(int argc, const char * argv[]) {
     // Create cartridge
     auto cartridge = cartridgeFactory.createCartridgeFromStream(ifs);
     
-    // Read prg-ram if necessary
-    if (cartridge->getPrgRam().size() > 0) {
-        std::ifstream ifs("../prgRam.dat", std::ios::binary);
+    // Read persistent memory if necessary
+    if (cartridge->hasPersistentMemory()) {
+        std::ifstream ifs("../persistentMemory.dat", std::ios::binary);
         
         if (ifs.good()) {
-            // Get prg-ram
-            auto &prgRam = cartridge->getPrgRam();
+            // Get persitent memory
+            auto &persistentMemory = cartridge->getPersistentMemory();
             
             // Read from file
-            ifs.read(reinterpret_cast<char *>(prgRam.data()), prgRam.size());
+            ifs.read(reinterpret_cast<char *>(persistentMemory.data()), persistentMemory.size());
         }
     }
     
@@ -527,16 +527,16 @@ int main(int argc, const char * argv[]) {
     // Remove cartridge
     cartridge = nes.removeCartridge();
     
-    // Save prg-ram if necessary
-    if (cartridge->getPrgRam().size() > 0) {
-        std::ofstream ofs("../prgRam.dat", std::ios::binary);
+    // Save persistent memory if necessary
+    if (cartridge->hasPersistentMemory()) {
+        std::ofstream ofs("../persistentMemory.dat", std::ios::binary);
         
         if (ofs.good()) {
-            // Get prg-ram
-            auto const &prgRam = cartridge->getPrgRam();
+            // Get persistent memory
+            auto const &persistentMemory = cartridge->getPersistentMemory();
             
             // Write to file
-            ofs.write(reinterpret_cast<char const *>(prgRam.data()), prgRam.size());
+            ofs.write(reinterpret_cast<char const *>(persistentMemory.data()), persistentMemory.size());
         }
     }
     

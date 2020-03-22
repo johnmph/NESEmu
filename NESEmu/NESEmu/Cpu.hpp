@@ -65,6 +65,10 @@ namespace NESEmu { namespace Cpu {
         // Set Cpu as friend to keep data bus methods private
         friend InternalCpu;
         
+        // Set Apu as friend to keep apuIrq method private
+        friend Apu::Chip<Chip, TSoundHardware>;
+        
+        
         // Bus intermediate
         uint16_t getAddressBus() const;
         void setAddressBus(uint16_t address);
@@ -82,8 +86,13 @@ namespace NESEmu { namespace Cpu {
         void startDma(uint8_t address);
         void stopDma();
         
+        // APU IRQ
+        void apuIrq(bool high);
+        
         // Internal
+        Apu::Chip<Chip, TSoundHardware> _apu;
         TBus &_bus;
+        
         bool _dmaStarted;
         int _dmaCount;
         uint8_t _dmaAddress;
@@ -91,7 +100,8 @@ namespace NESEmu { namespace Cpu {
         
         uint8_t _outLatch;
         
-        Apu::Chip<Chip, TSoundHardware> _apu;
+        bool _irqLine;
+        bool _apuIrqLine;
     };
     
     #include "Cpu_s.hpp"

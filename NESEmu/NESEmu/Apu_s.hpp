@@ -726,7 +726,7 @@ void Chip<TInterruptHardware, TSoundHardware>::clockFrameCounterHalfFrame() {
 
 template <class TInterruptHardware, class TSoundHardware>
 void Chip<TInterruptHardware, TSoundHardware>::checkInterrupt() {
-    _interruptHardware.irq(!_frameCounter.getInterrupt());//TODO: le probleme est que l'irq est raccordé a plusieurs entrées, dans le mmc3 par exemple il peut lancer des irq mais si ici on le reset a true a chaque clock ca nique l'irq du mmc3 et ca le fait deconner !!!!
+    _interruptHardware.apuIrq(!_frameCounter.getInterrupt());
 }
 
 #endif /* NESEmu_Apu_s_hpp */

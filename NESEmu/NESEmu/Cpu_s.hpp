@@ -11,7 +11,7 @@
 
 
 template <>
-struct Constants<Model::Ricoh2A03> {
+struct Constants<Model::Ricoh2A03> {//TODO: taper ca dans apu et voir a quoi ca correspond
     // APU
     static constexpr int apuFrameCounterRateInHz = 60;
 };
@@ -24,7 +24,7 @@ struct Constants<Model::Ricoh2A07> {
 
 
 template <Model EModel, class TBus, class TSoundHardware>
-Chip<EModel, TBus, TSoundHardware>::Chip(TBus &bus, TSoundHardware &soundHardware) : _bus(bus), InternalCpu(*this), _dmaStarted(false), _apu(*this, soundHardware) {
+Chip<EModel, TBus, TSoundHardware>::Chip(TBus &bus, TSoundHardware &soundHardware) : _apu(*this, soundHardware), _bus(bus), InternalCpu(*this), _dmaStarted(false) {
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
@@ -33,6 +33,10 @@ void Chip<EModel, TBus, TSoundHardware>::powerUp(uint16_t programCounter, uint8_
     
     // Power up APU
     _apu.powerUp();
+    
+    // Reset irq line
+    _irqLine = true;
+    _apuIrqLine = true;
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
@@ -148,6 +152,7 @@ void Chip<EModel, TBus, TSoundHardware>::reset(bool high) {
         stopDma();
     }
     
+    // Reset CPU
     InternalCpu::reset(high);
     
     // Reset APU
@@ -161,7 +166,11 @@ void Chip<EModel, TBus, TSoundHardware>::nmi(bool high) {
 
 template <Model EModel, class TBus, class TSoundHardware>
 void Chip<EModel, TBus, TSoundHardware>::irq(bool high) {
-    InternalCpu::irq(high);
+    // Save signal
+    _irqLine = high;
+    
+    // Irq must be low if any of its input is low
+    InternalCpu::irq(_irqLine && _apuIrqLine);
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
@@ -358,6 +367,15 @@ void Chip<EModel, TBus, TSoundHardware>::stopDma() {
     
     // Reset DMA flag
     _dmaStarted = false;
+}
+
+template <Model EModel, class TBus, class TSoundHardware>
+void Chip<EModel, TBus, TSoundHardware>::apuIrq(bool high) {
+    // Save signal
+    _apuIrqLine = high;
+    
+    // Irq must be low if any of its input is low
+    InternalCpu::irq(_irqLine && _apuIrqLine);
 }
 
 #endif /* NESEmu_Cpu_s_hpp */

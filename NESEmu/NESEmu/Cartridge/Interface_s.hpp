@@ -19,7 +19,12 @@ Interface<TCpuHardwareInterface, TPpuHardwareInterface>::~Interface() {
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-std::vector<uint8_t> &Interface<TCpuHardwareInterface, TPpuHardwareInterface>::getPrgRam() {
+bool Interface<TCpuHardwareInterface, TPpuHardwareInterface>::hasPersistentMemory() const {
+    return _prgRam.size() > 0;
+}
+
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+std::vector<uint8_t> &Interface<TCpuHardwareInterface, TPpuHardwareInterface>::getPersistentMemory() {
     return _prgRam;
 }
 

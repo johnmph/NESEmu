@@ -19,11 +19,15 @@ namespace NESEmu { namespace Cartridge { namespace Loader {
     struct Data {
         
         Model mapperModel;
+        
         std::vector<uint8_t> prgRom;
         std::size_t prgRamSize;
         std::vector<uint8_t> chrRom;
         std::size_t chrRamSize;
+        
         MirroringType mirroringType;
+        
+        bool hasPersistentMemory;
     };
     
 } } }
