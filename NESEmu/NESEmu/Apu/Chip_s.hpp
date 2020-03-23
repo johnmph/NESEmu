@@ -71,19 +71,19 @@ template <class TInterruptHardware, class TSoundHardware>
 void Chip<TInterruptHardware, TSoundHardware>::setChannelRegister(uint16_t address, uint8_t data) {
     // Pulse registers
     if (address < 0x4008) {
-        setPulseChannelRegister((address >= 0x4004), (address & 0x3), data);
+        _pulseChannel[(address >= 0x4004)].setRegister((address & 0x3), data);
     }
     // Triangle register
     else if (address < 0x400C) {
-        setTriangleChannelRegister((address & 0x3), data);
+        _triangleChannel.setRegister((address & 0x3), data);
     }
     // Noise register
     else if (address < 0x4010) {
-        setNoiseChannelRegister((address & 0x3), data);
+        _noiseChannel.setRegister((address & 0x3), data);
     }
     // DMC register
     else {
-        setDmcChannelRegister((address & 0x3), data);
+        _dmcChannel.setRegister((address & 0x3), data);
     }
 }
 
@@ -134,48 +134,19 @@ float Chip<TInterruptHardware, TSoundHardware>::getMixedOutput() const {//TODO: 
     float pulseOut = (pulseSum > 0) ? (95.88f / ((8128.0f / pulseSum) + 100.0f)) : 0;
     
     // Sum other channels (need this in case of division by 0)
-    float triangleNoiseDmcMixedSum = (_triangleChannel.getOutput() / 8227.0f) + (_noiseChannel.getOutput() / 12241.0f) + (_dmcChannel.getOutput() / 22638.0f);
+    float triangleNoiseDmcMixedSum = (_triangleChannel.getOutput() / 8227.0f)/* + (_noiseChannel.getOutput() / 12241.0f) + (_dmcChannel.getOutput() / 22638.0f)*/;
     
     // Get triangle, noise and DMC mixed output
     float triangleNoiseDmcOut = (triangleNoiseDmcMixedSum > 0) ? (159.79f / ((1.0f / triangleNoiseDmcMixedSum) + 100.0f)) : 0;
     
     // Get mixed output
-    return pulseOut + triangleNoiseDmcOut;
-}
-
-template <class TInterruptHardware, class TSoundHardware>
-void Chip<TInterruptHardware, TSoundHardware>::setPulseChannelRegister(uint8_t pulseChannelNumber, uint8_t registerNumber, uint8_t data) {
-    // Set register
-    _pulseChannel[pulseChannelNumber].setRegister(registerNumber, data);
-}
-
-template <class TInterruptHardware, class TSoundHardware>
-void Chip<TInterruptHardware, TSoundHardware>::setTriangleChannelRegister(uint8_t registerNumber, uint8_t data) {
-    _triangleChannel.setRegister(registerNumber, data);
-}
-
-template <class TInterruptHardware, class TSoundHardware>
-void Chip<TInterruptHardware, TSoundHardware>::setNoiseChannelRegister(uint8_t registerNumber, uint8_t data) {
-    _noiseChannel.setRegister(registerNumber, data);
-}
-
-template <class TInterruptHardware, class TSoundHardware>
-void Chip<TInterruptHardware, TSoundHardware>::setDmcChannelRegister(uint8_t registerNumber, uint8_t data) {
-    // IRQ enable, loop, frequency
-    if (registerNumber == 0x0) {
-        
-    }
-    // Load counter
-    else if (registerNumber == 0x1) {
-        
-    }
-    // Sample address
-    else if (registerNumber == 0x2) {
-        
-    }
-    // Sample length
-    else if (registerNumber == 0x3) {
-    }
+    return /*pulseOut + */triangleNoiseDmcOut;
+    /*
+    float pulseOut = 0.00752f * (_pulseChannel[0].getOutput() + _pulseChannel[1].getOutput());
+    
+    float triangleNoiseDmcOut = (0.00851f * _triangleChannel.getOutput()) + (0.00494f * _noiseChannel.getOutput()) + (0.00335f * _dmcChannel.getOutput());
+    
+    return pulseOut + triangleNoiseDmcOut;*/
 }
 
 template <class TInterruptHardware, class TSoundHardware>

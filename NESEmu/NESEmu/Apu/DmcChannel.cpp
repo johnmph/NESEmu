@@ -33,4 +33,22 @@ namespace NESEmu { namespace Apu {
         return 0;// TODO: a faire
     }
     
+    void DmcChannel::setRegister(uint8_t registerNumber, uint8_t data) {
+        // IRQ enable, loop, frequency
+        if (registerNumber == 0x0) {
+            
+        }
+        // Load counter
+        else if (registerNumber == 0x1) {
+            
+        }
+        // Sample address
+        else if (registerNumber == 0x2) {
+            
+        }
+        // Sample length
+        else if (registerNumber == 0x3) {
+        }
+    }
+    
 } }

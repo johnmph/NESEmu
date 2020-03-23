@@ -195,10 +195,24 @@ struct SoundHardware {
         
         // Avoir la possibilité de filtrer la value ? (style de shader audio) :
         /*std::size_t previousBufferIndex = ((_currentBufferIndex > 0) ? _currentBufferIndex : _buffer.size()) - 1;
-         float absDiff = std::fabs(value - (_buffer[previousBufferIndex] + 0.5f));
-         if (absDiff > (_buffer[previousBufferIndex] * 2)) {
-         value /= 2.0f;
-         }*/
+        float absDiff = std::fabs(value - (_buffer[previousBufferIndex] + 0.5f));
+        if (absDiff > (_buffer[previousBufferIndex] * 2)) {
+            value /= 2.0f;
+        }
+        */
+        /*
+        std::size_t previousBufferIndex = ((_currentBufferIndex > 0) ? _currentBufferIndex : _buffer.size()) - 1;
+        float absDiff = std::fabs(value - (_buffer[previousBufferIndex] + 0.5f));
+        
+        if (absDiff > 0.75f) {
+            value /= 4.0f;
+        } else if (absDiff > 0.66f) {
+            value /= 3.0f;
+        } else if (absDiff > 0.5f) {
+            value /= 2.0f;
+        }
+        //_buffer[previousBufferIndex] = value - 0.5f;
+        */
         
         _buffer[_currentBufferIndex] = /*(255 * value);/*/value - 0.5f;//TODO: -0.5f ou pas ? // TODO: aussi essayer avec uint8_t !!!
         
@@ -397,7 +411,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Ms. Pac-Man (Tengen).nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/DK.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/Castlevania.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
-    //std::ifstream ifs("../UnitTestFiles/Duck Tales.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
+    std::ifstream ifs("../UnitTestFiles/Duck Tales.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Battletoads.nes", std::ios::binary);  // Mapper7, 256kb de prg-rom, single screen mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Paperboy.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/Huge Insect.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, vertical mirroring
@@ -422,7 +436,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Kid Icarus.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Mega Man.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/R.C. Pro-Am.nes", std::ios::binary);
-    std::ifstream ifs("../UnitTestFiles/Teenage Mutant Ninja Turtles.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Teenage Mutant Ninja Turtles.nes", std::ios::binary);
 
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/nestest.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/1.Branch_Basics.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
@@ -480,6 +494,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/blargg_apu_2005.07.30/10.len_halt_timing.nes", std::ios::binary);//TODO: foire sur 10 et 11
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_2/test_10.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_tri_lin_ctr/lin_ctr.nes", std::ios::binary);
     
     // Check that file exists
     assert(ifs.good());

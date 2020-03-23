@@ -42,7 +42,7 @@ namespace NESEmu { namespace Apu {
             bool feedback = (_shiftRegister & 0x1) ^ (((_mode) ? (_shiftRegister & 0x40) : (_shiftRegister & 0x2)) != 0);
             _shiftRegister = (feedback << 14) | (_shiftRegister >> 1);
             
-            return;//TODO: a voir
+            return;
         }
         
         // Decrement counter

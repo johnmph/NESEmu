@@ -26,6 +26,9 @@ namespace NESEmu { namespace Apu {
         // Output
         uint8_t getOutput() const;
         
+        // Register
+        void setRegister(uint8_t registerNumber, uint8_t data);
+        
     };
     
 } }

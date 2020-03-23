@@ -54,11 +54,6 @@ namespace NESEmu { namespace Apu {
         // See https://wiki.nesdev.com/w/index.php/APU_Mixer
         float getMixedOutput() const;
         
-        void setPulseChannelRegister(uint8_t pulseChannelNumber, uint8_t registerNumber, uint8_t data);
-        void setTriangleChannelRegister(uint8_t registerNumber, uint8_t data);
-        void setNoiseChannelRegister(uint8_t registerNumber, uint8_t data);
-        void setDmcChannelRegister(uint8_t registerNumber, uint8_t data);
-        
         void clockFrameCounterQuarterFrame();
         void clockFrameCounterHalfFrame();
         

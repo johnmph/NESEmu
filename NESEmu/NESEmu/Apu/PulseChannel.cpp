@@ -26,10 +26,10 @@
 namespace NESEmu { namespace Apu {
     
     uint8_t const PulseChannel::_dutyWaveforms[4] = {
-        0b00000001,     // 12.5%
-        0b00000011,     // 25%
-        0b00001111,     // 50%
-        0b11111100      // 75%
+        0b00000010,     // 12.5%
+        0b00000110,     // 25%
+        0b00011110,     // 50%
+        0b11111001      // 75%
     };
     
     PulseChannel::PulseChannel(bool sweepOneComplementMode) : _sweepUnit(sweepOneComplementMode, _timer) {
@@ -48,10 +48,10 @@ namespace NESEmu { namespace Apu {
             // Reload counter
             _counter = _timer;
             
-            // Decrement sequencer current step
-            _sequencerCurrentStep = (_sequencerCurrentStep > 0) ? (_sequencerCurrentStep - 1) : 7;
+            // Increment sequencer current step
+            _sequencerCurrentStep = (_sequencerCurrentStep + 1) & 0x7;
             
-            return;//TODO: a voir
+            return;
         }
         
         // Decrement counter

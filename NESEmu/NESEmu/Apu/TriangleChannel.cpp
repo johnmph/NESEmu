@@ -18,7 +18,7 @@
  */
 
 
-namespace NESEmu { namespace Apu {//TODO: beaucoup de pop et de son high frequency !!! a voir
+namespace NESEmu { namespace Apu {//TODO: beaucoup de pop et de son high frequency !!! a voir : les high frequency peuvent etre supprimées en ne clockant pas le counter si timer < 2 mais je n'arrive pas a enlever les pops !!!
     
     void TriangleChannel::powerUp() {
     }
@@ -28,25 +28,17 @@ namespace NESEmu { namespace Apu {//TODO: beaucoup de pop et de son high frequen
     }
     
     void TriangleChannel::clock() {
-        // Sequencer is clocked if both linear and length counter are non zero
-/*        if ((_linearCounter == 0) || (!_lengthCounter.getOutput())) {
-            return;
-        }*/
-        
         // If counter reached 0
-        if (_counter == 0) {
+        if ((_counter == 0) && (_timer > 1)) {//TODO: j'ai mis le test timer > 1 pour retirer les mauvais sons
             // Reload counter
             _counter = _timer;
             
             // Sequencer is clocked if both linear and length counter are non zero
-            if ((_linearCounter == 0) || (!_lengthCounter.getOutput())) {//TODO:ici ou au debut ??
-                return;
+            if ((_linearCounter > 0) && _lengthCounter.getOutput()) {
+                _sequencerCurrentStep = (_sequencerCurrentStep + 1) & 0x1F;
             }
             
-            // Increment current step
-            _sequencerCurrentStep = (_sequencerCurrentStep < 31) ? (_sequencerCurrentStep + 1) : 0;
-            
-            return;//TODO: a voir
+            return;
         }
         
         // Decrement counter
@@ -106,7 +98,7 @@ namespace NESEmu { namespace Apu {//TODO: beaucoup de pop et de son high frequen
             // Set linear counter reload flag
             _linearCounterReloadFlag = true;
             
-            //_sequencerCounter = _sequencerTimer;//TODO: a mettre ??? si c'est comme pulse, non !
+            //_counter = _timer;//TODO: a mettre ??? si c'est comme pulse, non !
         }
     }
     
