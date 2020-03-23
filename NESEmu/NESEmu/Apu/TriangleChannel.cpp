@@ -29,7 +29,7 @@ namespace NESEmu { namespace Apu {//TODO: beaucoup de pop et de son high frequen
     
     void TriangleChannel::clock() {
         // If counter reached 0
-        if ((_counter == 0) && (_timer > 1)) {//TODO: j'ai mis le test timer > 1 pour retirer les mauvais sons
+        if ((_counter == 0) && (_timer > 1)) {//TODO: j'ai mis le test timer > 1 pour retirer les high frequency
             // Reload counter
             _counter = _timer;
             

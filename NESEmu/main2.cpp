@@ -98,7 +98,7 @@ struct GraphicHardware {
         // Check to wait for locked fps
         for (;;) {
             float elapsedMs = (SDL_GetPerformanceCounter() - _lockedFps) / static_cast<float>(SDL_GetPerformanceFrequency()) * 1000.0f;
-            if (elapsedMs >= 16.666f) {
+            if (elapsedMs >= 16.667f) {
                 break;
             }
         }
@@ -133,11 +133,11 @@ private:
 
 struct SoundHardware {
     
-    SoundHardware(unsigned int frequency, std::size_t bufferSize) : _counter(0), _currentBufferIndex(0) {
+    SoundHardware(unsigned int frequency, std::size_t bufferSize) : _counter(0), _currentBufferWriteIndex(0), _currentBufferReadIndex(0) {
         // TODO: bufferSize doit etre une puissance de 2
         
-        // Set buffer size
-        _buffer.resize(bufferSize);
+        // Set buffer size as double of audio hardware buffer size
+        _buffer.resize(bufferSize * 2);
         
         // Initialize audio
         SDL_InitSubSystem(SDL_INIT_AUDIO);
@@ -149,7 +149,7 @@ struct SoundHardware {
         _audioSpec.freq = frequency;
         _audioSpec.format = /*AUDIO_U8;*/AUDIO_F32SYS;
         _audioSpec.channels = 1;
-        _audioSpec.samples = bufferSize; // TODO: Oublier pas que ce sa doit être en puissance de deux 2^n
+        _audioSpec.samples = bufferSize;
         _audioSpec.callback = [] (void *param, Uint8 *stream, int len) {
             static_cast<SoundHardware *>(param)->fillBuffer(stream, len);
         };
@@ -171,6 +171,7 @@ struct SoundHardware {
     }
     
     void setSamplerFrequency(unsigned int frequency) {
+        // Calculate frequency ratio
         _frequencyRatio = static_cast<float>(frequency) / _audioSpec.freq;
     }
     
@@ -190,6 +191,11 @@ struct SoundHardware {
     }
     
     void addSample(float value) {
+        // If write too fast for audio hardware reading, wait before adding more sample
+        if (_currentBufferWriteIndex == _currentBufferReadIndex) {
+            return;
+        }
+        
         // Lock audio device
         SDL_LockAudioDevice(_audioDeviceID);
         
@@ -214,12 +220,14 @@ struct SoundHardware {
         //_buffer[previousBufferIndex] = value - 0.5f;
         */
         
-        _buffer[_currentBufferIndex] = /*(255 * value);/*/value - 0.5f;//TODO: -0.5f ou pas ? // TODO: aussi essayer avec uint8_t !!!
+        // Add sample
+        _buffer[_currentBufferWriteIndex] = /*(255 * value);/*/value - 0.5f;// TODO: aussi essayer avec uint8_t !!!
         
-        ++_currentBufferIndex;
+        // Update write index
+        ++_currentBufferWriteIndex;
         
-        if (_currentBufferIndex >= _buffer.size()) {
-            _currentBufferIndex = 0;
+        if (_currentBufferWriteIndex >= _buffer.size()) {
+            _currentBufferWriteIndex = 0;
         }
         
         // Unlock audio device
@@ -233,42 +241,38 @@ private:
     
     void fillBuffer(Uint8 *stream, int len) {
         // Method 1 : avec memcpy
-        auto start = _currentBufferIndex * sizeof(float/*uint8_t*/);
-        auto size = len - start;
+        // Get size
+        std::size_t size = len;
         
-        memcpy(stream, reinterpret_cast<Uint8 *>(&(_buffer.data()[_currentBufferIndex])), size);
-        memcpy(&stream[size], reinterpret_cast<Uint8 *>(_buffer.data()), start);
+        // Get sample size
+        std::size_t sampleSize = len / sizeof(float);
         
-        // Method 2 : avec loop sur Uint8
-        /*int start = _currentBufferIndex * sizeof(float);
-        Uint8 *buffer = reinterpret_cast<Uint8 *>(_buffer.data());
-        for (int i = 0, i2 = start; i < len; ++i, ++i2) {
-            if (i2 >= len) {
-                i2 = 0;
-            }
+        // Save read index
+        std::size_t readIndex = _currentBufferReadIndex;
+        
+        // Update read index
+        _currentBufferReadIndex += sampleSize;
+        
+        // Check if copy will cross boundary of buffer
+        if (_currentBufferReadIndex > _buffer.size()) {
+            // Copy until boundary
+            size = (_buffer.size() - readIndex) * sizeof(float);
+            memcpy(&stream[size], reinterpret_cast<Uint8 *>(_buffer.data()), len - size);
             
-            stream[i] = buffer[i2];
-        }*/
-        /*
-        // Method 3 : avec loop sur float
-        int size = len / sizeof(float);
-        float *streamFloat = reinterpret_cast<float *>(stream);
-        float *buffer = _buffer.data();
-        for (int i = 0, i2 = _currentBufferIndex; i < size; ++i, ++i2) {
-            if (i2 >= size) {
-                i2 = 0;
-            }
-            
-            streamFloat[i] = buffer[i2];
-        }*/
+            // Correct read index
+            _currentBufferReadIndex -= _buffer.size();
+        }
+        
+        // Copy buffer
+        memcpy(stream, reinterpret_cast<Uint8 *>(&(_buffer.data()[readIndex])), size);
     }
     
     
     SDL_AudioSpec _audioSpec;
     SDL_AudioDeviceID _audioDeviceID;
     std::vector<float/*uint8_t*/> _buffer;
-    std::size_t _currentBufferIndex;
-    
+    std::size_t _currentBufferWriteIndex;
+    std::size_t _currentBufferReadIndex;
     float _counter;
     float _frequencyRatio;
 };
