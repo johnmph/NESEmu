@@ -95,6 +95,15 @@ struct GraphicHardware {
         SDL_RenderPresent(_renderer);
         SDL_PollEvent(&_event);
         
+        // Check to wait for locked fps
+        for (;;) {
+            float elapsedMs = (SDL_GetPerformanceCounter() - _lockedFps) / static_cast<float>(SDL_GetPerformanceFrequency()) * 1000.0f;
+            if (elapsedMs >= 16.666f) {
+                break;
+            }
+        }
+        _lockedFps = SDL_GetPerformanceCounter();
+        
         // Update fps counter
         ++_fpsFrames;
         if (_fpsLastTime < (SDL_GetTicks() - 1000.0)) {
@@ -118,6 +127,8 @@ private:
     uint32_t _fpsLastTime;
     uint32_t _fpsCurrent;
     uint32_t _fpsFrames;
+    
+    Uint64 _lockedFps;
 };
 
 struct SoundHardware {
@@ -351,7 +362,7 @@ void runNes(TNes &nes, SDL_Event &event) {
         //nes.clock();
         
         --_x;
-        if ((event.type == SDL_QUIT) || (_x == 0)) {
+        if ((event.type == SDL_QUIT)/* || (_x == 0)*/) {
             return;
         }
         
@@ -376,7 +387,7 @@ int main(int argc, const char * argv[]) {
     SDL_Event event;
     
     GraphicHardware graphicHardware(event);
-    SoundHardware soundHardware(44100, 1024);
+    SoundHardware soundHardware(44100, 2048);
     ControllerHardware controllerHardware;
     auto controller = std::make_unique<NESEmu::Controller::Standard<ControllerHardware>>(controllerHardware);
     
@@ -390,7 +401,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Battletoads.nes", std::ios::binary);  // Mapper7, 256kb de prg-rom, single screen mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Paperboy.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/Huge Insect.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, vertical mirroring
-    std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
+    //std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/SMB2.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Young Indiana Jones Chronicles.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Adventures of Lolo 2.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 32kb de chr-rom
@@ -402,6 +413,16 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Zelda 2.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom // TODO: bug mais peut etre parce que le mapper1 n'est pas complet (selon les versions du mapper !) deja c du chr-ram et ici c du chr-rom : oui en plus il y a 8ko dans le mapper1 et ici 128 !!! : OK
     //std::ifstream ifs("../UnitTestFiles/Simpsons - Bart Vs the Space Mutants.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom, IL Y A LE BUG DU SCOREBAR QUI SHAKE UN PEU, a voir (timing ppu ?)
     //std::ifstream ifs("../UnitTestFiles/Bill & Ted's Excellent Video Game Adventure.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom // TODO : ne fonctionne pas car on doit gerer la double ecriture dans le MMC1 : ok
+    
+    //std::ifstream ifs("../UnitTestFiles/1942.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Batman - The Video Game.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Dragon Quest.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Duck Hunt.nes", std::ios::binary);//TODO: regarder pour le zapper controller
+    //std::ifstream ifs("../UnitTestFiles/Ghosts'n Goblins.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Kid Icarus.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Mega Man.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/R.C. Pro-Am.nes", std::ios::binary);
+    std::ifstream ifs("../UnitTestFiles/Teenage Mutant Ninja Turtles.nes", std::ios::binary);
 
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/nestest.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/1.Branch_Basics.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
@@ -456,20 +477,12 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/allpads.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, 8kb de chr-ram, Horizontal mirroring
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_test/apu_test.nes", std::ios::binary);
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/blargg_apu_2005.07.30/11.len_reload_timing.nes", std::ios::binary);//TODO: foire sur 10 et 11
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/blargg_apu_2005.07.30/10.len_halt_timing.nes", std::ios::binary);//TODO: foire sur 10 et 11
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_2/test_10.nes", std::ios::binary);
     
     // Check that file exists
     assert(ifs.good());
-    
-    // Mapper for SMB
-    //NESEmu::Mapper::Mapper0<32, 0, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
-    //NESEmu::Mapper::Mapper1<128, 8/*, NESEmu::Cartridge::MirroringType::Vertical*/> mapper0(ifs);
-    //NESEmu::Mapper::Mapper2<128, 0, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
-    //NESEmu::Mapper::Mapper3<16, 0, 32, NESEmu::Cartridge::MirroringType::Vertical> mapper0(ifs);
-    //NESEmu::Mapper::Mapper4<32, 8> mapper0(ifs);
-    //NESEmu::Mapper::Mapper7<256, 0> mapper0(ifs);
     
     // Loop manager
     LoopManager loopManager(event);

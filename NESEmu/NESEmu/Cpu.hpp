@@ -14,7 +14,7 @@
 
 #include <cstdint>
 #include "Cpu6502/Chip.hpp"
-#include "Apu.hpp"
+#include "Apu/Chip.hpp"
 
 
 namespace NESEmu { namespace Cpu {
