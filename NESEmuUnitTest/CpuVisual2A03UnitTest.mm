@@ -23,6 +23,17 @@
 
 namespace {
     
+    struct SoundHardware {
+        
+        bool askForAddingSample() const {
+            return false;
+        }
+        
+        void addSample(uint8_t value) {
+        }
+        
+    };
+    
     struct Bus {
         uint8_t read(uint16_t address) {
             //std::cout << std::hex << "Read 0x" << static_cast<int>(memory[address]) << " at 0x" << address << "\n";
@@ -74,7 +85,8 @@ namespace {
     
     
     Bus bus;
-    Cpu2A03FullAccess<NESEmu::Cpu::Model::Ricoh2A03, Bus> cpu2A03(bus);
+    SoundHardware soundHardware;
+    Cpu2A03FullAccess<NESEmu::Cpu::Model::Ricoh2A03, Bus, SoundHardware> cpu2A03(bus, soundHardware);
     
 }
 
@@ -102,7 +114,7 @@ namespace {
     XCTAssertTrue(ifsLog.good());
     
     // Create analyzer
-    Visual6502::Analyzer<Cpu2A03FullAccess<NESEmu::Cpu::Model::Ricoh2A03, Bus>> visual6502Analyzer(ifsLog, [](uint16_t address, uint8_t data) { bus.write(address, data); });
+    Visual6502::Analyzer<Cpu2A03FullAccess<NESEmu::Cpu::Model::Ricoh2A03, Bus, SoundHardware>> visual6502Analyzer(ifsLog, [](uint16_t address, uint8_t data) { bus.write(address, data); });
     
     // Release reset to start cpu
     cpu2A03.reset(true);

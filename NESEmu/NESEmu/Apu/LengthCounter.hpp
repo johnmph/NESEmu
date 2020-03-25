@@ -6,8 +6,8 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Apu_Internal_LengthCounter_hpp
-#define NESEmu_Apu_Internal_LengthCounter_hpp
+#ifndef NESEmu_Apu_LengthCounter_hpp
+#define NESEmu_Apu_LengthCounter_hpp
 
 // See https://wiki.nesdev.com/w/index.php/APU_Length_Counter
 
@@ -39,4 +39,4 @@ namespace NESEmu { namespace Apu {
     
 } }
 
-#endif /* NESEmu_Apu_Internal_LengthCounter_hpp */
+#endif /* NESEmu_Apu_LengthCounter_hpp */

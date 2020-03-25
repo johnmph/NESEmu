@@ -6,8 +6,8 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Apu_Internal_NoiseChannel_s_hpp
-#define NESEmu_Apu_Internal_NoiseChannel_s_hpp
+#ifndef NESEmu_Apu_NoiseChannel_s_hpp
+#define NESEmu_Apu_NoiseChannel_s_hpp
 
 // See https://wiki.nesdev.com/w/index.php/APU_Noise
 
@@ -51,4 +51,4 @@ namespace NESEmu { namespace Apu {
     
 } }
 
-#endif /* NESEmu_Apu_Internal_NoiseChannel_s_hpp */
+#endif /* NESEmu_Apu_NoiseChannel_s_hpp */

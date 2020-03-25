@@ -57,7 +57,7 @@ namespace NESEmu { namespace Cpu {
         bool getM2Signal() const;
         
     //private:
-    protected:
+    protected:  // TODO: needed protected for unit test, else we can set it private
         
         using Constants = Constants<EModel>;
         using InternalCpu = Cpu6502::Chip<Cpu6502::ConfigurationPerformance<Chip, false>>;

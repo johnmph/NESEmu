@@ -6,8 +6,8 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Apu_Internal_FrameCounter_s_hpp
-#define NESEmu_Apu_Internal_FrameCounter_s_hpp
+#ifndef NESEmu_Apu_FrameCounter_s_hpp
+#define NESEmu_Apu_FrameCounter_s_hpp
 
 
 template <class TChip>
@@ -153,4 +153,4 @@ void FrameCounter<TChip>::clockHalfFrame() {
     _chip.clockFrameCounterHalfFrame();
 }
 
-#endif /* NESEmu_Apu_Internal_FrameCounter_s_hpp */
+#endif /* NESEmu_Apu_FrameCounter_s_hpp */

@@ -12,6 +12,7 @@
 
 template <class TControllerHardware>
 Zapper<TControllerHardware>::Zapper(TControllerHardware &controllerHardware) : _controllerHardware(controllerHardware) {
+    // TODO: avoir les methodes getTrigger() et getPhotoDiode()
 }
 
 template <class TControllerHardware>

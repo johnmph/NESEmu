@@ -6,8 +6,8 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Apu_Internal_Dmc_hpp
-#define NESEmu_Apu_Internal_Dmc_hpp
+#ifndef NESEmu_Apu_DmcChannel_hpp
+#define NESEmu_Apu_DmcChannel_hpp
 
 // See https://wiki.nesdev.com/w/index.php/APU_DMC
 
@@ -16,7 +16,10 @@
 
 namespace NESEmu { namespace Apu {
     
+    template <class TCpu>
     struct DmcChannel {
+        
+        DmcChannel(TCpu &cpu);
         
         void powerUp();
         
@@ -42,6 +45,7 @@ namespace NESEmu { namespace Apu {
         
         void loadSample();
         
+        TCpu &_cpu;
         uint8_t _shiftRegister;
         uint8_t _shiftRegisterRemainingBitsCounter;
         bool _silenceFlag;
@@ -60,6 +64,8 @@ namespace NESEmu { namespace Apu {
         
     };
     
+    #include "DmcChannel_s.hpp"
+    
 } }
 
-#endif /* NESEmu_Apu_Internal_Dmc_hpp */
+#endif /* NESEmu_Apu_DmcChannel_hpp */

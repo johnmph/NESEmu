@@ -18,21 +18,27 @@
 #include "NESEmu/Controller/Standard.hpp"
 
 
-template <class TSync>
+template <class TFrameListener>
 struct GraphicHardware {
     
-    GraphicHardware(SDL_Event &event, TSync &sync) : _event(event), _sync(sync) {
-        //SDL_Init(SDL_INIT_VIDEO);
+    GraphicHardware(SDL_Event &event, TFrameListener &frameListener) : _event(event), _frameListener(frameListener) {
+        // Initialize video
         SDL_InitSubSystem(SDL_INIT_VIDEO);
         std::cout << SDL_GetError() << "\n";
         
+        // Create window
         _window = SDL_CreateWindow("NESEmu", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 512, 480, /*SDL_WINDOW_FULLSCREEN | */SDL_WINDOW_OPENGL);
         std::cout << SDL_GetError() << "\n";
+        
+        // Create renderer
         _renderer = SDL_CreateRenderer(_window, -1, SDL_RENDERER_ACCELERATED);
         std::cout << SDL_GetError() << "\n";
+        
+        // Create texture
         _texture = SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, 256, 240);
         std::cout << SDL_GetError() << "\n";
         
+        // Allocate memory
         _palette = (uint32_t *) malloc(sizeof(uint32_t) * 64);
         _pixels = (uint32_t *) malloc(sizeof(uint32_t) * 256 * 240);
         
@@ -48,28 +54,25 @@ struct GraphicHardware {
             
             _palette[i] = (rgb[0] << 16) | (rgb[1] << 8) | rgb[2];
         }
-        
-        _fpsLastTime = SDL_GetTicks();
-        _fpsFrames = 0;
-        
-        _lastTime = SDL_GetPerformanceCounter();
     }
     
     ~GraphicHardware() {
+        // Free allocated memory
         free(_pixels);
         free(_palette);
         
+        // Release texture
         SDL_DestroyTexture(_texture);
+        
+        // Release renderer
         SDL_DestroyRenderer(_renderer);
+        
+        // Release window
         SDL_DestroyWindow(_window);
         
-        //SDL_Quit();
+        // Uninitialize video
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
     }
-    
-    /*uint32_t getColorFromIndex(uint8_t color, bool r, bool g, bool b) {
-        return 0;
-    }*/
     
     void plotPixel(unsigned int x, unsigned int y, uint8_t color, bool emphasizeRed, bool emphasizeGreen, bool emphasizeBlue) {
         assert(x < 256);
@@ -97,33 +100,11 @@ struct GraphicHardware {
         SDL_RenderCopy(_renderer, _texture, NULL, NULL);
         SDL_RenderPresent(_renderer);
         
+        // TODO: a voir j'update les event (et donc le clavier) une fois par frame :  voir si ok et voir si pas plutot le mettre dans TimeManager
         SDL_PollEvent(&_event);
         
-        // Check to wait for locked fps
-        for (;;) {
-            float elapsedMs = (SDL_GetPerformanceCounter() - _lockedFps) / static_cast<float>(SDL_GetPerformanceFrequency()) * 1000.0f;
-            if (elapsedMs >= 16.667f) {
-                break;
-            }
-        }
-        _lockedFps = SDL_GetPerformanceCounter();
-        
-        // TODO: ce n'est nécessaire que pour synchroniser +- le son quand le frame rate est different de 60fps
-        //TODO: surement mettre ca et le frame lock dans une autre classe qui gere le timing (TimingHardware ?)
-        Uint64 currentTime = SDL_GetPerformanceCounter();
-        //29780.5 = cycles CPU par frame
-        _sync.setSamplerFrequency(29780.5f / ((currentTime - _lastTime) / static_cast<float>(SDL_GetPerformanceFrequency())));
-        _lastTime = currentTime;
-        
-        // Update fps counter
-        ++_fpsFrames;
-        if (_fpsLastTime < (SDL_GetTicks() - 1000.0)) {
-            _fpsLastTime = SDL_GetTicks();
-            _fpsCurrent = _fpsFrames;
-            _fpsFrames = 0;
-            
-            std::cout << "FPS = " << _fpsCurrent << "\n";
-        }
+        // Notify that a frame has been generated
+        _frameListener.notifyFrameGenerated();
     }
     
 private:
@@ -135,13 +116,7 @@ private:
     uint32_t *_palette;
     uint32_t *_pixels;
     
-    uint32_t _fpsLastTime;
-    uint32_t _fpsCurrent;
-    uint32_t _fpsFrames;
-    
-    Uint64 _lockedFps;
-    TSync &_sync;
-    Uint64 _lastTime;
+    TFrameListener &_frameListener;
 };
 
 struct SoundHardware {
@@ -170,6 +145,7 @@ struct SoundHardware {
         
         // Open audio device
         _audioDeviceID = SDL_OpenAudioDevice(nullptr, 0, &_audioSpec, &_audioSpec, /*SDL_AUDIO_ALLOW_FREQUENCY_CHANGE*/0);
+        std::cout << SDL_GetError() << "\n";
         
         // Unpause audio device
         SDL_PauseAudioDevice(_audioDeviceID, SDL_FALSE);
@@ -328,6 +304,59 @@ private:
     uint8_t const *_keyStates;
 };
 
+struct TimeManager {
+    
+    TimeManager(SoundHardware &soundHardware, int maxFps, bool audioContinuousSync) : _soundHardware(soundHardware), _frameDuration(1.0f / maxFps), _audioContinuousSync(audioContinuousSync), _frameCounter(0) {
+        // Start at current time
+        _lastFrameTime = SDL_GetPerformanceCounter();
+        _lastFrameCounterTime = _lastFrameTime;
+    }
+    
+    void notifyFrameGenerated() {
+        // Get performance frequency
+        float performanceFrequency = SDL_GetPerformanceFrequency();
+        
+        // Check to wait for locked fps
+        for (;;) {
+            float elapsedMs = (SDL_GetPerformanceCounter() - _lastFrameTime) / performanceFrequency/* * 1000.0f*/;
+            if (elapsedMs >= _frameDuration) {
+                break;
+            }
+        }
+        
+        // Get current time
+        Uint64 currentTime = SDL_GetPerformanceCounter();
+        
+        // TODO: ce n'est nécessaire que pour synchroniser +- le son quand le frame rate est different de 60fps : ca devra etre une option a activer / desactiver
+        if (_audioContinuousSync) {
+            //29780.5 = cycles CPU par frame // TODO: voir si PAL !
+            _soundHardware.setSamplerFrequency(29780.5f / ((currentTime - _lastFrameTime) / performanceFrequency));
+        }
+        
+        // Update frame counter
+        ++_frameCounter;
+        if (_lastFrameCounterTime < (currentTime - performanceFrequency)) {
+            _lastFrameCounterTime = currentTime;
+            
+            // Show fps
+            std::cout << "FPS = " << _frameCounter << "\n";
+            
+            // Reset counter
+            _frameCounter = 0;
+        }
+        
+        // Save last frame time
+        _lastFrameTime = currentTime;
+    }
+    
+private:
+    SoundHardware &_soundHardware;
+    Uint64 _lastFrameTime;
+    Uint64 _lastFrameCounterTime;
+    float _frameDuration;
+    int _frameCounter;
+    bool _audioContinuousSync;
+};
 
 struct LoopManager {
     
@@ -414,7 +443,8 @@ int main(int argc, const char * argv[]) {
     SDL_Event event;
     
     SoundHardware soundHardware(44100, 2048);
-    GraphicHardware<SoundHardware> graphicHardware(event, soundHardware);
+    TimeManager timeManager(soundHardware, 60, true);
+    GraphicHardware<TimeManager> graphicHardware(event, timeManager);
     ControllerHardware controllerHardware;
     auto controller = std::make_unique<NESEmu::Controller::Standard<ControllerHardware>>(controllerHardware);
     
@@ -504,11 +534,13 @@ int main(int argc, const char * argv[]) {
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/allpads.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, 8kb de chr-ram, Horizontal mirroring
     
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_test/apu_test.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_test/apu_test.nes", std::ios::binary);//TODO: foire sur le dernier test du dmc basic (voir si ok quand dmc dma bien implementé)
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/blargg_apu_2005.07.30/10.len_halt_timing.nes", std::ios::binary);//TODO: foire sur 10 et 11
     
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_2/test_10.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_2/test_10.nes", std::ios::binary);//TODO: 3 fail and pass (reset), 5 6 fail
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_tri_lin_ctr/lin_ctr.nes", std::ios::binary);
+    
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_mixer/triangle.nes", std::ios::binary);//TODO: pas tres bon
     
     // Check that file exists
     assert(ifs.good());
@@ -523,7 +555,7 @@ int main(int argc, const char * argv[]) {
     
     // TODO: comme les mappers sont resolus au compile-time, a chaque mapper ajouté dans le code, il faut l'instantier (dans Factory) et donc il va avoir une duplication de NesImplementation pour chaque mapper, ca va augmenter la taille du code a fond et peut etre foutre la merde dans l'instruction cache ? si ca tombe la version avec virtual dispatch (runtime) sera au final plus rapide car moins de code meme si les appels de methodes sont indirects !!! A TESTER
     
-    using Nes = NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware<SoundHardware>, SoundHardware>;
+    using Nes = NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware<TimeManager>, SoundHardware>;
     
     NESEmu::Cartridge::Factory<Nes::CpuHardwareInterface, Nes::PpuHardwareInterface> cartridgeFactory;
     cartridgeFactory.registerLoader(std::shared_ptr<NESEmu::Cartridge::Loader::Interface>(new NESEmu::Cartridge::Loader::INes()));

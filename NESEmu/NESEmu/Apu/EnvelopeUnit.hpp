@@ -6,8 +6,8 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Apu_Internal_EnvelopeUnit_hpp
-#define NESEmu_Apu_Internal_EnvelopeUnit_hpp
+#ifndef NESEmu_Apu_EnvelopeUnit_hpp
+#define NESEmu_Apu_EnvelopeUnit_hpp
 
 // See https://wiki.nesdev.com/w/index.php/APU_Envelope
 
@@ -44,4 +44,4 @@ namespace NESEmu { namespace Apu {
     
 } }
 
-#endif /* NESEmu_Apu_Internal_EnvelopeUnit_hpp */
+#endif /* NESEmu_Apu_EnvelopeUnit_hpp */

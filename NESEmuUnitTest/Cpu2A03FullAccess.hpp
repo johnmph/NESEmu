@@ -13,12 +13,12 @@
 #include "NESEmu/Cpu.hpp"
 
 
-template <NESEmu::Cpu::Model EModel, class TBus>
-struct Cpu2A03FullAccess : NESEmu::Cpu::Chip<EModel, TBus> {
+template <NESEmu::Cpu::Model EModel, class TBus, class TSoundHardware>
+struct Cpu2A03FullAccess : NESEmu::Cpu::Chip<EModel, TBus, TSoundHardware> {
     
-    using Cpu = NESEmu::Cpu::Chip<EModel, TBus>;
+    using Cpu = NESEmu::Cpu::Chip<EModel, TBus, TSoundHardware>;
     
-    Cpu2A03FullAccess(TBus &bus) : Cpu(bus) {
+    Cpu2A03FullAccess(TBus &bus, TSoundHardware &soundHardware) : Cpu(bus, soundHardware) {
     }
     
     uint16_t getAddressBus() const {
