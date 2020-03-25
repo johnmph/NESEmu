@@ -19,24 +19,24 @@
  */
 
 
-template <class TCpu>
-uint16_t const DmcChannel<TCpu>::_rates[16] = {
+template <class TChip>
+uint16_t const DmcChannel<TChip>::_rates[16] = {
     //428, 380, 340, 320, 286, 254, 226, 214, 190, 160, 142, 128, 106, 84, 72, 54   // TODO: attention, ce sont des cpu cycles et pas des apu cycles, si on clock le dmc par apu cycle il faudra diviser ces valeurs par 2 (et on pourra passer en uint8_t pour _rate et _rates) !!!
     214, 190, 170, 160, 143, 127, 113, 107, 95, 80, 71, 64, 53, 42, 36, 27
 };
 
 
-template <class TCpu>
-DmcChannel<TCpu>::DmcChannel(TCpu &cpu) : _cpu(cpu) {
+template <class TChip>
+DmcChannel<TChip>::DmcChannel(TChip &chip) : _chip(chip) {
 }
 
-template <class TCpu>
-void DmcChannel<TCpu>::powerUp() {//TODO: voir pour les powerUp et reset de chaque channel et unit
+template <class TChip>
+void DmcChannel<TChip>::powerUp() {//TODO: voir pour les powerUp et reset de chaque channel et unit
     _outputLevel = 0;
 }
 
-template <class TCpu>
-void DmcChannel<TCpu>::clock() {
+template <class TChip>
+void DmcChannel<TChip>::clock() {
     // If counter reached 0
     if (_counter == 0) {
         // Reload counter
@@ -91,17 +91,17 @@ void DmcChannel<TCpu>::clock() {
     }
 }
 
-template <class TCpu>
-void DmcChannel<TCpu>::reset() {
+template <class TChip>
+void DmcChannel<TChip>::reset() {
 }
 
-template <class TCpu>
-uint16_t DmcChannel<TCpu>::getSampleRemainingBytesCount() const {
+template <class TChip>
+uint16_t DmcChannel<TChip>::getSampleRemainingBytesCount() const {
     return _sampleRemainingBytes;
 }
 
-template <class TCpu>
-void DmcChannel<TCpu>::setEnabled(bool enabled) {//TODO: a voir
+template <class TChip>
+void DmcChannel<TChip>::setEnabled(bool enabled) {//TODO: a voir
     // Enabled
     if (enabled) {
         // Restart sample if there is no more bytes remaining
@@ -119,23 +119,23 @@ void DmcChannel<TCpu>::setEnabled(bool enabled) {//TODO: a voir
     }
 }
 
-template <class TCpu>
-bool DmcChannel<TCpu>::getInterrupt() const {
+template <class TChip>
+bool DmcChannel<TChip>::getInterrupt() const {
     return _interrupt;
 }
 
-template <class TCpu>
-void DmcChannel<TCpu>::resetInterrupt() {
+template <class TChip>
+void DmcChannel<TChip>::resetInterrupt() {
     _interrupt = false;
 }
 
-template <class TCpu>
-uint8_t DmcChannel<TCpu>::getOutput() const {
+template <class TChip>
+uint8_t DmcChannel<TChip>::getOutput() const {
     return _outputLevel;
 }
 
-template <class TCpu>
-void DmcChannel<TCpu>::setRegister(uint8_t registerNumber, uint8_t data) {
+template <class TChip>
+void DmcChannel<TChip>::setRegister(uint8_t registerNumber, uint8_t data) {
     // IRQ enable, loop, frequency
     if (registerNumber == 0x0) {
         // Get timer from rate index
@@ -166,19 +166,10 @@ void DmcChannel<TCpu>::setRegister(uint8_t registerNumber, uint8_t data) {
     }
 }
 
-template <class TCpu>
-void DmcChannel<TCpu>::loadSample() {
-    // Don't load if buffer not empty of if no remaining bytes
-    if (/*(_sampleBufferFilled) || */(_sampleRemainingBytes == 0)) {//TODO: pas besoin de la condition car l'appel est deja conditionné avec
-        return;
-    }
-    
-    // Read
-    uint16_t address = _cpu.getAddressBus();
-    _cpu.setAddressBus(_currentSampleAddress);  //TODO: pas bon, a changer, juste pour tests, il faut faire comme un dma !
-    _cpu.performRead();
-    _sampleBuffer = _cpu.getDataBus();
-    _cpu.setAddressBus(address);
+template <class TChip>
+void DmcChannel<TChip>::sampleFetched(uint8_t data) {
+    // Set sample buffer
+    _sampleBuffer = data;
     
     // Set sample buffer filled flag
     _sampleBufferFilled = true;
@@ -208,6 +199,17 @@ void DmcChannel<TCpu>::loadSample() {
             _interrupt = true;
         }
     }
+}
+
+template <class TChip>
+void DmcChannel<TChip>::loadSample() {
+    // Don't load if buffer not empty of if no remaining bytes
+    if (/*(_sampleBufferFilled) || */(_sampleRemainingBytes == 0)) {//TODO: pas besoin de la condition car l'appel est deja conditionné avec
+        return;
+    }
+    
+    // Request a sample
+    _chip.requestDmcSample(_currentSampleAddress);
 }
 
 #endif /* NESEmu_Apu_DmcChannel_s_hpp */

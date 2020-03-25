@@ -11,11 +11,12 @@
 
 
 template <class TCpu, class TSoundHardware>
-Chip<TCpu, TSoundHardware>::Chip(TCpu &cpu, TSoundHardware &soundHardware) : _cpu(cpu), _soundHardware(soundHardware), _frameCounter(*this), _pulseChannel{ true, false }, _dmcChannel(cpu) {
+Chip<TCpu, TSoundHardware>::Chip(TCpu &cpu, TSoundHardware &soundHardware) : _cpu(cpu), _soundHardware(soundHardware), _frameCounter(*this), _pulseChannel{ true, false }, _dmcChannel(*this) {
 }
 
 template <class TCpu, class TSoundHardware>
 void Chip<TCpu, TSoundHardware>::powerUp() {
+    // Power up channels
     _pulseChannel[0].powerUp();
     _pulseChannel[1].powerUp();
     _triangleChannel.powerUp();
@@ -58,7 +59,7 @@ void Chip<TCpu, TSoundHardware>::reset(bool high) {//TODO: voir si faire les res
         return;
     }
     
-    // Reset status register
+    // Reset channels
     _pulseChannel[0].reset();
     _pulseChannel[1].reset();
     _triangleChannel.reset();
@@ -126,6 +127,11 @@ void Chip<TCpu, TSoundHardware>::setFrameCounterRegister(uint8_t data) {
 }
 
 template <class TCpu, class TSoundHardware>
+void Chip<TCpu, TSoundHardware>::dmcSampleFetched(uint8_t data) {
+    _dmcChannel.sampleFetched(data);
+}
+
+template <class TCpu, class TSoundHardware>
 float Chip<TCpu, TSoundHardware>::getMixedOutput() const {//TODO: voir si plus optimisé avec les approximations
     // Sum pulse channels (need this in case of division by 0, uint8_t is enough because pulse channels output no more than 15)
     uint8_t pulseSum = _pulseChannel[0].getOutput() + _pulseChannel[1].getOutput();
@@ -165,6 +171,11 @@ void Chip<TCpu, TSoundHardware>::clockFrameCounterHalfFrame() {
     _pulseChannel[1].clockFrameCounterHalfFrame();
     _triangleChannel.clockFrameCounterHalfFrame();
     _noiseChannel.clockFrameCounterHalfFrame();
+}
+
+template <class TCpu, class TSoundHardware>
+void Chip<TCpu, TSoundHardware>::requestDmcSample(uint16_t address) {
+    _cpu.apuRequestDmcSample(address);
 }
 
 template <class TCpu, class TSoundHardware>

@@ -45,10 +45,16 @@ namespace NESEmu { namespace Apu {
         // Frame counter
         void setFrameCounterRegister(uint8_t data);
         
+        // DMC Sample fetched callback
+        void dmcSampleFetched(uint8_t data);
+        
     private:
         
         // Set FrameCounter as friend to keep clockFrameCounterxxx methods private
         friend FrameCounter<Chip>;
+        
+        // Set DmcChannel as friend to keep requestDmcSample method private
+        friend DmcChannel<Chip>;
         
         
         // See https://wiki.nesdev.com/w/index.php/APU_Mixer
@@ -57,6 +63,8 @@ namespace NESEmu { namespace Apu {
         void clockFrameCounterQuarterFrame();
         void clockFrameCounterHalfFrame();
         
+        void requestDmcSample(uint16_t address);
+        
         void checkInterrupt();
         
         
@@ -64,7 +72,7 @@ namespace NESEmu { namespace Apu {
         PulseChannel _pulseChannel[2];
         TriangleChannel _triangleChannel;
         NoiseChannel _noiseChannel;
-        DmcChannel<TCpu> _dmcChannel;
+        DmcChannel<Chip> _dmcChannel;
         
         // Frame counter
         FrameCounter<Chip> _frameCounter;

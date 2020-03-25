@@ -378,4 +378,13 @@ void Chip<EModel, TBus, TSoundHardware>::apuIrq(bool high) {
     InternalCpu::irq(_irqLine && _apuIrqLine);
 }
 
+template <Model EModel, class TBus, class TSoundHardware>
+void Chip<EModel, TBus, TSoundHardware>::apuRequestDmcSample(uint16_t address) {
+    uint16_t currentAddress = getAddressBus();
+    setAddressBus(address);  //TODO: pas bon, a changer, juste pour tests, il faut faire comme un dma !
+    performRead();
+    setAddressBus(currentAddress);
+    _apu.dmcSampleFetched(getDataBus());
+}
+
 #endif /* NESEmu_Cpu_s_hpp */

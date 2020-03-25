@@ -318,8 +318,9 @@ struct TimeManager {
         
         // Check to wait for locked fps
         for (;;) {
-            float elapsedMs = (SDL_GetPerformanceCounter() - _lastFrameTime) / performanceFrequency/* * 1000.0f*/;
-            if (elapsedMs >= _frameDuration) {
+            float elapsedSeconds = (SDL_GetPerformanceCounter() - _lastFrameTime) / performanceFrequency;
+            
+            if (elapsedSeconds >= _frameDuration) {
                 break;
             }
         }

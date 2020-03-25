@@ -16,10 +16,10 @@
 
 namespace NESEmu { namespace Apu {
     
-    template <class TCpu>
+    template <class TChip>
     struct DmcChannel {
         
-        DmcChannel(TCpu &cpu);
+        DmcChannel(TChip &chip);
         
         void powerUp();
         
@@ -39,13 +39,16 @@ namespace NESEmu { namespace Apu {
         // Register
         void setRegister(uint8_t registerNumber, uint8_t data);
         
+        // Sample fetched callback
+        void sampleFetched(uint8_t data);
+        
     private:
         
         static uint16_t const _rates[16];//TODO: ca depend de NTSC/PAL !!!
         
         void loadSample();
         
-        TCpu &_cpu;
+        TChip &_chip;
         uint8_t _shiftRegister;
         uint8_t _shiftRegisterRemainingBitsCounter;
         bool _silenceFlag;

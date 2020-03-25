@@ -65,7 +65,7 @@ namespace NESEmu { namespace Cpu {
         // Set Cpu as friend to keep data bus methods private
         friend InternalCpu;
         
-        // Set Apu as friend to keep apuIrq method private
+        // Set Apu as friend to keep apuIrq and apuRequestDmcSample methods private
         friend Apu::Chip<Chip, TSoundHardware>;
         
         
@@ -86,8 +86,9 @@ namespace NESEmu { namespace Cpu {
         void startDma(uint8_t address);
         void stopDma();
         
-        // APU IRQ
+        // APU
         void apuIrq(bool high);
+        void apuRequestDmcSample(uint16_t address);
         
         // Internal
         Apu::Chip<Chip, TSoundHardware> _apu;
