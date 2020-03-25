@@ -101,6 +101,8 @@
 		4D6FDB492427F638001B27DD /* TriangleChannel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TriangleChannel.cpp; sourceTree = "<group>"; };
 		4D6FDB4C2427F6BB001B27DD /* NoiseChannel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NoiseChannel.cpp; sourceTree = "<group>"; };
 		4D6FDB4F2427F721001B27DD /* DmcChannel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = DmcChannel.cpp; sourceTree = "<group>"; };
+		4D6FDB52242A80E3001B27DD /* Zapper.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Zapper.hpp; sourceTree = "<group>"; };
+		4D6FDB53242A815D001B27DD /* Zapper_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Zapper_s.hpp; sourceTree = "<group>"; };
 		4D7047492401FDC8005A56B1 /* Standard.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Standard.hpp; sourceTree = "<group>"; };
 		4D70474B2402A2BF005A56B1 /* Standard_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Standard_s.hpp; sourceTree = "<group>"; };
 		4D70474C2402FA9D005A56B1 /* Nothing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Nothing.hpp; sourceTree = "<group>"; };
@@ -295,6 +297,8 @@
 				4D70474D2402FAF1005A56B1 /* Nothing.cpp */,
 				4D7047492401FDC8005A56B1 /* Standard.hpp */,
 				4D70474B2402A2BF005A56B1 /* Standard_s.hpp */,
+				4D6FDB52242A80E3001B27DD /* Zapper.hpp */,
+				4D6FDB53242A815D001B27DD /* Zapper_s.hpp */,
 			);
 			path = Controller;
 			sourceTree = "<group>";

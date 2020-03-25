@@ -32,6 +32,8 @@ namespace NESEmu { namespace Apu {
         
     private:
         
+        static constexpr uint8_t decayCounterReloadValue = 15;
+        
         uint8_t _dividerPeriodOrConstantVolume;
         uint8_t _counter;
         uint8_t _decayCounter;

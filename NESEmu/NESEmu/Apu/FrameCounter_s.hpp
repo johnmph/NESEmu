@@ -74,13 +74,13 @@ void FrameCounter<TChip>::setSequence5StepMode(bool sequence5StepMode) {
 template <class TChip>
 void FrameCounter<TChip>::requestReset() {
     _needToReset = true;
-    _resetDelay = (_counter & 0x1) ? 4 : 3;
+    _resetDelay = resetDelayCycle + (_counter & 0x1);
 }
 
 template <class TChip>
 void FrameCounter<TChip>::clock4StepSequence() {
     // Check if last step reached
-    if (_counter == 29830) {//TODO: mettre les valeurs dans des constantes
+    if (_counter == sequence4StepClocks[0]) {
         // Set interrupt if not disabled
         _interrupt = !_disableInterrupt;
         
@@ -88,25 +88,25 @@ void FrameCounter<TChip>::clock4StepSequence() {
         _counter = 0;
     }
     // Step 1
-    else if (_counter == 7457) {
+    else if (_counter == sequence4StepClocks[1]) {
         clockQuarterFrame();
     }
     // Step 2
-    else if (_counter == 14913) {
+    else if (_counter == sequence4StepClocks[2]) {
         clockQuarterFrame();
         clockHalfFrame();
     }
     // Step 3
-    else if (_counter == 22371) {
+    else if (_counter == sequence4StepClocks[3]) {
         clockQuarterFrame();
     }
     // Step 4 (first cycle for interrupt)
-    else if (_counter == 29828) {
+    else if (_counter == sequence4StepClocks[4]) {
         // Set interrupt if not disabled
         _interrupt = !_disableInterrupt;
     }
     // Step 4
-    else if (_counter == 29829) {
+    else if (_counter == sequence4StepClocks[5]) {
         // Set interrupt if not disabled
         _interrupt = !_disableInterrupt;
         
@@ -118,26 +118,26 @@ void FrameCounter<TChip>::clock4StepSequence() {
 template <class TChip>
 void FrameCounter<TChip>::clock5StepSequence() {
     // Check if last step reached
-    if (_counter == 37282) {//TODO: mettre les valeurs dans des constantes
+    if (_counter == sequence5StepClocks[0]) {
         // Reset counter
         _counter = 0;
     }
     // Step 1
-    else if (_counter == 7457) {
+    else if (_counter == sequence5StepClocks[1]) {
         clockQuarterFrame();
     }
     // Step 2
-    else if (_counter == 14913) {
+    else if (_counter == sequence5StepClocks[2]) {
         clockQuarterFrame();
         clockHalfFrame();
     }
     // Step 3
-    else if (_counter == 22371) {
+    else if (_counter == sequence5StepClocks[3]) {
         clockQuarterFrame();
     }
     // Nothing happen on step 4
     // Step 5
-    else if (_counter == 37281) {
+    else if (_counter == sequence5StepClocks[4]) {
         clockQuarterFrame();
         clockHalfFrame();
     }

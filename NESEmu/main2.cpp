@@ -18,9 +18,10 @@
 #include "NESEmu/Controller/Standard.hpp"
 
 
+template <class TSync>
 struct GraphicHardware {
     
-    GraphicHardware(SDL_Event &event) : _event(event) {
+    GraphicHardware(SDL_Event &event, TSync &sync) : _event(event), _sync(sync) {
         //SDL_Init(SDL_INIT_VIDEO);
         SDL_InitSubSystem(SDL_INIT_VIDEO);
         std::cout << SDL_GetError() << "\n";
@@ -50,6 +51,8 @@ struct GraphicHardware {
         
         _fpsLastTime = SDL_GetTicks();
         _fpsFrames = 0;
+        
+        _lastTime = SDL_GetPerformanceCounter();
     }
     
     ~GraphicHardware() {
@@ -93,6 +96,7 @@ struct GraphicHardware {
         SDL_RenderClear(_renderer);
         SDL_RenderCopy(_renderer, _texture, NULL, NULL);
         SDL_RenderPresent(_renderer);
+        
         SDL_PollEvent(&_event);
         
         // Check to wait for locked fps
@@ -103,6 +107,13 @@ struct GraphicHardware {
             }
         }
         _lockedFps = SDL_GetPerformanceCounter();
+        
+        // TODO: ce n'est nécessaire que pour synchroniser +- le son quand le frame rate est different de 60fps
+        //TODO: surement mettre ca et le frame lock dans une autre classe qui gere le timing (TimingHardware ?)
+        Uint64 currentTime = SDL_GetPerformanceCounter();
+        //29780.5 = cycles CPU par frame
+        _sync.setSamplerFrequency(29780.5f / ((currentTime - _lastTime) / static_cast<float>(SDL_GetPerformanceFrequency())));
+        _lastTime = currentTime;
         
         // Update fps counter
         ++_fpsFrames;
@@ -129,6 +140,8 @@ private:
     uint32_t _fpsFrames;
     
     Uint64 _lockedFps;
+    TSync &_sync;
+    Uint64 _lastTime;
 };
 
 struct SoundHardware {
@@ -221,7 +234,7 @@ struct SoundHardware {
         */
         
         // Add sample
-        _buffer[_currentBufferWriteIndex] = /*(255 * value);/*/value - 0.5f;// TODO: aussi essayer avec uint8_t !!!
+        _buffer[_currentBufferWriteIndex] = value - 0.5f;// TODO: aussi essayer avec uint8_t !!!
         
         // Update write index
         ++_currentBufferWriteIndex;
@@ -232,15 +245,11 @@ struct SoundHardware {
         
         // Unlock audio device
         SDL_UnlockAudioDevice(_audioDeviceID);
-        
-        /*value -= 0.5f;
-         SDL_QueueAudio(_audioDeviceID, &value, 4);*/
     }
     
 private:
     
     void fillBuffer(Uint8 *stream, int len) {
-        // Method 1 : avec memcpy
         // Get size
         std::size_t size = len;
         
@@ -270,7 +279,7 @@ private:
     
     SDL_AudioSpec _audioSpec;
     SDL_AudioDeviceID _audioDeviceID;
-    std::vector<float/*uint8_t*/> _buffer;
+    std::vector<float> _buffer;
     std::size_t _currentBufferWriteIndex;
     std::size_t _currentBufferReadIndex;
     float _counter;
@@ -404,8 +413,8 @@ int main(int argc, const char * argv[]) {
     
     SDL_Event event;
     
-    GraphicHardware graphicHardware(event);
     SoundHardware soundHardware(44100, 2048);
+    GraphicHardware<SoundHardware> graphicHardware(event, soundHardware);
     ControllerHardware controllerHardware;
     auto controller = std::make_unique<NESEmu::Controller::Standard<ControllerHardware>>(controllerHardware);
     
@@ -415,11 +424,11 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Ms. Pac-Man (Tengen).nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/DK.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/Castlevania.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
-    std::ifstream ifs("../UnitTestFiles/Duck Tales.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
+    //std::ifstream ifs("../UnitTestFiles/Duck Tales.nes", std::ios::binary);  // Mapper2, 128kb de prg-rom, vertical mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Battletoads.nes", std::ios::binary);  // Mapper7, 256kb de prg-rom, single screen mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Paperboy.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/Huge Insect.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, vertical mirroring
-    //std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
+    std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/SMB2.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Young Indiana Jones Chronicles.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Adventures of Lolo 2.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 32kb de chr-rom
@@ -441,6 +450,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Mega Man.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/R.C. Pro-Am.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Teenage Mutant Ninja Turtles.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Wild Gunman.nes", std::ios::binary);
 
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/nestest.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/1.Branch_Basics.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
@@ -513,7 +523,7 @@ int main(int argc, const char * argv[]) {
     
     // TODO: comme les mappers sont resolus au compile-time, a chaque mapper ajouté dans le code, il faut l'instantier (dans Factory) et donc il va avoir une duplication de NesImplementation pour chaque mapper, ca va augmenter la taille du code a fond et peut etre foutre la merde dans l'instruction cache ? si ca tombe la version avec virtual dispatch (runtime) sera au final plus rapide car moins de code meme si les appels de methodes sont indirects !!! A TESTER
     
-    using Nes = NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware, SoundHardware>;
+    using Nes = NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware<SoundHardware>, SoundHardware>;
     
     NESEmu::Cartridge::Factory<Nes::CpuHardwareInterface, Nes::PpuHardwareInterface> cartridgeFactory;
     cartridgeFactory.registerLoader(std::shared_ptr<NESEmu::Cartridge::Loader::Interface>(new NESEmu::Cartridge::Loader::INes()));

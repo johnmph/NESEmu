@@ -19,15 +19,44 @@ namespace NESEmu { namespace Apu {
     struct DmcChannel {
         
         void powerUp();
-        void reset();
         
         void clock();
+        
+        void reset();
+        
+        // Properties
+        uint16_t getSampleRemainingBytesCount() const;
+        void setEnabled(bool enabled);
+        bool getInterrupt() const;
+        void resetInterrupt();
         
         // Output
         uint8_t getOutput() const;
         
         // Register
         void setRegister(uint8_t registerNumber, uint8_t data);
+        
+    private:
+        
+        static uint16_t const _rates[16];//TODO: ca depend de NTSC/PAL !!!
+        
+        void loadSample();
+        
+        uint8_t _shiftRegister;
+        uint8_t _shiftRegisterRemainingBitsCounter;
+        bool _silenceFlag;
+        uint16_t _counter;
+        uint16_t _timer;
+        uint8_t _outputLevel;
+        uint16_t _sampleAddress;
+        uint16_t _sampleLength;
+        uint16_t _currentSampleAddress;
+        uint16_t _sampleRemainingBytes;
+        uint8_t _sampleBuffer;
+        bool _sampleBufferFilled;
+        bool _loopFlag;
+        bool _interrupt;
+        bool _enableInterrupt;
         
     };
     

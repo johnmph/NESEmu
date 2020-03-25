@@ -37,6 +37,9 @@ namespace NESEmu { namespace Apu {
         
     private:
         
+        static constexpr uint16_t targetPeriodOverflow = 0x800;
+        static constexpr uint8_t channelMinimumPeriod = 8;
+        
         uint16_t &_channelPeriod;
         uint8_t _counter;
         uint8_t _period;

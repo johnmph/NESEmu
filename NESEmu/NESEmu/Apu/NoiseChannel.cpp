@@ -24,12 +24,9 @@ namespace NESEmu { namespace Apu {
         4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068
     };
     
+    
     void NoiseChannel::powerUp() {
         _shiftRegister = 0x1;
-    }
-    
-    void NoiseChannel::reset() {
-        _lengthCounter.setEnabled(false);
     }
     
     void NoiseChannel::clock() {
@@ -47,6 +44,10 @@ namespace NESEmu { namespace Apu {
         
         // Decrement counter
         --_counter;
+    }
+    
+    void NoiseChannel::reset() {
+        _lengthCounter.setEnabled(false);
     }
     
     void NoiseChannel::clockFrameCounterQuarterFrame() {

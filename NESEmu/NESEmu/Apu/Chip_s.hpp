@@ -24,22 +24,6 @@ void Chip<TInterruptHardware, TSoundHardware>::powerUp() {
 }
 
 template <class TInterruptHardware, class TSoundHardware>
-void Chip<TInterruptHardware, TSoundHardware>::reset(bool high) {
-    // If line high, exit
-    if (high == true) {
-        return;
-    }
-    
-    // Reset status register
-    _pulseChannel[0].reset();
-    _pulseChannel[1].reset();
-    _triangleChannel.reset();
-    _noiseChannel.reset();
-    _dmcChannel.reset();
-    _statusEnableDmc = false;
-}
-
-template <class TInterruptHardware, class TSoundHardware>
 void Chip<TInterruptHardware, TSoundHardware>::clock() {
     // Clock pulse, noise and DMC channels on APU cycle
     if (_oddCycle) {
@@ -68,6 +52,21 @@ void Chip<TInterruptHardware, TSoundHardware>::clock() {
 }
 
 template <class TInterruptHardware, class TSoundHardware>
+void Chip<TInterruptHardware, TSoundHardware>::reset(bool high) {//TODO: voir si faire les resets sur les channels tant que le reset est low
+    // If line high, exit
+    if (high == true) {
+        return;
+    }
+    
+    // Reset status register
+    _pulseChannel[0].reset();
+    _pulseChannel[1].reset();
+    _triangleChannel.reset();
+    _noiseChannel.reset();
+    _dmcChannel.reset();
+}
+
+template <class TInterruptHardware, class TSoundHardware>
 void Chip<TInterruptHardware, TSoundHardware>::setChannelRegister(uint16_t address, uint8_t data) {
     // Pulse registers
     if (address < 0x4008) {
@@ -89,13 +88,13 @@ void Chip<TInterruptHardware, TSoundHardware>::setChannelRegister(uint16_t addre
 
 template <class TInterruptHardware, class TSoundHardware>
 uint8_t Chip<TInterruptHardware, TSoundHardware>::getStatusRegister() {
-    uint8_t data = (false << 7) |
+    uint8_t data = (_dmcChannel.getInterrupt() << 7) |
                    (_frameCounter.getInterrupt() << 6) |
-                   (false << 4) |
+                   ((_dmcChannel.getSampleRemainingBytesCount() > 0) << 4) |
                    (_noiseChannel.getLengthCounterOutput() << 3) |
                    (_triangleChannel.getLengthCounterOutput() << 2) |
                    (_pulseChannel[1].getLengthCounterOutput() << 1) |
-                   _pulseChannel[0].getLengthCounterOutput();//TODO : continuer (DMC)
+                   _pulseChannel[0].getLengthCounterOutput();
     
     // Reset frame counter interrupt
     _frameCounter.resetInterrupt();
@@ -112,9 +111,10 @@ void Chip<TInterruptHardware, TSoundHardware>::setStatusRegister(uint8_t data) {
     _pulseChannel[1].setLengthCounterEnabled((data & 0x2) != 0);
     _triangleChannel.setLengthCounterEnabled((data & 0x4) != 0);
     _noiseChannel.setLengthCounterEnabled((data & 0x8) != 0);
-    _statusEnableDmc = data & 0x10;
+    _dmcChannel.setEnabled((data & 0x10) != 0);
     
-    // TODO: reseter le dmc interrupt flag + continuer le reste
+    // Reset Dmc interrupt flag
+    _dmcChannel.resetInterrupt();
 }
 
 template <class TInterruptHardware, class TSoundHardware>
@@ -134,13 +134,13 @@ float Chip<TInterruptHardware, TSoundHardware>::getMixedOutput() const {//TODO: 
     float pulseOut = (pulseSum > 0) ? (95.88f / ((8128.0f / pulseSum) + 100.0f)) : 0;
     
     // Sum other channels (need this in case of division by 0)
-    float triangleNoiseDmcMixedSum = (_triangleChannel.getOutput() / 8227.0f);// + (_noiseChannel.getOutput() / 12241.0f) + (_dmcChannel.getOutput() / 22638.0f);
+    float triangleNoiseDmcMixedSum = (_triangleChannel.getOutput() / 8227.0f) + (_noiseChannel.getOutput() / 12241.0f) + (_dmcChannel.getOutput() / 22638.0f);
     
     // Get triangle, noise and DMC mixed output
     float triangleNoiseDmcOut = (triangleNoiseDmcMixedSum > 0) ? (159.79f / ((1.0f / triangleNoiseDmcMixedSum) + 100.0f)) : 0;
     
     // Get mixed output
-    return /*pulseOut + */triangleNoiseDmcOut;
+    return pulseOut + triangleNoiseDmcOut;
     /*
      float pulseOut = 0.00752f * (_pulseChannel[0].getOutput() + _pulseChannel[1].getOutput());      // TODO: version avec approximation
     
@@ -169,7 +169,7 @@ void Chip<TInterruptHardware, TSoundHardware>::clockFrameCounterHalfFrame() {
 
 template <class TInterruptHardware, class TSoundHardware>
 void Chip<TInterruptHardware, TSoundHardware>::checkInterrupt() {
-    _interruptHardware.apuIrq(!_frameCounter.getInterrupt());
+    _interruptHardware.apuIrq(!(_frameCounter.getInterrupt() || _dmcChannel.getInterrupt()));
 }
 
 #endif /* NESEmu_Apu_Chip_s_hpp */

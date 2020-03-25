@@ -34,6 +34,10 @@ namespace NESEmu { namespace Apu {
         
     private:
         
+        static constexpr uint16_t sequence4StepClocks[] = { 29830, 7457, 14913, 22371, 29828, 29829 };
+        static constexpr uint16_t sequence5StepClocks[] = { 37282, 7457, 14913, 22371, 37281 };
+        static constexpr uint8_t resetDelayCycle = 3;
+        
         void clock4StepSequence();
         void clock5StepSequence();
         

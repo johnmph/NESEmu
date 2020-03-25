@@ -18,13 +18,9 @@
  */
 
 
-namespace NESEmu { namespace Apu {//TODO: beaucoup de pop et de son high frequency !!! a voir : les high frequency peuvent etre supprimées en ne clockant pas le counter si timer < 2 mais je n'arrive pas a enlever les pops !!!
+namespace NESEmu { namespace Apu {
     
     void TriangleChannel::powerUp() {
-    }
-    
-    void TriangleChannel::reset() {
-        _lengthCounter.setEnabled(false);
     }
     
     void TriangleChannel::clock() {
@@ -35,7 +31,7 @@ namespace NESEmu { namespace Apu {//TODO: beaucoup de pop et de son high frequen
             
             // Sequencer is clocked if both linear and length counter are non zero
             if ((_linearCounter > 0) && _lengthCounter.getOutput()) {
-                _sequencerCurrentStep = (_sequencerCurrentStep + 1) & 0x1F;
+                _sequencerCurrentStep = (_sequencerCurrentStep + 1) & sequencerStepsMask;
             }
             
             return;
@@ -43,6 +39,10 @@ namespace NESEmu { namespace Apu {//TODO: beaucoup de pop et de son high frequen
         
         // Decrement counter
         --_counter;
+    }
+    
+    void TriangleChannel::reset() {
+        _lengthCounter.setEnabled(false);
     }
     
     void TriangleChannel::clockFrameCounterQuarterFrame() {

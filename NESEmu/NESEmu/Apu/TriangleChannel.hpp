@@ -19,9 +19,10 @@ namespace NESEmu { namespace Apu {
     struct TriangleChannel {
         
         void powerUp();
-        void reset();
         
         void clock();
+        
+        void reset();
         
         void clockFrameCounterQuarterFrame();
         void clockFrameCounterHalfFrame();
@@ -36,6 +37,8 @@ namespace NESEmu { namespace Apu {
         void setLengthCounterEnabled(bool enabled);
         
     private:
+        
+        static constexpr uint8_t sequencerStepsMask = 0x1F;
         
         LengthCounter _lengthCounter;
         uint16_t _timer;

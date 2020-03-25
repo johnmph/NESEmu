@@ -47,8 +47,8 @@ namespace NESEmu { namespace Apu {
     }
     
     bool SweepUnit::getOutput() const {
-        // Output only if not overflow (11 bits timer) and channel period is not less than 8
-        return (getTargetPeriod() < 0x800) && (_channelPeriod > 7);
+        // Output only if not overflow (11 bits timer) and channel period is not less than the minimum period
+        return (getTargetPeriod() < targetPeriodOverflow) && (_channelPeriod >= channelMinimumPeriod);
     }
     
     void SweepUnit::setPeriod(uint8_t period) {

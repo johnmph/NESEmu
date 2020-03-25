@@ -20,9 +20,10 @@ namespace NESEmu { namespace Apu {
     struct NoiseChannel {
         
         void powerUp();
-        void reset();
         
         void clock();
+        
+        void reset();
         
         void clockFrameCounterQuarterFrame();
         void clockFrameCounterHalfFrame();

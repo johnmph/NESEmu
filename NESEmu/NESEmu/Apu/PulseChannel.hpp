@@ -23,9 +23,10 @@ namespace NESEmu { namespace Apu {
         PulseChannel(bool sweepOneComplementMode);
         
         void powerUp();
-        void reset();
         
         void clock();
+        
+        void reset();
         
         void clockFrameCounterQuarterFrame();
         void clockFrameCounterHalfFrame();
@@ -41,6 +42,7 @@ namespace NESEmu { namespace Apu {
         
     private:
         
+        static constexpr uint8_t sequencerStepsMask = 0x7;
         static uint8_t const _dutyWaveforms[4];
         
         EnvelopeUnit _envelopeUnit;

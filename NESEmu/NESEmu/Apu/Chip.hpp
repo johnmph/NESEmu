@@ -21,7 +21,7 @@
 
 namespace NESEmu { namespace Apu {
     
-    template <class TInterruptHardware, class TSoundHardware>
+    template <class TInterruptHardware, class TSoundHardware>//TODO: surement renommer TInterruptHardware en TCpu car il va aussi utiliser le cpu pour faire du dmc dma
     struct Chip {
         
         Chip(TInterruptHardware &interruptHardware, TSoundHardware &soundHardware);
@@ -29,11 +29,11 @@ namespace NESEmu { namespace Apu {
         // Power up
         void powerUp();
         
-        // Reset
-        void reset(bool high);
-        
         // Clock
         void clock();
+        
+        // Reset
+        void reset(bool high);
         
         // Channels
         void setChannelRegister(uint16_t address, uint8_t data);
@@ -65,9 +65,6 @@ namespace NESEmu { namespace Apu {
         TriangleChannel _triangleChannel;
         NoiseChannel _noiseChannel;
         DmcChannel _dmcChannel;
-        
-        // Status
-        bool _statusEnableDmc;//TODO: a voir
         
         // Frame counter
         FrameCounter<Chip> _frameCounter;

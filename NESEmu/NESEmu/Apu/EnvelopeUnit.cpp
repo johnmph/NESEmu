@@ -18,7 +18,7 @@ namespace NESEmu { namespace Apu {
             _startFlag = false;
             
             // Reset decay counter
-            _decayCounter = 15;
+            _decayCounter = decayCounterReloadValue;
             
             // Reload counter
             _counter = _dividerPeriodOrConstantVolume;
@@ -48,7 +48,7 @@ namespace NESEmu { namespace Apu {
         
         // If loop, reload decay counter
         if (_loopMode) {
-            _decayCounter = 15;
+            _decayCounter = decayCounterReloadValue;
         }
     }
     

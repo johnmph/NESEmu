@@ -38,10 +38,6 @@ namespace NESEmu { namespace Apu {
     void PulseChannel::powerUp() {
     }
     
-    void PulseChannel::reset() {
-        _lengthCounter.setEnabled(false);
-    }
-    
     void PulseChannel::clock() {
         // If counter reached 0
         if (_counter == 0) {
@@ -49,13 +45,17 @@ namespace NESEmu { namespace Apu {
             _counter = _timer;
             
             // Increment sequencer current step
-            _sequencerCurrentStep = (_sequencerCurrentStep + 1) & 0x7;
+            _sequencerCurrentStep = (_sequencerCurrentStep + 1) & sequencerStepsMask;
             
             return;
         }
         
         // Decrement counter
         --_counter;
+    }
+    
+    void PulseChannel::reset() {
+        _lengthCounter.setEnabled(false);
     }
     
     void PulseChannel::clockFrameCounterQuarterFrame() {
