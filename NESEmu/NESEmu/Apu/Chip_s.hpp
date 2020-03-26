@@ -31,11 +31,11 @@ void Chip<TCpu, TSoundHardware>::clock() {
         _pulseChannel[0].clock();
         _pulseChannel[1].clock();
         _noiseChannel.clock();
-        _dmcChannel.clock();
     }
     
-    // Clock triangle channel on CPU cycle
+    // Clock triangle and DMC channel on CPU cycle
     _triangleChannel.clock();
+    _dmcChannel.clock();
     
     // Clock frame counter
     _frameCounter.clock();

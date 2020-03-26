@@ -21,8 +21,7 @@
 
 template <class TChip>
 uint16_t const DmcChannel<TChip>::_rates[16] = {
-    //428, 380, 340, 320, 286, 254, 226, 214, 190, 160, 142, 128, 106, 84, 72, 54   // TODO: attention, ce sont des cpu cycles et pas des apu cycles, si on clock le dmc par apu cycle il faudra diviser ces valeurs par 2 (et on pourra passer en uint8_t pour _rate et _rates) !!!
-    214, 190, 170, 160, 143, 127, 113, 107, 95, 80, 71, 64, 53, 42, 36, 27
+    428, 380, 340, 320, 286, 254, 226, 214, 190, 160, 142, 128, 106, 84, 72, 54
 };
 
 
@@ -37,6 +36,9 @@ void DmcChannel<TChip>::powerUp() {//TODO: voir pour les powerUp et reset de cha
 
 template <class TChip>
 void DmcChannel<TChip>::clock() {
+    // Decrement counter
+    --_counter;
+    
     // If counter reached 0
     if (_counter == 0) {
         // Reload counter
@@ -79,9 +81,6 @@ void DmcChannel<TChip>::clock() {
                 _silenceFlag = true;
             }
         }
-    } else {
-        // Decrement counter
-        --_counter;
     }
     
     // If sample buffer empty

@@ -94,12 +94,16 @@ namespace NESEmu { namespace Cpu {
         Apu::Chip<Chip, TSoundHardware> _apu;
         TBus &_bus;
         
-        bool _dmaStarted;
         int _dmaCount;
         uint8_t _dmaAddress;
+        bool _dmaStarted;
         bool _dmaToggle;
         
         uint8_t _outLatch;
+        
+        int _dmcCount;
+        uint16_t _dmcSampleAddress;
+        bool _dmcStarted;
         
         bool _irqLine;
         bool _apuIrqLine;

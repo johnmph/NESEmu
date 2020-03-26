@@ -288,6 +288,33 @@ void Chip<EModel, TBus, TSoundHardware>::performWrite() {
 
 template <Model EModel, class TBus, class TSoundHardware>
 bool Chip<EModel, TBus, TSoundHardware>::checkDmaPhi1() {
+    // If DMC started
+    if (_dmcStarted) {
+        // Decrement DMC counter
+        --_dmcCount;
+        
+        if (_dmcCount == 1) {
+            _bus.setAddressBus(_dmcSampleAddress);
+            this->_readWrite = Cpu6502::ReadWrite::Read;
+        }
+        else if (_dmcCount == 0) {
+            // Notify APU that sample is fetched
+            _apu.dmcSampleFetched(_bus.getDataBus());
+            
+            // Restore CPU state
+            _bus.setAddressBus((this->_addressBusHigh << 8) | this->_addressBusLow);
+            
+            // Reenable CPU if necessary
+            if (!_dmaStarted) {
+                InternalCpu::ready(true);
+            }
+            
+            _dmcStarted = false;
+        }
+        
+        return false;
+    }
+    
     // Don't execute DMA if not asked
     if (!_dmaStarted) {
         return false;
@@ -380,6 +407,22 @@ void Chip<EModel, TBus, TSoundHardware>::apuIrq(bool high) {
 
 template <Model EModel, class TBus, class TSoundHardware>
 void Chip<EModel, TBus, TSoundHardware>::apuRequestDmcSample(uint16_t address) {
+    /*if (_dmcStarted) {
+        return;
+    }
+    // Save address
+    _dmcSampleAddress = address;
+    
+    // 4 cycles delay
+    _dmcCount = (_dmaStarted) ? 2 : 4;
+    
+    // Set DMC flag
+    _dmcStarted = true;
+    
+    // Disable CPU
+    InternalCpu::ready(false);
+    */
+    
     uint16_t currentAddress = getAddressBus();
     setAddressBus(address);  //TODO: pas bon, a changer, juste pour tests, il faut faire comme un dma !
     performRead();
