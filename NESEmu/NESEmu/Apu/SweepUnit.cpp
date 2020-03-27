@@ -16,7 +16,7 @@ namespace NESEmu { namespace Apu {
     
     void SweepUnit::clock() {
         // Update channel period if allowed
-        if ((_counter == 0) && _enabled && getOutput()) {
+        if ((_counter == 0) && _enabled && (_shiftCount > 0) && getOutput()) {//TODO: j'ai rajouté le test shiftCount > 0
             _channelPeriod = getTargetPeriod();
         }
         

@@ -160,7 +160,7 @@ void DmcChannel<TChip>::setRegister(uint8_t registerNumber, uint8_t data) {
         _sampleAddress = 0xC000 + (data << 6);
     }
     // Sample length
-    else if (registerNumber == 0x3) {
+    else {
         _sampleLength = (data << 4) | 0x1;
     }
 }

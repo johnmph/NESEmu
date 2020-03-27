@@ -80,7 +80,6 @@ namespace NESEmu { namespace Apu {
         // Internals
         TCpu &_cpu;
         TSoundHardware &_soundHardware;
-        bool _oddCycle;
         
     };
     

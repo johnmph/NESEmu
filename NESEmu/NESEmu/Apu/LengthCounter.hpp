@@ -20,6 +20,9 @@ namespace NESEmu { namespace Apu {
         
         void clock();
         
+        // Update
+        void update();
+        
         // Output
         bool getOutput() const;
         
@@ -35,6 +38,8 @@ namespace NESEmu { namespace Apu {
         uint8_t _counter;
         bool _enabled;
         bool _halt;
+        bool _requestHalt;
+        uint8_t _reloadValue;
     };
     
 } }

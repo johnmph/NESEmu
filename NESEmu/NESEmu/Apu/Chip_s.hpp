@@ -26,22 +26,15 @@ void Chip<TCpu, TSoundHardware>::powerUp() {
 
 template <class TCpu, class TSoundHardware>
 void Chip<TCpu, TSoundHardware>::clock() {
-    // Clock pulse, noise and DMC channels on APU cycle
-    if (_oddCycle) {
-        _pulseChannel[0].clock();
-        _pulseChannel[1].clock();
-        _noiseChannel.clock();
-    }
-    
-    // Clock triangle and DMC channel on CPU cycle
-    _triangleChannel.clock();
-    _dmcChannel.clock();
-    
     // Clock frame counter
-    _frameCounter.clock();
+    _frameCounter.clock();//TODO: je l'ai mis avant les channels, a voir
     
-    // Toggle flag
-    _oddCycle = !_oddCycle;
+    // Clock channels
+    _pulseChannel[0].clock();
+    _pulseChannel[1].clock();
+    _triangleChannel.clock();
+    _noiseChannel.clock();
+    _dmcChannel.clock();
     
     // Check interrupt
     checkInterrupt();
@@ -147,8 +140,8 @@ float Chip<TCpu, TSoundHardware>::getMixedOutput() const {//TODO: voir si plus o
     
     // Get mixed output
     return pulseOut + triangleNoiseDmcOut;
-    /*
-     float pulseOut = 0.00752f * (_pulseChannel[0].getOutput() + _pulseChannel[1].getOutput());      // TODO: version avec approximation
+    
+    /*float pulseOut = 0.00752f * (_pulseChannel[0].getOutput() + _pulseChannel[1].getOutput());      // TODO: version avec approximation
     
     float triangleNoiseDmcOut = (0.00851f * _triangleChannel.getOutput()) + (0.00494f * _noiseChannel.getOutput()) + (0.00335f * _dmcChannel.getOutput());
     

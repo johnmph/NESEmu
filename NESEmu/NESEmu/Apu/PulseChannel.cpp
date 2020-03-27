@@ -32,6 +32,7 @@ namespace NESEmu { namespace Apu {
         0b11111001      // 75%
     };
     
+    
     PulseChannel::PulseChannel(bool sweepOneComplementMode) : _sweepUnit(sweepOneComplementMode, _timer) {
     }
     
@@ -39,10 +40,13 @@ namespace NESEmu { namespace Apu {
     }
     
     void PulseChannel::clock() {
+        // Update length counter
+        _lengthCounter.update();
+        
         // If counter reached 0
         if (_counter == 0) {
-            // Reload counter
-            _counter = _timer;
+            // Reload counter (need to multiply timer by 2 because we clock at CPU rate and not APU rate (for the length counter) and add 1 because the period is timer + 1 but the counter is decremented after checking it and not before, this is why we add 1 and not 2)
+            _counter = (_timer << 1) + 1;
             
             // Increment sequencer current step
             _sequencerCurrentStep = (_sequencerCurrentStep + 1) & sequencerStepsMask;
@@ -115,7 +119,7 @@ namespace NESEmu { namespace Apu {
             _timer = (_timer & 0x700) | data;
         }
         // Length counter load, timer high
-        else if (registerNumber == 0x3) {
+        else {
             // Timer high
             _timer = ((data & 0x7) << 8) | (_timer & 0xFF);
             

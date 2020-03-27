@@ -24,6 +24,9 @@ namespace NESEmu { namespace Apu {
     }
     
     void TriangleChannel::clock() {
+        // Update length counter
+        _lengthCounter.update();
+        
         // If counter reached 0
         if ((_counter == 0) && (_timer > 1)) {//TODO: j'ai mis le test timer > 1 pour retirer les high frequency
             // Reload counter
@@ -83,12 +86,14 @@ namespace NESEmu { namespace Apu {
             _lengthCounter.setHalt((data & 0x80) != 0);
         }
         // Register 0x1 unused
+        else if (registerNumber == 0x1) {
+        }
         // Timer low
         else if (registerNumber == 0x2) {
             _timer = (_timer & 0x700) | data;
         }
         // Length counter load, timer high
-        else if (registerNumber == 0x3) {
+        else {
             // Timer high
             _timer = ((data & 0x7) << 8) | (_timer & 0xFF);
             

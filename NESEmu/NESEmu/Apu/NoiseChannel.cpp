@@ -21,7 +21,8 @@
 namespace NESEmu { namespace Apu {
     
     uint16_t const NoiseChannel::_timerPeriods[16] = {
-        4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068
+        //4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068
+        8, 16, 32, 64, 128, 192, 256, 320, 404, 508, 760, 1016, 1524, 2032, 4068, 8136  // TODO: * 2 car CPU cycle a la place d'APU cycle (pour le length counter)
     };
     
     
@@ -30,6 +31,9 @@ namespace NESEmu { namespace Apu {
     }
     
     void NoiseChannel::clock() {
+        // Update length counter
+        _lengthCounter.update();
+        
         // If counter reached 0
         if (_counter == 0) {
             // Reload counter
@@ -80,6 +84,8 @@ namespace NESEmu { namespace Apu {
             _lengthCounter.setHalt((data & 0x20) != 0);
         }
         // Register 0x1 unused
+        else if (registerNumber == 0x1) {
+        }
         // Loop noise, noise period
         else if (registerNumber == 0x2) {
             // Period
@@ -92,7 +98,7 @@ namespace NESEmu { namespace Apu {
             _mode = (data & 0x80) != 0;
         }
         // Length counter load
-        else if (registerNumber == 0x3) {
+        else {
             // Length counter load
             _lengthCounter.setValueIndex(data >> 3);
             
