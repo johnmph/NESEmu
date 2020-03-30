@@ -21,11 +21,10 @@ namespace NESEmu { namespace Apu {
         
         DmcChannel(TChip &chip);
         
-        void powerUp();
+        void powerUp();//TODO: retirer ca et reset si pas besoin
         
+        // Clock
         void clock();
-        
-        void reset();
         
         // Properties
         uint16_t getSampleRemainingBytesCount() const;
@@ -46,7 +45,6 @@ namespace NESEmu { namespace Apu {
         
         static uint16_t const _rates[16];//TODO: ca depend de NTSC/PAL !!!
         
-        void loadSample();
         
         TChip &_chip;
         uint8_t _shiftRegister;

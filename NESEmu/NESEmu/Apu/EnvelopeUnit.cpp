@@ -11,6 +11,15 @@
 
 namespace NESEmu { namespace Apu {
     
+    void EnvelopeUnit::powerUp() {
+        _dividerPeriodOrConstantVolume = 0;
+        _counter = 0;
+        _decayCounter = 0;
+        _startFlag = false;
+        _loopMode = false;
+        _constantVolumeMode = false;
+    }
+    
     void EnvelopeUnit::clock() {
         // If started
         if (_startFlag) {

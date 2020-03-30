@@ -14,9 +14,18 @@ namespace NESEmu { namespace Apu {
     SweepUnit::SweepUnit(bool oneComplementMode, uint16_t &channelPeriod) : _oneComplementMode(oneComplementMode), _channelPeriod(channelPeriod) {
     }
     
+    void SweepUnit::powerUp() {
+        _counter = 0;
+        _period = 0;
+        _shiftCount = 0;
+        _enabled = false;
+        _reloadFlag = false;
+        _negate = false;
+    }
+    
     void SweepUnit::clock() {
         // Update channel period if allowed
-        if ((_counter == 0) && _enabled && (_shiftCount > 0) && getOutput()) {//TODO: j'ai rajouté le test shiftCount > 0
+        if ((_counter == 0) && _enabled && (_shiftCount > 0) && getOutput()) {
             _channelPeriod = getTargetPeriod();
         }
         
@@ -48,7 +57,7 @@ namespace NESEmu { namespace Apu {
     
     bool SweepUnit::getOutput() const {
         // Output only if not overflow (11 bits timer) and channel period is not less than the minimum period
-        return (getTargetPeriod() < targetPeriodOverflow) && (_channelPeriod >= channelMinimumPeriod);
+        return ((_negate) || (getTargetPeriod() < targetPeriodOverflow)) && (_channelPeriod >= channelMinimumPeriod);
     }
     
     void SweepUnit::setPeriod(uint8_t period) {

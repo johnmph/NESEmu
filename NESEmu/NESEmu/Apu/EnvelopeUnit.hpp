@@ -18,8 +18,13 @@ namespace NESEmu { namespace Apu {
     
     struct EnvelopeUnit {
         
+        // Power up
+        void powerUp();
+        
+        // Clock
         void clock();
         
+        // Start
         void start();
         
         // Output

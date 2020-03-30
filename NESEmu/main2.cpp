@@ -444,7 +444,7 @@ int main(int argc, const char * argv[]) {
     SDL_Event event;
     
     SoundHardware soundHardware(44100, 2048);
-    TimeManager timeManager(soundHardware, 60, true);
+    TimeManager timeManager(soundHardware, 60, false);
     GraphicHardware<TimeManager> graphicHardware(event, timeManager);
     ControllerHardware controllerHardware;
     auto controller = std::make_unique<NESEmu::Controller::Standard<ControllerHardware>>(controllerHardware);
@@ -459,7 +459,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Battletoads.nes", std::ios::binary);  // Mapper7, 256kb de prg-rom, single screen mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Paperboy.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/Huge Insect.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, vertical mirroring
-    //std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
+    std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/SMB2.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Young Indiana Jones Chronicles.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Adventures of Lolo 2.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 32kb de chr-rom
@@ -482,6 +482,9 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/R.C. Pro-Am.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Teenage Mutant Ninja Turtles.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Wild Gunman.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Contra.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Darkman.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Die Hard.nes", std::ios::binary);
 
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/nestest.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/1.Branch_Basics.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
@@ -536,22 +539,24 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/allpads.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, 8kb de chr-ram, Horizontal mirroring
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_test/apu_test.nes", std::ios::binary);    // Ok !
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/blargg_apu_2005.07.30/11.len_reload_timing.nes", std::ios::binary); // Ok !
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/blargg_apu_2005.07.30/10.len_halt_timing.nes", std::ios::binary); // Ok !
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_2/test_10.nes", std::ios::binary);//TODO: 3 fail and pass (reset), 5 6 fail
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_m/test_11.nes", std::ios::binary);//TODO: 11 fail
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_tri_lin_ctr/lin_ctr.nes", std::ios::binary);
     
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_mixer/square.nes", std::ios::binary);//TODO: pas tres bon
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_reset/works_immediately.nes", std::ios::binary);//TODO: fail 4017_timing, 4017_written, irq_flag_cleared, works_immediately
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_mixer/dmc.nes", std::ios::binary);//TODO: pas tres bon pour square, parfait pour triangle
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_reset/works_immediately.nes", std::ios::binary);    // Ok !
+    
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/FrameCounterIrqAckTest/test.nes", std::ios::binary);//TODO: attention car apparemment ca fail sur une vraie nes ! // https://forums.nesdev.com/viewtopic.php?f=3&t=13844&sid=cbcaafaac1023fdf00510a47962184ad&start=300
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/status.nes", std::ios::binary);//? juste un beep a chaque test
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/dpcmletterbox/dpcmletterbox.nes", std::ios::binary);//TODO: vibre un peu (surement le meme probleme que simpsons (et scanline ?) !!!
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/dmc_dma_during_read4/dma_2007_read.nes", std::ios::binary);//TODO: a voir quand bien implementé
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_phase_reset/apu_phase_reset.nes", std::ios::binary);    // Ok !
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_phase_reset/apu_phase_reset.nes", std::ios::binary);    // Ok ! ( https://forums.nesdev.com/viewtopic.php?t=15346 )
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/square_timer_div2/square_timer_div2.nes", std::ios::binary);  // Ok !
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_env/test_apu_env.nes", std::ios::binary);  // Ok normalement !
-    std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_sweep/sweep_sub.nes", std::ios::binary);  // TODO: pas ok et je ne trouve pas !!!!!!!!!
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_sweep/sweep_cutoff.nes", std::ios::binary);  // Ok !
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_timers/dmc_pitch.nes", std::ios::binary);  // TODO: a l'air ok sauf pour le noise et le dmc !!!
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/volume_tests/volumes.nes", std::ios::binary);//?
     

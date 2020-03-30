@@ -37,6 +37,14 @@ namespace NESEmu { namespace Apu {
     }
     
     void PulseChannel::powerUp() {
+        _envelopeUnit.powerUp();
+        _sweepUnit.powerUp();
+        _lengthCounter.powerUp();
+        
+        _timer = 0;
+        _counter = 0;
+        _sequencerCurrentStep = 0;
+        _waveform = _dutyWaveforms[0];  // TODO: a voir pour waveform
     }
     
     void PulseChannel::clock() {
@@ -56,10 +64,6 @@ namespace NESEmu { namespace Apu {
         
         // Decrement counter
         --_counter;
-    }
-    
-    void PulseChannel::reset() {
-        _lengthCounter.setEnabled(false);
     }
     
     void PulseChannel::clockFrameCounterQuarterFrame() {
@@ -103,7 +107,7 @@ namespace NESEmu { namespace Apu {
             _sweepUnit.setShiftCount(data & 0x7);
             
             // Negate
-            _sweepUnit.setEnabled((data & 0x8) != 0);
+            _sweepUnit.setNegate((data & 0x8) != 0);
             
             // Period
             _sweepUnit.setPeriod((data >> 4) & 0x7);

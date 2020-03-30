@@ -22,6 +22,12 @@ void Chip<TCpu, TSoundHardware>::powerUp() {
     _triangleChannel.powerUp();
     _noiseChannel.powerUp();
     _dmcChannel.powerUp();
+    
+    // Set frame counter register with 0
+    setFrameCounterRegister(0x0);
+    
+    // Reset line is high
+    _resetLine = true;
 }
 
 template <class TCpu, class TSoundHardware>
@@ -39,6 +45,9 @@ void Chip<TCpu, TSoundHardware>::clock() {
     // Check interrupt
     checkInterrupt();
     
+    // Check reset
+    checkReset();
+    
     // Add data to sound hardware if necessary
     if (_soundHardware.askForAddingSample()) {
         _soundHardware.addSample(getMixedOutput());
@@ -46,18 +55,9 @@ void Chip<TCpu, TSoundHardware>::clock() {
 }
 
 template <class TCpu, class TSoundHardware>
-void Chip<TCpu, TSoundHardware>::reset(bool high) {//TODO: voir si faire les resets sur les channels tant que le reset est low
-    // If line high, exit
-    if (high == true) {
-        return;
-    }
-    
-    // Reset channels
-    _pulseChannel[0].reset();
-    _pulseChannel[1].reset();
-    _triangleChannel.reset();
-    _noiseChannel.reset();
-    _dmcChannel.reset();
+void Chip<TCpu, TSoundHardware>::reset(bool high) {
+    // Save signal
+    _resetLine = high;
 }
 
 template <class TCpu, class TSoundHardware>
@@ -174,6 +174,21 @@ void Chip<TCpu, TSoundHardware>::requestDmcSample(uint16_t address) {
 template <class TCpu, class TSoundHardware>
 void Chip<TCpu, TSoundHardware>::checkInterrupt() {
     _cpu.apuIrq(!(_frameCounter.getInterrupt() || _dmcChannel.getInterrupt()));
+}
+
+template <class TCpu, class TSoundHardware>
+void Chip<TCpu, TSoundHardware>::checkReset() {
+    // Only reset if reset line low
+    if (_resetLine) {
+        return;
+    }
+    
+    // Reset channels
+    setStatusRegister(0x0);
+    
+    // Reset frame counter
+    _frameCounter.resetInterrupt();
+    _frameCounter.requestReset();
 }
 
 #endif /* NESEmu_Apu_Chip_s_hpp */

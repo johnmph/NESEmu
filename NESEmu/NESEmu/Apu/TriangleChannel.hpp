@@ -18,11 +18,13 @@ namespace NESEmu { namespace Apu {
     
     struct TriangleChannel {
         
+        TriangleChannel();
+        
+        // Power up
         void powerUp();
         
+        // Clock
         void clock();
-        
-        void reset();
         
         void clockFrameCounterQuarterFrame();
         void clockFrameCounterHalfFrame();

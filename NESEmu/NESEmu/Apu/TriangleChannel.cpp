@@ -20,7 +20,19 @@
 
 namespace NESEmu { namespace Apu {
     
+    TriangleChannel::TriangleChannel() : _timer(0), _counter(0), _sequencerCurrentStep(0), _linearCounter(0), _linearCounterReloadValue(0), _linearCounterReloadFlag(false), _linearCounterControl(false) {
+    }
+    
     void TriangleChannel::powerUp() {
+        _lengthCounter.powerUp();
+        
+        _timer = 0;
+        _counter = 0;
+        _sequencerCurrentStep = 0;
+        _linearCounter = 0;
+        _linearCounterReloadValue = 0;
+        _linearCounterReloadFlag = false;
+        _linearCounterControl = false;
     }
     
     void TriangleChannel::clock() {
@@ -28,9 +40,13 @@ namespace NESEmu { namespace Apu {
         _lengthCounter.update();
         
         // If counter reached 0
-        if ((_counter == 0) && (_timer > 1)) {//TODO: j'ai mis le test timer > 1 pour retirer les high frequency
+        if (_counter == 0) {
             // Reload counter
             _counter = _timer;
+            
+            if (_timer < 2) { // TODO: voir si ainsi pour eliminer les high frequency !!! (presque pas de pop)
+                return;
+            }
             
             // Sequencer is clocked if both linear and length counter are non zero
             if ((_linearCounter > 0) && _lengthCounter.getOutput()) {
@@ -42,10 +58,6 @@ namespace NESEmu { namespace Apu {
         
         // Decrement counter
         --_counter;
-    }
-    
-    void TriangleChannel::reset() {
-        _lengthCounter.setEnabled(false);
     }
     
     void TriangleChannel::clockFrameCounterQuarterFrame() {
@@ -70,6 +82,10 @@ namespace NESEmu { namespace Apu {
     }
     
     uint8_t TriangleChannel::getOutput() const {
+        /*if (_timer < 2) { // TODO: voir si ainsi pour eliminer les high frequency !!! (pas mal de pop !!)
+            return 7;
+        }*/
+        
         return (_sequencerCurrentStep < 16) ? (15 - _sequencerCurrentStep) : (_sequencerCurrentStep - 16);
     }
     

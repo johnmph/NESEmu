@@ -17,6 +17,14 @@ namespace NESEmu { namespace Apu {
     };
     
     
+    void LengthCounter::powerUp() {
+        _counter = 0;
+        _enabled = false;
+        _halt = false;
+        _requestHalt = false;
+        _reloadValue = 0;
+    }
+    
     void LengthCounter::clock() {
         // Decrement counter if not reached 0 and if not halted
         if ((_counter > 0) && (!_halt)) {

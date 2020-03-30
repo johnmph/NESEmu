@@ -31,7 +31,21 @@ DmcChannel<TChip>::DmcChannel(TChip &chip) : _chip(chip) {
 
 template <class TChip>
 void DmcChannel<TChip>::powerUp() {//TODO: voir pour les powerUp et reset de chaque channel et unit
+    _shiftRegister = 0x0;
+    _shiftRegisterRemainingBitsCounter = 1; // TODO: nécessaire d'etre > 0 sinon ca va deconner au 1er cycle car ca le decremente avant de le checker, voir si 8 ou 1
+    _silenceFlag = true;//TODO: voir si ok
+    _timer = _rates[0]; // TODO: car on a besoin au demarrage d'avoir _counter > 0 sinon ca va deconner au 1er cycle car ca le decremente avant de le checker
+    _counter = _timer;
     _outputLevel = 0;
+    _sampleAddress = 0x0;
+    _sampleLength = 0;
+    _currentSampleAddress = 0x0;
+    _sampleRemainingBytes = 0;
+    _sampleBuffer = 0x0;
+    _sampleBufferFilled = false;
+    _loopFlag = false;
+    _interrupt = false;
+    _enableInterrupt = false;
 }
 
 template <class TChip>
@@ -83,15 +97,10 @@ void DmcChannel<TChip>::clock() {
         }
     }
     
-    // If sample buffer empty
-    if (!_sampleBufferFilled) {
-        // Load a sample
-        loadSample();
+    // Request a sample if necessary
+    if ((!_sampleBufferFilled) && (_sampleRemainingBytes > 0)) {
+        _chip.requestDmcSample(_currentSampleAddress);
     }
-}
-
-template <class TChip>
-void DmcChannel<TChip>::reset() {
 }
 
 template <class TChip>
@@ -134,7 +143,7 @@ uint8_t DmcChannel<TChip>::getOutput() const {
 }
 
 template <class TChip>
-void DmcChannel<TChip>::setRegister(uint8_t registerNumber, uint8_t data) {
+void DmcChannel<TChip>::setRegister(uint8_t registerNumber, uint8_t data) {//TODO: pour ca et les autres channels, a voir car tout est clocké en CPU cycle mais si on ecrit ici pendant un CPU cycle et pas un APU cycle, on va desynchroniser car le counter va commencer a compter a partir de la? a voir car c'est le timer et pas le counter qu'on set !
     // IRQ enable, loop, frequency
     if (registerNumber == 0x0) {
         // Get timer from rate index
@@ -175,9 +184,7 @@ void DmcChannel<TChip>::sampleFetched(uint8_t data) {
     
     // Update address
     ++_currentSampleAddress;
-    if (_currentSampleAddress == 0x0) {
-        _currentSampleAddress = 0x8000;
-    }
+    _currentSampleAddress |= 0x8000;
     
     // Decrement remaining bytes counter
     --_sampleRemainingBytes;
@@ -198,17 +205,6 @@ void DmcChannel<TChip>::sampleFetched(uint8_t data) {
             _interrupt = true;
         }
     }
-}
-
-template <class TChip>
-void DmcChannel<TChip>::loadSample() {
-    // Don't load if buffer not empty of if no remaining bytes
-    if (/*(_sampleBufferFilled) || */(_sampleRemainingBytes == 0)) {//TODO: pas besoin de la condition car l'appel est deja conditionné avec
-        return;
-    }
-    
-    // Request a sample
-    _chip.requestDmcSample(_currentSampleAddress);
 }
 
 #endif /* NESEmu_Apu_DmcChannel_s_hpp */

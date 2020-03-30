@@ -27,7 +27,13 @@ namespace NESEmu { namespace Apu {
     
     
     void NoiseChannel::powerUp() {
+        _envelopeUnit.powerUp();
+        _lengthCounter.powerUp();
+        
+        _counter = 0;
+        _timer = 0;
         _shiftRegister = 0x1;
+        _mode = false;
     }
     
     void NoiseChannel::clock() {
@@ -43,15 +49,11 @@ namespace NESEmu { namespace Apu {
             bool feedback = (_shiftRegister & 0x1) ^ (((_mode) ? (_shiftRegister & 0x40) : (_shiftRegister & 0x2)) != 0);
             _shiftRegister = (feedback << 14) | (_shiftRegister >> 1);
             
-            return;
+            // Don't return because the period is _timer and not _timer + 1
         }
         
         // Decrement counter
         --_counter;
-    }
-    
-    void NoiseChannel::reset() {
-        _lengthCounter.setEnabled(false);
     }
     
     void NoiseChannel::clockFrameCounterQuarterFrame() {

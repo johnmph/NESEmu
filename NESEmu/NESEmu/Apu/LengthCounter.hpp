@@ -18,6 +18,10 @@ namespace NESEmu { namespace Apu {
     
     struct LengthCounter {
         
+        // Power up
+        void powerUp();
+        
+        // Clock
         void clock();
         
         // Update

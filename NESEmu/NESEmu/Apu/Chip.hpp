@@ -67,6 +67,8 @@ namespace NESEmu { namespace Apu {
         
         void checkInterrupt();
         
+        void checkReset();
+        
         
         // Channels
         PulseChannel _pulseChannel[2];
@@ -81,6 +83,7 @@ namespace NESEmu { namespace Apu {
         TCpu &_cpu;
         TSoundHardware &_soundHardware;
         
+        bool _resetLine;
     };
     
     #include "Chip_s.hpp"

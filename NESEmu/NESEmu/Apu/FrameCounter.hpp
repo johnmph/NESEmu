@@ -18,11 +18,16 @@ namespace NESEmu { namespace Apu {
     
     template <class TChip>
     struct FrameCounter {
-        // TODO: voir pour reset et power up
+        
         FrameCounter(TChip &chip);
         
+        // Power up
+        void powerUp();
+        
+        // Clock
         void clock();
         
+        // Reset
         void requestReset();
         
         // Properties

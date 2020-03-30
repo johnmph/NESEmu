@@ -21,8 +21,13 @@ namespace NESEmu { namespace Apu {
         
         SweepUnit(bool oneComplementMode, uint16_t &channelPeriod);
         
+        // Power up
+        void powerUp();
+        
+        // Clock
         void clock();
         
+        // Reload
         void reload();
         
         // Output

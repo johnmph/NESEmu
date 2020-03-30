@@ -19,11 +19,11 @@ namespace NESEmu { namespace Apu {
     
     struct NoiseChannel {
         
-        void powerUp();
+        // Power up
+        void powerUp();//TODO: retirer ca et reset si pas besoin
         
+        // Clock
         void clock();
-        
-        void reset();
         
         void clockFrameCounterQuarterFrame();
         void clockFrameCounterHalfFrame();

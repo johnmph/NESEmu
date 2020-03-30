@@ -22,11 +22,11 @@ namespace NESEmu { namespace Apu {
         
         PulseChannel(bool sweepOneComplementMode);
         
+        // Power up
         void powerUp();
         
+        // Clock
         void clock();
-        
-        void reset();
         
         void clockFrameCounterQuarterFrame();
         void clockFrameCounterHalfFrame();

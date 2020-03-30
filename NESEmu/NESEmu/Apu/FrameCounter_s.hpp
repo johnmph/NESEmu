@@ -15,7 +15,20 @@ FrameCounter<TChip>::FrameCounter(TChip &chip) : _chip(chip) {
 }
 
 template <class TChip>
+void FrameCounter<TChip>::powerUp() {
+    _counter = 0;
+    _interrupt = false;
+    _disableInterrupt = false;
+    _sequence5StepMode = false;
+    _resetDelay = 0;
+    _needToReset = false;
+}
+
+template <class TChip>
 void FrameCounter<TChip>::clock() {
+    // Increment counter
+    ++_counter;
+    
     // Check if need to reset
     if (_needToReset) {
         // Decrement delay
@@ -41,9 +54,6 @@ void FrameCounter<TChip>::clock() {
     } else {
         clock4StepSequence();
     }
-    
-    // Increment counter
-    ++_counter;
 }
 
 template <class TChip>
@@ -69,12 +79,20 @@ void FrameCounter<TChip>::setDisableInterrupt(bool disableInterrupt) {
 template <class TChip>
 void FrameCounter<TChip>::setSequence5StepMode(bool sequence5StepMode) {
     _sequence5StepMode = sequence5StepMode;
+    /*
+    // If sequencer is set in 5 step mode, reset possible interrupt flag
+    if (_sequence5StepMode) {
+        _interrupt = false;
+     }*/ // TODO: ainsi ou pas ????
 }
 
 template <class TChip>
 void FrameCounter<TChip>::requestReset() {
     _needToReset = true;
-    _resetDelay = resetDelayCycle + (_counter & 0x1);
+    
+    // If the write occurs during an APU cycle, the effects occur 3 CPU cycles after the $4017 write cycle, and if the write occurs between APU cycles, the effects occurs 4 CPU cycles after the write cycle
+    // APU cycle has even counter but this is called before the counter is incremented so here a APU cycle has odd counter
+    _resetDelay = resetDelayCycle + ((_counter & 0x1) == 0);
 }
 
 template <class TChip>

@@ -312,7 +312,7 @@ bool Chip<EModel, TBus, TSoundHardware>::checkDmaPhi1() {
             _dmcStarted = false;
         }
         
-        return false;
+        if (_dmcCount > 0) return false;    // TODO: a voir
     }
     
     // Don't execute DMA if not asked
@@ -420,8 +420,8 @@ void Chip<EModel, TBus, TSoundHardware>::apuRequestDmcSample(uint16_t address) {
     _dmcStarted = true;
     
     // Disable CPU
-    InternalCpu::ready(false);
-    */
+    InternalCpu::ready(false);*/
+    
     
     uint16_t currentAddress = getAddressBus();
     setAddressBus(address);  //TODO: pas bon, a changer, juste pour tests, il faut faire comme un dma !
