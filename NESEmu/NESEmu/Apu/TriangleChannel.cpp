@@ -118,8 +118,6 @@ namespace NESEmu { namespace Apu {
             
             // Set linear counter reload flag
             _linearCounterReloadFlag = true;
-            
-            //_counter = _timer;//TODO: a mettre ??? si c'est comme pulse, non !
         }
     }
     

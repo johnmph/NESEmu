@@ -21,8 +21,7 @@
 namespace NESEmu { namespace Apu {
     
     uint16_t const NoiseChannel::_timerPeriods[16] = {
-        //4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068
-        8, 16, 32, 64, 128, 192, 256, 320, 404, 508, 760, 1016, 1524, 2032, 4068, 8136  // TODO: * 2 car CPU cycle a la place d'APU cycle (pour le length counter)
+        4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068
     };
     
     

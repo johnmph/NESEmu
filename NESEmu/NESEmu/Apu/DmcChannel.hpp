@@ -21,7 +21,7 @@ namespace NESEmu { namespace Apu {
         
         DmcChannel(TChip &chip);
         
-        void powerUp();//TODO: retirer ca et reset si pas besoin
+        void powerUp();
         
         // Clock
         void clock();
