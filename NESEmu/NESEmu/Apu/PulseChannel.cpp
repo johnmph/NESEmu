@@ -37,14 +37,18 @@ namespace NESEmu { namespace Apu {
     }
     
     void PulseChannel::powerUp() {
+        // Initialize internal units
         _envelopeUnit.powerUp();
         _sweepUnit.powerUp();
         _lengthCounter.powerUp();
         
+        // Initialize waveform at its minimal value
+        _waveform = _dutyWaveforms[0];  // TODO: a voir pour waveform
+        
+        // Initialize remaining at zero
         _timer = 0;
         _counter = 0;
         _sequencerCurrentStep = 0;
-        _waveform = _dutyWaveforms[0];  // TODO: a voir pour waveform
     }
     
     void PulseChannel::clock() {

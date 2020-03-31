@@ -68,6 +68,8 @@ void Chip<EModel, TBus, TSoundHardware>::clockPhi2() {
 
 template <Model EModel, class TBus, class TSoundHardware>
 void Chip<EModel, TBus, TSoundHardware>::startPhi1() {
+    _apu.clock();
+    
     // Start phi1
     this->_phi2 = false;
     
@@ -87,7 +89,7 @@ void Chip<EModel, TBus, TSoundHardware>::startPhi1() {
     }
     
     // Clock APU
-    _apu.clock();//TODO: voir si ok
+    //_apu.clock();//TODO: voir si ok
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
@@ -293,7 +295,8 @@ bool Chip<EModel, TBus, TSoundHardware>::checkDmaPhi1() {
         // Decrement DMC counter
         --_dmcCount;
         
-        if (_dmcCount == 1) {
+        if (_dmcCount == 1) {//TODO: il faut tjs commencer sur le meme cycle qu'un read spr dma si spr dma en execution (et s'il n'a pas attendu, laisser un autre cycle avec un read sur le address bus courant sinon continuer le spr dma le cycle d'apres) : est ce que c'est possible que le dmc dma commence quand le spr dma est en write ? car le dmc dma commence sur un apu cycle je pense, a verifier et voir aussi si un spr dma peut etre en write sur un cycle pair et sur un cycle impair ? peut etre c'est a cause de ca qu'il y a un extra cycle en impair (ou pair je ne sais plus), pour synchroniser avec l'apu dmc dma !!!
+            // TODO: pas besoin de sauver et de restaurer par apres le readwrite car meme s'il peut etre en write (fin d'interruption push stack), comme il attend suffisamment longtemps, l'instruction d'apres fait tjs un read !
             _bus.setAddressBus(_dmcSampleAddress);
             this->_readWrite = Cpu6502::ReadWrite::Read;
         }
@@ -303,16 +306,22 @@ bool Chip<EModel, TBus, TSoundHardware>::checkDmaPhi1() {
             
             // Restore CPU state
             _bus.setAddressBus((this->_addressBusHigh << 8) | this->_addressBusLow);
+            /*_bus.setAddressBus(_temp);
+            if (_temp != ((this->_addressBusHigh << 8) | this->_addressBusLow)) {
+                std::cout << "different : " << +_temp << ", " << +((this->_addressBusHigh << 8) | this->_addressBusLow) << "\n";
+                std::cout << "spr dma address : " << ((_dmaAddress << 8) | (256 - _dmaCount)) << "\n";
+            }*/
             
             // Reenable CPU if necessary
             if (!_dmaStarted) {
                 InternalCpu::ready(true);
             }
             
+            // Reset flag
             _dmcStarted = false;
         }
         
-        if (_dmcCount > 0) return false;    // TODO: a voir
+        if ((_dmcCount > 0) && (this->_readWrite == Cpu6502::ReadWrite::Read)) return false;    // TODO: a voir
     }
     
     // Don't execute DMA if not asked
@@ -328,7 +337,7 @@ bool Chip<EModel, TBus, TSoundHardware>::checkDmaPhi1() {
     }
     
     // Wait for DMA begin that CPU has terminated current instruction
-    if (!InternalCpu::getSyncSignal()) {
+    if (!InternalCpu::getSyncSignal()) {//TOD: je ne pense pas que c'est bon de faire ca !!!
         return false;
     }
     
@@ -373,7 +382,7 @@ void Chip<EModel, TBus, TSoundHardware>::startDma(uint8_t address) {
     _dmaAddress = address;
     
     // 257 for 1 extra cycle + 256 read-write cycles
-    _dmaCount = 257;
+    _dmaCount = 257; //TODO: apparemment, ca attend 513 ou 514 cycles selon que c'est demandé sur un cycle pair ou impair !!! ici j'attend 513 cycles a chaque fois !
     
     // Set DMA flags
     _dmaToggle = false;
@@ -407,27 +416,34 @@ void Chip<EModel, TBus, TSoundHardware>::apuIrq(bool high) {
 
 template <Model EModel, class TBus, class TSoundHardware>
 void Chip<EModel, TBus, TSoundHardware>::apuRequestDmcSample(uint16_t address) {
-    /*if (_dmcStarted) {
+    if (_dmcStarted) {
         return;
     }
     // Save address
     _dmcSampleAddress = address;
     
     // 4 cycles delay
-    _dmcCount = (_dmaStarted) ? 2 : 4;
+    //_dmcCount = (_dmaStarted) ? 2 : 4;
+    _dmcCount = (this->_readWrite == Cpu6502::ReadWrite::Write) ? 4 : 5;
+    if (_dmaStarted) {
+        std::cout << "dmc dma in spr dma\n";
+        _dmcCount = 3;
+        if (_dmaCount == 2) _dmcCount = 2;
+        if (_dmaCount == 1) _dmcCount = 4;
+    }
     
     // Set DMC flag
     _dmcStarted = true;
     
     // Disable CPU
-    InternalCpu::ready(false);*/
+    InternalCpu::ready(false);
     
-    
+    /*
     uint16_t currentAddress = getAddressBus();
     setAddressBus(address);  //TODO: pas bon, a changer, juste pour tests, il faut faire comme un dma !
     performRead();
     setAddressBus(currentAddress);
-    _apu.dmcSampleFetched(getDataBus());
+    _apu.dmcSampleFetched(getDataBus());*/
 }
 
 #endif /* NESEmu_Cpu_s_hpp */

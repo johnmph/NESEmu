@@ -37,9 +37,11 @@ void DmcChannel<TChip>::powerUp() {
     // Start silenced
     _silenceFlag = true;    // TODO: voir si ok
     
-    // Counter is decrement first then checked so it need to start at a value > 0 and timer also because it will be reseted with timer
+    // Initialize timer at its minimal value
     _timer = _rates[0];
-    _counter = _timer;
+    
+    // Counter is decrement first then checked so it need to start at a value > 0
+    _counter = _timer;//TODO: _timer ou 1 ?
     
     // Initialize sample address and length at their minimal values
     // See https://forums.nesdev.com/viewtopic.php?f=3&t=18278

@@ -24,8 +24,10 @@ namespace NESEmu { namespace Apu {
     }
     
     void TriangleChannel::powerUp() {
+        // Initialize internal unit
         _lengthCounter.powerUp();
         
+        // Initialize remaining at zero
         _timer = 0;
         _counter = 0;
         _sequencerCurrentStep = 0;

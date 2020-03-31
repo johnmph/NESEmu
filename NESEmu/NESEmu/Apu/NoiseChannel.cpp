@@ -26,12 +26,18 @@ namespace NESEmu { namespace Apu {
     
     
     void NoiseChannel::powerUp() {
+        // Initialize internal units
         _envelopeUnit.powerUp();
         _lengthCounter.powerUp();
         
-        _counter = 0;
-        _timer = 0;
+        // Initialize timer at its minimal value
+        _timer = _timerPeriods[0];
+        
+        // Shift register must be initialized at least 1 else there will be no noise sound output
         _shiftRegister = 0x1;
+        
+        // Initialize remaining at zero
+        _counter = 0;
         _mode = false;
     }
     

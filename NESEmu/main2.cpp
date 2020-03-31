@@ -120,6 +120,9 @@ private:
 };
 
 struct SoundHardware {
+    /*
+     Rajouter des methodes pour choisir le volume des canaux dans le soundhardware ou bien carrement laisser le soundhardware faire le mixing en ayant la possibilité d’utiliser la méthode de mixing de l’apu (qui deviendra une static method)
+     */
     
     SoundHardware(unsigned int frequency, std::size_t bufferSize) : _counter(0), _currentBufferWriteIndex(0), _currentBufferReadIndex(0) {
         // TODO: bufferSize doit etre une puissance de 2
@@ -469,7 +472,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Final Fantasy.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/Zelda.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/Zelda 2.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom // TODO: bug mais peut etre parce que le mapper1 n'est pas complet (selon les versions du mapper !) deja c du chr-ram et ici c du chr-rom : oui en plus il y a 8ko dans le mapper1 et ici 128 !!! : OK
-    //std::ifstream ifs("../UnitTestFiles/Simpsons - Bart Vs the Space Mutants.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom, IL Y A LE BUG DU SCOREBAR QUI SHAKE UN PEU, a voir (timing ppu ?)
+    //std::ifstream ifs("../UnitTestFiles/Simpsons - Bart Vs the Space Mutants.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom, IL Y A LE BUG DU SCOREBAR QUI SHAKE UN PEU, a voir (timing ppu ?) : ca ne vibre plus a chaque fois (peut etre plutot au niveau du dmc ou spr dma !)
     //std::ifstream ifs("../UnitTestFiles/Bill & Ted's Excellent Video Game Adventure.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom // TODO : ne fonctionne pas car on doit gerer la double ecriture dans le MMC1 : ok
     
     //std::ifstream ifs("../UnitTestFiles/1942.nes", std::ios::binary);
@@ -485,7 +488,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Contra.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Darkman.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Die Hard.nes", std::ios::binary);
-    std::ifstream ifs("../UnitTestFiles/Eliminator Boat Duel (USA).nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Eliminator Boat Duel (USA).nes", std::ios::binary);
 
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/nestest.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/1.Branch_Basics.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
@@ -517,7 +520,7 @@ int main(int argc, const char * argv[]) {
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_open_bus/ppu_open_bus.nes", std::ios::binary);// Mapper0, 32kb de prg-rom, vertical mirroring TODO: il faut implementer le decay de l'open bus pour que ca fonctionne
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/nmi_sync/demo_ntsc.nes", std::ios::binary);// Mapper0, 32kb de prg-rom, horizontal mirroring
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/nmi_sync/demo_ntsc.nes", std::ios::binary);// Mapper0, 32kb de prg-rom, horizontal mirroring TODO: ne fonctionne pas correctement !
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/sprdma_and_dmc_dma/sprdma_and_dmc_dma.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     
@@ -540,7 +543,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/allpads.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, 8kb de chr-ram, Horizontal mirroring
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_test/apu_test.nes", std::ios::binary);    // Ok !
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/blargg_apu_2005.07.30/10.len_halt_timing.nes", std::ios::binary); // Ok !
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/blargg_apu_2005.07.30/01.len_ctr.nes", std::ios::binary); // Ok !
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_2/test_10.nes", std::ios::binary);//TODO: 3 fail and pass (reset), 5 6 fail
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_m/test_11.nes", std::ios::binary);//TODO: 11 fail
@@ -549,19 +552,19 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/noisy/noisy_v1.nes", std::ios::binary);//TODO: a comparer avec un autre emulateur
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/DmcPowerOnTest_v3/DmcPowerOnBuzz.nes", std::ios::binary);//TODO: a comparer avec un autre emulateur
     
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_mixer/noise.nes", std::ios::binary);//TODO: pas tres bon pour square, parfait pour triangle
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_reset/works_immediately.nes", std::ios::binary);    // Ok !
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_mixer/triangle.nes", std::ios::binary);//TODO: pas tres bon pour square, parfait pour triangle
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_reset/works_immediately.nes", std::ios::binary);    // Ok ! (pour 4017_timing, 9 au power et 9 au reset pour l'apu clocked après cpu (et checkInterrupt apres clock de l'apu) et 10 au reset pour apu clocked avant cpu (et checkInterrupt avant le clock des units de l'apu))
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/FrameCounterIrqAckTest/test.nes", std::ios::binary);//TODO: attention car apparemment ca fail sur une vraie nes ! // https://forums.nesdev.com/viewtopic.php?f=3&t=13844&sid=cbcaafaac1023fdf00510a47962184ad&start=300
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/status.nes", std::ios::binary);//? juste un beep a chaque test
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/dpcmletterbox/dpcmletterbox.nes", std::ios::binary);//TODO: vibre un peu (surement le meme probleme que simpsons (et scanline ?) !!!
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/dmc_dma_during_read4/dma_2007_read.nes", std::ios::binary);//TODO: a voir quand bien implementé
+    std::ifstream ifs("../UnitTestFiles/TestRom/APU/dpcmletterbox/dpcmletterbox.nes", std::ios::binary);//TODO: vibre un peu (surement le meme probleme que simpsons !!! Ca ne vibre presque plus, surement un probleme de dmc dma avec le spr dma !!!
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/dmc_dma_during_read4/dma_4016_read.nes", std::ios::binary);//TODO: a voir quand bien implementé
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_phase_reset/apu_phase_reset.nes", std::ios::binary);    // Ok ! ( https://forums.nesdev.com/viewtopic.php?t=15346 )
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/square_timer_div2/square_timer_div2.nes", std::ios::binary);  // Ok !
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_env/test_apu_env.nes", std::ios::binary);  // Ok normalement !
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_sweep/sweep_cutoff.nes", std::ios::binary);  // Ok !
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_timers/dmc_pitch.nes", std::ios::binary);  // TODO: a l'air ok sauf pour le noise et le dmc !!!
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_timers/dmc_pitch.nes", std::ios::binary);  // Ok pour tous (mais reverifier le DMC une fois bien implementé avec les timing CPU/DMA)
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/volume_tests/volumes.nes", std::ios::binary);//?
     
     // Check that file exists
