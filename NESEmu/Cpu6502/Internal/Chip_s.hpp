@@ -416,7 +416,7 @@ void Chip<TConfiguration>::fetchOpcode() {
 template <class TConfiguration>
 void Chip<TConfiguration>::decodeOpcodeAndExecuteInstruction() {
     // We need this because some instructions will perform actions in the decode step of the next instruction, so we need to let them perform actions even if RDY is low, but we can't decode next opcode because opcode is not ready for reading
-    if (_readyWaitRequested) {
+    if (_readyWaitRequested) {//TODO: voir si encore besoin avec la nouvelle technique du dma
         return;
     }
     

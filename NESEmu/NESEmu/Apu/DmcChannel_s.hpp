@@ -41,7 +41,7 @@ void DmcChannel<TChip>::powerUp() {
     _timer = _rates[0];
     
     // Counter is decrement first then checked so it need to start at a value > 0
-    _counter = _timer;//TODO: _timer ou 1 ?
+    _counter = _timer;//TODO: _timer ou 1 ? (attention si 1, on doit inverser le test de even cycle pour le request dmc sample)
     
     // Initialize sample address and length at their minimal values
     // See https://forums.nesdev.com/viewtopic.php?f=3&t=18278
@@ -109,8 +109,8 @@ void DmcChannel<TChip>::clock() {
         }
     }
     
-    // Request a sample if necessary
-    if ((!_sampleBufferFilled) && (_sampleRemainingBytes > 0)) {
+    // Request a sample if necessary (only on even cycle)
+    if ((!_sampleBufferFilled) && (_sampleRemainingBytes > 0) && ((_counter & 0x1) != 0)) {
         _chip.requestDmcSample(_currentSampleAddress);
     }
 }

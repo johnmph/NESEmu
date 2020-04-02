@@ -522,7 +522,7 @@ int main(int argc, const char * argv[]) {
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/nmi_sync/demo_ntsc.nes", std::ios::binary);// Mapper0, 32kb de prg-rom, horizontal mirroring TODO: ne fonctionne pas correctement !
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/sprdma_and_dmc_dma/sprdma_and_dmc_dma.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
+    std::ifstream ifs("../UnitTestFiles/TestROM/PPU/sprdma_and_dmc_dma/sprdma_and_dmc_dma.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/oam_stress/oam_stress.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // Ok, juste long a executer, attendre bien la fin
     
@@ -558,8 +558,8 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/FrameCounterIrqAckTest/test.nes", std::ios::binary);//TODO: attention car apparemment ca fail sur une vraie nes ! // https://forums.nesdev.com/viewtopic.php?f=3&t=13844&sid=cbcaafaac1023fdf00510a47962184ad&start=300
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/status.nes", std::ios::binary);//? juste un beep a chaque test
-    std::ifstream ifs("../UnitTestFiles/TestRom/APU/dpcmletterbox/dpcmletterbox.nes", std::ios::binary);//TODO: vibre un peu (surement le meme probleme que simpsons !!! Ca ne vibre presque plus, surement un probleme de dmc dma avec le spr dma !!!
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/dmc_dma_during_read4/dma_4016_read.nes", std::ios::binary);//TODO: a voir quand bien implementé
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/dpcmletterbox/dpcmletterbox.nes", std::ios::binary);//TODO: vibre un peu (surement le meme probleme que simpsons !!! Ca ne vibre presque plus, surement un probleme de dmc dma avec le spr dma !!!
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/dmc_dma_during_read4/dma_2007_read.nes", std::ios::binary);//TODO: a voir quand bien implementé
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_phase_reset/apu_phase_reset.nes", std::ios::binary);    // Ok ! ( https://forums.nesdev.com/viewtopic.php?t=15346 )
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/square_timer_div2/square_timer_div2.nes", std::ios::binary);  // Ok !
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_env/test_apu_env.nes", std::ios::binary);  // Ok normalement !

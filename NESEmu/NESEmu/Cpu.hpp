@@ -59,6 +59,36 @@ namespace NESEmu { namespace Cpu {
     //private:
     protected:  // TODO: needed protected for unit test, else we can set it private
         
+        struct Dma {
+            
+            Dma(Chip &chip);
+            
+            // Clock
+            void clock();
+            
+            // Start
+            void startSprite(uint8_t address);
+            void startDmc(uint16_t address);
+            
+            // Properties
+            bool isWriteCycle() const;
+            bool isIdle() const;
+            
+        private:
+            
+            void process();
+            
+            Chip &_chip;
+            uint16_t _spriteAddress;
+            uint16_t _dmcAddress;
+            uint16_t _spriteCycleCount;
+            uint8_t _dmcCycleCount;
+            uint8_t _waitCycleCount;
+            bool _writeCycle;
+            bool _idle;
+        };
+        
+        
         using Constants = Constants<EModel>;
         using InternalCpu = Cpu6502::Chip<Cpu6502::ConfigurationPerformance<Chip, false>>;
         
@@ -81,29 +111,32 @@ namespace NESEmu { namespace Cpu {
         void performWrite();
         
         // DMA
-        bool checkDmaPhi1();
+        /*bool checkDmaPhi1();
         bool checkDmaPhi2();
         void startDma(uint8_t address);
-        void stopDma();
+        void stopDma();*/
         
         // APU
         void apuIrq(bool high);
-        void apuRequestDmcSample(uint16_t address);
+        void apuDmcRequestSample(uint16_t address);
+        void apuDmcSampleFetched();
         
         // Internal
         Apu::Chip<Chip, TSoundHardware> _apu;
         TBus &_bus;
         
+        Dma _dma;
+        /*
         int _dmaCount;
         uint8_t _dmaAddress;
         bool _dmaStarted;
-        bool _dmaToggle;
+        bool _dmaToggle;*/
         
         uint8_t _outLatch;
-        
+        /*
         int _dmcCount;
         uint16_t _dmcSampleAddress;
-        bool _dmcStarted;
+        bool _dmcStarted;*/
         
         bool _irqLine;
         bool _apuIrqLine;

@@ -32,7 +32,7 @@ void Chip<TCpu, TSoundHardware>::powerUp() {
 
 template <class TCpu, class TSoundHardware>
 void Chip<TCpu, TSoundHardware>::clock() {
-    checkInterrupt();//TODO: j'ai mis ca ici pour que le blarg test 8 passe (irq_timing) avec l'apu clocké avant le cpu !
+    //checkInterrupt();//TODO: j'ai mis ca ici pour que le blarg test 8 passe (irq_timing) avec l'apu clocké avant le cpu !
     
     // Clock frame counter
     _frameCounter.clock();//TODO: je l'ai mis avant les channels, a voir
@@ -45,7 +45,7 @@ void Chip<TCpu, TSoundHardware>::clock() {
     _dmcChannel.clock();
     
     // Check interrupt
-//    checkInterrupt();
+    checkInterrupt();
     
     // Check reset
     checkReset();
@@ -170,7 +170,7 @@ void Chip<TCpu, TSoundHardware>::clockFrameCounterHalfFrame() {
 
 template <class TCpu, class TSoundHardware>
 void Chip<TCpu, TSoundHardware>::requestDmcSample(uint16_t address) {
-    _cpu.apuRequestDmcSample(address);
+    _cpu.apuDmcRequestSample(address);
 }
 
 template <class TCpu, class TSoundHardware>
