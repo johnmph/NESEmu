@@ -63,7 +63,7 @@ namespace NESEmu { namespace Apu {
         void clockFrameCounterQuarterFrame();
         void clockFrameCounterHalfFrame();
         
-        void requestDmcSample(uint16_t address);
+        void requestDmcSample(uint16_t address, bool requestedOnEnable);
         
         void checkInterrupt();
         

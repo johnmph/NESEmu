@@ -29,6 +29,16 @@ struct Cpu2A03FullAccess : NESEmu::Cpu::Chip<EModel, TBus, TSoundHardware> {
         return this->_bus.getDataBus();
     }
     
+    void correctDataBusForVisual6502() {
+        uint8_t data = this->_bus.getDataBus();
+        
+        if (this->_readWrite == Cpu6502::ReadWrite::Write) {
+            this->_bus.setDataBus(_lastDataBusReadValue);
+        } else {
+            _lastDataBusReadValue = data;
+        }
+    }
+    
     uint16_t getProgramCounter() const {
         return (this->_programCounterHigh << 8) | this->_programCounterLow;
     }
@@ -69,6 +79,8 @@ struct Cpu2A03FullAccess : NESEmu::Cpu::Chip<EModel, TBus, TSoundHardware> {
         Cpu::ready(high);
     }
     
+private:
+    uint8_t _lastDataBusReadValue;
 };
 
 #endif /* Cpu2A03FullAccess_hpp */

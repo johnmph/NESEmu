@@ -24,16 +24,27 @@ struct Constants<Model::Ricoh2A07> {
 
 
 template <Model EModel, class TBus, class TSoundHardware>
-Chip<EModel, TBus, TSoundHardware>::Dma::Dma(Chip &chip) : _chip(chip), _spriteAddress(0x0), _dmcAddress(0x0), _spriteCycleCount(0), _dmcCycleCount(0), _waitCycleCount(0), _writeCycle(false), _idle(true) {//TODO: j'ai du mettre writeCycle a false, pq ???? (car il est switché avant le process) alors pq??? : 7 cycles dans le reset / 9 dans le power up, un nombre impair donc on commence en write cycle
+Chip<EModel, TBus, TSoundHardware>::Dma::Dma(Chip &chip) : _chip(chip), _spriteAddress(0x0), _dmcAddress(0x0), _spriteCycleCount(0), _dmcCycleCount(0), _spriteWaitCycleCount(0), _dmcWaitCycleCount(0), _writeCycle(false)/*, _idle(true)*/, _ready(true) {//TODO: j'ai du mettre writeCycle a false, pq ???? (car il est switché avant le process) alors pq??? : 7 cycles dans le reset / 9 dans le power up, un nombre impair donc on commence en write cycle
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::Dma::clock() {
+void Chip<EModel, TBus, TSoundHardware>::Dma::clockPhi1() {
     // Toggle read / write cycle before process so we have the same type cycle in process method and CPU instruction execution (which is right after this clock method)
     _writeCycle = !_writeCycle;
     
+    // Copy read write signal
+    _chip._readWrite = _chip.InternalCpu::_readWrite;//TODO: a voir
+    
     // Process
     process();
+    
+    //_writeCycle = !_writeCycle;//TODO: voir si ici ou au dessus (si ici, writeCycle doit etre initialisé a true)
+}
+
+template <Model EModel, class TBus, class TSoundHardware>
+void Chip<EModel, TBus, TSoundHardware>::Dma::clockPhi2() {
+    // Set ready line
+    _chip.ready(_ready);
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
@@ -42,79 +53,119 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::startSprite(uint8_t address) {
     _spriteAddress = address << 8;
     
     // Set count
-    _waitCycleCount = 1 + _writeCycle;
-    _spriteCycleCount = 513;    // TODO: besoin d'un cycle en plus pour la restauration du CPU apres le DMA (ce cycle executera l'instruction du CPU)
+    _spriteWaitCycleCount = (_dmcCycleCount > 0) ? 0 : 1/* + _writeCycle*/;
+    _spriteCycleCount = 513;    // TODO: besoin d'un cycle en plus pour la restauration du CPU apres le DMA (ce cycle executera l'instruction du CPU) TODO: voir si besoin de ce cycle supplémentaire si dmc dma arrive a ce moment
     
     // Disable CPU
     _chip.ready(false);
+    _ready = false;
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::Dma::startDmc(uint16_t address) {
+void Chip<EModel, TBus, TSoundHardware>::Dma::startDmc(uint16_t address, bool requestedOnEnable) {
     // Ensure that DMC DMA start on an even (read) cycle
-    assert(_writeCycle);//TODO: write cycle car apu clocké apres le dma et donc process en even deja effectué si on a !_writeCycle
+    //assert(_writeCycle);//TODO: write cycle car apu clocké apres le dma et donc process en even deja effectué si on a !_writeCycle
     
     // Don't start DMC if already started
     if (_dmcCycleCount > 0) {
-        return;
+        //return;
+        std::cout << "Started DMC DMA before last DMC DMA end\n";
     }
     
     // Copy address
     _dmcAddress = address;
     
     // Set count
-    _waitCycleCount = (_spriteCycleCount > 0) ? 0 : 2;//((_chip._readWrite == Cpu6502::ReadWrite::Write) ? 1 : 2);//TODO: changer, depend de plusieurs trucs, c'est 4 cycle en read et 3 en write (mais on parle de CPU write cycle et pas de write cycle d'ici), a voir car on est tjs avec _writeCycle = false ici TODO: si je met 4 je ne passe plus le test apu_test pour le dmc basic car l'interrupt quand dmc filled est trop tard : AVEC la nouvelle technique si je met 4 c'est le dmc rate que je ne passe plus
-    _dmcCycleCount = 2;
+    _dmcWaitCycleCount = (_spriteCycleCount > 0) ? 0 : 2;
+    _dmcCycleCount = (_spriteCycleCount > 0) ? 2 : 4;
+    //_spriteWaitCycleCount = 0;//TODO: a voir
+    
+    // Reset read first sync flag
+    _dmcReadFirstSync = false;
+    
+    if ((_spriteCycleCount == 0) && (!requestedOnEnable)) {
+        _dmcWaitCycleCount = 1;
+        _dmcReadFirstSync = true;
+    }
     
     // Disable CPU
-    _chip.ready(false);
+    //_chip.ready(false);
     
-    /*if (_spriteCycleCount > 0) {
-        std::cout << std::hex << "DMC in SPR begin : " << +((_chip._addressBusHigh << 8) | _chip._addressBusLow) << ", " << +_chip.getAddressBus() << ", " << +_chip.getDataBus() <<  "\n";
-    }*/
+    if (_spriteCycleCount > 0) {
+        std::cout << std::hex << "DMC in SPR begin : " << +((_chip._addressBusHigh << 8) | _chip._addressBusLow) << ", " << +_chip.getAddressBus() << ", " << +_chip.getDataBus() << std::dec << "\n";
+    }
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
 bool Chip<EModel, TBus, TSoundHardware>::Dma::isWriteCycle() const { // TODO: retirer si pas besoin mais normalement l'apu en a besoin je pense!
     return _writeCycle;
 }
-
+/*
 template <Model EModel, class TBus, class TSoundHardware>
 bool Chip<EModel, TBus, TSoundHardware>::Dma::isIdle() const {
     //return ((_dmcCycleCount == 0) && (_spriteCycleCount == 0)) || (_waitCycleCount > 0);//TODO: ne fonctionne pas car waitCycleCount est decrementé avant d'etre checké !
     return _idle;
-}
+}*/
 
 template <Model EModel, class TBus, class TSoundHardware>
 void Chip<EModel, TBus, TSoundHardware>::Dma::process() {
-    // If need to wait
-    if (_waitCycleCount > 0) {
-        // Decrement counter
-        --_waitCycleCount;
-        
-        // Exit
-        return;
-    }
-    
     // If DMC DMA is started
     if (_dmcCycleCount > 0) {
+        // If need to wait
+        if (_dmcWaitCycleCount > 0) {
+            // Decrement counter
+            --_dmcWaitCycleCount;
+            
+            // Exit
+            return;
+        }
+        
+        // Synchronize first time (before disabling CPU)
+        if (((_dmcCycleCount & 0x1) != _writeCycle) && (!_dmcReadFirstSync)) {
+            _dmcReadFirstSync = true;
+            
+            return;
+        }
+        
+        // Wait for CPU ending with possible writes
+        if (_chip.InternalCpu::_readWrite == Cpu6502::ReadWrite::Write) {//TODO: internal ou pas ?? normalement oui
+            return;
+        }
+        
+        // Disable CPU
+        //_chip.ready(false);
+        _ready = false;
+        
+        // Synchronize second time (after disabling CPU)
+        if ((_dmcCycleCount & 0x1) != _writeCycle) {
+            return;
+        }
+        
         // Check that we are really on correct cycle
         assert((_dmcCycleCount & 0x1) == _writeCycle);
         
         // Set idle flag
-        _idle = false;
+        //_idle = false;
         
         // Decrement counter
         --_dmcCycleCount;
         
         // Read cycle
         if (!_writeCycle) {
+            if (_dmcCycleCount > 1) {
+                return;
+            }
+            
             // Read cycle (only inputDataLatch / predecode / RW from 6502 are affected)
             _chip.setAddressBus(_dmcAddress);
-            _chip._readWrite = Cpu6502::ReadWrite::Read;
+            _chip._readWrite = Cpu6502::ReadWrite::Read;//TODO: pas obligé normalement car copié d'internalcpu dans le clock et il est read car les write cycles ont été passé avant ici
         }
         // Write cycle
         else {
+            if (_dmcCycleCount > 0) {
+                return;
+            }
+            
             // Notify APU that sample is fetched
             _chip.apuDmcSampleFetched();
             
@@ -125,9 +176,10 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::process() {
             if (_spriteCycleCount == 0) {
                 // Reenable CPU
                 _chip.ready(true);
+                _ready = true;
                 
                 // Set idle flag
-                _idle = true;
+                //_idle = true;
             }/* else {
                 std::cout << std::hex << "DMC in SPR end : " << +((_chip._addressBusHigh << 8) | _chip._addressBusLow) << ", " << +_chip.getAddressBus() << ", " << +_chip.getDataBus() <<  "\n";
             }*/
@@ -139,11 +191,25 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::process() {
     
     // If Sprite DMA is started
     if (_spriteCycleCount > 0) {
+        // If need to wait
+        if (_spriteWaitCycleCount > 0) {
+            // Decrement counter
+            --_spriteWaitCycleCount;
+            
+            // Exit
+            return;
+        }
+        
+        // Synchronize
+        if ((_spriteCycleCount & 0x1) == _writeCycle) {
+            return;
+        }
+        
         // Check that we are really on correct cycle
         assert((_spriteCycleCount & 0x1) == (!_writeCycle));
         
         // Set idle flag
-        _idle = false;
+        //_idle = false;
         
         // Decrement counter
         --_spriteCycleCount;
@@ -154,17 +220,18 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::process() {
             if (_spriteCycleCount == 0) {
                 // Restore CPU state
                 _chip.setAddressBus((_chip._addressBusHigh << 8) | _chip._addressBusLow);
-                _chip._readWrite = Cpu6502::ReadWrite::Read;
+                //_chip._readWrite = Cpu6502::ReadWrite::Read;//TODO: pas obligé normalement car copié d'internalcpu dans le clock et il est read car les write cycles ont été passé avant ici
                 
                 // Reenable CPU
                 _chip.ready(true);
+                _ready = true;
                 
                 // Set idle flag
-                _idle = true;
+                //_idle = true;
             } else {
                 // Read cycle (only inputDataLatch / predecode / RW from 6502 is affected)
                 _chip.setAddressBus(_spriteAddress);
-                _chip._readWrite = Cpu6502::ReadWrite::Read;
+                _chip._readWrite = Cpu6502::ReadWrite::Read;//TODO: pas obligé normalement car copié d'internalcpu dans le clock et il est read car les write cycles ont été passé avant ici
                 
                 // Increment sprite address
                 ++_spriteAddress;
@@ -183,7 +250,7 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::process() {
 
 
 template <Model EModel, class TBus, class TSoundHardware>
-Chip<EModel, TBus, TSoundHardware>::Chip(TBus &bus, TSoundHardware &soundHardware) : _apu(*this, soundHardware), _bus(bus), _dma(*this), InternalCpu(*this)/*, _dmaStarted(false)*/ {
+Chip<EModel, TBus, TSoundHardware>::Chip(TBus &bus, TSoundHardware &soundHardware) : _apu(*this, soundHardware), _bus(bus), _dma(*this), InternalCpu(*this) {
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
@@ -193,7 +260,9 @@ void Chip<EModel, TBus, TSoundHardware>::powerUp(uint16_t programCounter, uint8_
     // Power up APU
     _apu.powerUp();
     
-    // Reset irq line
+    // Internal
+    _readWrite = Cpu6502::ReadWrite::Read;//TODO: voir si nécessaire car copié du rw du 6502 si pas dma : oui si dma clock apres l'instruction !
+    
     _irqLine = true;
     _apuIrqLine = true;
 }
@@ -230,7 +299,7 @@ void Chip<EModel, TBus, TSoundHardware>::startPhi1() {
     //_apu.clock();//TODO: je l'ai mis ici pour les tests, a voir
     
     // Start phi1
-    this->_phi2 = false;
+    InternalCpu::_phi2 = false;
     
     // Update PC
     InternalCpu::updateProgramCounter();
@@ -238,61 +307,64 @@ void Chip<EModel, TBus, TSoundHardware>::startPhi1() {
     // Initialize dataOutput to emulate possible bus conflict which cause a low level to win (it is like an AND operation)
     //_dataOutput = 0xFF;
     
-    // Check for DMA
-    //bool needToForceExecute = checkDmaPhi1();
-    _dma.clock();
-    
-    // If rdy is low, wait before perform next read cycle (or write cycle if sync) unless we force execute
-    if ((!this->_readyWaitRequested) || ((this->_readWrite != Cpu6502::ReadWrite::Read) && (_dma.isIdle()))) {
-        //if ((!this->_readyWaitRequested) || ((!this->_sync) && (this->_readWrite != Cpu6502::ReadWrite::Read)) || needToForceExecute) {//TODO: peut etre a la place de ca, appeler simplement l'instruction mais a chaque fois qu'on doit passer a l'instruction d'apres en settant _currentInstruction on le fait via une methode setNextInstruction qui va checker si readWaitRequested et pas write et si oui ne pas setter la next instruction mais voir si executer plusieurs fois l'instruction en cours ne pose pas de probleme (si un add ou autre est ce que ca va faire plusieurs add a la suite car dans ce cas ce n'est pas bon) : tout ceci pour avoir les operations qui s'execute en parallele d'un fetch ou d'un decode opcode (alu) : TODO: peut etre qu'on doit avoir une variable executionAllowed et cette variable est a true et si readyWaitRequested = true, elle reste a true tant que l'isntruction en cours est un write, une fois passé en read elle passe a false et reste a false jusqu'a ce que readyWaitRequested repasse a false (ce qui veut dire que si apres un read il y a un write (comme pendant le dma) ca n'autorise quand meme pas le cpu a refonctionner tant que rdy n'est pas high), voir si ainsi dans la réalité et si oui l'implementer (ca permettra de ne plus avoir besoin de Dma::isIdle) !
+    // If rdy is low, wait before perform next read cycle
+    if ((!InternalCpu::_readyWaitRequested) || (InternalCpu::_readWrite != Cpu6502::ReadWrite::Read)) {
+        //if ((!this->_readyWaitRequested) || ((!this->_sync) && (this->_readWrite != Cpu6502::ReadWrite::Read)) || needToForceExecute) {//TODO: peut etre a la place de needToForceExecute, appeler simplement l'instruction mais a chaque fois qu'on doit passer a l'instruction d'apres en settant _currentInstruction on le fait via une methode setNextInstruction qui va checker si readWaitRequested et pas write et si oui ne pas setter la next instruction mais voir si executer plusieurs fois l'instruction en cours ne pose pas de probleme (si un add ou autre est ce que ca va faire plusieurs add a la suite car dans ce cas ce n'est pas bon) : tout ceci pour avoir les operations qui s'execute en parallele d'un fetch ou d'un decode opcode (alu) : TODO: dmaWithASO foire a cause de ca car l'accu n'est pas mis a jour avant (pendant) le dma
         // Execute current stage
-        (this->*(this->_currentInstruction))();
+        (this->*(InternalCpu::_currentInstruction))();
     }
     
     // Clock APU
     _apu.clock();//TODO: voir si ok
+    
+    // Clock DMA
+    _dma.clockPhi1();//TODO: le mettre apres l'instruction ??
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
 void Chip<EModel, TBus, TSoundHardware>::endPhi1() {
-    // Read data on dataBus if it is in read mode
-    if (this->_readWrite == Cpu6502::ReadWrite::Read) {
+    InternalCpu::endPhi1();
+    /*// Read data on dataBus if it is in read mode
+    if (_readWrite == Cpu6502::ReadWrite::Read) {
         performRead();
     }
     // Set dataBus with last read value in it is in write mode
-    else {
+    /*else {
         setDataBus(this->_inputDataLatch);//TODO: a voir pq c'est nécessaire pour les tests
-    }
+    }/
     
     // Check for overflow flag
-    //InternalCpu::template checkSetOverflow<InternalCpu::SetOverflowEnabled>();
+    //InternalCpu::template checkSetOverflow<InternalCpu::SetOverflowEnabled>();*/
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
 void Chip<EModel, TBus, TSoundHardware>::startPhi2() {
     // Start phi2
-    this->_phi2 = true;
+    InternalCpu::_phi2 = true;
     
     // Fetch memory for phi2
-    if (this->_readWrite == Cpu6502::ReadWrite::Write) {
-        // Check for DMA
-        if (!_dma.isIdle()) {
+    if (_readWrite == Cpu6502::ReadWrite::Write) {
+        // If internal read/write signal is not the same than external, it's because a DMA is in progress
+        if (InternalCpu::_readWrite != Cpu6502::ReadWrite::Write) {
             _bus.performWrite();//TODO: optimisation en mettant _bus devant pour eviter le decodage de l'adresse ici car le dma ecrit tjs en $2004
         } else {
             // Write data to dataBus
-            setDataBus(this->_dataOutput);
+            setDataBus(InternalCpu::_dataOutput);
             performWrite();
         }
     }
+    
+    _dma.clockPhi2();
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
 void Chip<EModel, TBus, TSoundHardware>::endPhi2() {
-    // Copy data from dataBus on internal registers
-    if (this->_readWrite == Cpu6502::ReadWrite::Read) {
-        this->_inputDataLatch = getDataBus();
-        this->_predecode = this->_inputDataLatch;
-    }
+    InternalCpu::endPhi2();
+    /*// Copy data from dataBus on internal registers
+    //if (this->_readWrite == Cpu6502::ReadWrite::Read) {//TODO: par apres voir si pas toujours lu meme en write (tester avec visual) (peut etre plus besoin du setDataBus(this->_inputDataLatch); dans endPhi1 si ca !!! a voir
+        InternalCpu::_inputDataLatch = getDataBus();
+        InternalCpu::_predecode = InternalCpu::_inputDataLatch;
+    //}
     
     // Check reset
     //InternalCpu::template checkReset<InternalCpu::ResetAccurate>();   // TODO: normalement pas besoin car initialisé avec une config performance
@@ -302,13 +374,13 @@ void Chip<EModel, TBus, TSoundHardware>::endPhi2() {
     InternalCpu::checkIrq();
     
     // Check ready line
-    InternalCpu::checkReady();
+    InternalCpu::checkReady();*/
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
 void Chip<EModel, TBus, TSoundHardware>::reset(bool high) {
     // If reset
-    /*if (!high) {          // TODO: a reflechir pour le reset et le DMA (peut etre un _dma.reset(high);)
+    /*if (!high) {          // TODO: a reflechir pour le reset et le DMA (peut etre un _dma.reset(high);) OUI C'est SUR QU'IL FAUT LE RESET CAR SI ON EXECUTE LES TESTS UN PAR UN C'est ok mais tous en meme temps et ca foire apres le 1er car il n'est pas reset pour les autres tests ! (peut etre pas reset mais PowerUp c'est sur)
         // Stop possible DMA
         stopDma();
     }*/
@@ -335,8 +407,8 @@ void Chip<EModel, TBus, TSoundHardware>::irq(bool high) {
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
-Cpu6502::ReadWrite Chip<EModel, TBus, TSoundHardware>::getReadWriteSignal() const {
-    return InternalCpu::getReadWriteSignal();
+Cpu6502::ReadWrite Chip<EModel, TBus, TSoundHardware>::getReadWriteSignal() const {//TODO: voir lequel retourner !! normalement l'externe donc _readWrite
+    return _readWrite;//InternalCpu::getReadWriteSignal();
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
@@ -419,10 +491,8 @@ void Chip<EModel, TBus, TSoundHardware>::performWrite() {
     if ((address >= 0x4000) && (address < 0x4014)) {
         _apu.setChannelRegister(address, data);
     }
-    // DMA
+    // Sprite DMA
     else if (address == 0x4014) {
-        //startDma(data);
-        // Start Sprite DMA
         _dma.startSprite(data);
     }
     // APU status
@@ -448,123 +518,6 @@ void Chip<EModel, TBus, TSoundHardware>::performWrite() {
         _bus.performWrite();
     }
 }
-/*
-template <Model EModel, class TBus, class TSoundHardware>
-bool Chip<EModel, TBus, TSoundHardware>::checkDmaPhi1() {
-    // If DMC started
-    if (_dmcStarted) {
-        // Decrement DMC counter
-        --_dmcCount;
-        
-        if (_dmcCount == 1) {//TODO: il faut tjs commencer sur le meme cycle qu'un read spr dma si spr dma en execution (et s'il n'a pas attendu, laisser un autre cycle avec un read sur le address bus courant sinon continuer le spr dma le cycle d'apres) : est ce que c'est possible que le dmc dma commence quand le spr dma est en write ? car le dmc dma commence sur un apu cycle je pense, a verifier et voir aussi si un spr dma peut etre en write sur un cycle pair et sur un cycle impair ? peut etre c'est a cause de ca qu'il y a un extra cycle en impair (ou pair je ne sais plus), pour synchroniser avec l'apu dmc dma !!!
-            // TODO: pas besoin de sauver et de restaurer par apres le readwrite car meme s'il peut etre en write (fin d'interruption push stack), comme il attend suffisamment longtemps, l'instruction d'apres fait tjs un read !
-            _bus.setAddressBus(_dmcSampleAddress);
-            this->_readWrite = Cpu6502::ReadWrite::Read;
-        }
-        else if (_dmcCount == 0) {
-            // Notify APU that sample is fetched
-            _apu.dmcSampleFetched(_bus.getDataBus());
-            
-            // Restore CPU state
-            _bus.setAddressBus((this->_addressBusHigh << 8) | this->_addressBusLow);
-            /*_bus.setAddressBus(_temp);
-            if (_temp != ((this->_addressBusHigh << 8) | this->_addressBusLow)) {
-                std::cout << "different : " << +_temp << ", " << +((this->_addressBusHigh << 8) | this->_addressBusLow) << "\n";
-                std::cout << "spr dma address : " << ((_dmaAddress << 8) | (256 - _dmaCount)) << "\n";
-            }/
-            
-            // Reenable CPU if necessary
-            if (!_dmaStarted) {
-                InternalCpu::ready(true);
-            }
-            
-            // Reset flag
-            _dmcStarted = false;
-        }
-        
-        if ((_dmcCount > 0) && (this->_readWrite == Cpu6502::ReadWrite::Read)) return false;    // TODO: a voir
-    }
-    
-    // Don't execute DMA if not asked
-    if (!_dmaStarted) {
-        return false;
-    }
-    
-    // If DMA is completed
-    if (_dmaCount == 0) {
-        stopDma();
-        
-        return false;
-    }
-    
-    // Wait for DMA begin that CPU has terminated current instruction
-    if (!InternalCpu::getSyncSignal()) {//TOD: je ne pense pas que c'est bon de faire ca !!!
-        return false;
-    }
-    
-    // If DMA is in read phase
-    if (!_dmaToggle) {
-        // If DMA begin, wait a last clock to ensure that all operations are finished (some operations does other things in the method which call decode instruction)
-        if (_dmaCount > 256) {
-            --_dmaCount;
-            
-            // Force execution because method which call decode instruction is called after the fetch cycle and so RW is read and RDY is low, so if it's not forced, it will not be executed
-            return true;
-        }
-        
-        // Read from dmaAddress (only inputDataLatch / predecode / RW from 6502 is affected)
-        _bus.setAddressBus((_dmaAddress << 8) | (256 - _dmaCount));
-        this->_readWrite = Cpu6502::ReadWrite::Read;
-    }
-    // If DMA is in write phase
-    else {
-        // Write to PPU (only RW from 6502 is affected)
-        _bus.setAddressBus(0x2004);
-        this->_readWrite = Cpu6502::ReadWrite::Write;
-        
-        // One byte copied
-        --_dmaCount;
-    }
-    
-    _dmaToggle = !_dmaToggle;
-    
-    return false;
-}
-
-template <Model EModel, class TBus, class TSoundHardware>
-bool Chip<EModel, TBus, TSoundHardware>::checkDmaPhi2() {
-    // Need to write if DMA started and begin to read/write and in write mode
-    return (_dmaStarted && (_dmaCount <= 256) && (this->_readWrite == Cpu6502::ReadWrite::Write));
-}*/
-/*
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::startDma(uint8_t address) {
-    // Set address
-    _dmaAddress = address;
-    
-    // 257 for 1 extra cycle + 256 read-write cycles
-    _dmaCount = 257; //TODO: apparemment, ca attend 513 ou 514 cycles selon que c'est demandé sur un cycle pair ou impair !!! ici j'attend 513 cycles a chaque fois !
-    
-    // Set DMA flags
-    _dmaToggle = false;
-    _dmaStarted = true;
-    
-    // Disable CPU
-    InternalCpu::ready(false);
-}
-
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::stopDma() {
-    // Restore CPU state
-    _bus.setAddressBus((this->_addressBusHigh << 8) | this->_addressBusLow);
-    this->_readWrite = Cpu6502::ReadWrite::Read;
-    
-    // Reenable CPU
-    InternalCpu::ready(true);
-    
-    // Reset DMA flag
-    _dmaStarted = false;
-}*/
 
 template <Model EModel, class TBus, class TSoundHardware>
 void Chip<EModel, TBus, TSoundHardware>::apuIrq(bool high) {
@@ -576,31 +529,9 @@ void Chip<EModel, TBus, TSoundHardware>::apuIrq(bool high) {
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::apuDmcRequestSample(uint16_t address) {
+void Chip<EModel, TBus, TSoundHardware>::apuDmcRequestSample(uint16_t address, bool requestedOnEnable) {
     // Start DMC DMA
-    _dma.startDmc(address);
-    
-/*    if (_dmcStarted) {
-        return;
-    }
-    // Save address
-    _dmcSampleAddress = address;
-    
-    // 4 cycles delay
-    //_dmcCount = (_dmaStarted) ? 2 : 4;
-    _dmcCount = (this->_readWrite == Cpu6502::ReadWrite::Write) ? 4 : 5;
-    if (_dmaStarted) {
-        std::cout << "dmc dma in spr dma\n";
-        _dmcCount = 3;
-        if (_dmaCount == 2) _dmcCount = 2;
-        if (_dmaCount == 1) _dmcCount = 4;
-    }
-    
-    // Set DMC flag
-    _dmcStarted = true;
-    
-    // Disable CPU
-    InternalCpu::ready(false);*/
+    _dma.startDmc(address, requestedOnEnable);
     
     /*
     uint16_t currentAddress = getAddressBus();
@@ -612,6 +543,7 @@ void Chip<EModel, TBus, TSoundHardware>::apuDmcRequestSample(uint16_t address) {
 
 template <Model EModel, class TBus, class TSoundHardware>
 void Chip<EModel, TBus, TSoundHardware>::apuDmcSampleFetched() {
+    // Notify APU that a DMC sample is fetched
     _apu.dmcSampleFetched(getDataBus());
 }
 

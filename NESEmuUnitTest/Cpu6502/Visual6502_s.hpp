@@ -340,6 +340,8 @@ void Analyzer<TCpu6502>::analyze(TCpu6502 &cpu6502, TFunction &&checkResult, int
             // Execute CPU
             if ((cycle & 0x1) == 0x0) {
                 cpu6502.endPhi1();
+                
+                cpu6502.correctDataBusForVisual6502();
             } else {
                 cpu6502.endPhi2();
             }
@@ -474,14 +476,15 @@ void Analyzer<TCpu6502>::decodeUrlParameter(std::string const &name, std::string
     
     // Address
     if (name == "a") {
-        command.data.insert({ std::stoi(value, 0, 16), std::vector<uint8_t>() });
+        command.data.push_back({ std::stoi(value, 0, 16), std::vector<uint8_t>() });
         return;
     }
     
     // Data
     if (name == "d") {
-        if (command.data.rbegin() != command.data.rend()) {
-            auto &commandDataBytes = command.data.rbegin()->second;
+        // Check to ensure that we have first set an address in url
+        if (command.data.size() > 0) {
+            auto &commandDataBytes = command.data.back().second;
             
             for (std::string::size_type index = 0; index < value.size(); index += 2) {
                 auto byte = value.substr(index, 2);

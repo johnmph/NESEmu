@@ -125,7 +125,8 @@ namespace {
     }
     
     // Analyze
-    visual6502Analyzer.analyze(cpu2A03, [self](bool result, std::string const &name) { XCTAssertTrue(result); }, 16);
+    visual6502Analyzer.analyze(cpu2A03, [self](bool result, std::string const &name) { if (!result) { std::cout << name << "\n"; }
+        XCTAssertTrue(result); }, 16);
     
     // Close file
     ifsLog.close();
@@ -153,6 +154,42 @@ namespace {
 
 - (void)testResetInDma {
     [self testFile:@"ResetInDma.txt"];    // TODO: ajouté don't check pour db pendant les phi1 des push stack du nmi car le db devrait etre ea ???
+}
+
+- (void)testDmaOddCycle {
+    [self testFile:@"DmaOddCycle.txt"];
+}
+
+- (void)testDmaEvenCycle {
+    [self testFile:@"DmaEvenCycle.txt"];
+}
+
+- (void)testDmcDmaOddCycle {
+    [self testFile:@"DmcDmaOddCycle.txt"];
+}
+
+- (void)testDmcDmaEvenCycle {
+    [self testFile:@"DmcDmaEvenCycle.txt"]; // TODO: ne passe pas car le meme que DMA ASO (execution de l'instruction secondaire au decodeopcode)
+}
+
+- (void)testDmcDmaOnWriteOddCycle {
+    [self testFile:@"DmcDmaOnWriteOddCycle.txt"];
+}
+
+- (void)testDmcDmaOnWriteEvenCycle {
+    [self testFile:@"DmcDmaOnWriteEvenCycle.txt"];
+}
+
+- (void)testDmcDmaOnDoubleWriteOddCycle {
+    [self testFile:@"DmcDmaOnDoubleWriteOddCycle.txt"]; // TODO: sur le phi1 apres le DMC dma, le bus a deja la valeur a écrire, désactivé le check du db pour le moment a ce cycle
+}
+
+- (void)testDmcDmaOnDoubleWriteEvenCycle {
+    [self testFile:@"DmcDmaOnDoubleWriteEvenCycle.txt"];     // TODO: sur le phi1 apres le DMC dma, le bus a deja la valeur a écrire, désactivé le check du db pour le moment a ce cycle
+}
+
+- (void)testBlarggSyncDmc {
+    [self testFile:@"BlarggSyncDmc.txt"];
 }
 
 @end

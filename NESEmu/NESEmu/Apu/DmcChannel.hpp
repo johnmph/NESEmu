@@ -27,6 +27,7 @@ namespace NESEmu { namespace Apu {
         void clock();
         
         // Properties
+        bool isEnabled() const;
         uint16_t getSampleRemainingBytesCount() const;
         void setEnabled(bool enabled);
         bool getInterrupt() const;
@@ -48,7 +49,7 @@ namespace NESEmu { namespace Apu {
         
         TChip &_chip;
         uint8_t _shiftRegister;
-        uint8_t _shiftRegisterRemainingBitsCounter;
+        uint8_t _shiftRegisterShiftedBitsCounter;
         bool _silenceFlag;
         uint16_t _counter;
         uint16_t _timer;
@@ -62,6 +63,9 @@ namespace NESEmu { namespace Apu {
         bool _loopFlag;
         bool _interrupt;
         bool _enableInterrupt;
+        
+        uint8_t _requestDisable;
+        bool _enabled;
     };
     
     #include "DmcChannel_s.hpp"

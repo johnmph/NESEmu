@@ -231,9 +231,9 @@ void Chip<TConfiguration>::endPhi1() {
         _bus.performRead();
     }
     // Set dataBus with last read value in it is in write mode
-    else {
+    /*else {
         _bus.setDataBus(_inputDataLatch);//TODO: a voir pq c'est nécessaire pour les tests
-    }
+    }*/
     
     // Check for overflow flag
     checkSetOverflow<SetOverflowEnabled>();
@@ -255,10 +255,10 @@ void Chip<TConfiguration>::startPhi2() {
 template <class TConfiguration>
 void Chip<TConfiguration>::endPhi2() {
     // Copy data from dataBus on internal registers
-    if (_readWrite == ReadWrite::Read) {
+    //if (_readWrite == ReadWrite::Read) {
         _inputDataLatch = _bus.getDataBus();
         _predecode = _inputDataLatch;
-    }
+    //}
     
     // Check reset
     checkReset<ResetAccurate>();
@@ -416,9 +416,9 @@ void Chip<TConfiguration>::fetchOpcode() {
 template <class TConfiguration>
 void Chip<TConfiguration>::decodeOpcodeAndExecuteInstruction() {
     // We need this because some instructions will perform actions in the decode step of the next instruction, so we need to let them perform actions even if RDY is low, but we can't decode next opcode because opcode is not ready for reading
-    if (_readyWaitRequested) {//TODO: voir si encore besoin avec la nouvelle technique du dma
+    /*if (_readyWaitRequested) {//TODO: remettre si execution pendant rdy low !!!
         return;
-    }
+    }*/
     
     // Get current instruction from opcode (or BRK (0) if interrupt requested)
     _instruction = (_interruptRequested) ? 0 : _predecode;

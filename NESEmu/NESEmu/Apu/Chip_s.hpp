@@ -86,7 +86,8 @@ template <class TCpu, class TSoundHardware>
 uint8_t Chip<TCpu, TSoundHardware>::getStatusRegister() {
     uint8_t data = (_dmcChannel.getInterrupt() << 7) |
                    (_frameCounter.getInterrupt() << 6) |
-                   ((_dmcChannel.getSampleRemainingBytesCount() > 0) << 4) |
+                   //((_dmcChannel.getSampleRemainingBytesCount() > 0) << 4) |
+                   (_dmcChannel.isEnabled() << 4) |
                    (_noiseChannel.getLengthCounterOutput() << 3) |
                    (_triangleChannel.getLengthCounterOutput() << 2) |
                    (_pulseChannel[1].getLengthCounterOutput() << 1) |
@@ -169,8 +170,8 @@ void Chip<TCpu, TSoundHardware>::clockFrameCounterHalfFrame() {
 }
 
 template <class TCpu, class TSoundHardware>
-void Chip<TCpu, TSoundHardware>::requestDmcSample(uint16_t address) {
-    _cpu.apuDmcRequestSample(address);
+void Chip<TCpu, TSoundHardware>::requestDmcSample(uint16_t address, bool requestedOnEnable) {
+    _cpu.apuDmcRequestSample(address, requestedOnEnable);
 }
 
 template <class TCpu, class TSoundHardware>

@@ -31,17 +31,15 @@ DmcChannel<TChip>::DmcChannel(TChip &chip) : _chip(chip) {
 
 template <class TChip>
 void DmcChannel<TChip>::powerUp() {
-    // This is decremented first then checked so it need to start at value 1 to start a new cycle
-    _shiftRegisterRemainingBitsCounter = 1;
-    
     // Start silenced
     _silenceFlag = true;    // TODO: voir si ok
     
-    // Initialize timer at its minimal value
+    // Initialize timer at its first rate value
     _timer = _rates[0];
     
-    // Counter is decrement first then checked so it need to start at a value > 0
-    _counter = _timer;//TODO: _timer ou 1 ? (attention si 1, on doit inverser le test de even cycle pour le request dmc sample)
+    // The first shift register clock happen after 1024 CPU clock cycles (due to LFSR start state)
+    // See : http://forums.nesdev.com/viewtopic.php?f=3&t=19910
+    _counter = 1024;
     
     // Initialize sample address and length at their minimal values
     // See https://forums.nesdev.com/viewtopic.php?f=3&t=18278
@@ -49,7 +47,8 @@ void DmcChannel<TChip>::powerUp() {
     _sampleLength = 1;
     
     // Initialize remaining at zero
-    _shiftRegister = 0x0;
+    _shiftRegister = 0xFF;
+    _shiftRegisterShiftedBitsCounter = 0;
     _outputLevel = 0;
     _currentSampleAddress = 0x0;
     _sampleRemainingBytes = 0;
@@ -58,6 +57,9 @@ void DmcChannel<TChip>::powerUp() {
     _loopFlag = false;
     _interrupt = false;
     _enableInterrupt = false;
+    
+    _enabled = false;
+    _requestDisable = false;
 }
 
 template <class TChip>
@@ -88,11 +90,11 @@ void DmcChannel<TChip>::clock() {
         
         // Update shift register
         _shiftRegister >>= 1;
-        --_shiftRegisterRemainingBitsCounter;
+        ++_shiftRegisterShiftedBitsCounter;
         
         // If need to start a new cycle
-        if (_shiftRegisterRemainingBitsCounter == 0) {
-            _shiftRegisterRemainingBitsCounter = 8;
+        if (_shiftRegisterShiftedBitsCounter == 8) {
+            _shiftRegisterShiftedBitsCounter = 0;
             
             // If sample buffer is filled
             if (_sampleBufferFilled) {
@@ -102,6 +104,12 @@ void DmcChannel<TChip>::clock() {
                 
                 // Reset silence flag
                 _silenceFlag = false;
+                
+                // Request a sample if necessary
+                if (_sampleRemainingBytes > 0) {
+                    _chip.requestDmcSample(_currentSampleAddress, false);
+                }
+
             } else {
                 // Set silence flag
                 _silenceFlag = true;
@@ -110,9 +118,30 @@ void DmcChannel<TChip>::clock() {
     }
     
     // Request a sample if necessary (only on even cycle)
-    if ((!_sampleBufferFilled) && (_sampleRemainingBytes > 0) && ((_counter & 0x1) != 0)) {
-        _chip.requestDmcSample(_currentSampleAddress);
+/*    if ((!_sampleBufferFilled) && (_sampleRemainingBytes > 0)/* && ((_counter & 0x1) != 0)/) {
+        _chip.requestDmcSample(_currentSampleAddress, false);
+    }*/
+    
+    // Check if need to disable
+    if (_requestDisable > 0) {
+        --_requestDisable;
+        
+        // Disable
+        if (_requestDisable == 0) {
+            _enabled = false;
+            _requestDisable = false;
+            
+            // If IRQ enabled
+            if (_enableInterrupt) {
+                _interrupt = true;
+            }
+        }
     }
+}
+
+template <class TChip>
+bool DmcChannel<TChip>::isEnabled() const {
+    return _enabled;
 }
 
 template <class TChip>
@@ -128,15 +157,26 @@ void DmcChannel<TChip>::setEnabled(bool enabled) {//TODO: a voir
         if (_sampleRemainingBytes == 0) {
             _currentSampleAddress = _sampleAddress;
             _sampleRemainingBytes = _sampleLength;
+            
+            if (!_sampleBufferFilled) {//TODO: ici plutot ? est ce possible d'avoir remainingBytes > 0 et d'avoir sampleBufferFilled false quand reenabled ???
+                _chip.requestDmcSample(_currentSampleAddress, true);
+            }
         }
         
         // TODO: voir si appeler ici load sample ou si c'est bon niveau timing juste dans le clock !!!
+        // Request a sample if necessary
+        //if (!_sampleBufferFilled) {   // TODO: voir si c'est pas le probleme du spr et dma dmc mais reflechir si ca revient pas au meme de l'avoir ou non ici avec l'autre dans le clock (mais voir si quand 2 d'affilée si ca annule le premier !!!)
+            //_chip.requestDmcSample(_currentSampleAddress);
+        //}
     }
     // Disabled
     else {
         // Reset sample remaining bytes
         _sampleRemainingBytes = 0;
     }
+    
+    // Set enabled flag
+    _enabled = enabled; // TODO: activer ou desactiver le canal par ici le fait directement, pas de delai, donc c'est bon ainsi
 }
 
 template <class TChip>
@@ -212,10 +252,15 @@ void DmcChannel<TChip>::sampleFetched(uint8_t data) {
             return;
         }
         
-        // If IRQ enabled
-        if (_enableInterrupt) {
-            _interrupt = true;
+        _requestDisable = 2 + (_counter & 0x1);//TODO: ainsi ??? normalement toujours 3 non ? : pour simuler le vrai comportement d'apres Visual mais a cause de ca ca ne passe plus le apu_test (one byte buffer)
+        if ((_counter & 0x1) == 0) {
+            std::cout << "Counter even\n";
         }
+        
+        // If IRQ enabled
+        /*if (_enableInterrupt) {
+            _interrupt = true;
+        }*/
     }
 }
 

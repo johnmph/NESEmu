@@ -25,12 +25,12 @@ namespace {
     
     struct Bus {
         uint8_t read(uint16_t address) {
-            //std::cout << std::hex << "Read 0x" << static_cast<int>(memory[address]) << " at 0x" << address << "\n";
+            //std::cout << std::hex << "Read 0x" << +memory[address] << " at 0x" << address << "\n";
             return memory[address];
         }
         
         void write(uint16_t address, uint8_t data) {
-            //std::cout << std::hex << "Write 0x" << static_cast<int>(data) << " at 0x" << address << "\n";
+            //std::cout << std::hex << "Write 0x" << +data << " at 0x" << address << "\n";
             memory[address] = data;
         }
         

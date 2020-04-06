@@ -59,20 +59,22 @@ namespace NESEmu { namespace Cpu {
     //private:
     protected:  // TODO: needed protected for unit test, else we can set it private
         
-        struct Dma {
+        struct Dma {//TODO: par apres  mettre cette classe a l'exterieur et dans son propre header file ?
             
             Dma(Chip &chip);
             
             // Clock
-            void clock();
+            void clockPhi1();
+            void clockPhi2();
+            //void setReadWrite();
             
             // Start
             void startSprite(uint8_t address);
-            void startDmc(uint16_t address);
+            void startDmc(uint16_t address, bool requestedOnEnable);
             
             // Properties
             bool isWriteCycle() const;
-            bool isIdle() const;
+            //bool isIdle() const;
             
         private:
             
@@ -83,9 +85,13 @@ namespace NESEmu { namespace Cpu {
             uint16_t _dmcAddress;
             uint16_t _spriteCycleCount;
             uint8_t _dmcCycleCount;
-            uint8_t _waitCycleCount;
+            uint8_t _spriteWaitCycleCount;
+            uint8_t _dmcWaitCycleCount;
             bool _writeCycle;
-            bool _idle;
+            //bool _idle;
+            
+            bool _ready;
+            bool _dmcReadFirstSync;
         };
         
         
@@ -110,33 +116,19 @@ namespace NESEmu { namespace Cpu {
         void performRead();
         void performWrite();
         
-        // DMA
-        /*bool checkDmaPhi1();
-        bool checkDmaPhi2();
-        void startDma(uint8_t address);
-        void stopDma();*/
-        
         // APU
         void apuIrq(bool high);
-        void apuDmcRequestSample(uint16_t address);
+        void apuDmcRequestSample(uint16_t address, bool requestedOnEnable);
         void apuDmcSampleFetched();
         
         // Internal
         Apu::Chip<Chip, TSoundHardware> _apu;
         TBus &_bus;
-        
         Dma _dma;
-        /*
-        int _dmaCount;
-        uint8_t _dmaAddress;
-        bool _dmaStarted;
-        bool _dmaToggle;*/
         
         uint8_t _outLatch;
-        /*
-        int _dmcCount;
-        uint16_t _dmcSampleAddress;
-        bool _dmcStarted;*/
+        
+        Cpu6502::ReadWrite _readWrite;
         
         bool _irqLine;
         bool _apuIrqLine;

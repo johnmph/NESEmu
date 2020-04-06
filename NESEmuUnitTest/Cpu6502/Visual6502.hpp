@@ -12,7 +12,6 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <map>
 #include <utility>
 #include <istream>
 
@@ -23,7 +22,7 @@ namespace Visual6502 {
         UrlCommand();
         
         std::unordered_map<std::string, std::vector<std::pair<int, int>>> checkAttribute;
-        std::map<int, std::vector<uint8_t>> data;
+        std::vector<std::pair<int, std::vector<uint8_t>>> data;
         int numCyclesToExecute;
         std::vector<std::pair<int, int>> resetLine;
         std::vector<std::pair<int, int>> nmiLine;

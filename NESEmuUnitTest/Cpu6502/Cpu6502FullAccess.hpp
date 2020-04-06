@@ -29,6 +29,16 @@ struct Cpu6502FullAccess : Cpu6502::Chip<TConfiguration> {
         return this->_bus.getDataBus();
     }
     
+    void correctDataBusForVisual6502() {
+        uint8_t data = this->_bus.getDataBus();
+        
+        if (this->_readWrite == Cpu6502::ReadWrite::Write) {
+            this->_bus.setDataBus(_lastDataBusReadValue);
+        } else {
+            _lastDataBusReadValue = data;
+        }
+    }
+    
     uint16_t getProgramCounter() const {
         return (this->_programCounterHigh << 8) | this->_programCounterLow;
     }
@@ -56,6 +66,9 @@ struct Cpu6502FullAccess : Cpu6502::Chip<TConfiguration> {
     bool getReadyLine() const {
         return this->_readyLine;
     }
+    
+private:
+    uint8_t _lastDataBusReadValue;
 };
 
 #endif /* Cpu6502FullAccess_hpp */
