@@ -1,251 +1,18 @@
 //
-//  Visual6502_s.hpp
+//  Analyzer_s.hpp
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 6/02/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef Visual6502_s_hpp
-#define Visual6502_s_hpp
+#ifndef VisualUnitTest_Analyzer_s_hpp
+#define VisualUnitTest_Analyzer_s_hpp
 
 
-template <class TCpu6502>
-Attribute<TCpu6502>::Attribute(std::string const &name) : _name(name), _enableCheck(true) {
-}
-
-template <class TCpu6502>
-Attribute<TCpu6502>::~Attribute() {
-}
-
-template <class TCpu6502>
-std::string const &Attribute<TCpu6502>::getName() {
-    return _name;
-}
-
-template <class TCpu6502>
-void Attribute<TCpu6502>::setEnableCheck(bool enableCheck) {
-    _enableCheck = enableCheck;
-}
-
-template <class TCpu6502>
-bool Attribute<TCpu6502>::compareValue(TCpu6502 &cpu6502) {
-    if (_enableCheck) {
-        return check(cpu6502);
-    }
-    
-    return true;
-}
-
-template <class TCpu6502>
-AttributeDontCheck<TCpu6502>::AttributeDontCheck(std::string const &name) : Attribute<TCpu6502>(name) {
-}
-
-template <class TCpu6502>
-void AttributeDontCheck<TCpu6502>::setValue(std::string const &value) {
-}
-
-template <class TCpu6502>
-bool AttributeDontCheck<TCpu6502>::check(TCpu6502 &cpu6502) {
-    return true;
-}
-
-template <class TCpu6502>
-AttributeAb<TCpu6502>::AttributeAb(std::string const &name) : Attribute<TCpu6502>(name) {
-}
-
-template <class TCpu6502>
-void AttributeAb<TCpu6502>::setValue(std::string const &value) {
-    _ab = std::stoi(value, 0, 16);
-}
-
-template <class TCpu6502>
-bool AttributeAb<TCpu6502>::check(TCpu6502 &cpu6502) {
-    return cpu6502.getAddressBus() == _ab;
-}
-
-template <class TCpu6502>
-AttributeDb<TCpu6502>::AttributeDb(std::string const &name) : Attribute<TCpu6502>(name) {
-}
-
-template <class TCpu6502>
-void AttributeDb<TCpu6502>::setValue(std::string const &value) {
-    _db = std::stoi(value, 0, 16);
-}
-
-template <class TCpu6502>
-bool AttributeDb<TCpu6502>::check(TCpu6502 &cpu6502) {
-    return cpu6502.getDataBus() == _db;
-}
-
-template <class TCpu6502>
-AttributeRw<TCpu6502>::AttributeRw(std::string const &name) : Attribute<TCpu6502>(name) {
-}
-
-template <class TCpu6502>
-void AttributeRw<TCpu6502>::setValue(std::string const &value) {
-    _rw = std::stoi(value, 0, 10);
-}
-
-template <class TCpu6502>
-bool AttributeRw<TCpu6502>::check(TCpu6502 &cpu6502) {
-    return static_cast<bool>(cpu6502.getReadWriteSignal()) == _rw;
-}
-
-template <class TCpu6502>
-AttributePc<TCpu6502>::AttributePc(std::string const &name) : Attribute<TCpu6502>(name) {
-}
-
-template <class TCpu6502>
-void AttributePc<TCpu6502>::setValue(std::string const &value) {
-    _pc = std::stoi(value, 0, 16);
-}
-
-template <class TCpu6502>
-bool AttributePc<TCpu6502>::check(TCpu6502 &cpu6502) {
-    return cpu6502.getProgramCounter() == _pc;
-}
-
-template <class TCpu6502>
-AttributePcl<TCpu6502>::AttributePcl(std::string const &name) : Attribute<TCpu6502>(name) {
-}
-
-template <class TCpu6502>
-void AttributePcl<TCpu6502>::setValue(std::string const &value) {
-    _pcl = std::stoi(value, 0, 16);
-}
-
-template <class TCpu6502>
-bool AttributePcl<TCpu6502>::check(TCpu6502 &cpu6502) {
-    return (cpu6502.getProgramCounter() & 0xFF) == _pcl;
-}
-
-template <class TCpu6502>
-AttributePch<TCpu6502>::AttributePch(std::string const &name) : Attribute<TCpu6502>(name) {
-}
-
-template <class TCpu6502>
-void AttributePch<TCpu6502>::setValue(std::string const &value) {
-    _pch = std::stoi(value, 0, 16);
-}
-
-template <class TCpu6502>
-bool AttributePch<TCpu6502>::check(TCpu6502 &cpu6502) {
-    return (cpu6502.getProgramCounter() >> 8) == _pch;
-}
-
-template <class TCpu6502>
-AttributeA<TCpu6502>::AttributeA(std::string const &name) : Attribute<TCpu6502>(name) {
-}
-
-template <class TCpu6502>
-void AttributeA<TCpu6502>::setValue(std::string const &value) {
-    _a = std::stoi(value, 0, 16);
-}
-
-template <class TCpu6502>
-bool AttributeA<TCpu6502>::check(TCpu6502 &cpu6502) {
-    return cpu6502.getAccumulator() == _a;
-}
-
-template <class TCpu6502>
-AttributeX<TCpu6502>::AttributeX(std::string const &name) : Attribute<TCpu6502>(name) {
-}
-
-template <class TCpu6502>
-void AttributeX<TCpu6502>::setValue(std::string const &value) {
-    _x = std::stoi(value, 0, 16);
-}
-
-template <class TCpu6502>
-bool AttributeX<TCpu6502>::check(TCpu6502 &cpu6502) {
-    return cpu6502.getXIndex() == _x;
-}
-
-template <class TCpu6502>
-AttributeY<TCpu6502>::AttributeY(std::string const &name) : Attribute<TCpu6502>(name) {
-}
-
-template <class TCpu6502>
-void AttributeY<TCpu6502>::setValue(std::string const &value) {
-    _y = std::stoi(value, 0, 16);
-}
-
-template <class TCpu6502>
-bool AttributeY<TCpu6502>::check(TCpu6502 &cpu6502) {
-    return cpu6502.getYIndex() == _y;
-}
-
-template <class TCpu6502>
-AttributeS<TCpu6502>::AttributeS(std::string const &name) : Attribute<TCpu6502>(name) {
-}
-
-template <class TCpu6502>
-void AttributeS<TCpu6502>::setValue(std::string const &value) {
-    _s = std::stoi(value, 0, 16);
-}
-
-template <class TCpu6502>
-bool AttributeS<TCpu6502>::check(TCpu6502 &cpu6502) {
-    return cpu6502.getStackPointer() == _s;
-}
-
-template <class TCpu6502>
-AttributeP<TCpu6502>::AttributeP(std::string const &name) : Attribute<TCpu6502>(name) {
-}
-
-template <class TCpu6502>
-void AttributeP<TCpu6502>::setValue(std::string const &value) {
-    _p = 0x20;
-    
-    _p |= (value[0] == 'N') << 7;
-    _p |= (value[1] == 'V') << 6;
-    // Unused flag always set, already set when initialized _p
-    _p |= (value[3] == 'B') << 4;
-    _p |= (value[4] == 'D') << 3;
-    _p |= (value[5] == 'I') << 2;
-    _p |= (value[6] == 'Z') << 1;
-    _p |= (value[7] == 'C');
-}
-
-template <class TCpu6502>
-bool AttributeP<TCpu6502>::check(TCpu6502 &cpu6502) {
-    // B is not a flag, it doesn't really exists, it's just the value pushed on the stack which differency BRK instruction from interrupts
-    // In Visual6502, B is representing the node which conditionally drives the data bus during a push of P
-    return (cpu6502.getStatusFlags() & 0xEF) == (_p & 0xEF);
-}
-
-template <class TCpu6502>
-AttributeSync<TCpu6502>::AttributeSync(std::string const &name) : Attribute<TCpu6502>(name) {
-}
-
-template <class TCpu6502>
-void AttributeSync<TCpu6502>::setValue(std::string const &value) {
-    _sync = std::stoi(value, 0, 10);
-}
-
-template <class TCpu6502>
-bool AttributeSync<TCpu6502>::check(TCpu6502 &cpu6502) {
-    return cpu6502.getSyncSignal() == _sync;
-}
-
-template <class TCpu6502>
-AttributeReadyLine<TCpu6502>::AttributeReadyLine(std::string const &name) : Attribute<TCpu6502>(name) {
-}
-
-template <class TCpu6502>
-void AttributeReadyLine<TCpu6502>::setValue(std::string const &value) {
-    _readyLine = std::stoi(value, 0, 10);
-}
-
-template <class TCpu6502>
-bool AttributeReadyLine<TCpu6502>::check(TCpu6502 &cpu6502) {
-    return cpu6502.getReadyLine() == _readyLine;
-}
-
-template <class TCpu6502>
-template <class TFunction>
-Analyzer<TCpu6502>::Analyzer(std::istream &istream, TFunction &&writeFunction) : _istream(istream) {
+template <class TCpu>
+template <class TAttributeFactoryFunction, class TWriteFunction>
+Analyzer<TCpu>::Analyzer(std::istream &istream, TAttributeFactoryFunction &&attributeFactoryFunction, TWriteFunction &&writeFunction) : _istream(istream) {
     std::string line;
     
     // Read and decode url
@@ -254,7 +21,7 @@ Analyzer<TCpu6502>::Analyzer(std::istream &istream, TFunction &&writeFunction) :
     
     // Read and decode attributes
     std::getline(_istream, line);
-    decodeAttributes(line);
+    decodeAttributes(attributeFactoryFunction, line);
     
     // Set data in memory
     for (auto const &data : _command.data) {
@@ -264,9 +31,9 @@ Analyzer<TCpu6502>::Analyzer(std::istream &istream, TFunction &&writeFunction) :
     }
 }
 
-template <class TCpu6502>
+template <class TCpu>
 template <class TFunction>
-void Analyzer<TCpu6502>::analyze(TCpu6502 &cpu6502, TFunction &&checkResult, int startCycle) {
+void Analyzer<TCpu>::analyze(TCpu &cpu6502, TFunction &&checkResult, int startCycle) {
     int cycle = startCycle;
     int lastResultFullCycle = -1;
     
@@ -396,65 +163,8 @@ void Analyzer<TCpu6502>::analyze(TCpu6502 &cpu6502, TFunction &&checkResult, int
     }
 }
 
-template <class TCpu6502>
-std::unique_ptr<Attribute<TCpu6502>> Analyzer<TCpu6502>::makeAttributeFromName(std::string const &name) {
-    if (name == "ab") {
-        return std::make_unique<AttributeAb<TCpu6502>>(name);
-    }
-    
-    if (name == "db") {
-        return std::make_unique<AttributeDb<TCpu6502>>(name);
-    }
-    
-    if (name == "rw") {
-        return std::make_unique<AttributeRw<TCpu6502>>(name);
-    }
-    
-    if (name == "pc") {
-        return std::make_unique<AttributePc<TCpu6502>>(name);
-    }
-    
-    if (name == "pcl") {
-        return std::make_unique<AttributePcl<TCpu6502>>(name);
-    }
-    
-    if (name == "pch") {
-        return std::make_unique<AttributePch<TCpu6502>>(name);
-    }
-    
-    if (name == "a") {
-        return std::make_unique<AttributeA<TCpu6502>>(name);
-    }
-    
-    if (name == "x") {
-        return std::make_unique<AttributeX<TCpu6502>>(name);
-    }
-    
-    if (name == "y") {
-        return std::make_unique<AttributeY<TCpu6502>>(name);
-    }
-    
-    if (name == "s") {
-        return std::make_unique<AttributeS<TCpu6502>>(name);
-    }
-    
-    if (name == "p") {
-        return std::make_unique<AttributeP<TCpu6502>>(name);
-    }
-    
-    if (name == "sync") {
-        return std::make_unique<AttributeSync<TCpu6502>>(name);
-    }
-    
-    if (name == "rdy") {
-        return std::make_unique<AttributeReadyLine<TCpu6502>>(name);
-    }
-    
-    return std::make_unique<AttributeDontCheck<TCpu6502>>(name);
-}
-
-template <class TCpu6502>
-void Analyzer<TCpu6502>::decodeUrlParameter(std::string const &name, std::string const &value, UrlCommand &command) {
+template <class TCpu>
+void Analyzer<TCpu>::decodeUrlParameter(std::string const &name, std::string const &value, UrlCommand &command) {
     // Added parameter -> check0xx with xx as name of attribute = disable check for this attribute at the value cycle
     if (name.find("check0") == 0) {
         auto attributeName = name.substr(6);
@@ -577,8 +287,8 @@ void Analyzer<TCpu6502>::decodeUrlParameter(std::string const &name, std::string
     }
 }
 
-template <class TCpu6502>
-void Analyzer<TCpu6502>::decodeUrl(std::string const &url) {
+template <class TCpu>
+void Analyzer<TCpu>::decodeUrl(std::string const &url) {
     // Browse url starting GET request
     for (auto index = url.find("?"); index != std::string::npos;) {
         // Skip search char
@@ -602,8 +312,9 @@ void Analyzer<TCpu6502>::decodeUrl(std::string const &url) {
     }
 }
 
-template <class TCpu6502>
-void Analyzer<TCpu6502>::decodeAttributes(std::string attributesString) {
+template <class TCpu>
+template <class TAttributeFactoryFunction>
+void Analyzer<TCpu>::decodeAttributes(TAttributeFactoryFunction &&attributeFactoryFunction, std::string attributesString) {
     // Add a tab to attributesString to save also last attribute
     attributesString += '\t';
     
@@ -612,7 +323,7 @@ void Analyzer<TCpu6502>::decodeAttributes(std::string attributesString) {
         // Save attribute and skip tabs and spaces
         if ((attributesString[index] == '\t') || (attributesString[index] == ' ')) {
             if (!attribute.empty()) {
-                _attributes.attributes.push_back(makeAttributeFromName(attribute));
+                _attributes.attributes.push_back(attributeFactoryFunction(attribute));
                 attribute = "";
             }
             
@@ -624,8 +335,8 @@ void Analyzer<TCpu6502>::decodeAttributes(std::string attributesString) {
     }
 }
 
-template <class TCpu6502>
-std::vector<std::string> Analyzer<TCpu6502>::decodeResults(std::string resultsString) {
+template <class TCpu>
+std::vector<std::string> Analyzer<TCpu>::decodeResults(std::string resultsString) {
     std::vector<std::string> results;
     
     // Add a tab to resultsString to save also last result
@@ -651,4 +362,4 @@ std::vector<std::string> Analyzer<TCpu6502>::decodeResults(std::string resultsSt
     return results;
 }
 
-#endif /* Visual6502_s_hpp */
+#endif /* VisualUnitTest_Cpu6502_Analyzer_s_hpp */

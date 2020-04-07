@@ -1,5 +1,5 @@
 //
-//  ChipNestestUnitTest.mm
+//  Cpu6502NestestUnitTest.mm
 //  NESEmuUnitTest
 //
 //  Created by Jonathan Baliko on 14/01/20.
@@ -14,11 +14,11 @@
 #include "Cpu6502FullAccess.hpp"
 
 
-@interface ChipNestestUnitTest : XCTestCase
+@interface Cpu6502NestestUnitTest : XCTestCase
 
 @end
 
-@implementation ChipNestestUnitTest
+@implementation Cpu6502NestestUnitTest
 
 namespace {
     

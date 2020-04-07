@@ -132,6 +132,8 @@ namespace NESEmu { namespace Cpu {
         
         bool _irqLine;
         bool _apuIrqLine;
+        
+        // TODO: rajouter uint16_t _address; et uint8_t _data; qui seront l'internal bus mais voir si mettre ainsi et renommer ou avoir une classe InternalBus, ou le mettre dans le Dma ? a voir : pas dans le Dma car il est utilisé aussi lors de l'accès a l'APU
     };
     
     #include "Cpu_s.hpp"

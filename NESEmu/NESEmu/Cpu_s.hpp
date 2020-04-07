@@ -469,7 +469,7 @@ void Chip<EModel, TBus, TSoundHardware>::performRead() {
     // See https://wiki.nesdev.com/w/index.php/Controller_reading
     // See https://wiki.nesdev.com/w/index.php/Controller_reading_code
     else if (address == 0x4016) {
-        _bus.readControllerPort(0); // TODO: voir si pas meilleure conception que ca sinon renommer TBus en THardware car ca ne fait pas que le bus
+        _bus.readControllerPort(0); // TODO: voir si pas meilleure conception que ca sinon renommer TBus en THardware car ca ne fait pas que le bus : il faut un autre template parameter TControllerCircuit ou un nom dans le genre et l'avoir dans la nes et le passer en reference dans le cpu !
     }
     // Controller 2
     // Same as controller 1

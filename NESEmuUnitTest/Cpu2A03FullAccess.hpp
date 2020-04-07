@@ -22,49 +22,49 @@ struct Cpu2A03FullAccess : NESEmu::Cpu::Chip<EModel, TBus, TSoundHardware> {
     }
     
     uint16_t getAddressBus() const {
-        return this->_bus.getAddressBus();
+        return Cpu::_bus.getAddressBus();
     }
     
     uint8_t getDataBus() const {
-        return this->_bus.getDataBus();
+        return Cpu::_bus.getDataBus();
     }
     
     void correctDataBusForVisual6502() {
         uint8_t data = this->_bus.getDataBus();
         
-        if (this->_readWrite == Cpu6502::ReadWrite::Write) {
-            this->_bus.setDataBus(_lastDataBusReadValue);
+        if (Cpu::_readWrite == Cpu6502::ReadWrite::Write) {
+            Cpu::_bus.setDataBus(_lastDataBusReadValue);
         } else {
             _lastDataBusReadValue = data;
         }
     }
     
     uint16_t getProgramCounter() const {
-        return (this->_programCounterHigh << 8) | this->_programCounterLow;
+        return (Cpu::_programCounterHigh << 8) | Cpu::_programCounterLow;
     }
     
     uint8_t getStackPointer() const {
-        return this->_stackPointer;
+        return Cpu::_stackPointer;
     }
     
     uint8_t getAccumulator() const {
-        return this->_accumulator;
+        return Cpu::_accumulator;
     }
     
     uint8_t getXIndex() const {
-        return this->_xIndex;
+        return Cpu::_xIndex;
     }
     
     uint8_t getYIndex() const {
-        return this->_yIndex;
+        return Cpu::_yIndex;
     }
     
     uint8_t getStatusFlags() const {
-        return this->_statusFlags;
+        return Cpu::_statusFlags;
     }
     
     bool getReadyLine() const {
-        return this->_readyLine;
+        return Cpu::_readyLine;
     }
     
     bool getSyncSignal() const {
@@ -77,6 +77,10 @@ struct Cpu2A03FullAccess : NESEmu::Cpu::Chip<EModel, TBus, TSoundHardware> {
     
     void ready(bool high) {
         Cpu::ready(high);
+    }
+    
+    Cpu6502::ReadWrite getInternalReadWriteSignal() const {
+        return Cpu::InternalCpu::getReadWriteSignal();
     }
     
 private:

@@ -1,15 +1,15 @@
 //
-//  Visual6502.cpp
+//  Analyzer.cpp
 //  NESEmuUnitTest
 //
-//  Created by Jonathan Baliko on 6/02/20.
+//  Created by Jonathan Baliko on 7/04/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#include "Visual6502.hpp"
+#include "Analyzer.hpp"
 
 
-namespace Visual6502 {
+namespace VisualUnitTest {
     
     UrlCommand::UrlCommand() : numCyclesToExecute(0) {
     }

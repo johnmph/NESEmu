@@ -1,5 +1,5 @@
 //
-//  CpuVisual2A03UnitTest.mm
+//  Cpu2A03VisualUnitTest.mm
 //  NESEmuUnitTest
 //
 //  Created by Jonathan Baliko on 7/02/20.
@@ -12,14 +12,15 @@
 #include <fstream>
 #include <memory>
 #include "Cpu2A03FullAccess.hpp"
-#include "Visual6502.hpp"
+#include "VisualUnitTest/Analyzer.hpp"
+#include "VisualUnitTest/Cpu2A03/Attributes.hpp"
 
 
-@interface CpuVisual2A03UnitTest : XCTestCase
+@interface Cpu2A03VisualUnitTest : XCTestCase
 
 @end
 
-@implementation CpuVisual2A03UnitTest
+@implementation Cpu2A03VisualUnitTest
 
 namespace {
     
@@ -114,7 +115,7 @@ namespace {
     XCTAssertTrue(ifsLog.good());
     
     // Create analyzer
-    Visual6502::Analyzer<Cpu2A03FullAccess<NESEmu::Cpu::Model::Ricoh2A03, Bus, SoundHardware>> visual6502Analyzer(ifsLog, [](uint16_t address, uint8_t data) { bus.write(address, data); });
+    VisualUnitTest::Analyzer<Cpu2A03FullAccess<NESEmu::Cpu::Model::Ricoh2A03, Bus, SoundHardware>> analyzer(ifsLog, [](std::string const &name) { return VisualUnitTest::Cpu2A03::attributeFactory<decltype(cpu2A03)>(name); }, [](uint16_t address, uint8_t data) { bus.write(address, data); });
     
     // Release reset to start cpu
     cpu2A03.reset(true);
@@ -125,8 +126,7 @@ namespace {
     }
     
     // Analyze
-    visual6502Analyzer.analyze(cpu2A03, [self](bool result, std::string const &name) { if (!result) { std::cout << name << "\n"; }
-        XCTAssertTrue(result); }, 16);
+    analyzer.analyze(cpu2A03, [self](bool result, std::string const &name) { if (!result) { std::cout << name << "\n"; } XCTAssertTrue(result); }, 16);
     
     // Close file
     ifsLog.close();

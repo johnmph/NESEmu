@@ -1,5 +1,5 @@
 //
-//  ChipVisual6502UnitTest.mm
+//  Cpu6502VisualUnitTest.mm
 //  NESEmuUnitTest
 //
 //  Created by Jonathan Baliko on 29/01/20.
@@ -12,14 +12,15 @@
 #include <fstream>
 #include <memory>
 #include "Cpu6502FullAccess.hpp"
-#include "Visual6502.hpp"
+#include "VisualUnitTest/Analyzer.hpp"
+#include "VisualUnitTest/Cpu6502/Attributes.hpp"
 
 
-@interface ChipVisual6502UnitTest : XCTestCase
+@interface Cpu6502VisualUnitTest : XCTestCase
 
 @end
 
-@implementation ChipVisual6502UnitTest
+@implementation Cpu6502VisualUnitTest
 
 namespace {
     
@@ -99,7 +100,7 @@ namespace {
     XCTAssertTrue(ifsLog.good());
     
     // Create analyzer
-    Visual6502::Analyzer<Cpu6502FullAccess<Cpu6502::ConfigurationAccurate<Bus>>> visual6502Analyzer(ifsLog, [](uint16_t address, uint8_t data) { bus.write(address, data); });
+    VisualUnitTest::Analyzer<Cpu6502FullAccess<Cpu6502::ConfigurationAccurate<Bus>>> analyzer(ifsLog, [](std::string const &name) { return VisualUnitTest::Cpu6502::attributeFactory<decltype(cpu6502)>(name); }, [](uint16_t address, uint8_t data) { bus.write(address, data); });
     
     // Release reset to start cpu
     //cpu6502.reset(true);
@@ -110,7 +111,7 @@ namespace {
     }
     
     // Analyze
-    visual6502Analyzer.analyze(cpu6502, [self](bool result, std::string const &name) { if (!result) { std::cout << name << "\n"; } XCTAssertTrue(result); });
+    analyzer.analyze(cpu6502, [self](bool result, std::string const &name) { if (!result) { std::cout << name << "\n"; } XCTAssertTrue(result); });
     
     // Close file
     ifsLog.close();

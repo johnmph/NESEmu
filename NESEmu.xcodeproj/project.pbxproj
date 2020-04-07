@@ -8,12 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		4D1137F323CD3EEC0056AAAD /* NESEmuUnitTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D1137F223CD3EEC0056AAAD /* NESEmuUnitTest.mm */; };
-		4D1137FD23CD403E0056AAAD /* ChipNestestUnitTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D1137FC23CD403E0056AAAD /* ChipNestestUnitTest.mm */; };
+		4D1137FD23CD403E0056AAAD /* Cpu6502NestestUnitTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D1137FC23CD403E0056AAAD /* Cpu6502NestestUnitTest.mm */; };
 		4D11382B23D533E70056AAAD /* Chip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D11382A23D533E60056AAAD /* Chip.cpp */; };
 		4D11382C23D534280056AAAD /* Chip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D11382A23D533E60056AAAD /* Chip.cpp */; };
-		4D6B9C2223E2310D000889C3 /* ChipVisual6502UnitTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D6B9C2123E2310D000889C3 /* ChipVisual6502UnitTest.mm */; };
-		4D6FAB3123ECBF9C009977EE /* Visual6502.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6FAB2F23ECBF9C009977EE /* Visual6502.cpp */; };
-		4D6FAB3423ECF19E009977EE /* CpuVisual2A03UnitTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D6FAB3323ECF19E009977EE /* CpuVisual2A03UnitTest.mm */; };
+		4D6B9C2223E2310D000889C3 /* Cpu6502VisualUnitTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D6B9C2123E2310D000889C3 /* Cpu6502VisualUnitTest.mm */; };
+		4D6FAB3423ECF19E009977EE /* Cpu2A03VisualUnitTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D6FAB3323ECF19E009977EE /* Cpu2A03VisualUnitTest.mm */; };
 		4D6FDB3E2427F24B001B27DD /* EnvelopeUnit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6FDB3D2427F24B001B27DD /* EnvelopeUnit.cpp */; };
 		4D6FDB3F2427F24B001B27DD /* EnvelopeUnit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6FDB3D2427F24B001B27DD /* EnvelopeUnit.cpp */; };
 		4D6FDB412427F2FA001B27DD /* SweepUnit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6FDB402427F2FA001B27DD /* SweepUnit.cpp */; };
@@ -28,6 +27,7 @@
 		4D6FDB4E2427F6BB001B27DD /* NoiseChannel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6FDB4C2427F6BB001B27DD /* NoiseChannel.cpp */; };
 		4D70474E2402FAF1005A56B1 /* Nothing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D70474D2402FAF1005A56B1 /* Nothing.cpp */; };
 		4D70474F2402FAF1005A56B1 /* Nothing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D70474D2402FAF1005A56B1 /* Nothing.cpp */; };
+		4D90B21D243BF028008C8190 /* Analyzer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D90B21C243BF028008C8190 /* Analyzer.cpp */; };
 		4DD1EB802403911B00018E52 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD1EB7E2403911B00018E52 /* Common.cpp */; };
 		4DD1EB812403911B00018E52 /* Common.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD1EB7E2403911B00018E52 /* Common.cpp */; };
 		4DD1EB832403FD1700018E52 /* main2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD1EB822403FD1700018E52 /* main2.cpp */; };
@@ -62,7 +62,7 @@
 		4D1137F023CD3EEC0056AAAD /* NESEmuUnitTest.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = NESEmuUnitTest.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D1137F223CD3EEC0056AAAD /* NESEmuUnitTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = NESEmuUnitTest.mm; sourceTree = "<group>"; };
 		4D1137F423CD3EEC0056AAAD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		4D1137FC23CD403E0056AAAD /* ChipNestestUnitTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ChipNestestUnitTest.mm; sourceTree = "<group>"; };
+		4D1137FC23CD403E0056AAAD /* Cpu6502NestestUnitTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Cpu6502NestestUnitTest.mm; sourceTree = "<group>"; };
 		4D11382A23D533E60056AAAD /* Chip.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Chip.cpp; sourceTree = "<group>"; };
 		4D5DD38023CABF15003AE868 /* Undocumented.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Undocumented.hpp; sourceTree = "<group>"; };
 		4D5DD38123CABF5D003AE868 /* Undocumented_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Undocumented_s.hpp; sourceTree = "<group>"; };
@@ -70,7 +70,7 @@
 		4D6B9C1E23D92987000889C3 /* Ppu_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Ppu_s.hpp; sourceTree = "<group>"; };
 		4D6B9C1F23D92C32000889C3 /* Cpu.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu.hpp; sourceTree = "<group>"; };
 		4D6B9C2023D92D25000889C3 /* Cpu_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu_s.hpp; sourceTree = "<group>"; };
-		4D6B9C2123E2310D000889C3 /* ChipVisual6502UnitTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = ChipVisual6502UnitTest.mm; sourceTree = "<group>"; };
+		4D6B9C2123E2310D000889C3 /* Cpu6502VisualUnitTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Cpu6502VisualUnitTest.mm; sourceTree = "<group>"; };
 		4D6E33152405CE1400749F24 /* Mapper3.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mapper3.hpp; sourceTree = "<group>"; };
 		4D6E33162405CEC000749F24 /* Mapper3_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mapper3_s.hpp; sourceTree = "<group>"; };
 		4D6E33172406015900749F24 /* Mapper1.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mapper1.hpp; sourceTree = "<group>"; };
@@ -78,10 +78,9 @@
 		4D6FAB2B23EB719A009977EE /* Cpu6502FullAccess.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu6502FullAccess.hpp; sourceTree = "<group>"; };
 		4D6FAB2D23EC6BDA009977EE /* Common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Common.hpp; sourceTree = "<group>"; };
 		4D6FAB2E23EC6C48009977EE /* Common_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Common_s.hpp; sourceTree = "<group>"; };
-		4D6FAB2F23ECBF9C009977EE /* Visual6502.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Visual6502.cpp; sourceTree = "<group>"; };
-		4D6FAB3023ECBF9C009977EE /* Visual6502.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Visual6502.hpp; sourceTree = "<group>"; };
-		4D6FAB3223ECC363009977EE /* Visual6502_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Visual6502_s.hpp; sourceTree = "<group>"; };
-		4D6FAB3323ECF19E009977EE /* CpuVisual2A03UnitTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = CpuVisual2A03UnitTest.mm; sourceTree = "<group>"; };
+		4D6FAB3023ECBF9C009977EE /* Attributes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Attributes.hpp; sourceTree = "<group>"; };
+		4D6FAB3223ECC363009977EE /* Attributes_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Attributes_s.hpp; sourceTree = "<group>"; };
+		4D6FAB3323ECF19E009977EE /* Cpu2A03VisualUnitTest.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Cpu2A03VisualUnitTest.mm; sourceTree = "<group>"; };
 		4D6FAB3523EE3B15009977EE /* Cpu2A03FullAccess.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Cpu2A03FullAccess.hpp; sourceTree = "<group>"; };
 		4D6FDB2D2427ED42001B27DD /* PulseChannel.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = PulseChannel.hpp; sourceTree = "<group>"; };
 		4D6FDB2F2427EDB4001B27DD /* EnvelopeUnit.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = EnvelopeUnit.hpp; sourceTree = "<group>"; };
@@ -105,6 +104,9 @@
 		4D70474B2402A2BF005A56B1 /* Standard_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Standard_s.hpp; sourceTree = "<group>"; };
 		4D70474C2402FA9D005A56B1 /* Nothing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Nothing.hpp; sourceTree = "<group>"; };
 		4D70474D2402FAF1005A56B1 /* Nothing.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Nothing.cpp; sourceTree = "<group>"; };
+		4D90B21A243BEE73008C8190 /* Attribute.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Attribute.hpp; sourceTree = "<group>"; };
+		4D90B21B243BEFEC008C8190 /* Attribute_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Attribute_s.hpp; sourceTree = "<group>"; };
+		4D90B21C243BF028008C8190 /* Analyzer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Analyzer.cpp; sourceTree = "<group>"; };
 		4D9807EE23C39A66007D1953 /* Data.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Data.hpp; sourceTree = "<group>"; };
 		4D9807EF23C50190007D1953 /* AddressingMode.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = AddressingMode.hpp; sourceTree = "<group>"; };
 		4D9807F023C50448007D1953 /* Flag.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Flag.hpp; sourceTree = "<group>"; };
@@ -126,6 +128,10 @@
 		4D98080023C5161A007D1953 /* Memory_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Memory_s.hpp; sourceTree = "<group>"; };
 		4D98080123C5163C007D1953 /* Register_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Register_s.hpp; sourceTree = "<group>"; };
 		4D98080223C51651007D1953 /* Stack_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Stack_s.hpp; sourceTree = "<group>"; };
+		4DCC158B243BF57D0033AD90 /* Attributes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Attributes.hpp; sourceTree = "<group>"; };
+		4DCC158C243BF5D70033AD90 /* Attributes_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Attributes_s.hpp; sourceTree = "<group>"; };
+		4DCC158D243BF9F10033AD90 /* Analyzer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Analyzer.hpp; sourceTree = "<group>"; };
+		4DCC158E243BF9F40033AD90 /* Analyzer_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Analyzer_s.hpp; sourceTree = "<group>"; };
 		4DD1EB7D240373DB00018E52 /* Mapper0_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mapper0_s.hpp; sourceTree = "<group>"; };
 		4DD1EB7E2403911B00018E52 /* Common.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Common.cpp; sourceTree = "<group>"; };
 		4DD1EB7F2403911B00018E52 /* Common.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Common.hpp; sourceTree = "<group>"; };
@@ -179,9 +185,12 @@
 		4D1137F123CD3EEC0056AAAD /* NESEmuUnitTest */ = {
 			isa = PBXGroup;
 			children = (
-				4D1137F923CD3FA10056AAAD /* Cpu6502 */,
+				4D6FAB2B23EB719A009977EE /* Cpu6502FullAccess.hpp */,
 				4D6FAB3523EE3B15009977EE /* Cpu2A03FullAccess.hpp */,
-				4D6FAB3323ECF19E009977EE /* CpuVisual2A03UnitTest.mm */,
+				4D90B219243BEDCA008C8190 /* VisualUnitTest */,
+				4D1137FC23CD403E0056AAAD /* Cpu6502NestestUnitTest.mm */,
+				4D6B9C2123E2310D000889C3 /* Cpu6502VisualUnitTest.mm */,
+				4D6FAB3323ECF19E009977EE /* Cpu2A03VisualUnitTest.mm */,
 				4D1137F223CD3EEC0056AAAD /* NESEmuUnitTest.mm */,
 				4D1137F423CD3EEC0056AAAD /* Info.plist */,
 			);
@@ -201,12 +210,8 @@
 		4D1137F923CD3FA10056AAAD /* Cpu6502 */ = {
 			isa = PBXGroup;
 			children = (
-				4D6FAB2B23EB719A009977EE /* Cpu6502FullAccess.hpp */,
-				4D6FAB3023ECBF9C009977EE /* Visual6502.hpp */,
-				4D6FAB3223ECC363009977EE /* Visual6502_s.hpp */,
-				4D6FAB2F23ECBF9C009977EE /* Visual6502.cpp */,
-				4D1137FC23CD403E0056AAAD /* ChipNestestUnitTest.mm */,
-				4D6B9C2123E2310D000889C3 /* ChipVisual6502UnitTest.mm */,
+				4D6FAB3023ECBF9C009977EE /* Attributes.hpp */,
+				4D6FAB3223ECC363009977EE /* Attributes_s.hpp */,
 			);
 			path = Cpu6502;
 			sourceTree = "<group>";
@@ -328,6 +333,29 @@
 				4DFE480424193F4E006B7DAB /* Factory_s.hpp */,
 			);
 			path = Cartridge;
+			sourceTree = "<group>";
+		};
+		4D90B219243BEDCA008C8190 /* VisualUnitTest */ = {
+			isa = PBXGroup;
+			children = (
+				4D90B21A243BEE73008C8190 /* Attribute.hpp */,
+				4D90B21B243BEFEC008C8190 /* Attribute_s.hpp */,
+				4D1137F923CD3FA10056AAAD /* Cpu6502 */,
+				4D90B21E243BF12D008C8190 /* Cpu2A03 */,
+				4DCC158D243BF9F10033AD90 /* Analyzer.hpp */,
+				4DCC158E243BF9F40033AD90 /* Analyzer_s.hpp */,
+				4D90B21C243BF028008C8190 /* Analyzer.cpp */,
+			);
+			path = VisualUnitTest;
+			sourceTree = "<group>";
+		};
+		4D90B21E243BF12D008C8190 /* Cpu2A03 */ = {
+			isa = PBXGroup;
+			children = (
+				4DCC158B243BF57D0033AD90 /* Attributes.hpp */,
+				4DCC158C243BF5D70033AD90 /* Attributes_s.hpp */,
+			);
+			path = Cpu2A03;
 			sourceTree = "<group>";
 		};
 		4DD1EB852404047900018E52 /* Frameworks */ = {
@@ -467,23 +495,23 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4D6B9C2223E2310D000889C3 /* ChipVisual6502UnitTest.mm in Sources */,
+				4D6B9C2223E2310D000889C3 /* Cpu6502VisualUnitTest.mm in Sources */,
 				4DFE480B241942C1006B7DAB /* Interface.cpp in Sources */,
 				4D1137F323CD3EEC0056AAAD /* NESEmuUnitTest.mm in Sources */,
 				4D6FDB4B2427F638001B27DD /* TriangleChannel.cpp in Sources */,
 				4D6FDB3F2427F24B001B27DD /* EnvelopeUnit.cpp in Sources */,
 				4DD1EB812403911B00018E52 /* Common.cpp in Sources */,
-				4D6FAB3123ECBF9C009977EE /* Visual6502.cpp in Sources */,
 				4D6FDB422427F2FA001B27DD /* SweepUnit.cpp in Sources */,
 				4D70474F2402FAF1005A56B1 /* Nothing.cpp in Sources */,
 				4D6FDB452427F38C001B27DD /* LengthCounter.cpp in Sources */,
 				4D6FDB4E2427F6BB001B27DD /* NoiseChannel.cpp in Sources */,
+				4D90B21D243BF028008C8190 /* Analyzer.cpp in Sources */,
 				4DFE480E241942FF006B7DAB /* INes.cpp in Sources */,
-				4D1137FD23CD403E0056AAAD /* ChipNestestUnitTest.mm in Sources */,
+				4D1137FD23CD403E0056AAAD /* Cpu6502NestestUnitTest.mm in Sources */,
 				4D11382C23D534280056AAAD /* Chip.cpp in Sources */,
 				4DD7179323FEAADC00005D8C /* Common.cpp in Sources */,
 				4D6FDB482427F524001B27DD /* PulseChannel.cpp in Sources */,
-				4D6FAB3423ECF19E009977EE /* CpuVisual2A03UnitTest.mm in Sources */,
+				4D6FAB3423ECF19E009977EE /* Cpu2A03VisualUnitTest.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
