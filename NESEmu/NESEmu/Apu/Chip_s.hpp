@@ -86,7 +86,6 @@ template <class TCpu, class TSoundHardware>
 uint8_t Chip<TCpu, TSoundHardware>::getStatusRegister() {
     uint8_t data = (_dmcChannel.getInterrupt() << 7) |
                    (_frameCounter.getInterrupt() << 6) |
-                   //((_dmcChannel.getSampleRemainingBytesCount() > 0) << 4) |
                    (_dmcChannel.isEnabled() << 4) |
                    (_noiseChannel.getLengthCounterOutput() << 3) |
                    (_triangleChannel.getLengthCounterOutput() << 2) |

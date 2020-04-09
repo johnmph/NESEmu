@@ -28,7 +28,6 @@ namespace NESEmu { namespace Apu {
         
         // Properties
         bool isEnabled() const;
-        uint16_t getSampleRemainingBytesCount() const;
         void setEnabled(bool enabled);
         bool getInterrupt() const;
         void resetInterrupt();
@@ -63,9 +62,6 @@ namespace NESEmu { namespace Apu {
         bool _loopFlag;
         bool _interrupt;
         bool _enableInterrupt;
-        
-        uint8_t _requestDisable;
-        bool _enabled;
     };
     
     #include "DmcChannel_s.hpp"

@@ -523,8 +523,6 @@ int main(int argc, const char * argv[]) {
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/nmi_sync/demo_ntsc.nes", std::ios::binary);// Mapper0, 32kb de prg-rom, horizontal mirroring TODO: ne fonctionne pas correctement !
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/sprdma_and_dmc_dma/sprdma_and_dmc_dma.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
-    
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/oam_stress/oam_stress.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // Ok, juste long a executer, attendre bien la fin
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/oamtest3/oam3.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, vertical mirroring chr-ram // ???
@@ -543,8 +541,8 @@ int main(int argc, const char * argv[]) {
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/allpads.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, 8kb de chr-ram, Horizontal mirroring
     
-    std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_test/apu_test.nes", std::ios::binary);    // Ok !
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/blargg_apu_2005.07.30/11.len_reload_timing.nes", std::ios::binary); // Ok !
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_test/apu_test.nes", std::ios::binary);    // Ok !
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/blargg_apu_2005.07.30/10.len_halt_timing.nes", std::ios::binary); // Ok !
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_2/test_10.nes", std::ios::binary);//TODO: 3 fail and pass (reset), 5 6 fail
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_m/test_11.nes", std::ios::binary);//TODO: 11 fail
@@ -553,20 +551,59 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/noisy/noisy_v1.nes", std::ios::binary);//TODO: a comparer avec un autre emulateur
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/DmcPowerOnTest_v3/DmcPowerOnBuzz.nes", std::ios::binary);//TODO: a comparer avec un autre emulateur
     
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_mixer/triangle.nes", std::ios::binary);//TODO: pas tres bon pour square, parfait pour triangle
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_reset/len_ctrs_enabled.nes", std::ios::binary);    // Ok ! (pour 4017_timing, 9 au power et 9 au reset pour l'apu clocked après cpu (et checkInterrupt apres clock de l'apu) et 10 au reset pour apu clocked avant cpu (et checkInterrupt avant le clock des units de l'apu)) : maintenant 9 au power et 10 au reset avec l'apu apres le cpu mais avant le dma : mesen est a 9 pour les 2 : maintenant 9 et 9 aussi
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_mixer/dmc.nes", std::ios::binary);//TODO: pas tres bon pour square, parfait pour triangle
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_reset/works_immediately.nes", std::ios::binary);    // Ok ! (pour 4017_timing, 9 au power et 9 au reset pour l'apu clocked après cpu (et checkInterrupt apres clock de l'apu) et 10 au reset pour apu clocked avant cpu (et checkInterrupt avant le clock des units de l'apu)) : maintenant 9 au power et 10 au reset avec l'apu apres le cpu mais avant le dma : mesen est a 9 pour les 2 : maintenant 9 et 9 aussi : De nouveau 9 et 10 !
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/FrameCounterIrqAckTest/test.nes", std::ios::binary);//TODO: attention car apparemment ca fail sur une vraie nes ! // https://forums.nesdev.com/viewtopic.php?f=3&t=13844&sid=cbcaafaac1023fdf00510a47962184ad&start=300
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/status.nes", std::ios::binary);//? juste un beep a chaque test
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/dpcmletterbox/dpcmletterbox.nes", std::ios::binary);//TODO: vibre un peu (surement le meme probleme que simpsons !!! Ca ne vibre presque plus, surement un probleme de dmc dma avec le spr dma !!!
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/dmc_dma_during_read4/read_write_2007.nes", std::ios::binary);//TODO: a voir quand bien implementé
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_phase_reset/apu_phase_reset.nes", std::ios::binary);    // Ok ! ( https://forums.nesdev.com/viewtopic.php?t=15346 )
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/square_timer_div2/square_timer_div2.nes", std::ios::binary);  // Ok !
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_env/test_apu_env.nes", std::ios::binary);  // Ok normalement !
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_sweep/sweep_cutoff.nes", std::ios::binary);  // Ok !
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_timers/dmc_pitch.nes", std::ios::binary);  // Ok pour tous (mais reverifier le DMC une fois bien implementé avec les timing CPU/DMA)
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/volume_tests/volumes.nes", std::ios::binary);//?
+    
+    std::ifstream ifs("../UnitTestFiles/TestROM/DMA/sprdma_and_dmc_dma/sprdma_and_dmc_dma.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
+    //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dmc_dma_during_read4/dma_4016_read.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_badrol.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_goodrol.nes", std::ios::binary);
+    
+    /*
+     
+     T+ Clocks (decimal)
+     00 527      +4  LDA #$07    ; 2
+     01 528      +4
+     02 527      +4  STA $4014   ; 4 + 513/514
+     03 528      +4
+     04 527      +4
+     05 526      +2
+     06 525      +2     // TODO: j'ai 527 !
+     07 526      +2
+     08 525      +2
+     09 526      +2
+     0A 525      +2
+     0B 526      +2
+     0C 525      +2
+     0D 526      +2
+     0E 525      +2
+     0F 526      +2
+     ...
+     200 525     +2
+     201 526     +2
+     202 525     +2
+     203 526     +2
+     204 524     +1  DMA next-to-next-to-last cycle
+     205 525     +1  DMA next-to-next-to-last cycle
+     206 526     +3  DMA last cycle
+     207 527     +3  DMA last cycle
+     208 527     +4  STA $100 second cycle
+     209 528     +4  STA $100 second cycle
+     20A 526     +3  STA $100 fourth cycle
+     20B 527     +3  STA $100 fourth cycle
+     
+     */
     
     // Check that file exists
     assert(ifs.good());

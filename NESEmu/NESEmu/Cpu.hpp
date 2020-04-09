@@ -74,7 +74,7 @@ namespace NESEmu { namespace Cpu {
             
             // Properties
             bool isWriteCycle() const;
-            //bool isIdle() const;
+            bool isIdle() const;
             
         private:
             
@@ -88,7 +88,7 @@ namespace NESEmu { namespace Cpu {
             uint8_t _spriteWaitCycleCount;
             uint8_t _dmcWaitCycleCount;
             bool _writeCycle;
-            //bool _idle;
+            bool _idle;
             
             bool _ready;
             bool _dmcReadFirstSync;
@@ -128,12 +128,15 @@ namespace NESEmu { namespace Cpu {
         
         uint8_t _outLatch;
         
+        // Bus of 6502
+        uint16_t _6502BusAddress;        // TODO: voir si mettre ainsi ou renommer ou avoir une classe InternalBus, ou le mettre dans le Dma ? a voir : pas dans le Dma car il est utilisé aussi lors de l'accès a l'APU
+        uint8_t _6502BusData;
+        uint8_t _last4015DataWritten;
+        
         Cpu6502::ReadWrite _readWrite;
         
         bool _irqLine;
         bool _apuIrqLine;
-        
-        // TODO: rajouter uint16_t _address; et uint8_t _data; qui seront l'internal bus mais voir si mettre ainsi et renommer ou avoir une classe InternalBus, ou le mettre dans le Dma ? a voir : pas dans le Dma car il est utilisé aussi lors de l'accès a l'APU
     };
     
     #include "Cpu_s.hpp"

@@ -320,6 +320,23 @@ void Nes<EModel, TGraphicHardware, TSoundHardware>::clockFull() {   // TODO: gro
     
     // Clock ppu
     _ppu.clock();
+    
+    /*
+     TODO: cette combinaison resoud le prob de la barre de statut qui tremble dans Simpsons (combiné avec les io direct du PPU plutot que delayé)
+     _cpu.startPhi1();
+     
+     _ppu.clock();
+     _ppu.clock();
+     
+     _cpu.endPhi1();
+     
+     _ppu.clock();
+     
+     _cpu.startPhi2();
+     
+     _cpu.endPhi2();
+     
+     */
 }
 
 template <Model EModel, class TGraphicHardware, class TSoundHardware>

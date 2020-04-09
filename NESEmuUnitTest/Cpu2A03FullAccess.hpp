@@ -29,7 +29,7 @@ struct Cpu2A03FullAccess : NESEmu::Cpu::Chip<EModel, TBus, TSoundHardware> {
         return Cpu::_bus.getDataBus();
     }
     
-    void correctDataBusForVisual6502() {
+    void correctDataBusForVisual6502() {//TODO: a voir avec le bus interne !!!
         uint8_t data = this->_bus.getDataBus();
         
         if (Cpu::_readWrite == Cpu6502::ReadWrite::Write) {
@@ -77,6 +77,14 @@ struct Cpu2A03FullAccess : NESEmu::Cpu::Chip<EModel, TBus, TSoundHardware> {
     
     void ready(bool high) {
         Cpu::ready(high);
+    }
+    
+    uint16_t getInternalAddressBus() const {
+        return Cpu::getAddressBus();
+    }
+    
+    uint8_t getInternalDataBus() const {
+        return Cpu::getDataBus();
     }
     
     Cpu6502::ReadWrite getInternalReadWriteSignal() const {
