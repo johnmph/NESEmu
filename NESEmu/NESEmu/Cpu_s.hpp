@@ -37,8 +37,6 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::clockPhi1() {
     
     // Process
     process();
-    
-    //_writeCycle = !_writeCycle;//TODO: voir si ici ou au dessus (si ici, writeCycle doit etre initialisé a true)
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
@@ -52,10 +50,9 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::startSprite(uint8_t address) {
     // Calculate address
     _spriteAddress = address << 8;
     
-    // Set count
-    _spriteWaitCycleCount = (_dmcCycleCount > 0) ? 0 : 1/* + _writeCycle*/;
-    _spriteCycleCount = 513;    // TODO: besoin d'un cycle en plus pour la restauration du CPU apres le DMA (ce cycle executera l'instruction du CPU) TODO: voir si besoin de ce cycle supplémentaire si dmc dma arrive a ce moment
-    if (_dmcCycleCount > 2) _dmcCycleCount -= 1;//TODO: besoin de ca pour passer le sprdma test rom
+    // Set count (Sprite cycle count has a extra cycle to restore the CPU at the end)
+    _spriteWaitCycleCount = 1;
+    _spriteCycleCount = 513;
     
     // Disable CPU
     _chip.ready(false);
@@ -64,34 +61,31 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::startSprite(uint8_t address) {
 
 template <Model EModel, class TBus, class TSoundHardware>
 void Chip<EModel, TBus, TSoundHardware>::Dma::startDmc(uint16_t address, bool requestedOnEnable) {
-    // Ensure that DMC DMA start on an even (read) cycle
-    //assert(_writeCycle);//TODO: write cycle car apu clocké apres le dma et donc process en even deja effectué si on a !_writeCycle
-    
-    // Don't start DMC if already started
+/*    // Don't start DMC if already started
     if (_dmcCycleCount > 0) {
         //return;
         std::cout << "Started DMC DMA before last DMC DMA end\n";
-    }
+    }*/
     
     // Copy address
     _dmcAddress = address;
     
+    if (_spriteCycleCount > 0) {
+        std::cout << "DMA DMC started at " << +_spriteWaitCycleCount << " spriteWaitCycleCount, " << +_spriteCycleCount << " spriteCycleCount\n";
+    }
+    
     // Set count
-    _dmcWaitCycleCount = (_spriteCycleCount > 0) ? 0 : 2;
-    _dmcCycleCount = (_spriteCycleCount > 1) ? 2 : 4;       // TODO: 1 a la place de 0 pour etre bon pour sprdma 512 test rom car le dernier cycle du spr dma n'est pas vraiment un cycle spr dma, c'est le cycle qui restaure le cpu
-    //_spriteWaitCycleCount = 0;//TODO: a voir
+    _dmcWaitCycleCount = (_spriteCycleCount == 3) ? 3 : 2;// TODO: j'ai du mettre ce test avec 3 pour passer le dmcdma512 !! voir pq !!!
+    _dmcCycleCount = 4;
     
     // Reset read first sync flag
     _dmcReadFirstSync = false;
     
-    if ((_spriteCycleCount == 0) && (!requestedOnEnable)) {
+    //if ((_spriteCycleCount == 0) && (!requestedOnEnable)) {
+    if ((_spriteCycleCount < 2) && (!requestedOnEnable)) {  // TODO: mieux avec < 2 pour le sprdma 512 mais pourquoi devoir faire ca a la base (car sinon ca ne passe pas du tout mais est ce vraiment ainsi en vrai ?)
         _dmcWaitCycleCount = 1;
         _dmcReadFirstSync = true;
     }
-    
-    /*if (_spriteCycleCount > 0) {
-        std::cout << std::hex << "DMC in SPR begin : " << +((_chip._addressBusHigh << 8) | _chip._addressBusLow) << ", " << +_chip.getAddressBus() << ", " << +_chip.getDataBus() << std::dec << "\n";
-    }*/
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
@@ -107,148 +101,165 @@ bool Chip<EModel, TBus, TSoundHardware>::Dma::isIdle() const {
 
 template <Model EModel, class TBus, class TSoundHardware>
 void Chip<EModel, TBus, TSoundHardware>::Dma::process() {
-    // If DMC DMA is started
-    if (_dmcCycleCount > 0) {
-        // If need to wait
-        if (_dmcWaitCycleCount > 0) {
-            // Decrement counter
-            --_dmcWaitCycleCount;
-            
-            // Exit
-            return;
-        }
-        
-        // Synchronize first time (before disabling CPU)
-        if (((_dmcCycleCount & 0x1) != _writeCycle) && (!_dmcReadFirstSync)) {
-            _dmcReadFirstSync = true;
-            
-            return;
-        }
-        
-        // Wait for CPU ending with possible writes
-        if (_chip.InternalCpu::_readWrite == Cpu6502::ReadWrite::Write) {//TODO: internal ou pas ?? normalement oui
-            return;
-        }
-        
-        // Disable CPU
-        //_chip.ready(false);
-        _ready = false;
-        
-        // Synchronize second time (after disabling CPU)
-        if ((_dmcCycleCount & 0x1) != _writeCycle) {
-            return;
-        }
-        
-        // Check that we are really on correct cycle
-        assert((_dmcCycleCount & 0x1) == _writeCycle);
-        
-        // Set idle flag
-        _idle = false;
-        
+    // Process DMC
+    bool canProcessSprite = processDmc();
+    
+    // Process sprite if necessary
+    if (canProcessSprite) {
+        processSprite();
+    }
+}
+
+template <Model EModel, class TBus, class TSoundHardware>
+bool Chip<EModel, TBus, TSoundHardware>::Dma::processDmc() {
+    // If no DMC DMA started
+    if (_dmcCycleCount == 0) {
+        // Exit
+        return true;
+    }
+    
+    // If need to wait
+    if (_dmcWaitCycleCount > 0) {
         // Decrement counter
-        --_dmcCycleCount;
+        --_dmcWaitCycleCount;
         
-        // Read cycle
-        if (!_writeCycle) {
-            if (_dmcCycleCount > 1) {
-                return;
-            }
-            
-            // Read cycle (only inputDataLatch / predecode / RW from 6502 are affected)
-            _chip._bus.setAddressBus(_dmcAddress);
-            _chip._readWrite = Cpu6502::ReadWrite::Read;//TODO: pas obligé normalement car copié d'internalcpu dans le clock et il est read car les write cycles ont été passé avant ici
+        // Exit
+        return true;
+    }
+    
+    // Synchronize first time (before disabling CPU)
+    if (((_dmcCycleCount & 0x1) != _writeCycle) && (!_dmcReadFirstSync)) {
+        _dmcReadFirstSync = true;
+        
+        return true;
+    }
+    
+    // Wait for CPU ending with possible writes
+    if (_chip.InternalCpu::_readWrite == Cpu6502::ReadWrite::Write) {//TODO: internal ou pas ?? normalement oui
+        return true;
+    }
+    
+    // Disable CPU
+    //_chip.ready(false);
+    _ready = false;
+    
+    // Synchronize second time (after disabling CPU)
+    if ((_dmcCycleCount & 0x1) != _writeCycle) {
+        return true;
+    }
+    
+    // Check that we are really on correct cycle
+    assert((_dmcCycleCount & 0x1) == _writeCycle);
+    
+    // Set idle flag
+    _idle = false;
+    
+    // Decrement counter
+    --_dmcCycleCount;
+    
+    // Read cycle
+    if (!_writeCycle) {
+        if (_dmcCycleCount > 1) {
+            return true;
         }
-        // Write cycle
-        else {
-            if (_dmcCycleCount > 0) {
-                return;
-            }
-            
-            // Notify APU that sample is fetched
-            _chip.apuDmcSampleFetched();
-            
-            // Restore CPU state (no need to restore read/write signal because last cycle was a read)
-            //_chip.setAddressBus((_chip._addressBusHigh << 8) | _chip._addressBusLow);
-            _chip._bus.setAddressBus(_chip.getAddressBus());
-            /*
-             if (_spriteCycleCount == 1) {//TODO: ce serait logique d'avoir ca mais d'apres le sprdma 512 ca n'a pas l'air d'etre bon
-                _spriteCycleCount = 0;
-            }*/
-            
-            // If no sprite DMA pending
-            if (_spriteCycleCount == 0) {
-                // Reenable CPU
-                _chip.ready(true);
-                _ready = true;
-                
-                // Set idle flag
-                _idle = true;
-            }/* else {
-                std::cout << std::hex << "DMC in SPR end : " << +((_chip._addressBusHigh << 8) | _chip._addressBusLow) << ", " << +_chip.getAddressBus() << ", " << +_chip.getDataBus() <<  "\n";
-            }*/
+        
+        // Read cycle (only inputDataLatch / predecode / RW from 6502 are affected)
+        _chip._bus.setAddressBus(_dmcAddress);
+        _chip._readWrite = Cpu6502::ReadWrite::Read;//TODO: pas obligé normalement car copié d'internalcpu dans le clock et il est read car les write cycles ont été passé avant ici
+    }
+    // Write cycle
+    else {
+        if (_dmcCycleCount > 0) {
+            return true;
         }
+        
+        // Notify APU that sample is fetched
+        _chip.apuDmcSampleFetched();
+        
+        // Restore CPU state (no need to restore read/write signal because last cycle was a read)
+        //_chip.setAddressBus((_chip._addressBusHigh << 8) | _chip._addressBusLow);
+        _chip._bus.setAddressBus(_chip.getAddressBus());
+        
+        // If we are in last sprite cycle, we don't need it because we already restore the CPU on this DMC cycle (but we can't simply return true here because we are in DMA write cycle and CPU restore cycle on the sprite happens on the DMA read cycle)
+        if (_spriteCycleCount == 1) {
+            _spriteCycleCount = 0;
+        }
+        
+        // If no sprite DMA pending
+        if (_spriteCycleCount == 0) {
+            // Reenable CPU
+            _chip.ready(true);
+            _ready = true;
+            
+            // Set idle flag
+            _idle = true;
+        }
+    }
+    
+    // Exit
+    return false;
+}
+
+template <Model EModel, class TBus, class TSoundHardware>
+void Chip<EModel, TBus, TSoundHardware>::Dma::processSprite() {
+    // If no sprite DMA started
+    if (_spriteCycleCount == 0) {
+        // Exit
+        return;
+    }
+    
+    // If need to wait
+    if (_spriteWaitCycleCount > 0) {
+        // Decrement counter
+        --_spriteWaitCycleCount;
         
         // Exit
         return;
     }
     
-    // If Sprite DMA is started
-    if (_spriteCycleCount > 0) {
-        // If need to wait
-        if (_spriteWaitCycleCount > 0) {
-            // Decrement counter
-            --_spriteWaitCycleCount;
+    // Synchronize
+    if ((_spriteCycleCount & 0x1) == _writeCycle) {
+        return;
+    }
+    
+    // Check that we are really on correct cycle
+    assert((_spriteCycleCount & 0x1) == (!_writeCycle));
+    
+    // Set idle flag
+    _idle = false;
+    
+    // Decrement counter
+    --_spriteCycleCount;
+    
+    // Read cycle
+    if (!_writeCycle) {
+        // If last cycle
+        if (_spriteCycleCount == 0) {
+            // Restore CPU state
+            //_chip.setAddressBus((_chip._addressBusHigh << 8) | _chip._addressBusLow);
+            //_chip._readWrite = Cpu6502::ReadWrite::Read;//TODO: pas obligé normalement car copié d'internalcpu dans le clock et il est read car les write cycles ont été passé avant ici
+            _chip._bus.setAddressBus(_chip.getAddressBus());
             
-            // Exit
-            return;
-        }
-        
-        // Synchronize
-        if ((_spriteCycleCount & 0x1) == _writeCycle) {
-            return;
-        }
-        
-        // Check that we are really on correct cycle
-        assert((_spriteCycleCount & 0x1) == (!_writeCycle));
-        
-        // Set idle flag
-        _idle = false;
-        
-        // Decrement counter
-        --_spriteCycleCount;
-        
-        // Read cycle
-        if (!_writeCycle) {
-            // If last cycle
-            if (_spriteCycleCount == 0) {
-                // Restore CPU state
-                //_chip.setAddressBus((_chip._addressBusHigh << 8) | _chip._addressBusLow);
-                //_chip._readWrite = Cpu6502::ReadWrite::Read;//TODO: pas obligé normalement car copié d'internalcpu dans le clock et il est read car les write cycles ont été passé avant ici
-                _chip._bus.setAddressBus(_chip.getAddressBus());
-                
-                // Reenable CPU
-                _chip.ready(true);
-                _ready = true;
-                
-                // Set idle flag
-                _idle = true;
-            } else {
-                // Read cycle (only inputDataLatch / predecode / RW from 6502 is affected)
-                _chip._bus.setAddressBus(_spriteAddress);
-                _chip._readWrite = Cpu6502::ReadWrite::Read;//TODO: pas obligé normalement car copié d'internalcpu dans le clock et il est read car les write cycles ont été passé avant ici
-                
-                // Increment sprite address
-                ++_spriteAddress;
-            }
-        }
-        // Write cycle
-        else {
-            //std::cout << +_chip.getDataBus() << "\n";
+            // Reenable CPU
+            _chip.ready(true);
+            _ready = true;
             
-            // Write to PPU (only RW from 6502 is affected)
-            _chip._bus.setAddressBus(0x2004);
-            _chip._readWrite = Cpu6502::ReadWrite::Write;
+            // Set idle flag
+            _idle = true;
+        } else {
+            // Read cycle (only inputDataLatch / predecode / RW from 6502 is affected)
+            _chip._bus.setAddressBus(_spriteAddress);
+            _chip._readWrite = Cpu6502::ReadWrite::Read;//TODO: pas obligé normalement car copié d'internalcpu dans le clock et il est read car les write cycles ont été passé avant ici
+            
+            // Increment sprite address
+            ++_spriteAddress;
         }
+    }
+    // Write cycle
+    else {
+        // Write to PPU (only RW from 6502 is affected)
+        _chip._bus.setAddressBus(0x2004);
+        _chip._readWrite = Cpu6502::ReadWrite::Write;
     }
 }
 

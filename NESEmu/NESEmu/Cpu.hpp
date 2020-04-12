@@ -63,6 +63,8 @@ namespace NESEmu { namespace Cpu {
             
             Dma(Chip &chip);
             
+            // TODO: ajouter powerUp
+            
             // Clock
             void clockPhi1();
             void clockPhi2();
@@ -79,6 +81,8 @@ namespace NESEmu { namespace Cpu {
         private:
             
             void process();
+            bool processDmc();
+            void processSprite();
             
             Chip &_chip;
             uint16_t _spriteAddress;
