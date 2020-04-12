@@ -61,6 +61,15 @@ void DmcChannel<TChip>::powerUp() {
 
 template <class TChip>
 void DmcChannel<TChip>::clock() {
+    // If need to request a sample
+    if (_needRequestSample && ((_counter & 0x1) == 0)) {
+        // Request a sample
+        _chip.requestDmcSample(_currentSampleAddress, true);
+        
+        // Reset flag
+        _needRequestSample = false;
+    }
+    
     // Decrement counter
     --_counter;
     
@@ -111,6 +120,7 @@ void DmcChannel<TChip>::clock() {
         
         // Request a sample if necessary
         if (_sampleRemainingBytes > 0) {
+            //_needRequestSample = true;
             _chip.requestDmcSample(_currentSampleAddress, false);
         }
         
@@ -147,7 +157,7 @@ void DmcChannel<TChip>::setEnabled(bool enabled) {
     
     // Request a sample if necessary
     if (!_sampleBufferFilled) {
-        _chip.requestDmcSample(_currentSampleAddress, true);
+        _needRequestSample = true;
     }
 }
 

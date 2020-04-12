@@ -62,6 +62,8 @@ namespace NESEmu { namespace Apu {
         bool _loopFlag;
         bool _interrupt;
         bool _enableInterrupt;
+        
+        bool _needRequestSample;
     };
     
     #include "DmcChannel_s.hpp"

@@ -75,17 +75,18 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::startDmc(uint16_t address, bool re
     }
     
     // Set count
-    _dmcWaitCycleCount = (_spriteCycleCount == 3) ? 3 : 2;// TODO: j'ai du mettre ce test avec 3 pour passer le dmcdma512 !! voir pq !!!
+    //_dmcWaitCycleCount = (_spriteCycleCount == 3) ? 3 : 2;// TODO: j'ai du mettre ce test avec 3 pour passer le dmcdma512 !! voir pq !!!
+    _dmcWaitCycleCount = 1/* + requestedOnEnable*/;
     _dmcCycleCount = 4;
     
     // Reset read first sync flag
-    _dmcReadFirstSync = false;
+    _dmcReadFirstSync = true;//!requestedOnEnable;
     
     //if ((_spriteCycleCount == 0) && (!requestedOnEnable)) {
-    if ((_spriteCycleCount < 2) && (!requestedOnEnable)) {  // TODO: mieux avec < 2 pour le sprdma 512 mais pourquoi devoir faire ca a la base (car sinon ca ne passe pas du tout mais est ce vraiment ainsi en vrai ?)
+    /*if ((_spriteCycleCount < 2) && (!requestedOnEnable)) {  // TODO: mieux avec < 2 pour le sprdma 512 mais pourquoi devoir faire ca a la base (car sinon ca ne passe pas du tout mais est ce vraiment ainsi en vrai ?)
         _dmcWaitCycleCount = 1;
         _dmcReadFirstSync = true;
-    }
+    }*/
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
@@ -127,25 +128,30 @@ bool Chip<EModel, TBus, TSoundHardware>::Dma::processDmc() {
         return true;
     }
     
+    // Wait for CPU ending with possible writes
+    /*if (_chip.InternalCpu::_readWrite == Cpu6502::ReadWrite::Write) {//TODO: internal ou pas ?? normalement oui
+        return true;
+    }
+    
     // Synchronize first time (before disabling CPU)
     if (((_dmcCycleCount & 0x1) != _writeCycle) && (!_dmcReadFirstSync)) {
         _dmcReadFirstSync = true;
         
         return true;
-    }
+    }*/
+    
+    // Disable CPU
+    _chip.ready(false);
+    _ready = false;
     
     // Wait for CPU ending with possible writes
     if (_chip.InternalCpu::_readWrite == Cpu6502::ReadWrite::Write) {//TODO: internal ou pas ?? normalement oui
-        return true;
+        return (_spriteCycleCount != 1);
     }
-    
-    // Disable CPU
-    //_chip.ready(false);
-    _ready = false;
     
     // Synchronize second time (after disabling CPU)
     if ((_dmcCycleCount & 0x1) != _writeCycle) {
-        return true;
+        return (_spriteCycleCount != 1);
     }
     
     // Check that we are really on correct cycle
@@ -160,7 +166,7 @@ bool Chip<EModel, TBus, TSoundHardware>::Dma::processDmc() {
     // Read cycle
     if (!_writeCycle) {
         if (_dmcCycleCount > 1) {
-            return true;
+            return (_spriteCycleCount != 1);
         }
         
         // Read cycle (only inputDataLatch / predecode / RW from 6502 are affected)
@@ -170,7 +176,7 @@ bool Chip<EModel, TBus, TSoundHardware>::Dma::processDmc() {
     // Write cycle
     else {
         if (_dmcCycleCount > 0) {
-            return true;
+            return (_spriteCycleCount != 1);
         }
         
         // Notify APU that sample is fetched
@@ -422,7 +428,7 @@ void Chip<EModel, TBus, TSoundHardware>::endPhi2() {
 template <Model EModel, class TBus, class TSoundHardware>
 void Chip<EModel, TBus, TSoundHardware>::reset(bool high) {
     // If reset
-    /*if (!high) {          // TODO: a reflechir pour le reset et le DMA (peut etre un _dma.reset(high);) OUI C'est SUR QU'IL FAUT LE RESET CAR SI ON EXECUTE LES TESTS UN PAR UN C'est ok mais tous en meme temps et ca foire apres le 1er car il n'est pas reset pour les autres tests ! (peut etre pas reset mais PowerUp c'est sur)
+    /*if (!high) {          // TODO: a reflechir pour le reset et le DMA (peut etre un _dma.reset(high);) OUI C'est SUR QU'IL FAUT LE RESET CAR SI ON EXECUTE LES TESTS UN PAR UN C'est ok mais tous en meme temps et ca foire apres le 1er car il n'est pas reset pour les autres tests ! (peut etre pas reset mais PowerUp c'est sur) : pour le reset, tester en faisant un spr dma et pendant qu'il est en cours, faire un signal reset low
         // Stop possible DMA
         stopDma();
     }*/
