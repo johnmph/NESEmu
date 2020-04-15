@@ -14,6 +14,7 @@
 
 #include <cstdint>
 #include "Cpu6502/Chip.hpp"
+#include "Dma.hpp"
 #include "Apu/Chip.hpp"
 
 
@@ -59,47 +60,14 @@ namespace NESEmu { namespace Cpu {
     //private:
     protected:  // TODO: needed protected for unit test, else we can set it private
         
-        struct Dma {//TODO: par apres  mettre cette classe a l'exterieur et dans son propre header file ?
-            
-            Dma(Chip &chip);
-            
-            void powerUp();
-            
-            // Clock
-            void clock();
-            
-            // Reset
-            void reset(bool high);
-            
-            // Start
-            void startSprite(uint8_t address);
-            void startDmc(uint16_t address);
-            
-            // Properties
-            bool isIdle() const;
-            
-        private:
-            
-            void process();
-            bool processDmc();
-            void processSprite();
-            
-            Chip &_chip;
-            uint16_t _spriteAddress;
-            uint16_t _dmcAddress;
-            uint16_t _spriteCycleCount;
-            uint8_t _dmcCycleCount;
-            uint8_t _spriteWaitCycleCount;
-            uint8_t _dmcWaitCycleCount;
-            bool _writeCycle;
-        };
-        
-        
         using Constants = Constants<EModel>;
         using InternalCpu = Cpu6502::Chip<Cpu6502::ConfigurationPerformance<Chip, false>>;
         
         // Set Cpu as friend to keep data bus methods private
         friend InternalCpu;
+        
+        // Set Dma as friend to keep members private
+        friend Dma<Chip>;
         
         // Set Apu as friend to keep apuIrq and apuRequestDmcSample methods private
         friend Apu::Chip<Chip, TSoundManager>;
@@ -123,7 +91,7 @@ namespace NESEmu { namespace Cpu {
         
         // Internal
         Apu::Chip<Chip, TSoundManager> _apu;
-        Dma _dma;
+        Dma<Chip> _dma;
         TBus &_bus;
         TControllerHardware &_controllerHardware;
         
@@ -134,6 +102,10 @@ namespace NESEmu { namespace Cpu {
         
         Cpu6502::ReadWrite _readWrite;
         
+        // Out latch
+        uint8_t _outLatch;
+        
+        // Irq
         bool _irqLine;
         bool _apuIrqLine;
     };

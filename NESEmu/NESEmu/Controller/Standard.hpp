@@ -16,10 +16,10 @@
 
 namespace NESEmu { namespace Controller {
     
-    template <class TControllerHardware>
+    template <class TControllerManager>
     struct Standard : Interface {
         
-        Standard(TControllerHardware &controllerHardware);
+        Standard(TControllerManager &controllerManager);
         
         void clock(uint8_t &data) override;
         void out(bool high) override;
@@ -27,7 +27,7 @@ namespace NESEmu { namespace Controller {
         void update();
         
     private:
-        TControllerHardware &_controllerHardware;
+        TControllerManager &_controllerManager;
         uint8_t _buttonsShiftRegister;
         bool _needToUpdate;
     };

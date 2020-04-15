@@ -265,7 +265,7 @@ private:
     float _frequencyRatio;
 };
 
-struct ControllerHardware {
+struct ControllerManager {
     
     void update() {
         _keyStates = SDL_GetKeyboardState(NULL);
@@ -449,8 +449,8 @@ int main(int argc, const char * argv[]) {
     SoundManager soundManager(44100, 2048);
     TimeManager timeManager(soundManager, 60, /*false*/true);
     GraphicManager<TimeManager> graphicManager(event, timeManager);
-    ControllerHardware controllerHardware;
-    auto controller = std::make_unique<NESEmu::Controller::Standard<ControllerHardware>>(controllerHardware);
+    ControllerManager controllerManager;
+    auto controller = std::make_unique<NESEmu::Controller::Standard<ControllerManager>>(controllerManager);
     
     // Open ROM
     //std::ifstream ifs("../UnitTestFiles/SMB.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
@@ -472,7 +472,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Final Fantasy.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/Zelda.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/Zelda 2.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom // TODO: bug mais peut etre parce que le mapper1 n'est pas complet (selon les versions du mapper !) deja c du chr-ram et ici c du chr-rom : oui en plus il y a 8ko dans le mapper1 et ici 128 !!! : OK
-    std::ifstream ifs("../UnitTestFiles/Simpsons - Bart Vs the Space Mutants.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom, IL Y A LE BUG DU SCOREBAR QUI SHAKE UN PEU, a voir (timing ppu ?) : ca ne vibre plus a chaque fois
+    //std::ifstream ifs("../UnitTestFiles/Simpsons - Bart Vs the Space Mutants.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom, IL Y A LE BUG DU SCOREBAR QUI SHAKE UN PEU, a voir (timing ppu ?) : ca ne vibre plus a chaque fois
     //std::ifstream ifs("../UnitTestFiles/Bill & Ted's Excellent Video Game Adventure.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom // TODO : ne fonctionne pas car on doit gerer la double ecriture dans le MMC1 : ok
     
     //std::ifstream ifs("../UnitTestFiles/1942.nes", std::ios::binary);
@@ -521,7 +521,7 @@ int main(int argc, const char * argv[]) {
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_open_bus/ppu_open_bus.nes", std::ios::binary);// Mapper0, 32kb de prg-rom, vertical mirroring TODO: il faut implementer le decay de l'open bus pour que ca fonctionne
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/nmi_sync/demo_ntsc.nes", std::ios::binary);// Mapper0, 32kb de prg-rom, horizontal mirroring TODO: ne fonctionne pas correctement !
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/nmi_sync/demo_ntsc.nes", std::ios::binary);// Mapper0, 32kb de prg-rom, horizontal mirroring TODO: ne fonctionne pas correctement ! : maintenant oui presque correctement !!!
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/oam_stress/oam_stress.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // Ok, juste long a executer, attendre bien la fin
     
@@ -537,7 +537,7 @@ int main(int argc, const char * argv[]) {
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/sprite_overflow_tests/5.Emulator.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring // OK
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/Mapper/mmc3_test_2/rom_singles/4-scanline_timing.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 8kb de chr-rom  // TODO: foire sur 4 et 6 (je peux faire passer 6 en changeant la facon de lancer l'irq mais ca fait foirer 5, c'est surement parce que 6 alt teste le mapper3 alternatif : oui)
+    //std::ifstream ifs("../UnitTestFiles/TestROM/Mapper/mmc3_test_2/rom_singles/4-scanline_timing.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 8kb de chr-rom  // TODO: foire sur 6 (je peux faire passer 6 en changeant la facon de lancer l'irq mais ca fait foirer 5, c'est surement parce que 6 alt teste le mapper3 alternatif : oui)
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/allpads.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, 8kb de chr-ram, Horizontal mirroring
     
@@ -565,47 +565,12 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_timers/dmc_pitch.nes", std::ios::binary);  // Ok pour tous (mais reverifier le DMC une fois bien implementé avec les timing CPU/DMA)
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/volume_tests/volumes.nes", std::ios::binary);//?
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/DMA/sprdma_and_dmc_dma/sprdma_and_dmc_dma_512.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
-    //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dmc_dma_during_read4/dma_4016_read.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/TestROM/DMA/sprdma_and_dmc_dma/sprdma_and_dmc_dma.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
+    std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dmc_dma_during_read4/dma_4016_read.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_badrol.nes", std::ios::binary);    // Ok, doit devenir blanc mais le probleme est que cette rom de test n'attend pas correctement le PPU warmup et donc je dois le desactiver pour voir le resultat sinon ca reste gris car la couleur de background est ecrite trop tot
     //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_goodrol.nes", std::ios::binary); // Ok, doit etre noir et devenir blanc si pad right press mais pareil qu'au dessus pour le ppu warm up !
     
-    //std::ifstream ifs("../UnitTestFiles/Demo/45.nes", std::ios::binary);
-    
-    /*
-     
-     T+ Clocks (decimal)
-     00 527      +4  LDA #$07    ; 2
-     01 528      +4
-     02 527      +4  STA $4014   ; 4 + 513/514
-     03 528      +4
-     04 527      +4
-     05 526      +2
-     06 525      +2     // TODO: j'ai 527 !
-     07 526      +2
-     08 525      +2
-     09 526      +2
-     0A 525      +2
-     0B 526      +2
-     0C 525      +2
-     0D 526      +2
-     0E 525      +2
-     0F 526      +2
-     ...
-     200 525     +2
-     201 526     +2
-     202 525     +2
-     203 526     +2
-     204 524     +1  DMA next-to-next-to-last cycle
-     205 525     +1  DMA next-to-next-to-last cycle
-     206 526     +3  DMA last cycle
-     207 527     +3  DMA last cycle
-     208 527     +4  STA $100 second cycle
-     209 528     +4  STA $100 second cycle
-     20A 526     +3  STA $100 fourth cycle
-     20B 527     +3  STA $100 fourth cycle
-     
-     */
+    //std::ifstream ifs("../UnitTestFiles/Demo/19.nes", std::ios::binary);    // TODO: qq roms ne fonctionnent pas a cause du PPU warm up mais la 19 ne va pas du tout meme sans le PPU warm up alors qu'elle fonctionne bien dans nintaco !!! la 4 non plus mais c'est a cause du prg-ram size qui est mal detecté dans le header, a voir, pour la 19 je n'arrive pas a la faire aller mais elle ne va pas non plus dans openemu, voir si ca va dans mesen !
     
     // Check that file exists
     assert(ifs.good());

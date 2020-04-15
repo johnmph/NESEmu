@@ -96,9 +96,8 @@ namespace NESEmu {
             // Clock
             void clock(uint16_t address, Cpu6502::ReadWrite readWrite);
             
-            // Out latch
-            uint8_t getOutLatch() const;
-            void setOutLatch(uint8_t data);
+            // Out 0
+            void setOut0(bool data);
             
             // Read controller
             uint8_t readControllerPort(unsigned int number, uint8_t dataBus);
@@ -107,7 +106,7 @@ namespace NESEmu {
             std::unique_ptr<Controller::Interface> _controllerPorts[2];    // TODO: 2 controllers ports, voir si mettre 2 dans un const
             uint16_t _lastAddress;
             Cpu6502::ReadWrite _lastReadWrite;
-            uint8_t _outLatch;
+            bool _out0;
             bool _clockLine;
         };
         

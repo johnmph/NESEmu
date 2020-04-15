@@ -10,21 +10,21 @@
 #define NESEmu_Controller_Zapper_s_hpp
 
 
-template <class TControllerHardware>
-Zapper<TControllerHardware>::Zapper(TControllerHardware &controllerHardware) : _controllerHardware(controllerHardware) {
+template <class TControllerManager>
+Zapper<TControllerManager>::Zapper(TControllerManager &controllerManager) : _controllerManager(controllerManager) {
     // TODO: avoir les methodes getTrigger() et getPhotoDiode()
 }
 
-template <class TControllerHardware>
-void Zapper<TControllerHardware>::clock(uint8_t &data) {
+template <class TControllerManager>
+void Zapper<TControllerManager>::clock(uint8_t &data) {
 }
 
-template <class TControllerHardware>
-void Zapper<TControllerHardware>::out(bool high) {
+template <class TControllerManager>
+void Zapper<TControllerManager>::out(bool high) {
 }
 
-template <class TControllerHardware>
-void Zapper<TControllerHardware>::update() {
+template <class TControllerManager>
+void Zapper<TControllerManager>::update() {
 }
 
 #endif /* NESEmu_Controller_Zapper_s_hpp */

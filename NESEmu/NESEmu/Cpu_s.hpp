@@ -24,213 +24,6 @@ struct Constants<Model::Ricoh2A07> {
 
 
 template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
-Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::Dma(Chip &chip) : _chip(chip) {
-}
-
-template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
-void Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::powerUp() {
-    _spriteAddress = 0x0;
-    _dmcAddress = 0x0;
-    _writeCycle = false;
-    
-    // Reset other members via reset method
-    reset(false);
-}
-
-template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
-void Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::clock() {
-    // Toggle read / write cycle before process so we have the same type cycle in process method and CPU instruction execution (which is right after this clock method)
-    _writeCycle = !_writeCycle;
-    
-    // Copy read write signal
-    _chip._readWrite = _chip.InternalCpu::_readWrite;//TODO: a voir
-    
-    // Process
-    process();
-}
-
-template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
-void Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::reset(bool high) {
-    // Only reset if line is low
-    if (high) {
-        return;
-    }
-    
-    // Reset possible DMA operation
-    _spriteCycleCount = 0;
-    _spriteWaitCycleCount = 0;
-    _dmcCycleCount = 0;
-    _dmcWaitCycleCount = 0;
-    
-    // Reenable possible disabled CPU
-    _chip.ready(true);  // TODO: voir si ok
-}
-
-template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
-void Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::startSprite(uint8_t address) {
-    // Calculate address
-    _spriteAddress = address << 8;
-    
-    // Set counters (Sprite cycle count has a extra cycle to restore the CPU at the end)
-    _spriteWaitCycleCount = 1;
-    _spriteCycleCount = 513;
-    
-    // Disable CPU
-    _chip.ready(false);
-}
-
-template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
-void Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::startDmc(uint16_t address) {
-    // Copy address
-    _dmcAddress = address;
-    
-    // Set counters
-    _dmcWaitCycleCount = 2;
-    _dmcCycleCount = 2;
-}
-
-template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
-bool Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::isIdle() const {
-    // DMA is running only if DMA operations are requested and currently performed
-    return (((_dmcCycleCount == 0) || (_dmcCycleCount == 2)) && ((_spriteCycleCount == 0) || (_spriteCycleCount == 513)));
-}
-
-template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
-void Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::process() {
-    // Process DMC
-    bool canProcessSprite = processDmc();
-    
-    // Process sprite if necessary
-    if (canProcessSprite) {
-        processSprite();
-    }
-}
-
-template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
-bool Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::processDmc() {
-    // If no DMC DMA started
-    if (_dmcCycleCount == 0) {
-        // Exit
-        return true;
-    }
-    
-    // Wait for CPU ending with possible writes
-    if (_chip.InternalCpu::_readWrite == Cpu6502::ReadWrite::Write) {//TODO: internal ou pas ?? normalement oui
-        return true;//(_spriteCycleCount != 1);
-    }
-    
-    // Disable CPU
-    _chip.ready(false);
-    
-    // If need to wait
-    if (_dmcWaitCycleCount > 0) {
-        // Decrement counter
-        --_dmcWaitCycleCount;
-        
-        // Exit
-        return (_spriteCycleCount != 1);
-    }
-    
-    // Synchronize (because possible writes can desynchronize it)
-    if ((_dmcCycleCount & 0x1) != _writeCycle) {
-        return true;//(_spriteCycleCount != 1);
-    }
-    
-    // Check that we are really on correct cycle
-    assert((_dmcCycleCount & 0x1) == _writeCycle);
-    
-    // Decrement counter
-    --_dmcCycleCount;
-    
-    // Read cycle
-    if (!_writeCycle) {
-        // Read cycle (only inputDataLatch / predecode / RW from 6502 are affected)
-        _chip._bus.setAddressBus(_dmcAddress);
-        _chip._readWrite = Cpu6502::ReadWrite::Read;//TODO: pas obligé normalement car copié d'internalcpu dans le clock et il est read car les write cycles ont été passé avant ici
-    }
-    // Write cycle
-    else {
-        // Notify APU that sample is fetched
-        _chip.apuDmcSampleFetched();
-        
-        // Restore CPU state (no need to restore read/write signal because last cycle was a read)
-        //_chip.setAddressBus((_chip._addressBusHigh << 8) | _chip._addressBusLow);
-        _chip._bus.setAddressBus(_chip.getAddressBus());
-        
-        // If we are in last sprite cycle, we don't need it because we already restore the CPU on this DMC cycle (but we can't simply return true here because we are in DMA write cycle and CPU restore cycle on the sprite happens on the DMA read cycle)
-        if (_spriteCycleCount == 1) {
-            _spriteCycleCount = 0;
-        }
-        
-        // If no sprite DMA pending
-        if (_spriteCycleCount == 0) {
-            // Reenable CPU
-            _chip.ready(true);
-        }
-    }
-    
-    // Exit
-    return false;
-}
-
-template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
-void Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::processSprite() {
-    // If no sprite DMA started
-    if (_spriteCycleCount == 0) {
-        // Exit
-        return;
-    }
-    
-    // If need to wait
-    if (_spriteWaitCycleCount > 0) {
-        // Decrement counter
-        --_spriteWaitCycleCount;
-        
-        // Exit
-        return;
-    }
-    
-    // Synchronize
-    if ((_spriteCycleCount & 0x1) == _writeCycle) {
-        return;
-    }
-    
-    // Check that we are really on correct cycle
-    assert((_spriteCycleCount & 0x1) == (!_writeCycle));
-    
-    // Decrement counter
-    --_spriteCycleCount;
-    
-    // Read cycle
-    if (!_writeCycle) {
-        // If last cycle
-        if (_spriteCycleCount == 0) {
-            // Restore CPU state
-            //_chip.setAddressBus((_chip._addressBusHigh << 8) | _chip._addressBusLow);
-            //_chip._readWrite = Cpu6502::ReadWrite::Read;//TODO: pas obligé normalement car copié d'internalcpu dans le clock et il est read car les write cycles ont été passé avant ici
-            _chip._bus.setAddressBus(_chip.getAddressBus());
-            
-            // Reenable CPU
-            _chip.ready(true);
-        } else {
-            // Read cycle (only inputDataLatch / predecode / RW from 6502 is affected)
-            _chip._bus.setAddressBus(_spriteAddress);
-            _chip._readWrite = Cpu6502::ReadWrite::Read;//TODO: pas obligé normalement car copié d'internalcpu dans le clock et il est read car les write cycles ont été passé avant ici
-            
-            // Increment sprite address
-            ++_spriteAddress;
-        }
-    }
-    // Write cycle
-    else {
-        // Write to PPU (only RW from 6502 is affected)
-        _chip._bus.setAddressBus(0x2004);
-        _chip._readWrite = Cpu6502::ReadWrite::Write;
-    }
-}
-
-
-template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
 Chip<EModel, TBus, TControllerHardware, TSoundManager>::Chip(TBus &bus, TControllerHardware &controllerHardware, TSoundManager &soundManager) : _apu(*this, soundManager), _dma(*this), _bus(bus), _controllerHardware(controllerHardware), InternalCpu(*this) {
 }
 
@@ -248,6 +41,8 @@ void Chip<EModel, TBus, TControllerHardware, TSoundManager>::powerUp(uint16_t pr
     //_6502BusAddress = 0x0;//TODO: normalement pas besoin mais verifier quand meme
     //_6502BusData = 0x0;
     _readWrite = Cpu6502::ReadWrite::Read;//TODO: voir si nécessaire car copié du rw du 6502 si pas dma : oui si dma clock apres l'instruction !
+    
+    _outLatch = 0x0;
     
     _irqLine = true;
     _apuIrqLine = true;
@@ -420,7 +215,7 @@ Cpu6502::ReadWrite Chip<EModel, TBus, TControllerHardware, TSoundManager>::getRe
 
 template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
 uint8_t Chip<EModel, TBus, TControllerHardware, TSoundManager>::getOutSignal() const {
-    return _controllerHardware.getOutLatch();
+    return _outLatch;
 }
 
 template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
@@ -554,7 +349,11 @@ void Chip<EModel, TBus, TControllerHardware, TSoundManager>::performWrite() {
     // See https://wiki.nesdev.com/w/index.php/Controller_reading
     // See https://wiki.nesdev.com/w/index.php/Controller_reading_code
     else if (address == 0x4016) {
-        _controllerHardware.setOutLatch(data);
+        // Set outLatch
+        _outLatch = data & 0x7;
+        
+        // Set out 0 of controller hardware
+        _controllerHardware.setOut0((_outLatch & 0x1) != 0);
     }
     // APU frame counter
     else if (address == 0x4017) {

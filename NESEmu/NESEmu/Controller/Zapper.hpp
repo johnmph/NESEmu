@@ -16,10 +16,10 @@
 
 namespace NESEmu { namespace Controller {//TODO: a faire, voir https://wiki.nesdev.com/w/index.php/Input_devices pour l'interface, il faudra peut etre la modifier (pour standard aussi)
     
-    template <class TControllerHardware>
+    template <class TControllerManager>
     struct Zapper : Interface {
         
-        Zapper(TControllerHardware &controllerHardware);
+        Zapper(TControllerManager &controllerManager);
         
         void clock(uint8_t &data) override;
         void out(bool high) override;
@@ -27,7 +27,7 @@ namespace NESEmu { namespace Controller {//TODO: a faire, voir https://wiki.nesd
         void update();
         
     private:
-        TControllerHardware &_controllerHardware;
+        TControllerManager &_controllerManager;
     };
     
     #include "Zapper_s.hpp"

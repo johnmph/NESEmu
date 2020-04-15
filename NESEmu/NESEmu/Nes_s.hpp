@@ -183,7 +183,7 @@ void Nes<EModel, TGraphicManager, TSoundManager>::PpuHardwareInterface::interrup
 }
 
 template <Model EModel, class TGraphicManager, class TSoundManager>
-Nes<EModel, TGraphicManager, TSoundManager>::ControllerHardware::ControllerHardware() : _lastAddress(0x0), _lastReadWrite(Cpu6502::ReadWrite::Read), _outLatch(0x0), _clockLine(false) {
+Nes<EModel, TGraphicManager, TSoundManager>::ControllerHardware::ControllerHardware() : _lastAddress(0x0), _lastReadWrite(Cpu6502::ReadWrite::Read), _clockLine(false) {
 }
 
 template <Model EModel, class TGraphicManager, class TSoundManager>
@@ -221,18 +221,10 @@ void Nes<EModel, TGraphicManager, TSoundManager>::ControllerHardware::clock(uint
 }
 
 template <Model EModel, class TGraphicManager, class TSoundManager>
-uint8_t Nes<EModel, TGraphicManager, TSoundManager>::ControllerHardware::getOutLatch() const {
-    return _outLatch;
-}
-
-template <Model EModel, class TGraphicManager, class TSoundManager>
-void Nes<EModel, TGraphicManager, TSoundManager>::ControllerHardware::setOutLatch(uint8_t data) {
-    // Set outLatch
-    _outLatch = data & 0x7;
-    
+void Nes<EModel, TGraphicManager, TSoundManager>::ControllerHardware::setOut0(bool data) {
     // Update controllers
     for (int i = 0; i < 2; ++i) {
-        _controllerPorts[i]->out(_outLatch & 0x1);
+        _controllerPorts[i]->out(data);
     }
 }
 
@@ -259,7 +251,7 @@ Nes<EModel, TGraphicManager, TSoundManager>::Nes(TGraphicManager &graphicManager
     disconnectController(0);
     disconnectController(1);
     
-    // Set sound hardware sampler frequency to cpu frequency (because apu is clocked each time cpu is clocked)
+    // Set sound manager sampler frequency to cpu frequency (because apu is clocked each time cpu is clocked)
     soundManager.setSamplerFrequency(Constants::masterClockSpeedInHz / Constants::cpuMasterClockDivider);
 }
 

@@ -279,6 +279,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::checkReset() {
         return;
     }
     
+    _resetRequested = false;  // TODO: pour desactiver le PPU warmup
+    
     // Reset PPUCTRL/PPUSCROLL temporary address
     _temporaryAddress = 0x2000;
     
