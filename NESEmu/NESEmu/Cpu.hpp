@@ -66,16 +66,13 @@ namespace NESEmu { namespace Cpu {
             // TODO: ajouter powerUp
             
             // Clock
-            void clockPhi1();
-            void clockPhi2();
-            //void setReadWrite();
+            void clock();
             
             // Start
             void startSprite(uint8_t address);
             void startDmc(uint16_t address);
             
             // Properties
-            bool isWriteCycle() const;
             bool isIdle() const;
             
         private:
@@ -92,9 +89,6 @@ namespace NESEmu { namespace Cpu {
             uint8_t _spriteWaitCycleCount;
             uint8_t _dmcWaitCycleCount;
             bool _writeCycle;
-            //bool _idle;
-            
-            bool _ready;
         };
         
         

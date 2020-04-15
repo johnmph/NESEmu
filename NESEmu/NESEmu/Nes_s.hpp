@@ -302,7 +302,7 @@ void Nes<EModel, TGraphicHardware, TSoundHardware>::clockFull() {   // TODO: gro
     
     // Update controllers
     for (int i = 0; i < 2; ++i) {
-        _controllerPorts[i]->out(_cpu.getOutSignal() & 0x1);        // TODO: voir pour les performances ici
+        _controllerPorts[i]->out(_cpu.getOutSignal() & 0x1);        // TODO: une fois les modifs faite dans le CPU pour le getOutSignal et le 4016 write, je n'aurai plus besoin de clocker ca ici !
     }
     
     // Clock cartridge

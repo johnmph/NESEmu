@@ -24,11 +24,11 @@ struct Constants<Model::Ricoh2A07> {
 
 
 template <Model EModel, class TBus, class TSoundHardware>
-Chip<EModel, TBus, TSoundHardware>::Dma::Dma(Chip &chip) : _chip(chip), _spriteAddress(0x0), _dmcAddress(0x0), _spriteCycleCount(0), _dmcCycleCount(0), _spriteWaitCycleCount(0), _dmcWaitCycleCount(0), _writeCycle(false), /*_idle(true),*/ _ready(true) {
+Chip<EModel, TBus, TSoundHardware>::Dma::Dma(Chip &chip) : _chip(chip), _spriteAddress(0x0), _dmcAddress(0x0), _spriteCycleCount(0), _dmcCycleCount(0), _spriteWaitCycleCount(0), _dmcWaitCycleCount(0), _writeCycle(false) {
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::Dma::clockPhi1() {
+void Chip<EModel, TBus, TSoundHardware>::Dma::clock() {
     // Toggle read / write cycle before process so we have the same type cycle in process method and CPU instruction execution (which is right after this clock method)
     _writeCycle = !_writeCycle;
     
@@ -40,12 +40,6 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::clockPhi1() {
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::Dma::clockPhi2() {
-    // Set ready line
-    _chip.ready(_ready);
-}
-
-template <Model EModel, class TBus, class TSoundHardware>
 void Chip<EModel, TBus, TSoundHardware>::Dma::startSprite(uint8_t address) {
     // Calculate address
     _spriteAddress = address << 8;
@@ -54,9 +48,8 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::startSprite(uint8_t address) {
     _spriteWaitCycleCount = 1;
     _spriteCycleCount = 513;
     
-    // Disable CPU immediately
+    // Disable CPU
     _chip.ready(false);
-    _ready = false;
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
@@ -70,15 +63,9 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::startDmc(uint16_t address) {
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
-bool Chip<EModel, TBus, TSoundHardware>::Dma::isWriteCycle() const { // TODO: retirer si pas besoin mais normalement l'apu en a besoin je pense!
-    return _writeCycle;
-}
-
-template <Model EModel, class TBus, class TSoundHardware>
 bool Chip<EModel, TBus, TSoundHardware>::Dma::isIdle() const {
     // DMA is running only if DMA operations are requested and currently performed
     return (((_dmcCycleCount == 0) || (_dmcCycleCount == 2)) && ((_spriteCycleCount == 0) || (_spriteCycleCount == 513)));
-    //return _idle;
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
@@ -106,8 +93,7 @@ bool Chip<EModel, TBus, TSoundHardware>::Dma::processDmc() {
     }
     
     // Disable CPU
-    //_chip.ready(false);   // TODO: quand fini DMA, tester en retirant le ready et en mettant directement le _chip.ready dans le DMA comme ici (je l'avais mis pour les tests visual2A03 car le ready etait mis en phi2 et pas en phi1 mais si pas important, pas besoin de laisser cette complexité inutile (on peut retirer le clockPhi2 du DMA))
-    _ready = false;
+    _chip.ready(false);
     
     // If need to wait
     if (_dmcWaitCycleCount > 0) {
@@ -118,16 +104,13 @@ bool Chip<EModel, TBus, TSoundHardware>::Dma::processDmc() {
         return (_spriteCycleCount != 1);
     }
     
-    // Synchronize (because possible writes can desynchronize it)//TODO: appel par DMC (pas par enabled) toujours desynchronisé !!!
+    // Synchronize (because possible writes can desynchronize it)
     if ((_dmcCycleCount & 0x1) != _writeCycle) {
         return true;//(_spriteCycleCount != 1);
     }
     
     // Check that we are really on correct cycle
     assert((_dmcCycleCount & 0x1) == _writeCycle);
-    
-    // Set idle flag
-    //_idle = false;
     
     // Decrement counter
     --_dmcCycleCount;
@@ -156,10 +139,6 @@ bool Chip<EModel, TBus, TSoundHardware>::Dma::processDmc() {
         if (_spriteCycleCount == 0) {
             // Reenable CPU
             _chip.ready(true);
-            _ready = true;
-            
-            // Set idle flag
-            //_idle = true;
         }
     }
     
@@ -192,9 +171,6 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::processSprite() {
     // Check that we are really on correct cycle
     assert((_spriteCycleCount & 0x1) == (!_writeCycle));
     
-    // Set idle flag
-    //_idle = false;
-    
     // Decrement counter
     --_spriteCycleCount;
     
@@ -209,10 +185,6 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::processSprite() {
             
             // Reenable CPU
             _chip.ready(true);
-            _ready = true;
-            
-            // Set idle flag
-            //_idle = true;
         } else {
             // Read cycle (only inputDataLatch / predecode / RW from 6502 is affected)
             _chip._bus.setAddressBus(_spriteAddress);
@@ -280,8 +252,6 @@ void Chip<EModel, TBus, TSoundHardware>::clockPhi2() {
 
 template <Model EModel, class TBus, class TSoundHardware>
 void Chip<EModel, TBus, TSoundHardware>::startPhi1() {
-    //_apu.clock();//TODO: je l'ai mis ici pour les tests, a voir
-    
     // Start phi1
     InternalCpu::_phi2 = false;
     
@@ -299,10 +269,10 @@ void Chip<EModel, TBus, TSoundHardware>::startPhi1() {
     }
     
     // Clock APU
-    _apu.clock();//TODO: voir si ok
+    _apu.clock();
     
     // Clock DMA
-    _dma.clockPhi1();//TODO: le mettre apres l'instruction ??
+    _dma.clock();
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
@@ -357,8 +327,6 @@ void Chip<EModel, TBus, TSoundHardware>::startPhi2() {
             _bus.performWrite();
         }
     }
-    
-    _dma.clockPhi2();
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
@@ -422,7 +390,7 @@ Cpu6502::ReadWrite Chip<EModel, TBus, TSoundHardware>::getReadWriteSignal() cons
 
 template <Model EModel, class TBus, class TSoundHardware>
 uint8_t Chip<EModel, TBus, TSoundHardware>::getOutSignal() const {
-    return _outLatch;
+    return _outLatch;   // TODO: remplacer ca par un appel au controller hardware pour getter son out
 }
 
 template <Model EModel, class TBus, class TSoundHardware>
@@ -562,7 +530,7 @@ void Chip<EModel, TBus, TSoundHardware>::performWrite() {
     // See https://wiki.nesdev.com/w/index.php/Controller_reading
     // See https://wiki.nesdev.com/w/index.php/Controller_reading_code
     else if (address == 0x4016) {
-        _outLatch = data & 0x7;
+        _outLatch = data & 0x7; // TODO: remplacer ca par un appel au controller hardware pour setter son out
     }
     // APU frame counter
     else if (address == 0x4017) {

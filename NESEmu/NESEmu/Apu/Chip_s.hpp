@@ -32,8 +32,6 @@ void Chip<TCpu, TSoundHardware>::powerUp() {
 
 template <class TCpu, class TSoundHardware>
 void Chip<TCpu, TSoundHardware>::clock() {
-    //checkInterrupt();//TODO: j'ai mis ca ici pour que le blarg test 8 passe (irq_timing) avec l'apu clocké avant le cpu !
-    
     // Clock frame counter
     _frameCounter.clock();//TODO: je l'ai mis avant les channels, a voir
     
