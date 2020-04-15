@@ -31,11 +31,10 @@ template <Model EModel, class TBus, class TControllerHardware, class TSoundManag
 void Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::powerUp() {
     _spriteAddress = 0x0;
     _dmcAddress = 0x0;
-    _spriteCycleCount = 0;
-    _dmcCycleCount = 0;
-    _spriteWaitCycleCount = 0;
-    _dmcWaitCycleCount = 0;
     _writeCycle = false;
+    
+    // Reset other members via reset method
+    reset(false);
 }
 
 template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
@@ -48,6 +47,23 @@ void Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::clock() {
     
     // Process
     process();
+}
+
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::reset(bool high) {
+    // Only reset if line is low
+    if (high) {
+        return;
+    }
+    
+    // Reset possible DMA operation
+    _spriteCycleCount = 0;
+    _spriteWaitCycleCount = 0;
+    _dmcCycleCount = 0;
+    _dmcWaitCycleCount = 0;
+    
+    // Reenable possible disabled CPU
+    _chip.ready(true);  // TODO: voir si ok
 }
 
 template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
@@ -373,17 +389,14 @@ void Chip<EModel, TBus, TControllerHardware, TSoundManager>::endPhi2() {
 
 template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
 void Chip<EModel, TBus, TControllerHardware, TSoundManager>::reset(bool high) {
-    // If reset
-    /*if (!high) {          // TODO: a reflechir pour le reset et le DMA (peut etre un _dma.reset(high);) OUI C'est SUR QU'IL FAUT LE RESET CAR SI ON EXECUTE LES TESTS UN PAR UN C'est ok mais tous en meme temps et ca foire apres le 1er car il n'est pas reset pour les autres tests ! (peut etre pas reset mais PowerUp c'est sur) : pour le reset, tester en faisant un spr dma et pendant qu'il est en cours, faire un signal reset low
-        // Stop possible DMA
-        stopDma();
-    }*/
-    
     // Reset CPU
     InternalCpu::reset(high);
     
     // Reset APU
     _apu.reset(high);
+    
+    // Reset DMA
+    _dma.reset(high);
 }
 
 template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>

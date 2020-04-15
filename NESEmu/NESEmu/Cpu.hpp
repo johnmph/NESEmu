@@ -63,10 +63,13 @@ namespace NESEmu { namespace Cpu {
             
             Dma(Chip &chip);
             
-            void powerUp();//TODO: voir aussi pour le reset
+            void powerUp();
             
             // Clock
             void clock();
+            
+            // Reset
+            void reset(bool high);
             
             // Start
             void startSprite(uint8_t address);
@@ -133,8 +136,6 @@ namespace NESEmu { namespace Cpu {
         
         bool _irqLine;
         bool _apuIrqLine;
-        
-        bool _last4016ReadWasReadyLow = false;
     };
     
     #include "Cpu_s.hpp"
