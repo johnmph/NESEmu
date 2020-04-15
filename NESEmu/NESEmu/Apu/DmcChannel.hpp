@@ -57,13 +57,12 @@ namespace NESEmu { namespace Apu {
         uint16_t _sampleLength;
         uint16_t _currentSampleAddress;
         uint16_t _sampleRemainingBytes;
+        uint8_t _needRequestSample;
         uint8_t _sampleBuffer;
         bool _sampleBufferFilled;
         bool _loopFlag;
         bool _interrupt;
         bool _enableInterrupt;
-        
-        bool _needRequestSample;
     };
     
     #include "DmcChannel_s.hpp"

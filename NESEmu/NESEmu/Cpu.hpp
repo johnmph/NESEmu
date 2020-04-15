@@ -72,7 +72,7 @@ namespace NESEmu { namespace Cpu {
             
             // Start
             void startSprite(uint8_t address);
-            void startDmc(uint16_t address, bool requestedOnEnable);
+            void startDmc(uint16_t address);
             
             // Properties
             bool isWriteCycle() const;
@@ -92,10 +92,9 @@ namespace NESEmu { namespace Cpu {
             uint8_t _spriteWaitCycleCount;
             uint8_t _dmcWaitCycleCount;
             bool _writeCycle;
-            bool _idle;
+            //bool _idle;
             
             bool _ready;
-            bool _dmcReadFirstSync;
         };
         
         
@@ -122,7 +121,7 @@ namespace NESEmu { namespace Cpu {
         
         // APU
         void apuIrq(bool high);
-        void apuDmcRequestSample(uint16_t address, bool requestedOnEnable);
+        void apuDmcRequestSample(uint16_t address);
         void apuDmcSampleFetched();
         
         // Internal
@@ -141,6 +140,8 @@ namespace NESEmu { namespace Cpu {
         
         bool _irqLine;
         bool _apuIrqLine;
+        
+        bool _last4016ReadWasReadyLow = false;
     };
     
     #include "Cpu_s.hpp"

@@ -169,8 +169,8 @@ void Chip<TCpu, TSoundHardware>::clockFrameCounterHalfFrame() {
 }
 
 template <class TCpu, class TSoundHardware>
-void Chip<TCpu, TSoundHardware>::requestDmcSample(uint16_t address, bool requestedOnEnable) {
-    _cpu.apuDmcRequestSample(address, requestedOnEnable);
+void Chip<TCpu, TSoundHardware>::requestDmcSample(uint16_t address) {
+    _cpu.apuDmcRequestSample(address);
 }
 
 template <class TCpu, class TSoundHardware>

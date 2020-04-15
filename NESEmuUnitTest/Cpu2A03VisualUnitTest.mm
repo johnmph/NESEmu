@@ -126,7 +126,7 @@ namespace {
     }
     
     // Analyze
-    analyzer.analyze(cpu2A03, [self](bool result, std::string const &name) { if (!result) { std::cout << name << "\n"; } XCTAssertTrue(result); }, 16);
+    analyzer.analyze(cpu2A03, [self](bool result, std::string const &name) { if (!result) { std::cout << name << "\n"; } XCTAssertTrue(result); }, 18);
     
     // Close file
     ifsLog.close();

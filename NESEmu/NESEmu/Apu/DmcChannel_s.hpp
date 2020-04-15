@@ -37,9 +37,9 @@ void DmcChannel<TChip>::powerUp() {
     // Initialize timer at its first rate value
     _timer = _rates[0];
     
-    // The first shift register clock happen after 1024 CPU clock cycles (due to LFSR start state)
+    // The first shift register clock happen after 1025 CPU clock cycles (due to LFSR start state)
     // See : http://forums.nesdev.com/viewtopic.php?f=3&t=19910
-    _counter = 1024;
+    _counter = 1025;//TODO: voir pour le reset si ainsi aussi !
     
     // Initialize sample address and length at their minimal values
     // See https://forums.nesdev.com/viewtopic.php?f=3&t=18278
@@ -52,6 +52,7 @@ void DmcChannel<TChip>::powerUp() {
     _outputLevel = 0;
     _currentSampleAddress = 0x0;
     _sampleRemainingBytes = 0;
+    _needRequestSample = 0;
     _sampleBuffer = 0x0;
     _sampleBufferFilled = false;
     _loopFlag = false;
@@ -61,17 +62,19 @@ void DmcChannel<TChip>::powerUp() {
 
 template <class TChip>
 void DmcChannel<TChip>::clock() {
-    // If need to request a sample
-    if (_needRequestSample && ((_counter & 0x1) == 0)) {
-        // Request a sample
-        _chip.requestDmcSample(_currentSampleAddress, true);
-        
-        // Reset flag
-        _needRequestSample = false;
-    }
-    
     // Decrement counter
     --_counter;
+    
+    // If need to request a sample
+    if ((_needRequestSample > 0) && ((_counter & 0x1) != 0)) {
+        // Decrement counter
+        --_needRequestSample;
+        
+        // If reached 0, request a sample
+        if (_needRequestSample == 0) {
+            _chip.requestDmcSample(_currentSampleAddress);
+        }
+    }
     
     // Exit if counter not reached 0
     if (_counter > 0) {
@@ -118,12 +121,10 @@ void DmcChannel<TChip>::clock() {
         // Reset silence flag
         _silenceFlag = false;
         
-        // Request a sample if necessary
+        // Request a sample immediately if necessary
         if (_sampleRemainingBytes > 0) {
-            //_needRequestSample = true;
-            _chip.requestDmcSample(_currentSampleAddress, false);
+            _chip.requestDmcSample(_currentSampleAddress);
         }
-        
     } else {
         // Set silence flag
         _silenceFlag = true;
@@ -157,7 +158,7 @@ void DmcChannel<TChip>::setEnabled(bool enabled) {
     
     // Request a sample if necessary
     if (!_sampleBufferFilled) {
-        _needRequestSample = true;
+        _needRequestSample = 2;
     }
 }
 

@@ -551,8 +551,8 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/noisy/noisy_v1.nes", std::ios::binary);//TODO: a comparer avec un autre emulateur
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/DmcPowerOnTest_v3/DmcPowerOnBuzz.nes", std::ios::binary);//TODO: a comparer avec un autre emulateur
     
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_mixer/dmc.nes", std::ios::binary);//TODO: pas tres bon pour square, parfait pour triangle
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_reset/works_immediately.nes", std::ios::binary);    // Ok ! (pour 4017_timing, 9 au power et 9 au reset pour l'apu clocked après cpu (et checkInterrupt apres clock de l'apu) et 10 au reset pour apu clocked avant cpu (et checkInterrupt avant le clock des units de l'apu)) : maintenant 9 au power et 10 au reset avec l'apu apres le cpu mais avant le dma : mesen est a 9 pour les 2 : maintenant 9 et 9 aussi : De nouveau 9 et 10 !
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_mixer/triangle.nes", std::ios::binary);//TODO: pas tres bon pour square, parfait pour triangle
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_reset/len_ctrs_enabled.nes", std::ios::binary);    // Ok ! (pour 4017_timing, 9 au power et 9 au reset pour l'apu clocked après cpu (et checkInterrupt apres clock de l'apu) et 10 au reset pour apu clocked avant cpu (et checkInterrupt avant le clock des units de l'apu)) : maintenant 9 au power et 10 au reset avec l'apu apres le cpu mais avant le dma : mesen est a 9 pour les 2 : maintenant 9 et 9 aussi : De nouveau 9 et 10 !
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/FrameCounterIrqAckTest/test.nes", std::ios::binary);//TODO: attention car apparemment ca fail sur une vraie nes ! // https://forums.nesdev.com/viewtopic.php?f=3&t=13844&sid=cbcaafaac1023fdf00510a47962184ad&start=300
     
@@ -567,8 +567,8 @@ int main(int argc, const char * argv[]) {
     
     std::ifstream ifs("../UnitTestFiles/TestROM/DMA/sprdma_and_dmc_dma/sprdma_and_dmc_dma_512.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dmc_dma_during_read4/dma_4016_read.nes", std::ios::binary);
-    //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_badrol.nes", std::ios::binary);
-    //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_goodrol.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_badrol.nes", std::ios::binary);    // Ok, doit devenir blanc mais le probleme est que cette rom de test n'attend pas correctement le PPU warmup et donc je dois le desactiver pour voir le resultat sinon ca reste gris car la couleur de background est ecrite trop tot
+    //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_goodrol.nes", std::ios::binary); // Ok, doit etre noir et devenir blanc si pad right press mais pareil qu'au dessus pour le ppu warm up !
     
     //std::ifstream ifs("../UnitTestFiles/Demo/45.nes", std::ios::binary);
     
