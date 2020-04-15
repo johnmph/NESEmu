@@ -33,7 +33,7 @@ namespace NESEmu {
     template <Model EModel>
     struct Constants;
     
-    template <Model EModel, class TGraphicHardware, class TSoundHardware>
+    template <Model EModel, class TGraphicManager, class TSoundManager>
     struct Nes {
         
     private:
@@ -50,8 +50,6 @@ namespace NESEmu {
             
             void performRead();
             void performWrite();
-            
-            void readControllerPort(unsigned int number);
             
             void irq(bool high);
             
@@ -87,6 +85,32 @@ namespace NESEmu {
             uint8_t _externalOctalLatch;
         };
         
+        struct ControllerHardware {
+            
+            ControllerHardware();
+            
+            // Set up controllers
+            void connectController(unsigned int portNumber, std::unique_ptr<Controller::Interface> controller);
+            std::unique_ptr<Controller::Interface> disconnectController(unsigned int portNumber);
+            
+            // Clock
+            void clock(uint16_t address, Cpu6502::ReadWrite readWrite);
+            
+            // Out latch
+            uint8_t getOutLatch() const;
+            void setOutLatch(uint8_t data);
+            
+            // Read controller
+            uint8_t readControllerPort(unsigned int number, uint8_t dataBus);
+            
+        private:
+            std::unique_ptr<Controller::Interface> _controllerPorts[2];    // TODO: 2 controllers ports, voir si mettre 2 dans un const
+            uint16_t _lastAddress;
+            Cpu6502::ReadWrite _lastReadWrite;
+            uint8_t _outLatch;
+            bool _clockLine;
+        };
+        
     public:
         
         // Keep Hardware interface classes private but allow external code to get their types for Cartridge::Interface type
@@ -94,7 +118,7 @@ namespace NESEmu {
         using PpuHardwareInterface = PpuHardwareInterface;
         
         
-        Nes(TGraphicHardware &graphicHardware, TSoundHardware &soundHardware);
+        Nes(TGraphicManager &graphicManager, TSoundManager &soundManager);
         
         void powerUp();
         
@@ -128,8 +152,8 @@ namespace NESEmu {
         void cartridgeInterrupt(bool high);
         
         // Chips
-        Cpu::Chip<Constants::cpuModel, CpuHardwareInterface, TSoundHardware> _cpu;
-        Ppu::Chip<Constants::ppuModel, PpuHardwareInterface, PpuHardwareInterface, TGraphicHardware> _ppu;
+        Cpu::Chip<Constants::cpuModel, CpuHardwareInterface, ControllerHardware, TSoundManager> _cpu;
+        Ppu::Chip<Constants::ppuModel, PpuHardwareInterface, PpuHardwareInterface, TGraphicManager> _ppu;
         
         // 2kb of RAM
         std::vector<uint8_t> _ram;
@@ -137,13 +161,11 @@ namespace NESEmu {
         // 2kb of VRAM
         std::vector<uint8_t> _vram;
         
-        // Controllers
-        std::unique_ptr<Controller::Interface> _controllerPorts[2];    // TODO: 2 controllers ports, voir si mettre 2 dans un const
-        
         // Internals
         std::unique_ptr<Cartridge::Interface<CpuHardwareInterface, PpuHardwareInterface>> _cartridge;
         CpuHardwareInterface _cpuHardwareInterface;
         PpuHardwareInterface _ppuHardwareInterface;
+        ControllerHardware _controllerHardware;
         
         int _currentClockForCpu;
         int _currentClockForPpu;

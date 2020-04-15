@@ -27,10 +27,10 @@ namespace NESEmu { namespace Cpu {
     template <Model EModel>
     struct Constants;
     
-    template <Model EModel, class TBus, class TSoundHardware>
-    struct Chip : protected Cpu6502::Chip<Cpu6502::ConfigurationPerformance<Chip<EModel, TBus, TSoundHardware>, false>> {
+    template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+    struct Chip : protected Cpu6502::Chip<Cpu6502::ConfigurationPerformance<Chip<EModel, TBus, TControllerHardware, TSoundManager>, false>> {
         
-        Chip(TBus &bus, TSoundHardware &soundHardware);
+        Chip(TBus &bus, TControllerHardware &controllerHardware, TSoundManager &soundManager);
         
         void powerUp(uint16_t programCounter = 0x100F, uint8_t stackPointer = 0x0, uint8_t accumulator = 0x0, uint8_t xIndex = 0x0, uint8_t yIndex = 0x0, uint8_t statusFlags = 0x34);  // TODO: d'apres la rom de tests ce sont les valeurs que ca doit avoir au power up, a verifier (pour le pc je ne sais pas)
         
@@ -63,7 +63,7 @@ namespace NESEmu { namespace Cpu {
             
             Dma(Chip &chip);
             
-            // TODO: ajouter powerUp
+            void powerUp();//TODO: voir aussi pour le reset
             
             // Clock
             void clock();
@@ -99,7 +99,7 @@ namespace NESEmu { namespace Cpu {
         friend InternalCpu;
         
         // Set Apu as friend to keep apuIrq and apuRequestDmcSample methods private
-        friend Apu::Chip<Chip, TSoundHardware>;
+        friend Apu::Chip<Chip, TSoundManager>;
         
         
         // Bus intermediate
@@ -119,11 +119,10 @@ namespace NESEmu { namespace Cpu {
         void apuDmcSampleFetched();
         
         // Internal
-        Apu::Chip<Chip, TSoundHardware> _apu;
-        TBus &_bus;
+        Apu::Chip<Chip, TSoundManager> _apu;
         Dma _dma;
-        
-        uint8_t _outLatch;
+        TBus &_bus;
+        TControllerHardware &_controllerHardware;
         
         // Bus of 6502
         uint16_t _6502BusAddress;        // TODO: voir si mettre ainsi ou renommer ou avoir une classe InternalBus, ou le mettre dans le Dma ? a voir : pas dans le Dma car il est utilisé aussi lors de l'accès a l'APU

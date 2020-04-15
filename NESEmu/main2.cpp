@@ -19,9 +19,9 @@
 
 
 template <class TFrameListener>
-struct GraphicHardware {
+struct GraphicManager {
     
-    GraphicHardware(SDL_Event &event, TFrameListener &frameListener) : _event(event), _frameListener(frameListener) {
+    GraphicManager(SDL_Event &event, TFrameListener &frameListener) : _event(event), _frameListener(frameListener) {
         // Initialize video
         SDL_InitSubSystem(SDL_INIT_VIDEO);
         std::cout << SDL_GetError() << "\n";
@@ -56,7 +56,7 @@ struct GraphicHardware {
         }
     }
     
-    ~GraphicHardware() {
+    ~GraphicManager() {
         // Free allocated memory
         free(_pixels);
         free(_palette);
@@ -119,12 +119,12 @@ private:
     TFrameListener &_frameListener;
 };
 
-struct SoundHardware {
+struct SoundManager {
     /*
-     Rajouter des methodes pour choisir le volume des canaux dans le soundhardware ou bien carrement laisser le soundhardware faire le mixing en ayant la possibilité d’utiliser la méthode de mixing de l’apu (qui deviendra une static method)
+     Rajouter des methodes pour choisir le volume des canaux dans le soundmanager ou bien carrement laisser le soundmanager faire le mixing en ayant la possibilité d’utiliser la méthode de mixing de l’apu (qui deviendra une static method)
      */
     
-    SoundHardware(unsigned int frequency, std::size_t bufferSize) : _counter(0), _currentBufferWriteIndex(0), _currentBufferReadIndex(0) {
+    SoundManager(unsigned int frequency, std::size_t bufferSize) : _counter(0), _currentBufferWriteIndex(0), _currentBufferReadIndex(0) {
         // TODO: bufferSize doit etre une puissance de 2
         
         // Set buffer size as double of audio hardware buffer size
@@ -142,7 +142,7 @@ struct SoundHardware {
         _audioSpec.channels = 1;
         _audioSpec.samples = bufferSize;
         _audioSpec.callback = [] (void *param, Uint8 *stream, int len) {
-            static_cast<SoundHardware *>(param)->fillBuffer(stream, len);
+            static_cast<SoundManager *>(param)->fillBuffer(stream, len);
         };
         _audioSpec.userdata = this;
         
@@ -154,7 +154,7 @@ struct SoundHardware {
         SDL_PauseAudioDevice(_audioDeviceID, SDL_FALSE);
     }
     
-    ~SoundHardware() {
+    ~SoundManager() {
         // Close audio device
         SDL_CloseAudioDevice(_audioDeviceID);
         
@@ -309,7 +309,7 @@ private:
 
 struct TimeManager {
     
-    TimeManager(SoundHardware &soundHardware, int maxFps, bool audioContinuousSync) : _soundHardware(soundHardware), _frameDuration(1.0f / maxFps), _audioContinuousSync(audioContinuousSync), _frameCounter(0) {
+    TimeManager(SoundManager &soundManager, int maxFps, bool audioContinuousSync) : _soundManager(soundManager), _frameDuration(1.0f / maxFps), _audioContinuousSync(audioContinuousSync), _frameCounter(0) {
         // Start at current time
         _lastFrameTime = SDL_GetPerformanceCounter();
         _lastFrameCounterTime = _lastFrameTime;
@@ -334,7 +334,7 @@ struct TimeManager {
         // TODO: ce n'est nécessaire que pour synchroniser +- le son quand le frame rate est different de 60fps : ca devra etre une option a activer / desactiver
         if (_audioContinuousSync) {
             //29780.5 = cycles CPU par frame // TODO: voir si PAL !
-            _soundHardware.setSamplerFrequency(29780.5f / ((currentTime - _lastFrameTime) / performanceFrequency));
+            _soundManager.setSamplerFrequency(29780.5f / ((currentTime - _lastFrameTime) / performanceFrequency));
         }
         
         // Update frame counter
@@ -354,7 +354,7 @@ struct TimeManager {
     }
     
 private:
-    SoundHardware &_soundHardware;
+    SoundManager &_soundManager;
     Uint64 _lastFrameTime;
     Uint64 _lastFrameCounterTime;
     float _frameDuration;
@@ -446,9 +446,9 @@ int main(int argc, const char * argv[]) {
     
     SDL_Event event;
     
-    SoundHardware soundHardware(44100, 2048);
-    TimeManager timeManager(soundHardware, 60, /*false*/true);
-    GraphicHardware<TimeManager> graphicHardware(event, timeManager);
+    SoundManager soundManager(44100, 2048);
+    TimeManager timeManager(soundManager, 60, /*false*/true);
+    GraphicManager<TimeManager> graphicManager(event, timeManager);
     ControllerHardware controllerHardware;
     auto controller = std::make_unique<NESEmu::Controller::Standard<ControllerHardware>>(controllerHardware);
     
@@ -472,7 +472,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Final Fantasy.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/Zelda.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/Zelda 2.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom // TODO: bug mais peut etre parce que le mapper1 n'est pas complet (selon les versions du mapper !) deja c du chr-ram et ici c du chr-rom : oui en plus il y a 8ko dans le mapper1 et ici 128 !!! : OK
-    //std::ifstream ifs("../UnitTestFiles/Simpsons - Bart Vs the Space Mutants.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom, IL Y A LE BUG DU SCOREBAR QUI SHAKE UN PEU, a voir (timing ppu ?) : ca ne vibre plus a chaque fois (peut etre plutot au niveau du dmc ou spr dma !)
+    std::ifstream ifs("../UnitTestFiles/Simpsons - Bart Vs the Space Mutants.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom, IL Y A LE BUG DU SCOREBAR QUI SHAKE UN PEU, a voir (timing ppu ?) : ca ne vibre plus a chaque fois
     //std::ifstream ifs("../UnitTestFiles/Bill & Ted's Excellent Video Game Adventure.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom // TODO : ne fonctionne pas car on doit gerer la double ecriture dans le MMC1 : ok
     
     //std::ifstream ifs("../UnitTestFiles/1942.nes", std::ios::binary);
@@ -566,7 +566,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/volume_tests/volumes.nes", std::ios::binary);//?
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/DMA/sprdma_and_dmc_dma/sprdma_and_dmc_dma.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
-    std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dmc_dma_during_read4/dma_4016_read.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dmc_dma_during_read4/dma_4016_read.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_badrol.nes", std::ios::binary);    // Ok, doit devenir blanc mais le probleme est que cette rom de test n'attend pas correctement le PPU warmup et donc je dois le desactiver pour voir le resultat sinon ca reste gris car la couleur de background est ecrite trop tot
     //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_goodrol.nes", std::ios::binary); // Ok, doit etre noir et devenir blanc si pad right press mais pareil qu'au dessus pour le ppu warm up !
     
@@ -620,7 +620,7 @@ int main(int argc, const char * argv[]) {
     
     // TODO: comme les mappers sont resolus au compile-time, a chaque mapper ajouté dans le code, il faut l'instantier (dans Factory) et donc il va avoir une duplication de NesImplementation pour chaque mapper, ca va augmenter la taille du code a fond et peut etre foutre la merde dans l'instruction cache ? si ca tombe la version avec virtual dispatch (runtime) sera au final plus rapide car moins de code meme si les appels de methodes sont indirects !!! A TESTER
     
-    using Nes = NESEmu::Nes<NESEmu::Model::Ntsc, GraphicHardware<TimeManager>, SoundHardware>;
+    using Nes = NESEmu::Nes<NESEmu::Model::Ntsc, GraphicManager<TimeManager>, SoundManager>;
     
     NESEmu::Cartridge::Factory<Nes::CpuHardwareInterface, Nes::PpuHardwareInterface> cartridgeFactory;
     cartridgeFactory.registerLoader(std::shared_ptr<NESEmu::Cartridge::Loader::Interface>(new NESEmu::Cartridge::Loader::INes()));
@@ -642,7 +642,7 @@ int main(int argc, const char * argv[]) {
     }
     
     // Create NES
-    Nes nes(graphicHardware, soundHardware);
+    Nes nes(graphicManager, soundManager);
     
     // Insert cartridge
     nes.insertCartridge(std::move(cartridge));

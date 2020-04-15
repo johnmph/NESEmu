@@ -21,10 +21,10 @@
 
 namespace NESEmu { namespace Apu {
     
-    template <class TCpu, class TSoundHardware>
+    template <class TCpu, class TSoundManager>
     struct Chip {
         
-        Chip(TCpu &cpu, TSoundHardware &soundHardware);
+        Chip(TCpu &cpu, TSoundManager &soundManager);
         
         // Power up
         void powerUp();
@@ -81,7 +81,7 @@ namespace NESEmu { namespace Apu {
         
         // Internals
         TCpu &_cpu;
-        TSoundHardware &_soundHardware;
+        TSoundManager &_soundManager;
         
         bool _resetLine;
     };

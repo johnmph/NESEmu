@@ -10,12 +10,12 @@
 #define NESEmu_Apu_Chip_s_hpp
 
 
-template <class TCpu, class TSoundHardware>
-Chip<TCpu, TSoundHardware>::Chip(TCpu &cpu, TSoundHardware &soundHardware) : _cpu(cpu), _soundHardware(soundHardware), _frameCounter(*this), _pulseChannel{ true, false }, _dmcChannel(*this) {
+template <class TCpu, class TSoundManager>
+Chip<TCpu, TSoundManager>::Chip(TCpu &cpu, TSoundManager &soundManager) : _cpu(cpu), _soundManager(soundManager), _frameCounter(*this), _pulseChannel{ true, false }, _dmcChannel(*this) {
 }
 
-template <class TCpu, class TSoundHardware>
-void Chip<TCpu, TSoundHardware>::powerUp() {
+template <class TCpu, class TSoundManager>
+void Chip<TCpu, TSoundManager>::powerUp() {
     // Power up channels
     _pulseChannel[0].powerUp();
     _pulseChannel[1].powerUp();
@@ -30,8 +30,8 @@ void Chip<TCpu, TSoundHardware>::powerUp() {
     _resetLine = true;
 }
 
-template <class TCpu, class TSoundHardware>
-void Chip<TCpu, TSoundHardware>::clock() {
+template <class TCpu, class TSoundManager>
+void Chip<TCpu, TSoundManager>::clock() {
     // Clock frame counter
     _frameCounter.clock();//TODO: je l'ai mis avant les channels, a voir
     
@@ -48,20 +48,20 @@ void Chip<TCpu, TSoundHardware>::clock() {
     // Check reset
     checkReset();
     
-    // Add data to sound hardware if necessary
-    if (_soundHardware.askForAddingSample()) {
-        _soundHardware.addSample(getMixedOutput());
+    // Add data to sound manager if necessary
+    if (_soundManager.askForAddingSample()) {
+        _soundManager.addSample(getMixedOutput());
     }
 }
 
-template <class TCpu, class TSoundHardware>
-void Chip<TCpu, TSoundHardware>::reset(bool high) {
+template <class TCpu, class TSoundManager>
+void Chip<TCpu, TSoundManager>::reset(bool high) {
     // Save signal
     _resetLine = high;
 }
 
-template <class TCpu, class TSoundHardware>
-void Chip<TCpu, TSoundHardware>::setChannelRegister(uint16_t address, uint8_t data) {
+template <class TCpu, class TSoundManager>
+void Chip<TCpu, TSoundManager>::setChannelRegister(uint16_t address, uint8_t data) {
     // Pulse registers
     if (address < 0x4008) {
         _pulseChannel[(address >= 0x4004)].setRegister((address & 0x3), data);
@@ -80,8 +80,8 @@ void Chip<TCpu, TSoundHardware>::setChannelRegister(uint16_t address, uint8_t da
     }
 }
 
-template <class TCpu, class TSoundHardware>
-uint8_t Chip<TCpu, TSoundHardware>::getStatusRegister() {
+template <class TCpu, class TSoundManager>
+uint8_t Chip<TCpu, TSoundManager>::getStatusRegister() {
     uint8_t data = (_dmcChannel.getInterrupt() << 7) |
                    (_frameCounter.getInterrupt() << 6) |
                    (_dmcChannel.isEnabled() << 4) |
@@ -98,8 +98,8 @@ uint8_t Chip<TCpu, TSoundHardware>::getStatusRegister() {
     return data;
 }
 
-template <class TCpu, class TSoundHardware>
-void Chip<TCpu, TSoundHardware>::setStatusRegister(uint8_t data) {
+template <class TCpu, class TSoundManager>
+void Chip<TCpu, TSoundManager>::setStatusRegister(uint8_t data) {
     // Get channels enable flags
     _pulseChannel[0].setLengthCounterEnabled((data & 0x1) != 0);
     _pulseChannel[1].setLengthCounterEnabled((data & 0x2) != 0);
@@ -111,21 +111,21 @@ void Chip<TCpu, TSoundHardware>::setStatusRegister(uint8_t data) {
     _dmcChannel.resetInterrupt();
 }
 
-template <class TCpu, class TSoundHardware>
-void Chip<TCpu, TSoundHardware>::setFrameCounterRegister(uint8_t data) {
+template <class TCpu, class TSoundManager>
+void Chip<TCpu, TSoundManager>::setFrameCounterRegister(uint8_t data) {
     _frameCounter.setDisableInterrupt(data & 0x40);
     _frameCounter.setSequence5StepMode(data & 0x80);
     
     _frameCounter.requestReset();
 }
 
-template <class TCpu, class TSoundHardware>
-void Chip<TCpu, TSoundHardware>::dmcSampleFetched(uint8_t data) {
+template <class TCpu, class TSoundManager>
+void Chip<TCpu, TSoundManager>::dmcSampleFetched(uint8_t data) {
     _dmcChannel.sampleFetched(data);
 }
 
-template <class TCpu, class TSoundHardware>
-float Chip<TCpu, TSoundHardware>::getMixedOutput() const {//TODO: voir si plus optimisé avec les approximations
+template <class TCpu, class TSoundManager>
+float Chip<TCpu, TSoundManager>::getMixedOutput() const {//TODO: voir si plus optimisé avec les approximations
     // Sum pulse channels (need this in case of division by 0, uint8_t is enough because pulse channels output no more than 15)
     uint8_t pulseSum = _pulseChannel[0].getOutput() + _pulseChannel[1].getOutput();
     
@@ -148,8 +148,8 @@ float Chip<TCpu, TSoundHardware>::getMixedOutput() const {//TODO: voir si plus o
     return pulseOut + triangleNoiseDmcOut;*/
 }
 
-template <class TCpu, class TSoundHardware>
-void Chip<TCpu, TSoundHardware>::clockFrameCounterQuarterFrame() {
+template <class TCpu, class TSoundManager>
+void Chip<TCpu, TSoundManager>::clockFrameCounterQuarterFrame() {
     // Clock channels
     _pulseChannel[0].clockFrameCounterQuarterFrame();
     _pulseChannel[1].clockFrameCounterQuarterFrame();
@@ -157,8 +157,8 @@ void Chip<TCpu, TSoundHardware>::clockFrameCounterQuarterFrame() {
     _noiseChannel.clockFrameCounterQuarterFrame();
 }
 
-template <class TCpu, class TSoundHardware>
-void Chip<TCpu, TSoundHardware>::clockFrameCounterHalfFrame() {
+template <class TCpu, class TSoundManager>
+void Chip<TCpu, TSoundManager>::clockFrameCounterHalfFrame() {
     // Clock length counter channels
     _pulseChannel[0].clockFrameCounterHalfFrame();
     _pulseChannel[1].clockFrameCounterHalfFrame();
@@ -166,18 +166,18 @@ void Chip<TCpu, TSoundHardware>::clockFrameCounterHalfFrame() {
     _noiseChannel.clockFrameCounterHalfFrame();
 }
 
-template <class TCpu, class TSoundHardware>
-void Chip<TCpu, TSoundHardware>::requestDmcSample(uint16_t address) {
+template <class TCpu, class TSoundManager>
+void Chip<TCpu, TSoundManager>::requestDmcSample(uint16_t address) {
     _cpu.apuDmcRequestSample(address);
 }
 
-template <class TCpu, class TSoundHardware>
-void Chip<TCpu, TSoundHardware>::checkInterrupt() {
+template <class TCpu, class TSoundManager>
+void Chip<TCpu, TSoundManager>::checkInterrupt() {
     _cpu.apuIrq(!(_frameCounter.getInterrupt() || _dmcChannel.getInterrupt()));
 }
 
-template <class TCpu, class TSoundHardware>
-void Chip<TCpu, TSoundHardware>::checkReset() {
+template <class TCpu, class TSoundManager>
+void Chip<TCpu, TSoundManager>::checkReset() {
     // Only reset if reset line low
     if (_resetLine) {
         return;

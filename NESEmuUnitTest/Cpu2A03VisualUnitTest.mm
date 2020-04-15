@@ -24,7 +24,25 @@
 
 namespace {
     
-    struct SoundHardware {
+    struct ControllerHardware {
+        
+        void clock(uint16_t address, Cpu6502::ReadWrite readWrite) {
+        }
+        
+        uint8_t getOutLatch() const {
+            return 0;
+        }
+        
+        void setOutLatch(uint8_t data) {
+        }
+        
+        uint8_t readControllerPort(unsigned int number, uint8_t dataBus) {
+            return 0;
+        }
+        
+    };
+    
+    struct SoundManager {
         
         bool askForAddingSample() const {
             return false;
@@ -86,8 +104,9 @@ namespace {
     
     
     Bus bus;
-    SoundHardware soundHardware;
-    Cpu2A03FullAccess<NESEmu::Cpu::Model::Ricoh2A03, Bus, SoundHardware> cpu2A03(bus, soundHardware);
+    ControllerHardware controllerHardware;
+    SoundManager soundManager;
+    Cpu2A03FullAccess<NESEmu::Cpu::Model::Ricoh2A03, Bus, ControllerHardware, SoundManager> cpu2A03(bus, controllerHardware, soundManager);
     
 }
 
@@ -115,7 +134,7 @@ namespace {
     XCTAssertTrue(ifsLog.good());
     
     // Create analyzer
-    VisualUnitTest::Analyzer<Cpu2A03FullAccess<NESEmu::Cpu::Model::Ricoh2A03, Bus, SoundHardware>> analyzer(ifsLog, [](std::string const &name) { return VisualUnitTest::Cpu2A03::attributeFactory<decltype(cpu2A03)>(name); }, [](uint16_t address, uint8_t data) { bus.write(address, data); });
+    VisualUnitTest::Analyzer<Cpu2A03FullAccess<NESEmu::Cpu::Model::Ricoh2A03, Bus, ControllerHardware, SoundManager>> analyzer(ifsLog, [](std::string const &name) { return VisualUnitTest::Cpu2A03::attributeFactory<decltype(cpu2A03)>(name); }, [](uint16_t address, uint8_t data) { bus.write(address, data); });
     
     // Release reset to start cpu
     cpu2A03.reset(true);

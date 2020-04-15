@@ -23,12 +23,23 @@ struct Constants<Model::Ricoh2A07> {
 };
 
 
-template <Model EModel, class TBus, class TSoundHardware>
-Chip<EModel, TBus, TSoundHardware>::Dma::Dma(Chip &chip) : _chip(chip), _spriteAddress(0x0), _dmcAddress(0x0), _spriteCycleCount(0), _dmcCycleCount(0), _spriteWaitCycleCount(0), _dmcWaitCycleCount(0), _writeCycle(false) {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::Dma(Chip &chip) : _chip(chip) {
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::Dma::clock() {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::powerUp() {
+    _spriteAddress = 0x0;
+    _dmcAddress = 0x0;
+    _spriteCycleCount = 0;
+    _dmcCycleCount = 0;
+    _spriteWaitCycleCount = 0;
+    _dmcWaitCycleCount = 0;
+    _writeCycle = false;
+}
+
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::clock() {
     // Toggle read / write cycle before process so we have the same type cycle in process method and CPU instruction execution (which is right after this clock method)
     _writeCycle = !_writeCycle;
     
@@ -39,8 +50,8 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::clock() {
     process();
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::Dma::startSprite(uint8_t address) {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::startSprite(uint8_t address) {
     // Calculate address
     _spriteAddress = address << 8;
     
@@ -52,8 +63,8 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::startSprite(uint8_t address) {
     _chip.ready(false);
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::Dma::startDmc(uint16_t address) {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::startDmc(uint16_t address) {
     // Copy address
     _dmcAddress = address;
     
@@ -62,14 +73,14 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::startDmc(uint16_t address) {
     _dmcCycleCount = 2;
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-bool Chip<EModel, TBus, TSoundHardware>::Dma::isIdle() const {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+bool Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::isIdle() const {
     // DMA is running only if DMA operations are requested and currently performed
     return (((_dmcCycleCount == 0) || (_dmcCycleCount == 2)) && ((_spriteCycleCount == 0) || (_spriteCycleCount == 513)));
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::Dma::process() {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::process() {
     // Process DMC
     bool canProcessSprite = processDmc();
     
@@ -79,8 +90,8 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::process() {
     }
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-bool Chip<EModel, TBus, TSoundHardware>::Dma::processDmc() {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+bool Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::processDmc() {
     // If no DMC DMA started
     if (_dmcCycleCount == 0) {
         // Exit
@@ -146,8 +157,8 @@ bool Chip<EModel, TBus, TSoundHardware>::Dma::processDmc() {
     return false;
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::Dma::processSprite() {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::Dma::processSprite() {
     // If no sprite DMA started
     if (_spriteCycleCount == 0) {
         // Exit
@@ -203,16 +214,19 @@ void Chip<EModel, TBus, TSoundHardware>::Dma::processSprite() {
 }
 
 
-template <Model EModel, class TBus, class TSoundHardware>
-Chip<EModel, TBus, TSoundHardware>::Chip(TBus &bus, TSoundHardware &soundHardware) : _apu(*this, soundHardware), _bus(bus), _dma(*this), InternalCpu(*this) {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+Chip<EModel, TBus, TControllerHardware, TSoundManager>::Chip(TBus &bus, TControllerHardware &controllerHardware, TSoundManager &soundManager) : _apu(*this, soundManager), _dma(*this), _bus(bus), _controllerHardware(controllerHardware), InternalCpu(*this) {
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::powerUp(uint16_t programCounter, uint8_t stackPointer, uint8_t accumulator, uint8_t xIndex, uint8_t yIndex, uint8_t statusFlags) {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::powerUp(uint16_t programCounter, uint8_t stackPointer, uint8_t accumulator, uint8_t xIndex, uint8_t yIndex, uint8_t statusFlags) {
     InternalCpu::powerUp(programCounter, stackPointer, accumulator, xIndex, yIndex, statusFlags);
     
     // Power up APU
     _apu.powerUp();
+    
+    // Power up DMA
+    _dma.powerUp();
     
     // Internal
     //_6502BusAddress = 0x0;//TODO: normalement pas besoin mais verifier quand meme
@@ -223,8 +237,8 @@ void Chip<EModel, TBus, TSoundHardware>::powerUp(uint16_t programCounter, uint8_
     _apuIrqLine = true;
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::clock() {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::clock() {
     // Execute phi1
     clockPhi1();
     
@@ -232,8 +246,8 @@ void Chip<EModel, TBus, TSoundHardware>::clock() {
     clockPhi2();
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::clockPhi1() {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::clockPhi1() {
     // End phi2
     endPhi2();
     
@@ -241,8 +255,8 @@ void Chip<EModel, TBus, TSoundHardware>::clockPhi1() {
     startPhi1();
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::clockPhi2() {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::clockPhi2() {
     // End phi1
     endPhi1();
     
@@ -250,8 +264,8 @@ void Chip<EModel, TBus, TSoundHardware>::clockPhi2() {
     startPhi2();
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::startPhi1() {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::startPhi1() {
     // Start phi1
     InternalCpu::_phi2 = false;
     
@@ -273,10 +287,13 @@ void Chip<EModel, TBus, TSoundHardware>::startPhi1() {
     
     // Clock DMA
     _dma.clock();
+    
+    // Clock controller hardware
+    _controllerHardware.clock(_bus.getAddressBus(), _readWrite);
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::endPhi1() {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::endPhi1() {
     //InternalCpu::endPhi1();
     // Read data on dataBus if it is in read mode
     if (_readWrite == Cpu6502::ReadWrite::Read) {
@@ -303,8 +320,8 @@ void Chip<EModel, TBus, TSoundHardware>::endPhi1() {
     //InternalCpu::template checkSetOverflow<InternalCpu::SetOverflowEnabled>();
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::startPhi2() {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::startPhi2() {
     // Start phi2
     InternalCpu::_phi2 = true;
     
@@ -329,8 +346,8 @@ void Chip<EModel, TBus, TSoundHardware>::startPhi2() {
     }
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::endPhi2() {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::endPhi2() {
     //InternalCpu::endPhi2();
     // Copy data from dataBus on internal registers
     //if (this->_readWrite == Cpu6502::ReadWrite::Read) {//TODO: par apres voir si pas toujours lu meme en write (tester avec visual) (peut etre plus besoin du setDataBus(this->_inputDataLatch); dans endPhi1 si ca !!! a voir
@@ -354,8 +371,8 @@ void Chip<EModel, TBus, TSoundHardware>::endPhi2() {
     InternalCpu::checkReady();
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::reset(bool high) {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::reset(bool high) {
     // If reset
     /*if (!high) {          // TODO: a reflechir pour le reset et le DMA (peut etre un _dma.reset(high);) OUI C'est SUR QU'IL FAUT LE RESET CAR SI ON EXECUTE LES TESTS UN PAR UN C'est ok mais tous en meme temps et ca foire apres le 1er car il n'est pas reset pour les autres tests ! (peut etre pas reset mais PowerUp c'est sur) : pour le reset, tester en faisant un spr dma et pendant qu'il est en cours, faire un signal reset low
         // Stop possible DMA
@@ -369,13 +386,13 @@ void Chip<EModel, TBus, TSoundHardware>::reset(bool high) {
     _apu.reset(high);
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::nmi(bool high) {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::nmi(bool high) {
     InternalCpu::nmi(high);
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::irq(bool high) {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::irq(bool high) {
     // Save signal
     _irqLine = high;
     
@@ -383,39 +400,39 @@ void Chip<EModel, TBus, TSoundHardware>::irq(bool high) {
     InternalCpu::irq(_irqLine && _apuIrqLine);
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-Cpu6502::ReadWrite Chip<EModel, TBus, TSoundHardware>::getReadWriteSignal() const {//TODO: voir lequel retourner !! normalement l'externe donc _readWrite
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+Cpu6502::ReadWrite Chip<EModel, TBus, TControllerHardware, TSoundManager>::getReadWriteSignal() const {//TODO: voir lequel retourner !! normalement l'externe donc _readWrite
     return _readWrite;//InternalCpu::getReadWriteSignal();
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-uint8_t Chip<EModel, TBus, TSoundHardware>::getOutSignal() const {
-    return _outLatch;   // TODO: remplacer ca par un appel au controller hardware pour getter son out
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+uint8_t Chip<EModel, TBus, TControllerHardware, TSoundManager>::getOutSignal() const {
+    return _controllerHardware.getOutLatch();
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-bool Chip<EModel, TBus, TSoundHardware>::getOe1Signal() const { // TODO: sert a activer/desactiver (signal inversé) le port manette 1 (qui active ce signal ???) (peut etre grace a ca pouvoir eviter d'appeler a chaque clock CPU l'update des controllers ?)
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+bool Chip<EModel, TBus, TControllerHardware, TSoundManager>::getOe1Signal() const { // TODO: sert a activer/desactiver (signal inversé) le port manette 1 (qui active ce signal ???) (peut etre grace a ca pouvoir eviter d'appeler a chaque clock CPU l'update des controllers ?)
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-bool Chip<EModel, TBus, TSoundHardware>::getOe2Signal() const { // TODO: pareil qu'au dessus
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+bool Chip<EModel, TBus, TControllerHardware, TSoundManager>::getOe2Signal() const { // TODO: pareil qu'au dessus
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-bool Chip<EModel, TBus, TSoundHardware>::getM2Signal() const {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+bool Chip<EModel, TBus, TControllerHardware, TSoundManager>::getM2Signal() const {
     return InternalCpu::getM2Signal();
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-uint16_t Chip<EModel, TBus, TSoundHardware>::getAddressBus() const {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+uint16_t Chip<EModel, TBus, TControllerHardware, TSoundManager>::getAddressBus() const {
     //return _bus.getAddressBus();
     
     // Get address
     return _6502BusAddress;
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::setAddressBus(uint16_t address) {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::setAddressBus(uint16_t address) {
     //_bus.setAddressBus(address);
     
     // Set address
@@ -425,8 +442,8 @@ void Chip<EModel, TBus, TSoundHardware>::setAddressBus(uint16_t address) {
     _bus.setAddressBus(address);
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-uint8_t Chip<EModel, TBus, TSoundHardware>::getDataBus() const {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+uint8_t Chip<EModel, TBus, TControllerHardware, TSoundManager>::getDataBus() const {
     //return _bus.getDataBus();
     
     // Get data with possibly open data bus latch on some or all lines
@@ -434,16 +451,16 @@ uint8_t Chip<EModel, TBus, TSoundHardware>::getDataBus() const {
     return _6502BusData;
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::setDataBus(uint8_t data) {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::setDataBus(uint8_t data) {
     //_bus.setDataBus(data);
     
     // Set data
     _6502BusData = data;
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::setDataBus(uint8_t data, uint8_t mask) {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::setDataBus(uint8_t data, uint8_t mask) {
     //_bus.setDataBus(data, mask);
     
     // Set data with possibly open data bus latch on some or all lines
@@ -451,8 +468,8 @@ void Chip<EModel, TBus, TSoundHardware>::setDataBus(uint8_t data, uint8_t mask) 
     _6502BusData = (_6502BusData & ~mask) | (data & mask);
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::performRead() {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::performRead() {
     // The CPU itself decodes reads of $4015 (APU status) and $4016-$4017 (controller read). But no circuit in the Control Deck decodes reads from $4000-$4014 or $4018-$7FFF
     // See https://wiki.nesdev.com/w/index.php/Open_bus_behavior
     
@@ -468,29 +485,23 @@ void Chip<EModel, TBus, TSoundHardware>::performRead() {
     // See https://wiki.nesdev.com/w/index.php/Controller_reading
     // See https://wiki.nesdev.com/w/index.php/Controller_reading_code
     else if (address == 0x4016) {
-        // Save last read ready low flag
-        bool lastWasReadyLow = _last4016ReadWasReadyLow;    // TODO: a voir avec http://forums.nesdev.com/viewtopic.php?f=2&t=4116 mais pas bon, il faut regarder par rapport a l'adresse et a rw et pas par rapport a ready low !
-        
-        // Set current read ready low flag
-        _last4016ReadWasReadyLow = InternalCpu::_readyWaitRequested;
-        
-        // If we read during ready low multiple times in a row
-        if (lastWasReadyLow && _last4016ReadWasReadyLow) {
-            // Exit
-            return;
-        }
+        // Get current data bus
+        uint8_t dataBus = _bus.getDataBus();
         
         // Read controller port 0
-        _bus.readControllerPort(0); // TODO: voir si pas meilleure conception que ca sinon renommer TBus en THardware car ca ne fait pas que le bus : il faut un autre template parameter TControllerCircuit ou un nom dans le genre et l'avoir dans la nes et le passer en reference dans le cpu !
+        _bus.setDataBus(_controllerHardware.readControllerPort(0, dataBus));
         
         // Get data from external data bus
         setDataBus(_bus.getDataBus());
     }
     // Controller 2
     // Same as controller 1
-    else if (address == 0x4017) {//TODO: voir si pareil qu'au dessus pour les read en ready low
-        // Read controller port 1
-        _bus.readControllerPort(1);
+    else if (address == 0x4017) {
+        // Get current data bus
+        uint8_t dataBus = _bus.getDataBus();
+        
+        // Read controller port 0
+        _bus.setDataBus(_controllerHardware.readControllerPort(1, dataBus));
         
         // Get data from external data bus
         setDataBus(_bus.getDataBus());
@@ -505,8 +516,8 @@ void Chip<EModel, TBus, TSoundHardware>::performRead() {
     }
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::performWrite() {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::performWrite() {
     uint16_t address = getAddressBus();
     uint8_t data = getDataBus();
     
@@ -530,7 +541,7 @@ void Chip<EModel, TBus, TSoundHardware>::performWrite() {
     // See https://wiki.nesdev.com/w/index.php/Controller_reading
     // See https://wiki.nesdev.com/w/index.php/Controller_reading_code
     else if (address == 0x4016) {
-        _outLatch = data & 0x7; // TODO: remplacer ca par un appel au controller hardware pour setter son out
+        _controllerHardware.setOutLatch(data);
     }
     // APU frame counter
     else if (address == 0x4017) {
@@ -547,8 +558,8 @@ void Chip<EModel, TBus, TSoundHardware>::performWrite() {
     }
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::apuIrq(bool high) {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::apuIrq(bool high) {
     // Save signal
     _apuIrqLine = high;
     
@@ -556,14 +567,14 @@ void Chip<EModel, TBus, TSoundHardware>::apuIrq(bool high) {
     InternalCpu::irq(_irqLine && _apuIrqLine);
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::apuDmcRequestSample(uint16_t address) {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::apuDmcRequestSample(uint16_t address) {
     // Start DMC DMA
     _dma.startDmc(address);
 }
 
-template <Model EModel, class TBus, class TSoundHardware>
-void Chip<EModel, TBus, TSoundHardware>::apuDmcSampleFetched() {
+template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
+void Chip<EModel, TBus, TControllerHardware, TSoundManager>::apuDmcSampleFetched() {
     // Notify APU that a DMC sample is fetched
     _apu.dmcSampleFetched(getDataBus());
 }

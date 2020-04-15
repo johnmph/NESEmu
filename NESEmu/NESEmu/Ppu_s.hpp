@@ -31,12 +31,12 @@ struct ModelConstants<Model::Ricoh2C07> {
 };
 
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::Chip(TBus &bus, TInterruptHardware &interruptHardware, TGraphicHardware &graphicHardware) : _bus(bus), _interruptHardware(interruptHardware), _graphicHardware(graphicHardware), _objectAttributeMemory(256), _secondObjectAttributeMemory(32), _paletteIndexMemory(32) {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::Chip(TBus &bus, TInterruptHardware &interruptHardware, TGraphicManager &graphicManager) : _bus(bus), _interruptHardware(interruptHardware), _graphicManager(graphicManager), _objectAttributeMemory(256), _secondObjectAttributeMemory(32), _paletteIndexMemory(32) {
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::powerUp() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::powerUp() {
     // See https://wiki.nesdev.com/w/index.php/PPU_power_up_state
     
     // Reset PPUSTATUS
@@ -75,8 +75,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::powerUp() {
     reset(true);
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clock() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::clock() {
     // Process rendering
     processRendering();
     
@@ -93,8 +93,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clock() {
     checkReset();
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::reset(bool high) {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::reset(bool high) {
     // Save reset line
     _resetLine = high;
     
@@ -104,8 +104,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::reset(bool high) 
     }
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::exts(uint8_t data) {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::exts(uint8_t data) {
     // Don't get anything if PPU is in master mode
     if (_controlMasterSlaveSelect) {
         return;
@@ -115,8 +115,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::exts(uint8_t data
     _extBackgroundIndex = data;
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getExts(uint8_t &data) const {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::getExts(uint8_t &data) const {
     // Don't drive anything if PPU is in slave mode
     if (!_controlMasterSlaveSelect) {
         return;
@@ -126,9 +126,9 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getExts(uint8_t &
     data = _currentPixelIndex;
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
 template <class TConnectedBus>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readPerformed(TConnectedBus &connectedBus) {
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::readPerformed(TConnectedBus &connectedBus) {
     // Get bus
     _ioBus = &connectedBus;
     
@@ -142,9 +142,9 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readPerformed(TCo
     _ioPending = 1;
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
 template <class TConnectedBus>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TConnectedBus &connectedBus) {
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::writePerformed(TConnectedBus &connectedBus) {
     // Get bus
     _ioBus = &connectedBus;
     
@@ -161,39 +161,39 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePerformed(TC
 
 // *** Helper ***
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInRenderScanline() const {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+bool Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::isInRenderScanline() const {
     return (_currentScanline >= Constants::firstRenderPeriodScanline) && (_currentScanline <= Constants::lastRenderPeriodScanline);
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInPostRenderScanline() const {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+bool Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::isInPostRenderScanline() const {
     return (_currentScanline >= Constants::firstPostRenderPeriodScanline) && (_currentScanline <= Constants::lastPostRenderPeriodScanline);
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInVBlankScanline() const {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+bool Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::isInVBlankScanline() const {
     return (_currentScanline >= Constants::firstVBlankPeriodScanline) && (_currentScanline <= Constants::lastVBlankPeriodScanline);
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInPreRenderScanline() const {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+bool Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::isInPreRenderScanline() const {
     return (_currentScanline >= Constants::firstPreRenderPeriodScanline) && (_currentScanline <= Constants::lastPreRenderPeriodScanline);
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isRenderingEnabled() const {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+bool Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::isRenderingEnabled() const {
     return _maskShowBackground || _maskShowSprites;
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInRenderingPeriod() const {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+bool Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::isInRenderingPeriod() const {
     // To be in rendering period, render must be enabled and the current scanline must be in render or pre-render line)
     return isRenderingEnabled() && (isInRenderScanline() || isInPreRenderScanline());
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInSecondOAMClearPeriod() const {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+bool Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::isInSecondOAMClearPeriod() const {
     // To be in second OAM clear period, it must be in rendering period and current pixel must be between 1 and 64 (pixel 0 is already skipped on the clock method) //TODO: le pixel 0 n'est pas skipé si on appelle read ou write OAM et que ca tombe exactement au pixel 0 (dans ce cas retourner FF ou non ???) a tester sur Visual2C02 (comme c'est ici pour l'instant ca le fait)
     return isInRenderingPeriod() && (_currentPixel <= Constants::lastSecondClearOamPeriodPixel);
 }
@@ -201,8 +201,8 @@ bool Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::isInSecondOAMClea
 
 // *** Main ***
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processRendering() {// TODO: a la place de faire ca (checker le current scanline), utiliser les methodes isInXXXPhase !!! : le meilleur serait d'avoir une methode qui rafraichirait tous les signaux en fonction du currentPixel, du currentScanline et d'autres choses et ensuite (ou avant le rafraichissement des signaux ?) appeler la methode qui gere les io et qui elle aussi modifierai certains signaux et ensuite faire les operations d'apres ces signaux
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::processRendering() {// TODO: a la place de faire ca (checker le current scanline), utiliser les methodes isInXXXPhase !!! : le meilleur serait d'avoir une methode qui rafraichirait tous les signaux en fonction du currentPixel, du currentScanline et d'autres choses et ensuite (ou avant le rafraichissement des signaux ?) appeler la methode qui gere les io et qui elle aussi modifierai certains signaux et ensuite faire les operations d'apres ces signaux
     
     // Render line
     if (_currentScanline <= Constants::lastRenderPeriodScanline) {
@@ -222,8 +222,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processRendering(
     }
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processIO() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::processIO() {
     // If no pending IO, exit
     if (_ioPending == 0) {
         return;
@@ -239,14 +239,14 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processIO() {
     _ioPending >>= 1;
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkInterrupt() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::checkInterrupt() {
     // See https://wiki.nesdev.com/w/index.php/NMI
     _interruptHardware.interrupt(!(_statusVBlankStarted && _controlGenerateNmiForVBlank));
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateState() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::updateState() {
     // Update status VBlank flag
     _statusVBlankStarted = _vBlankStartedLatch;
     
@@ -270,8 +270,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateState() {
     incrementPositionCounters();
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkReset() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::checkReset() {
     // See https://wiki.nesdev.com/w/index.php/PPU_power_up_state
     
     // If no need to reset, exit
@@ -317,8 +317,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkReset() {
 
 // *** Rendering ***
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processRenderLine() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::processRenderLine() {
     // Only VRAM access if rendering is enabled
     if (isRenderingEnabled()) {
         // Complete tile data is 8 cycles
@@ -340,24 +340,24 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processRenderLine
     }
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPostRenderLine() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::processPostRenderLine() {
     // Nothing happens in post-render line
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processVBlankLine() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::processVBlankLine() {
     if ((_currentScanline == Constants::firstVBlankPeriodScanline) && (_currentPixel == Constants::firstActivePixel)) {
         // Set VBlank flag
         _vBlankStartedLatch = true;
         
-        // Notify hardware that the VBlank has started
-        _graphicHardware.notifyVBlankStarted();
+        // Notify manager that the VBlank has started
+        _graphicManager.notifyVBlankStarted();
     }
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPreRenderLine() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::processPreRenderLine() {
     // Only VRAM access if rendering is enabled
     if (isRenderingEnabled()) {
         // Complete tile data is 8 cycles
@@ -398,8 +398,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPreRenderL
 
 // *** Tiles ***
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processTiles(uint8_t dataType) {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::processTiles(uint8_t dataType) {
     // Fetch tiles if on the period (no need to check for first tile fetch first period and last tile fetch second period because there are in the boundary of _currentPixel)
     if ((_currentPixel <= Constants::lastTileFetchFirstPeriodPixel) || (_currentPixel >= Constants::firstTileFetchSecondPeriodPixel)) {
         fetchTiles(dataType);
@@ -411,8 +411,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processTiles(uint
     }
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchTiles(uint8_t dataType) {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::fetchTiles(uint8_t dataType) {
     // Correct dataType for first cycle (Unused low tile BG set address)
     if (_currentPixel == Constants::idlePixel) {
         dataType = FetchStep::LowTileByteSetAddress;
@@ -465,8 +465,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchTiles(uint8_
     }
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateTileShiftRegisters(uint8_t dataType) {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::updateTileShiftRegisters(uint8_t dataType) {
     // Get tile out bits
     _bgLowTileBitOut = (_bgLowTileShiftRegister >> _fineXScroll) & 0x1;
     _bgHighTileBitOut = (_bgHighTileShiftRegister >> _fineXScroll) & 0x1;
@@ -501,8 +501,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateTileShiftRe
 
 // *** Sprites ***
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processSprites(uint8_t dataType) {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::processSprites(uint8_t dataType) {
     // Exit if we are no more in process sprites period
     if ((_currentPixel < Constants::firstSecondClearOamPeriodPixel) || (_currentPixel > Constants::lastSpritesFetchPeriodPixel)) {
         return;
@@ -539,8 +539,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processSprites(ui
     fetchSprites(dataType);
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::startClearSecondOAM() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::startClearSecondOAM() {
     // We use the same code that evaluate sprites to clear OAM, simply do a 32 bytes copy (_oamAddress doesn't change and read to OAM returns $FF in this period)
     _spriteEvaluationCopyByteCount = 32;
     
@@ -549,8 +549,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::startClearSecondO
     resetSecondOAMAddress();
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clearSecondOAM() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::clearSecondOAM() {
     // Reset OAM address overflow
     _oamAddressOverflow = false;
     
@@ -561,8 +561,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clearSecondOAM() 
     clearSecondOAMAndEvaluateSprites();
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::startEvaluateSprites() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::startEvaluateSprites() {
     // Bug in 2C02 which cause copy of some portion of OAM when OAMADDR > 7 // TODO: et faire des tests visual2C02, surement moyen d'emuler ca exactement en faisant le process de refresh OAM (voir ci dessous)
     // See https://wiki.nesdev.com/w/index.php/PPU_sprite_evaluation
     // See https://wiki.nesdev.com/w/index.php/Errata#OAM_and_Sprites
@@ -577,14 +577,14 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::startEvaluateSpri
     resetSecondOAMAddress();
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::evaluateSprites() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::evaluateSprites() {
     // Evalute sprites
     clearSecondOAMAndEvaluateSprites();
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clearSecondOAMAndEvaluateSprites() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::clearSecondOAMAndEvaluateSprites() {
     // TODO : Because OAM is implemented with dynamic RAM instead of static RAM, the data stored in OAM memory will quickly begin to decay into random bits if it is not being refreshed. The OAM memory is refreshed once per scanline while rendering is enabled (if either the sprite or background bit is enabled via the register at $2001), but on an NTSC PPU this refresh is prevented whenever rendering is disabled.
     // TODO: quand et comment fait il ca ? 256 read suivi de write ? de 1 a 256 (inclus) ??
     
@@ -663,8 +663,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::clearSecondOAMAnd
     --_spriteEvaluationCopyByteCount;
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::startFetchSprites() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::startFetchSprites() {
     // Reset second OAM address
     resetSecondOAMAddress();
     
@@ -675,8 +675,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::startFetchSprites
     copyXOnAddress();
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchSprites(uint8_t dataType) {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::fetchSprites(uint8_t dataType) {
     // OAMADDR is set to 0 during each of ticks 257-320 (the sprite tile loading interval) of the pre-render and visible scanlines
     _oamAddress = 0;
     
@@ -735,8 +735,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::fetchSprites(uint
     }
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-uint16_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getAddressForFetchSprites(uint8_t spriteNumber) {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+uint16_t Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::getAddressForFetchSprites(uint8_t spriteNumber) {
     uint8_t spriteRow = _currentScanline - _spriteY;
     uint8_t tileIndex = _spriteTileIndex;
     
@@ -768,8 +768,8 @@ uint16_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getAddressFor
     return patternTableAddress | (tileIndex << 4) | spriteRow;
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getDataForFetchSprites(uint8_t spriteNumber) {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::getDataForFetchSprites(uint8_t spriteNumber) {
     // Read data (even if unused sprite)
     uint8_t data = read();
     
@@ -786,8 +786,8 @@ uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::getDataForFetc
     return data;
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateSpriteShiftRegisters() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::updateSpriteShiftRegisters() {
     // Sprites loop
     bool spriteFound = false;
     
@@ -837,8 +837,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::updateSpriteShift
 
 // *** Pixel rendering ***
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPixel() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::processPixel() {
     // The process pixel period is 2-257
     if ((_currentPixel < Constants::firstProcessPixelPeriodPixel) || (_currentPixel > Constants::lastProcessPixelPeriodPixel)) {
         // No output if no in process pixel period
@@ -862,11 +862,11 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::processPixel() {
     uint8_t pixelColor = readPaletteIndexMemory(_currentPixelIndex);// TODO: normalement il y a un delai de 2 cycles pour récuperer la couleur et plotter le pixel courant !!!
     
     // Plot pixel
-    _graphicHardware.plotPixel(pixelNumber, _currentScanline, pixelColor, _maskEmphasizeRed, _maskEmphasizeGreen, _maskEmphasizeBlue);
+    _graphicManager.plotPixel(pixelNumber, _currentScanline, pixelColor, _maskEmphasizeRed, _maskEmphasizeGreen, _maskEmphasizeBlue);
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::calculatePixel(uint8_t pixelNumber) {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::calculatePixel(uint8_t pixelNumber) {
     // Get BG pixel
     uint8_t bgPixel = (_maskShowBackground && (_maskShowBackgroundFirst8px || (pixelNumber >= 8))) ? ((_bgHighTileBitOut << 1) | _bgLowTileBitOut) : 0x0;  // TODO: on peut simplifier ce test en ayant une variable qui est le pixel min a commencer a afficher qui sera 0 si showBackground == true et 256 si showBackground = false et 8 si showBackground == true mais maskShowBackgroundFirst8px == false : cette variable devra etre initialisée dans le write du mask register car c'est lui qui contient les données
     
@@ -891,8 +891,8 @@ uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::calculatePixel
     return _extBackgroundIndex;  // TODO: voir si ok + SI le spPixel ou bgPixel == 0 (si la palette = 0) est ce qu'on retourne 0 ou bien _extBackgroundIndex ??? si on doit retourner _extBackgroundIndex, alors remettre 0 a la place de _extBackgroundIndex partout et dans getColorFromPalette checker si l'index 0 et si oui utiliser l'index _extBackgroundIndex
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkSprite0Hit(uint8_t bgPixel, uint8_t spPixel) {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::checkSprite0Hit(uint8_t bgPixel, uint8_t spPixel) {
     // Don't check if sprite 0 is not active
     if (!_sprite0Active) {
         return;
@@ -907,13 +907,13 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::checkSprite0Hit(u
 
 // *** State ***
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementXOnAddress() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::incrementXOnAddress() {
     _address = ((_address & 0x7FE0) | ((_address + 1) & 0x1F)) ^ ((((_address & 0x1F) + 1) & 0x20) << 5);
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementYOnAddress() {  // TODO: voir si plus optimisé
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::incrementYOnAddress() {  // TODO: voir si plus optimisé
     // Fine Y scroll doesn't carry out
     if ((_address & 0x7000) != 0x7000) {
         // Increment fine Y and exit
@@ -944,18 +944,18 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementYOnAddre
     _address = (_address & 0x0C1F) | coarseYScrollInAddress;
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::copyXOnAddress() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::copyXOnAddress() {
     _address = (_address & 0x7BE0) | (_temporaryAddress & 0x41F);
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::copyYOnAddress() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::copyYOnAddress() {
     _address = (_address & 0x41F) | (_temporaryAddress & 0x7BE0);
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementOAMAddress() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::incrementOAMAddress() {
     // Continue to increment even if overflow
     
     // Increment (always by 1 if we are not in rendering period)
@@ -980,15 +980,15 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementOAMAddre
     _needIncrementOAMAddress = false;
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::resetSecondOAMAddress() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::resetSecondOAMAddress() {
     // Reset second OAM address (because it can be overflow and it can be lower than 0x1F, no matter its value, it is reset to 0)
     _secondOAMAddressOverflow = false;
     _secondOAMAddress = 0;
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementSecondOAMAddress() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::incrementSecondOAMAddress() {
     // Don't increment if overflow
     if (_secondOAMAddressOverflow) {
         return;
@@ -1008,8 +1008,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementSecondOA
     _needIncrementSecondOAMAddress = false;
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementPositionCounters() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::incrementPositionCounters() {
     // Increment pixel counter
     ++_currentPixel;
     
@@ -1034,9 +1034,9 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::incrementPosition
 
 // *** IO ***
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
 template <class TConnectedBus>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioRead() {
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::ioRead() {
     // Get bus
     TConnectedBus &ioBus = ioGetBus<TConnectedBus>();
     
@@ -1101,9 +1101,9 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioRead() {
     ioBus.setDataBus(_dataBusCapacitanceLatch);
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
 template <class TConnectedBus>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite() {
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::ioWrite() {
     // Get bus
     TConnectedBus &ioBus = ioGetBus<TConnectedBus>();
     
@@ -1227,9 +1227,9 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioWrite() {
     }
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
 template <class TConnectedBus>
-TConnectedBus &Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioGetBus() const {
+TConnectedBus &Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::ioGetBus() const {
     // Safe conversion because it is called by ioRead / ioWrite which contains the correct TConnectedBus type (because their saved method address are for this type)
     return *static_cast<TConnectedBus *>(_ioBus);
 }
@@ -1237,8 +1237,8 @@ TConnectedBus &Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::ioGetBu
 
 // *** External memory ***
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::read() const {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::read() const {
     // Perform read on the bus
     _bus.performRead();
     
@@ -1246,8 +1246,8 @@ uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::read() const {
     return _bus.getDataBus();
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::write(uint8_t data) const {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::write(uint8_t data) const {
     // Set data on the bus
     _bus.setDataBus(data);
     
@@ -1258,14 +1258,14 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::write(uint8_t dat
 
 // *** Internal memory ***
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readObjectAttributeMemory() {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::readObjectAttributeMemory() {
     // If we are in second OAM period, we must read $FF instead of real data
     _oamData = (!isInSecondOAMClearPeriod()) ? _objectAttributeMemory[_oamAddress] : 0xFF;
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writeObjectAttributeMemory(uint8_t data) {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::writeObjectAttributeMemory(uint8_t data) {
     // If we are in second OAM phase and rendering is enabled, we must write $FF instead of data
     _oamData = (!isInSecondOAMClearPeriod()) ? data : 0xFF;
     
@@ -1274,8 +1274,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writeObjectAttrib
     _objectAttributeMemory[_oamAddress] = ((_oamAddress & 0x3) == 0x2) ? (_oamData & 0xE3) : _oamData;
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readPaletteIndexMemory(uint8_t address) const {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::readPaletteIndexMemory(uint8_t address) const {
     // Addresses $10/$14/$18/$1C are mirrors of $00/$04/$08/$0C
     uint8_t mirroredAddress = address & (((address & 0x13) == 0x10) ? 0xF : 0x1F);
     
@@ -1283,8 +1283,8 @@ uint8_t Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::readPaletteInd
     return _paletteIndexMemory[mirroredAddress] & _maskGrayscale;
 }
 
-template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
-void Chip<EModel, TBus, TInterruptHardware, TGraphicHardware>::writePaletteIndexMemory(uint8_t address, uint8_t data) {
+template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
+void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::writePaletteIndexMemory(uint8_t address, uint8_t data) {
     // Addresses $10/$14/$18/$1C are mirrors of $00/$04/$08/$0C
     uint8_t mirroredAddress = address & (((address & 0x13) == 0x10) ? 0xF : 0x1F);
     

@@ -107,10 +107,10 @@ namespace NESEmu { namespace Ppu {
         };
     }
     
-    template <Model EModel, class TBus, class TInterruptHardware, class TGraphicHardware>
+    template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
     struct Chip {
         
-        Chip(TBus &bus, TInterruptHardware &interruptHardware, TGraphicHardware &graphicHardware);
+        Chip(TBus &bus, TInterruptHardware &interruptHardware, TGraphicManager &graphicManager);
         
         // Power pins
         void powerUp();
@@ -251,7 +251,7 @@ namespace NESEmu { namespace Ppu {
         // Internal
         TBus &_bus;
         TInterruptHardware &_interruptHardware;
-        TGraphicHardware &_graphicHardware;
+        TGraphicManager &_graphicManager;
         
         bool _resetLine;
         bool _resetRequested;
