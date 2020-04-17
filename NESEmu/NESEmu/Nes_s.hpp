@@ -183,7 +183,7 @@ void Nes<EModel, TGraphicManager, TSoundManager>::PpuHardwareInterface::interrup
 }
 
 template <Model EModel, class TGraphicManager, class TSoundManager>
-Nes<EModel, TGraphicManager, TSoundManager>::ControllerHardware::ControllerHardware() : _lastAddress(0x0), _lastReadWrite(Cpu6502::ReadWrite::Read), _clockLine(false) {
+Nes<EModel, TGraphicManager, TSoundManager>::ControllerHardware::ControllerHardware() : _clockLineOe1(false), _clockLineOe2(false), _lastOe1(true), _lastOe2(true), _out0(false) {
 }
 
 template <Model EModel, class TGraphicManager, class TSoundManager>
@@ -209,15 +209,21 @@ std::unique_ptr<Controller::Interface> Nes<EModel, TGraphicManager, TSoundManage
 }
 
 template <Model EModel, class TGraphicManager, class TSoundManager>
-void Nes<EModel, TGraphicManager, TSoundManager>::ControllerHardware::clock(uint16_t address, Cpu6502::ReadWrite readWrite) {
-    // Set clock line (to avoid successive read on the same address)
+template <class TCpu>
+void Nes<EModel, TGraphicManager, TSoundManager>::ControllerHardware::clock(TCpu const &cpu) {
+    // Get oe signals (inverted)
+    bool oe1 = !cpu.getOe1Signal();
+    bool oe2 = !cpu.getOe2Signal();
+    
+    // Set clock lines (to avoid successive read on the same address)
     // See https://wiki.nesdev.com/w/index.php/Controller_reading (Section Clock timing)
     // See http://forums.nesdev.com/viewtopic.php?f=2&t=4116
-    _clockLine = (address != _lastAddress) || (readWrite != _lastReadWrite);
+    _clockLineOe1 = oe1 && (!_lastOe1);
+    _clockLineOe2 = oe2 && (!_lastOe2);
     
-    // Save address and readWrite
-    _lastAddress = address;
-    _lastReadWrite = readWrite;
+    // Save oe signals
+    _lastOe1 = oe1;
+    _lastOe2 = oe2;
 }
 
 template <Model EModel, class TGraphicManager, class TSoundManager>
@@ -231,7 +237,7 @@ void Nes<EModel, TGraphicManager, TSoundManager>::ControllerHardware::setOut0(bo
 template <Model EModel, class TGraphicManager, class TSoundManager>
 uint8_t Nes<EModel, TGraphicManager, TSoundManager>::ControllerHardware::readControllerPort(unsigned int number, uint8_t dataBus) {
     // Exit if clock line is low
-    if (!_clockLine) {
+    if (((!_clockLineOe1) && (number == 0)) || ((!_clockLineOe2) && (number == 1))) {
         return dataBus;
     }
     

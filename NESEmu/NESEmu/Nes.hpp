@@ -94,7 +94,8 @@ namespace NESEmu {
             std::unique_ptr<Controller::Interface> disconnectController(unsigned int portNumber);
             
             // Clock
-            void clock(uint16_t address, Cpu6502::ReadWrite readWrite);
+            template <class TCpu>
+            void clock(TCpu const &cpu);
             
             // Out 0
             void setOut0(bool data);
@@ -104,10 +105,11 @@ namespace NESEmu {
             
         private:
             std::unique_ptr<Controller::Interface> _controllerPorts[2];    // TODO: 2 controllers ports, voir si mettre 2 dans un const
-            uint16_t _lastAddress;
-            Cpu6502::ReadWrite _lastReadWrite;
+            bool _clockLineOe1;
+            bool _clockLineOe2;
+            bool _lastOe1;
+            bool _lastOe2;
             bool _out0;
-            bool _clockLine;
         };
         
     public:

@@ -24,9 +24,9 @@ namespace NESEmu { namespace Controller {
         void clock(uint8_t &data) override;
         void out(bool high) override;
         
+    private:
         void update();
         
-    private:
         TControllerManager &_controllerManager;
         uint8_t _buttonsShiftRegister;
         bool _needToUpdate;

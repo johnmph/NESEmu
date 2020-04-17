@@ -16,6 +16,7 @@
 #include "NESEmu/Cartridge/Factory.hpp"
 #include "NESEmu/Nes.hpp"
 #include "NESEmu/Controller/Standard.hpp"
+#include "NESEmu/Controller/Zapper.hpp"
 
 
 template <class TFrameListener>
@@ -74,6 +75,14 @@ struct GraphicManager {
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
     }
     
+    uint32_t getPixelAtScreenPosition(unsigned int x, unsigned int y) const {
+        // Convert screen position to real position (window is 2x the real size)
+        x >>= 1;
+        y >>= 1;
+        
+        return _pixels[(y * 256) + x];
+    }
+    
     void plotPixel(unsigned int x, unsigned int y, uint8_t color, bool emphasizeRed, bool emphasizeGreen, bool emphasizeBlue) {
         assert(x < 256);
         assert(y < 240);
@@ -99,6 +108,10 @@ struct GraphicManager {
         SDL_RenderClear(_renderer);
         SDL_RenderCopy(_renderer, _texture, NULL, NULL);
         SDL_RenderPresent(_renderer);
+        
+        // Reset pixels memory to simulate CRT monitors (needed by zapper)
+        // Simulate the electron gun drawing pixel by pixel, without this, the pixels stays lighted between frames)
+        memset(_pixels, 0, sizeof(uint32_t) * 256 * 240);
         
         // TODO: a voir j'update les event (et donc le clavier) une fois par frame :  voir si ok et voir si pas plutot le mettre dans TimeManager
         SDL_PollEvent(&_event);
@@ -265,7 +278,7 @@ private:
     float _frequencyRatio;
 };
 
-struct ControllerManager {
+struct StandardControllerManager {
     
     void update() {
         _keyStates = SDL_GetKeyboardState(NULL);
@@ -305,6 +318,58 @@ struct ControllerManager {
     
 private:
     uint8_t const *_keyStates;
+};
+
+template <class TGraphicManager>
+struct ZapperControllerManager {
+    
+    ZapperControllerManager(TGraphicManager const &graphicManager) : _graphicManager(graphicManager) {
+    }
+    
+    bool getLightSense() const {
+        int x;
+        int y;
+        
+        // Get mouse position
+        SDL_GetMouseState(&x, &y);
+        
+        // Get color at position
+        uint32_t color = _graphicManager.getPixelAtScreenPosition(x, y);
+        
+        // Convert to luminance
+        uint8_t luminance = ((color >> 16) * 0.3f) + (((color >> 8) & 0xFF) * 0.59f) + ((color & 0xFF) * 0.11f);
+        
+        // Check threshold
+        return (luminance > lightThreshold);
+    }
+    
+    bool getTrigger() {
+        // Get current trigger state
+        bool triggerState = (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_LMASK) != 0;
+        
+        // If begin pulled
+        if (triggerState && (!_lastTriggerState)) {
+            // Save current time
+            _lastTriggerPulledTime = SDL_GetPerformanceCounter();
+        }
+        
+        // Save trigger state
+        _lastTriggerState = triggerState;
+        
+        // Get elapsed seconds
+        float elapsedSeconds = (SDL_GetPerformanceCounter() - _lastTriggerPulledTime) / static_cast<float>(SDL_GetPerformanceFrequency());
+        
+        // Trigger only stays for 0.1 sec max
+        return triggerState && (elapsedSeconds < maxTriggerTime);
+    }
+    
+private:
+    static constexpr float maxTriggerTime = 0.1f;
+    static constexpr uint8_t lightThreshold = 154;//63  // TODO: 154 pour ne pas detecter le texte vert de la rom test ruder
+    
+    TGraphicManager const &_graphicManager;
+    Uint64 _lastTriggerPulledTime;
+    bool _lastTriggerState;
 };
 
 struct TimeManager {
@@ -449,8 +514,10 @@ int main(int argc, const char * argv[]) {
     SoundManager soundManager(44100, 2048);
     TimeManager timeManager(soundManager, 60, /*false*/true);
     GraphicManager<TimeManager> graphicManager(event, timeManager);
-    ControllerManager controllerManager;
-    auto controller = std::make_unique<NESEmu::Controller::Standard<ControllerManager>>(controllerManager);
+    StandardControllerManager standardControllerManager;
+    ZapperControllerManager<GraphicManager<TimeManager>> zapperControllerManager(graphicManager);
+    auto standardController = std::make_unique<NESEmu::Controller::Standard<StandardControllerManager>>(standardControllerManager);
+    auto zapperController = std::make_unique<NESEmu::Controller::Zapper<decltype(zapperControllerManager)>>(zapperControllerManager);
     
     // Open ROM
     //std::ifstream ifs("../UnitTestFiles/SMB.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
@@ -478,7 +545,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/1942.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Batman - The Video Game.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Dragon Quest.nes", std::ios::binary);
-    //std::ifstream ifs("../UnitTestFiles/Duck Hunt.nes", std::ios::binary);//TODO: regarder pour le zapper controller
+    //std::ifstream ifs("../UnitTestFiles/Duck Hunt.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Ghosts'n Goblins.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Kid Icarus.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Mega Man.nes", std::ios::binary);
@@ -538,8 +605,13 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/sprite_overflow_tests/5.Emulator.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring // OK
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/Mapper/mmc3_test_2/rom_singles/4-scanline_timing.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 8kb de chr-rom  // TODO: foire sur 6 (je peux faire passer 6 en changeant la facon de lancer l'irq mais ca fait foirer 5, c'est surement parce que 6 alt teste le mapper3 alternatif : oui)
+    //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/bntest/bntest_h.nes", std::ios::binary);//TODO: ne va pas !!! : normal, c'est un test de mapper que je n'ai pas encore implémenté
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/allpads.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, 8kb de chr-ram, Horizontal mirroring
+    //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/allpads.nes", std::ios::binary);  // Ok !
+    //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/zapper/zapper_flip.nes", std::ios::binary); // Ok !
+    //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/ruder-0.03a/ruder.nes", std::ios::binary); // Ok !, voir si sur vraie nes le light detecte le texte vert du menu ou pas
+    //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/read_joy3/thorough_test.nes", std::ios::binary);//count_errors_fast: Errors=16/1000, counts_errors: Conflits=47/1000, thorough_test passe mais il faut attendre au moins 30sec, voir si aussi long sur mesen
+    //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/telling-lys-0.01/telling-lys.nes", std::ios::binary);//TODO: pas bon, pour que ca passe il faut que le statut des boutons des controllers change a des periodes differentes dans la frame et pas toujours au meme scanline, je ne vois pas trop comment y arriver en rapport avec le read / write 4016 qui se fait par rapport a quand le programme le fait ???
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_test/apu_test.nes", std::ios::binary);    // Ok !
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/blargg_apu_2005.07.30/10.len_halt_timing.nes", std::ios::binary); // Ok !
@@ -566,11 +638,12 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/volume_tests/volumes.nes", std::ios::binary);//?
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/DMA/sprdma_and_dmc_dma/sprdma_and_dmc_dma.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
-    std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dmc_dma_during_read4/dma_4016_read.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dmc_dma_during_read4/dma_4016_read.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_badrol.nes", std::ios::binary);    // Ok, doit devenir blanc mais le probleme est que cette rom de test n'attend pas correctement le PPU warmup et donc je dois le desactiver pour voir le resultat sinon ca reste gris car la couleur de background est ecrite trop tot
     //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_goodrol.nes", std::ios::binary); // Ok, doit etre noir et devenir blanc si pad right press mais pareil qu'au dessus pour le ppu warm up !
+    //std::ifstream ifs("../UnitTestFiles/TestROM/DMA/dma_sync_test_v2/dma_sync_test.nes", std::ios::binary);//TODO:ecran noir
     
-    //std::ifstream ifs("../UnitTestFiles/Demo/19.nes", std::ios::binary);    // TODO: qq roms ne fonctionnent pas a cause du PPU warm up mais la 19 ne va pas du tout meme sans le PPU warm up alors qu'elle fonctionne bien dans nintaco !!! la 4 non plus mais c'est a cause du prg-ram size qui est mal detecté dans le header, a voir, pour la 19 je n'arrive pas a la faire aller mais elle ne va pas non plus dans openemu, voir si ca va dans mesen !
+    std::ifstream ifs("../UnitTestFiles/Demo/19.nes", std::ios::binary);    // TODO: qq roms ne fonctionnent pas a cause du PPU warm up mais la 19 ne va pas du tout meme sans le PPU warm up alors qu'elle fonctionne bien dans nintaco !!! la 4 non plus mais c'est a cause du prg-ram size qui est mal detecté dans le header, a voir, pour la 19 je n'arrive pas a la faire aller mais elle ne va pas non plus dans openemu, voir si ca va dans mesen ! : ne fonctionne pas non plus dans mesen, il faut changer l'instruction cli par nop a l'adresse 0x800A pour qu'elle fonctionne
     
     // Check that file exists
     assert(ifs.good());
@@ -613,7 +686,8 @@ int main(int argc, const char * argv[]) {
     nes.insertCartridge(std::move(cartridge));
     
     // Connect controller
-    nes.connectController(0, std::move(controller));
+    nes.connectController(0, std::move(standardController));
+    nes.connectController(1, std::move(zapperController));
     
     // Power up NES
     nes.powerUp();

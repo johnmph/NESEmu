@@ -12,19 +12,25 @@
 
 template <class TControllerManager>
 Zapper<TControllerManager>::Zapper(TControllerManager &controllerManager) : _controllerManager(controllerManager) {
-    // TODO: avoir les methodes getTrigger() et getPhotoDiode()
 }
 
 template <class TControllerManager>
 void Zapper<TControllerManager>::clock(uint8_t &data) {
+    // D1-D2 and D5-D7 lines are unused here TODO: voir si open bus ou si pull-up ou pull-down resistor !!! ici open bus pour l'instant
+    data &= 0xE6;
+    
+    // No serial data
+    data |= 0x1;
+    
+    // Set light sense data (inverted)
+    data |= _controllerManager.getLightSense() << 3;
+    
+    // Set trigger data
+    data |= (!_controllerManager.getTrigger()) << 4;
 }
 
 template <class TControllerManager>
 void Zapper<TControllerManager>::out(bool high) {
-}
-
-template <class TControllerManager>
-void Zapper<TControllerManager>::update() {
 }
 
 #endif /* NESEmu_Controller_Zapper_s_hpp */

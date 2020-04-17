@@ -24,8 +24,6 @@ namespace NESEmu { namespace Controller {//TODO: a faire, voir https://wiki.nesd
         void clock(uint8_t &data) override;
         void out(bool high) override;
         
-        void update();
-        
     private:
         TControllerManager &_controllerManager;
     };

@@ -100,7 +100,7 @@ void Chip<EModel, TBus, TControllerHardware, TSoundManager>::startPhi1() {
     _dma.clock();
     
     // Clock controller hardware
-    _controllerHardware.clock(_bus.getAddressBus(), _readWrite);
+    _controllerHardware.clock(*this);
 }
 
 template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
@@ -219,11 +219,13 @@ uint8_t Chip<EModel, TBus, TControllerHardware, TSoundManager>::getOutSignal() c
 }
 
 template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
-bool Chip<EModel, TBus, TControllerHardware, TSoundManager>::getOe1Signal() const { // TODO: sert a activer/desactiver (signal inversé) le port manette 1 (qui active ce signal ???) (peut etre grace a ca pouvoir eviter d'appeler a chaque clock CPU l'update des controllers ?)
+bool Chip<EModel, TBus, TControllerHardware, TSoundManager>::getOe1Signal() const {
+    return !((_bus.getAddressBus() == 0x4016) && (_readWrite == Cpu6502::ReadWrite::Read));
 }
 
 template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
-bool Chip<EModel, TBus, TControllerHardware, TSoundManager>::getOe2Signal() const { // TODO: pareil qu'au dessus
+bool Chip<EModel, TBus, TControllerHardware, TSoundManager>::getOe2Signal() const {
+    return !((_bus.getAddressBus() == 0x4017) && (_readWrite == Cpu6502::ReadWrite::Read));
 }
 
 template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
