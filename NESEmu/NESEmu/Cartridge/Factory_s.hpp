@@ -88,6 +88,11 @@ std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> Factory
         }
         break;
         
+        case Model::MMC2 : {
+            cartridge = std::make_unique<Mapper9::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), data.prgRamSize, std::move(data.chrRom));
+        }
+        break;
+        
         default: {
             // Mapper not supported
             cartridge = std::make_unique<Nothing<TCpuHardwareInterface, TPpuHardwareInterface>>();

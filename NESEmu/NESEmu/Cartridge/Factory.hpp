@@ -19,6 +19,7 @@
 #include "Mapper3.hpp"
 #include "Mapper4.hpp"
 #include "Mapper7.hpp"
+#include "Mapper9.hpp"
 // TODO: les mettre tous
 
 

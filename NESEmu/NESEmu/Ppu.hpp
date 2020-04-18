@@ -310,6 +310,7 @@ namespace NESEmu { namespace Ppu {
         bool _secondOAMAddressOverflow;
         bool _needIncrementOAMAddress;
         bool _needIncrementSecondOAMAddress;
+        uint8_t _copyAddressCycleDelay;
         
         // IO
         void *_ioBus;

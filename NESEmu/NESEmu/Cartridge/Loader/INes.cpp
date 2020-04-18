@@ -20,7 +20,9 @@ namespace NESEmu { namespace Cartridge { namespace Loader {
         Model::MMC3,
         Model::MMC5,
         Model::FFE,
-        Model::AxROM
+        Model::AxROM,
+        Model::M008,
+        Model::MMC2
         //TODO: continuer
     };
     
@@ -36,8 +38,8 @@ namespace NESEmu { namespace Cartridge { namespace Loader {
         Data data;
         
         // Read flags
-        char flags[16];
-        istream.read(flags, sizeof(flags));
+        uint8_t flags[16];
+        istream.read(reinterpret_cast<char *>(flags), sizeof(flags));
         
         // Get persistent memory flag
         data.hasPersistentMemory = (flags[6] & 0x2) != 0;

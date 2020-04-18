@@ -65,6 +65,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::powerUp() {
     _oamAddressOverflow = false;
     _needIncrementOAMAddress = false;
     _needIncrementSecondOAMAddress = false;
+    _copyAddressCycleDelay = 0;
     
     _ioPending = 0;
     
@@ -266,6 +267,21 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::updateState() {
     
     // TODO: dans l'incrémentation : si incrementation de 4 et que l'adresse n'est pas alignée on l'aligne avant et on fait l'incrementation SI _statusSpriteOverflow == false, sinon on ne fait l'incrementation de 4 que si l'adresse etait alignée
     
+    // If need to copy temporary address to address
+    if (_copyAddressCycleDelay > 0) {
+        // Decrement cycle delay counter
+        --_copyAddressCycleDelay;
+        
+        // If reached 0
+        if (_copyAddressCycleDelay == 0) {
+            // Copy temporary address to address
+            _address = _temporaryAddress;
+            
+            // Set address bus
+            _bus.setAddressBus(_address);
+        }
+    }
+    
     // Increment position counters
     incrementPositionCounters();
 }
@@ -352,6 +368,10 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::processVBlankLine(
     if ((_currentScanline == Constants::firstVBlankPeriodScanline) && (_currentPixel == Constants::firstActivePixel)) {
         // Set VBlank flag
         _vBlankStartedLatch = true;
+        
+        // Emulate open bus decay (it must be at 0 after 1 second max, the maximum value is 255 and this method is called 60 times per second)
+        // 255 / 60 = 4.25 so it must be at least 5 to ensure that is zero after 1 second
+        _dataBusCapacitanceLatch = (_dataBusCapacitanceLatch >= 5) ? (_dataBusCapacitanceLatch - 5) : 0;
         
         // Notify manager that the VBlank has started
         _graphicManager.notifyVBlankStarted();
@@ -1072,7 +1092,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::ioRead() {
         _dataBusCapacitanceLatch = _oamData;
     }
     // Data register
-    else if (address == IORegisters::Data) {// TODO: il parait que 2 read successif ignore le dernier read ??? a voir dans la doc
+    else if (address == IORegisters::Data) {// TODO: il parait que 2 read successif ignore le dernier read ??? a voir dans la doc et a tester sur Visual2C02 (avoir une variable _lastIoIs2007Read qui sera true si on lit en 2007 et on la resetera a false sinon (un autre io read ou un io write), puis si elle est true et qu'on lit en 2007, on retourne la derniere valeur lue sinon on lit normalement)
         // Save data read buffer
         uint8_t oldDataReadBuffer = _dataReadBuffer;
         
@@ -1196,11 +1216,8 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::ioWrite() {
             // Set low byte address on temporary address
             _temporaryAddress = (_temporaryAddress & 0x7F00) | data;
             
-            // Copy temporary address to address
-            _address = _temporaryAddress;
-            
-            // Set address bus
-            _bus.setAddressBus(_address);
+            // Copy temporary to address after 3 cycles
+            _copyAddressCycleDelay = 3;   //TODO: voir si 1, 2 ou 3 (normalement 3)
         }
         
         // Toggle write

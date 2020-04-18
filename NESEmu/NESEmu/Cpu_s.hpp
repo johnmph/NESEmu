@@ -29,6 +29,7 @@ Chip<EModel, TBus, TControllerHardware, TSoundManager>::Chip(TBus &bus, TControl
 
 template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
 void Chip<EModel, TBus, TControllerHardware, TSoundManager>::powerUp(uint16_t programCounter, uint8_t stackPointer, uint8_t accumulator, uint8_t xIndex, uint8_t yIndex, uint8_t statusFlags) {
+    // Power up CPU
     InternalCpu::powerUp(programCounter, stackPointer, accumulator, xIndex, yIndex, statusFlags);
     
     // Power up APU

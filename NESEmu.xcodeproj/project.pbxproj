@@ -128,6 +128,8 @@
 		4D98080023C5161A007D1953 /* Memory_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Memory_s.hpp; sourceTree = "<group>"; };
 		4D98080123C5163C007D1953 /* Register_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Register_s.hpp; sourceTree = "<group>"; };
 		4D98080223C51651007D1953 /* Stack_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Stack_s.hpp; sourceTree = "<group>"; };
+		4D9F773B244A76A500150E23 /* Mapper9.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mapper9.hpp; sourceTree = "<group>"; };
+		4D9F773C244A76BB00150E23 /* Mapper9_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Mapper9_s.hpp; sourceTree = "<group>"; };
 		4DCC158B243BF57D0033AD90 /* Attributes.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Attributes.hpp; sourceTree = "<group>"; };
 		4DCC158C243BF5D70033AD90 /* Attributes_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Attributes_s.hpp; sourceTree = "<group>"; };
 		4DCC158D243BF9F10033AD90 /* Analyzer.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Analyzer.hpp; sourceTree = "<group>"; };
@@ -332,6 +334,8 @@
 				4D09C9DF2408DFF30035AE0C /* Mapper4_s.hpp */,
 				4D09C9DC24083FEB0035AE0C /* Mapper7.hpp */,
 				4D09C9DD24083FFF0035AE0C /* Mapper7_s.hpp */,
+				4D9F773B244A76A500150E23 /* Mapper9.hpp */,
+				4D9F773C244A76BB00150E23 /* Mapper9_s.hpp */,
 				4DFF461D241868AF005D3F21 /* Loader */,
 				4DFE480324193D55006B7DAB /* Factory.hpp */,
 				4DFE480424193F4E006B7DAB /* Factory_s.hpp */,

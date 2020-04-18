@@ -14,7 +14,7 @@
 #include "Interface.hpp"
 
 
-namespace NESEmu { namespace Controller {//TODO: a faire, voir https://wiki.nesdev.com/w/index.php/Input_devices pour l'interface, il faudra peut etre la modifier (pour standard aussi)
+namespace NESEmu { namespace Controller {
     
     template <class TControllerManager>
     struct Zapper : Interface {

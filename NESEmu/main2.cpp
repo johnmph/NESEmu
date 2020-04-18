@@ -11,6 +11,7 @@
 #include <functional>
 #include <algorithm>//TODO: pour le filtre audio
 #include <cmath>//TODO: pour le filtre audio
+#include <random>//TODO: pour le rafraichissement aleatoire des inputs pour telling lys
 #include <SDL.h>
 #include "NESEmu/Cartridge/Loader/INes.hpp"
 #include "NESEmu/Cartridge/Factory.hpp"
@@ -22,7 +23,7 @@
 template <class TFrameListener>
 struct GraphicManager {
     
-    GraphicManager(SDL_Event &event, TFrameListener &frameListener) : _event(event), _frameListener(frameListener) {
+    GraphicManager(SDL_Event &event, TFrameListener &frameListener) : _event(event), _frameListener(frameListener), _generator(_randomDevice()), _distribution(0, (256 * 240) - 1) {
         // Initialize video
         SDL_InitSubSystem(SDL_INIT_VIDEO);
         std::cout << SDL_GetError() << "\n";
@@ -93,6 +94,19 @@ struct GraphicManager {
         //paletteColor = (((paletteColor & 0xFF0000) << emphasizeRed) & 0xFF0000) | (((paletteColor & 0xFF00) << emphasizeGreen) & 0xFF00) | (((paletteColor & 0xFF) << emphasizeBlue) & 0xFF);//TODO: voir apres
         
         _pixels[(y * 256) + x] = paletteColor;
+        
+        // TODO: pour passer telling lys et avoir les input qui se rafraichisse n'importe quand et pas tout le temps au debut du vblank
+        // TODO: avec cette technique il update n'importe quand sauf en hblank et vblank
+        if (_pollEventPixelCounter == 0) {
+            return;
+        }
+        
+        --_pollEventPixelCounter;
+        
+        if (_pollEventPixelCounter == 0) {
+            // TODO: a voir j'update les event (et donc le clavier) une fois par frame :  voir si ok et voir si pas plutot le mettre dans TimeManager
+            SDL_PollEvent(&_event);
+        }
     }
     
     void notifyVBlankStarted() {
@@ -114,7 +128,8 @@ struct GraphicManager {
         memset(_pixels, 0, sizeof(uint32_t) * 256 * 240);
         
         // TODO: a voir j'update les event (et donc le clavier) une fois par frame :  voir si ok et voir si pas plutot le mettre dans TimeManager
-        SDL_PollEvent(&_event);
+        //SDL_PollEvent(&_event);
+        _pollEventPixelCounter = _distribution(_generator);
         
         // Notify that a frame has been generated
         _frameListener.notifyFrameGenerated();
@@ -130,6 +145,11 @@ private:
     uint32_t *_pixels;
     
     TFrameListener &_frameListener;
+    
+    std::random_device _randomDevice;
+    std::mt19937 _generator;
+    std::uniform_int_distribution<> _distribution;
+    uint32_t _pollEventPixelCounter;
 };
 
 struct SoundManager {
@@ -539,7 +559,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Final Fantasy.nes", std::ios::binary);  // Mapper1, 256kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/Zelda.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom
     //std::ifstream ifs("../UnitTestFiles/Zelda 2.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom // TODO: bug mais peut etre parce que le mapper1 n'est pas complet (selon les versions du mapper !) deja c du chr-ram et ici c du chr-rom : oui en plus il y a 8ko dans le mapper1 et ici 128 !!! : OK
-    //std::ifstream ifs("../UnitTestFiles/Simpsons - Bart Vs the Space Mutants.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom, IL Y A LE BUG DU SCOREBAR QUI SHAKE UN PEU, a voir (timing ppu ?) : ca ne vibre plus a chaque fois
+    //std::ifstream ifs("../UnitTestFiles/Simpsons - Bart Vs the Space Mutants.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom, IL Y A LE BUG DU SCOREBAR QUI SHAKE UN PEU, a voir (timing ppu ?) : ca ne vibre plus a chaque fois : ok, avait besoin du delai pour la copie de temporary sur address
     //std::ifstream ifs("../UnitTestFiles/Bill & Ted's Excellent Video Game Adventure.nes", std::ios::binary);  // Mapper1, 128kb de prg-rom, 128 de chr-rom // TODO : ne fonctionne pas car on doit gerer la double ecriture dans le MMC1 : ok
     
     //std::ifstream ifs("../UnitTestFiles/1942.nes", std::ios::binary);
@@ -557,6 +577,9 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Die Hard.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Eliminator Boat Duel (USA).nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Isolated Warrior.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Terminator 2 - Judgment Day.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Star Gate.nes", std::ios::binary);
+    std::ifstream ifs("../UnitTestFiles/Punch Out.nes", std::ios::binary);
 
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/nestest.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/1.Branch_Basics.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
@@ -568,7 +591,7 @@ int main(int argc, const char * argv[]) {
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/instr_timing/rom_singles/1-instr_timing.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring // TODO: a voir une fois le APU length counter terminé : ok sauf pour les unofficial opcodes non implementé
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_exec_space/test_cpu_exec_space_apu.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring TODO: ok meme sans l'APU ?!
+    //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_exec_space/test_cpu_exec_space_apu.nes", std::ios::binary);  // Ok mais ne fonctionne pas si zapper connecté au port 2 !
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/cpu_interrupts_v2/cpu_interrupts.nes", std::ios::binary);  // Mapper1, 80kb de prg-rom // Ok!
     
@@ -586,7 +609,7 @@ int main(int argc, const char * argv[]) {
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_overflow/ppu_sprite_overflow.nes", std::ios::binary);// Mapper1, 128kb de prg-rom, vertical mirroring OK
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_open_bus/ppu_open_bus.nes", std::ios::binary);// Mapper0, 32kb de prg-rom, vertical mirroring TODO: il faut implementer le decay de l'open bus pour que ca fonctionne
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_open_bus/ppu_open_bus.nes", std::ios::binary); // Ok !
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/nmi_sync/demo_ntsc.nes", std::ios::binary);// Mapper0, 32kb de prg-rom, horizontal mirroring TODO: ne fonctionne pas correctement ! : maintenant oui presque correctement !!!
     
@@ -594,7 +617,7 @@ int main(int argc, const char * argv[]) {
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/oamtest3/oam3.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, vertical mirroring chr-ram // ???
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/blargg_ppu_tests_2005.09.15b/vbl_clear_time.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring chr-ram  // OK
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/blargg_ppu_tests_2005.09.15b/vram_access.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring chr-ram  // OK
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/scanline/scanline.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, vertical mirroring // TODO: pour qu'il fonctionne bien comme openEmu (juste 2 pixels de stars et pas 3), il faut faire les ppu io avant le process line seulement pour les io write, voir si c'est tjs bon par rapport aux autres tests roms
     
@@ -602,19 +625,19 @@ int main(int argc, const char * argv[]) {
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/full_palette/full_palette.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, horizontal mirroring
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/sprite_overflow_tests/5.Emulator.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring // OK
+    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_overflow/ppu_sprite_overflow.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring // OK
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/Mapper/mmc3_test_2/rom_singles/4-scanline_timing.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 8kb de chr-rom  // TODO: foire sur 6 (je peux faire passer 6 en changeant la facon de lancer l'irq mais ca fait foirer 5, c'est surement parce que 6 alt teste le mapper3 alternatif : oui)
+    //std::ifstream ifs("../UnitTestFiles/TestROM/Mapper/mmc3_test_2/rom_singles/5-MMC3.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 8kb de chr-rom  // TODO: foire sur 6 (je peux faire passer 6 en changeant la facon de lancer l'irq mais ca fait foirer 5, c'est surement parce que 6 alt teste le mapper3 alternatif : oui)
     //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/bntest/bntest_h.nes", std::ios::binary);//TODO: ne va pas !!! : normal, c'est un test de mapper que je n'ai pas encore implémenté
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/allpads.nes", std::ios::binary);  // Ok !
     //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/zapper/zapper_flip.nes", std::ios::binary); // Ok !
     //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/ruder-0.03a/ruder.nes", std::ios::binary); // Ok !, voir si sur vraie nes le light detecte le texte vert du menu ou pas
-    //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/read_joy3/thorough_test.nes", std::ios::binary);//count_errors_fast: Errors=16/1000, counts_errors: Conflits=47/1000, thorough_test passe mais il faut attendre au moins 30sec, voir si aussi long sur mesen
-    //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/telling-lys-0.01/telling-lys.nes", std::ios::binary);//TODO: pas bon, pour que ca passe il faut que le statut des boutons des controllers change a des periodes differentes dans la frame et pas toujours au meme scanline, je ne vois pas trop comment y arriver en rapport avec le read / write 4016 qui se fait par rapport a quand le programme le fait ???
+    //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/read_joy3/thorough_test.nes", std::ios::binary);//count_errors_fast: Errors=16/1000, counts_errors: Conflits=47/1000, thorough_test passe mais il faut attendre au moins 60sec, voir si aussi long sur mesen : non sur mesen ca prend 3 secondes
+    //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/telling-lys-0.01/telling-lys.nes", std::ios::binary); // Ok !
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_test/apu_test.nes", std::ios::binary);    // Ok !
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/blargg_apu_2005.07.30/10.len_halt_timing.nes", std::ios::binary); // Ok !
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/blargg_apu_2005.07.30/11.len_reload_timing.nes", std::ios::binary); // Ok !
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_2/test_10.nes", std::ios::binary);//TODO: 3 fail and pass (reset), 5 6 fail
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_m/test_11.nes", std::ios::binary);//TODO: 11 fail
@@ -623,8 +646,8 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/noisy/noisy_v1.nes", std::ios::binary);//TODO: a comparer avec un autre emulateur
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/DmcPowerOnTest_v3/DmcPowerOnBuzz.nes", std::ios::binary);//TODO: a comparer avec un autre emulateur
     
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_mixer/triangle.nes", std::ios::binary);//TODO: pas tres bon pour square, parfait pour triangle
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_reset/len_ctrs_enabled.nes", std::ios::binary);    // Ok ! (pour 4017_timing, 9 au power et 9 au reset pour l'apu clocked après cpu (et checkInterrupt apres clock de l'apu) et 10 au reset pour apu clocked avant cpu (et checkInterrupt avant le clock des units de l'apu)) : maintenant 9 au power et 10 au reset avec l'apu apres le cpu mais avant le dma : mesen est a 9 pour les 2 : maintenant 9 et 9 aussi : De nouveau 9 et 10 !
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_mixer/dmc.nes", std::ios::binary);//TODO: pas tres bon pour square, parfait pour triangle
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_reset/works_immediately.nes", std::ios::binary);    // Ok ! (pour 4017_timing, 9 au power et 9/10 au reset, mesen est a 9 pour les 2 (mais voir si ca tombe c'est 9/10 aussi)
     
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/FrameCounterIrqAckTest/test.nes", std::ios::binary);//TODO: attention car apparemment ca fail sur une vraie nes ! // https://forums.nesdev.com/viewtopic.php?f=3&t=13844&sid=cbcaafaac1023fdf00510a47962184ad&start=300
     
@@ -633,17 +656,19 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/apu_phase_reset/apu_phase_reset.nes", std::ios::binary);    // Ok ! ( https://forums.nesdev.com/viewtopic.php?t=15346 )
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/square_timer_div2/square_timer_div2.nes", std::ios::binary);  // Ok !
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_env/test_apu_env.nes", std::ios::binary);  // Ok normalement !
-    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_sweep/sweep_cutoff.nes", std::ios::binary);  // Ok !
+    //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_sweep/sweep_sub.nes", std::ios::binary);  // Ok !
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_timers/dmc_pitch.nes", std::ios::binary);  // Ok pour tous (mais reverifier le DMC une fois bien implementé avec les timing CPU/DMA)
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/volume_tests/volumes.nes", std::ios::binary);//?
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/DMA/sprdma_and_dmc_dma/sprdma_and_dmc_dma.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
-    //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dmc_dma_during_read4/dma_4016_read.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dmc_dma_during_read4/read_write_2007.nes", std::ios::binary);   // Ok sauf pour le double_2007_read
     //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_badrol.nes", std::ios::binary);    // Ok, doit devenir blanc mais le probleme est que cette rom de test n'attend pas correctement le PPU warmup et donc je dois le desactiver pour voir le resultat sinon ca reste gris car la couleur de background est ecrite trop tot
     //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_goodrol.nes", std::ios::binary); // Ok, doit etre noir et devenir blanc si pad right press mais pareil qu'au dessus pour le ppu warm up !
-    //std::ifstream ifs("../UnitTestFiles/TestROM/DMA/dma_sync_test_v2/dma_sync_test.nes", std::ios::binary);//TODO:ecran noir
+    //std::ifstream ifs("../UnitTestFiles/TestROM/DMA/dma_sync_test_v2/dma_sync_test.nes", std::ios::binary); // Ok, Ecran noir puis blanc si pad right
     
-    std::ifstream ifs("../UnitTestFiles/Demo/19.nes", std::ios::binary);    // TODO: qq roms ne fonctionnent pas a cause du PPU warm up mais la 19 ne va pas du tout meme sans le PPU warm up alors qu'elle fonctionne bien dans nintaco !!! la 4 non plus mais c'est a cause du prg-ram size qui est mal detecté dans le header, a voir, pour la 19 je n'arrive pas a la faire aller mais elle ne va pas non plus dans openemu, voir si ca va dans mesen ! : ne fonctionne pas non plus dans mesen, il faut changer l'instruction cli par nop a l'adresse 0x800A pour qu'elle fonctionne
+    //std::ifstream ifs("../UnitTestFiles/Demo/19.nes", std::ios::binary);    // TODO: qq roms ne fonctionnent pas a cause du PPU warm up mais la 19 ne va pas du tout meme sans le PPU warm up alors qu'elle fonctionne bien dans nintaco !!! la 4 non plus mais c'est a cause du prg-ram size qui est mal detecté dans le header, a voir, pour la 19 je n'arrive pas a la faire aller mais elle ne va pas non plus dans openemu, voir si ca va dans mesen ! : ne fonctionne pas non plus dans mesen, il faut changer l'instruction cli par nop a l'adresse 0x8007 pour qu'elle fonctionne : ok quand fait ca
+    
+    //std::ifstream ifs("../UnitTestFiles/Difference (Unl).nes", std::ios::binary);
     
     // Check that file exists
     assert(ifs.good());
