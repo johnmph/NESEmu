@@ -125,6 +125,16 @@ void Chip<TCpu, TSoundManager>::dmcSampleFetched(uint8_t data) {
 }
 
 template <class TCpu, class TSoundManager>
+uint8_t Chip<TCpu, TSoundManager>::getPulsesOutput() const {
+    return _pulseChannel[0].getOutput() + _pulseChannel[1].getOutput();
+}
+
+template <class TCpu, class TSoundManager>
+uint8_t Chip<TCpu, TSoundManager>::getTriangleNoiseDmcOutput() const {
+    return _triangleChannel.getOutput() + (_noiseChannel.getOutput() * 0.672f) + (_dmcChannel.getOutput() * 0.363f);
+}
+
+template <class TCpu, class TSoundManager>
 float Chip<TCpu, TSoundManager>::getMixedOutput() const {//TODO: voir si plus optimisé avec les approximations
     // Sum pulse channels (need this in case of division by 0, uint8_t is enough because pulse channels output no more than 15)
     uint8_t pulseSum = _pulseChannel[0].getOutput() + _pulseChannel[1].getOutput();

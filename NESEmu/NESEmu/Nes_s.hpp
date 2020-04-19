@@ -337,6 +337,8 @@ void Nes<EModel, TGraphicManager, TSoundManager>::clockFull() {   // TODO: gros 
      _ppu.clock();
      */
     
+    // TODO : voir http://wiki.nesdev.com/w/index.php/Visual_circuit_tutorial pour une description complete de la synchronization des clocks CPU PPU APU
+    
     // Clock cartridge
     _cartridge->clock(_cpuHardwareInterface, _ppuHardwareInterface);
     
@@ -352,23 +354,6 @@ void Nes<EModel, TGraphicManager, TSoundManager>::clockFull() {   // TODO: gros 
     
     // Clock ppu
     _ppu.clock();
-    
-    /*
-     TODO: cette combinaison resoud le prob de la barre de statut qui tremble dans Simpsons (combiné avec les io direct du PPU plutot que delayé)
-     _cpu.startPhi1();
-     
-     _ppu.clock();
-     _ppu.clock();
-     
-     _cpu.endPhi1();
-     
-     _ppu.clock();
-     
-     _cpu.startPhi2();
-     
-     _cpu.endPhi2();
-     
-     */
 }
 
 template <Model EModel, class TGraphicManager, class TSoundManager>

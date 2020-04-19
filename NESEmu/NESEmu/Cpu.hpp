@@ -48,9 +48,8 @@ namespace NESEmu { namespace Cpu {
         void irq(bool high);
         //void test(bool high);
         
-        // TODO: exposer tous ce qu'il y a dans les pins
-        //bool getAd1Signal() const;    // TODO: ce sont les pins pour l'audio (ad1 = squares, ad2 = triangle, noise et dmc) mais comment retourner un bool alors que l'apu fonctionne avec des uint8_t (et le mixer utilise un float) !
-        //bool getAd2Signal() const;
+        uint8_t getAd1Signal() const;    // TODO: ce sont les pins pour l'audio (ad1 = squares, ad2 = triangle, noise et dmc) mais comment retourner un bool alors que l'apu fonctionne avec des uint8_t (et le mixer utilise un float) ! : C'est tout simplement une sortie analogique ! donc a la place de retourner un bool, retourne un uint8_t ou un float !
+        uint8_t getAd2Signal() const;
         Cpu6502::ReadWrite getReadWriteSignal() const;
         uint8_t getOutSignal() const;
         bool getOe1Signal() const;

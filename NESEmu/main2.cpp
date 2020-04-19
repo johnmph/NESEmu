@@ -46,6 +46,7 @@ struct GraphicManager {
         
         // Read palette
         std::ifstream ifs("../UnitTestFiles/ntscpalette.pal", std::ios::binary);
+        // TODO: par apres emuler aussi le signal NTSC : http://wiki.nesdev.com/w/index.php/NTSC_video
         
         // Check that file exists
         assert(ifs.good());
@@ -89,20 +90,25 @@ struct GraphicManager {
         assert(y < 240);
         assert(color < 64);
         
+        // Get color on palette
         uint32_t paletteColor = _palette[color];
         
-        //paletteColor = (((paletteColor & 0xFF0000) << emphasizeRed) & 0xFF0000) | (((paletteColor & 0xFF00) << emphasizeGreen) & 0xFF00) | (((paletteColor & 0xFF) << emphasizeBlue) & 0xFF);//TODO: voir apres
+        //paletteColor = (((paletteColor & 0xFF0000) << emphasizeRed) & 0xFF0000) | (((paletteColor & 0xFF00) << emphasizeGreen) & 0xFF00) | (((paletteColor & 0xFF) << emphasizeBlue) & 0xFF);//TODO: voir apres http://wiki.nesdev.com/w/index.php/Colour-emphasis_games
         
+        // Set pixel on video buffer
         _pixels[(y * 256) + x] = paletteColor;
         
         // TODO: pour passer telling lys et avoir les input qui se rafraichisse n'importe quand et pas tout le temps au debut du vblank
         // TODO: avec cette technique il update n'importe quand sauf en hblank et vblank
+        // Exit if no event already polled this frame
         if (_pollEventPixelCounter == 0) {
             return;
         }
         
+        // Decrement poll event pixel counter
         --_pollEventPixelCounter;
         
+        // Poll event if counter reached 0
         if (_pollEventPixelCounter == 0) {
             // TODO: a voir j'update les event (et donc le clavier) une fois par frame :  voir si ok et voir si pas plutot le mettre dans TimeManager
             SDL_PollEvent(&_event);
@@ -127,8 +133,7 @@ struct GraphicManager {
         // Simulate the electron gun drawing pixel by pixel, without this, the pixels stays lighted between frames)
         memset(_pixels, 0, sizeof(uint32_t) * 256 * 240);
         
-        // TODO: a voir j'update les event (et donc le clavier) une fois par frame :  voir si ok et voir si pas plutot le mettre dans TimeManager
-        //SDL_PollEvent(&_event);
+        // Calculate next time for polling event
         _pollEventPixelCounter = _distribution(_generator);
         
         // Notify that a frame has been generated
@@ -549,7 +554,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Battletoads.nes", std::ios::binary);  // Mapper7, 256kb de prg-rom, single screen mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Paperboy.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/Huge Insect.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, vertical mirroring
-    //std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
+    std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/SMB2.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Young Indiana Jones Chronicles.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Adventures of Lolo 2.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 32kb de chr-rom
@@ -579,7 +584,9 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Isolated Warrior.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Terminator 2 - Judgment Day.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Star Gate.nes", std::ios::binary);
-    std::ifstream ifs("../UnitTestFiles/Punch Out.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Punch Out.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Megaman 6.nes", std::ios::binary);//TODO: fait planter l'emu
+    //std::ifstream ifs("../UnitTestFiles/Metal Gear.nes", std::ios::binary);
 
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/nestest.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/1.Branch_Basics.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
@@ -625,8 +632,6 @@ int main(int argc, const char * argv[]) {
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/full_palette/full_palette.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, horizontal mirroring
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/PPU/ppu_sprite_overflow/ppu_sprite_overflow.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring // OK
-    
     //std::ifstream ifs("../UnitTestFiles/TestROM/Mapper/mmc3_test_2/rom_singles/5-MMC3.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 8kb de chr-rom  // TODO: foire sur 6 (je peux faire passer 6 en changeant la facon de lancer l'irq mais ca fait foirer 5, c'est surement parce que 6 alt teste le mapper3 alternatif : oui)
     //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/bntest/bntest_h.nes", std::ios::binary);//TODO: ne va pas !!! : normal, c'est un test de mapper que je n'ai pas encore implémenté
     
@@ -660,7 +665,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/test_apu_timers/dmc_pitch.nes", std::ios::binary);  // Ok pour tous (mais reverifier le DMC une fois bien implementé avec les timing CPU/DMA)
     //std::ifstream ifs("../UnitTestFiles/TestRom/APU/volume_tests/volumes.nes", std::ios::binary);//?
     
-    //std::ifstream ifs("../UnitTestFiles/TestROM/DMA/sprdma_and_dmc_dma/sprdma_and_dmc_dma.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
+    //std::ifstream ifs("../UnitTestFiles/TestROM/DMA/sprdma_and_dmc_dma/sprdma_and_dmc_dma_512.nes", std::ios::binary);  // Mapper0, 32kb de prg-rom, vertical mirroring
     //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dmc_dma_during_read4/read_write_2007.nes", std::ios::binary);   // Ok sauf pour le double_2007_read
     //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_badrol.nes", std::ios::binary);    // Ok, doit devenir blanc mais le probleme est que cette rom de test n'attend pas correctement le PPU warmup et donc je dois le desactiver pour voir le resultat sinon ca reste gris car la couleur de background est ecrite trop tot
     //std::ifstream ifs("../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_goodrol.nes", std::ios::binary); // Ok, doit etre noir et devenir blanc si pad right press mais pareil qu'au dessus pour le ppu warm up !

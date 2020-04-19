@@ -48,6 +48,10 @@ namespace NESEmu { namespace Apu {
         // DMC Sample fetched callback
         void dmcSampleFetched(uint8_t data);
         
+        // Channels output
+        uint8_t getPulsesOutput() const;
+        uint8_t getTriangleNoiseDmcOutput() const;
+        
     private:
         
         // Set FrameCounter as friend to keep clockFrameCounterxxx methods private

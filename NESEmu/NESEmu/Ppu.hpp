@@ -326,6 +326,10 @@ namespace NESEmu { namespace Ppu {
         // Data read buffer
         // See https://wiki.nesdev.com/w/index.php/PPU_registers#PPUDATA
         uint8_t _dataReadBuffer;
+        
+        // 2007 double read race condition (if another read happens before maximum 3 PPU cycles)
+        uint8_t _read2007RaceConditionCycle;
+        uint8_t _read2007LastBusData;
     };
     
     #include "Ppu_s.hpp"

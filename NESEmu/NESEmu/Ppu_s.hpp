@@ -66,6 +66,7 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::powerUp() {
     _needIncrementOAMAddress = false;
     _needIncrementSecondOAMAddress = false;
     _copyAddressCycleDelay = 0;
+    _read2007RaceConditionCycle = 0;
     
     _ioPending = 0;
     
@@ -225,6 +226,11 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::processRendering()
 
 template <Model EModel, class TBus, class TInterruptHardware, class TGraphicManager>
 void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::processIO() {
+    // Decrement read 2007 race condition cycle counter if necessary
+    if (_read2007RaceConditionCycle > 0) {
+        --_read2007RaceConditionCycle;
+    }
+    
     // If no pending IO, exit
     if (_ioPending == 0) {
         return;
@@ -1092,9 +1098,13 @@ void Chip<EModel, TBus, TInterruptHardware, TGraphicManager>::ioRead() {
         _dataBusCapacitanceLatch = _oamData;
     }
     // Data register
-    else if (address == IORegisters::Data) {// TODO: il parait que 2 read successif ignore le dernier read ??? a voir dans la doc et a tester sur Visual2C02 (avoir une variable _lastIoIs2007Read qui sera true si on lit en 2007 et on la resetera a false sinon (un autre io read ou un io write), puis si elle est true et qu'on lit en 2007, on retourne la derniere valeur lue sinon on lit normalement)
-        // Save data read buffer
-        uint8_t oldDataReadBuffer = _dataReadBuffer;
+    else if (address == IORegisters::Data) {
+        // Get data read buffer if no race condition else read return last data bus (which was address bus low)
+        uint8_t oldDataReadBuffer = (_read2007RaceConditionCycle == 0) ? _dataReadBuffer : _read2007LastBusData;
+        
+        // Update read 2007 race condition informations (3+1 PPU cycles) TODO: comment savoir si 3+1 ou 6 cycles? peut etre via les unofficials opcodes
+        _read2007RaceConditionCycle = 4;
+        _read2007LastBusData = _bus.getDataBus();
         
         // Set address bus
         _bus.setAddressBus(_address);    // TODO: normalement ne fait pas tout ca sur le meme cycle PPU (il faut un cycle pour setter l'adresse, et un autre pour lire)
