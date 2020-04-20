@@ -125,6 +125,8 @@ namespace NESEmu { namespace Ppu {
         void exts(uint8_t data);
         void getExts(uint8_t &data) const;
         
+        // TODO: ajouter la pin vout qui retourne le signal ntsc ? http://wiki.nesdev.com/w/index.php/PPU_pin_out_and_signal_description
+        
         // IO access
         template <class TConnectedBus>
         void readPerformed(TConnectedBus &connectedBus);

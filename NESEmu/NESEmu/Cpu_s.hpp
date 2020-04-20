@@ -210,12 +210,12 @@ void Chip<EModel, TBus, TControllerHardware, TSoundManager>::irq(bool high) {
 }
 
 template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
-uint8_t Chip<EModel, TBus, TControllerHardware, TSoundManager>::getAd1Signal() const {//TODO: utiliser ca pour le sound manager plutot que le systeme de maintenant ?
+float Chip<EModel, TBus, TControllerHardware, TSoundManager>::getAd1Signal() const {//TODO: utiliser ca pour le sound manager plutot que le systeme de maintenant ?
     return _apu.getSquareOutput();
 }
 
 template <Model EModel, class TBus, class TControllerHardware, class TSoundManager>
-uint8_t Chip<EModel, TBus, TControllerHardware, TSoundManager>::getAd2Signal() const {
+float Chip<EModel, TBus, TControllerHardware, TSoundManager>::getAd2Signal() const {
     return _apu.getTriangleNoiseDmcOutput();
 }
 

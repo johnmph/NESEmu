@@ -125,31 +125,27 @@ void Chip<TCpu, TSoundManager>::dmcSampleFetched(uint8_t data) {
 }
 
 template <class TCpu, class TSoundManager>
-uint8_t Chip<TCpu, TSoundManager>::getPulsesOutput() const {
-    return _pulseChannel[0].getOutput() + _pulseChannel[1].getOutput();
-}
-
-template <class TCpu, class TSoundManager>
-uint8_t Chip<TCpu, TSoundManager>::getTriangleNoiseDmcOutput() const {
-    return _triangleChannel.getOutput() + (_noiseChannel.getOutput() * 0.672f) + (_dmcChannel.getOutput() * 0.363f);
-}
-
-template <class TCpu, class TSoundManager>
-float Chip<TCpu, TSoundManager>::getMixedOutput() const {//TODO: voir si plus optimisé avec les approximations
+float Chip<TCpu, TSoundManager>::getPulsesOutput() const {
     // Sum pulse channels (need this in case of division by 0, uint8_t is enough because pulse channels output no more than 15)
     uint8_t pulseSum = _pulseChannel[0].getOutput() + _pulseChannel[1].getOutput();
     
     // Get pulse channels mixed output
-    float pulseOut = (pulseSum > 0) ? (95.88f / ((8128.0f / pulseSum) + 100.0f)) : 0;
-    
+    return (pulseSum > 0) ? (95.88f / ((8128.0f / pulseSum) + 100.0f)) : 0;
+}
+
+template <class TCpu, class TSoundManager>
+float Chip<TCpu, TSoundManager>::getTriangleNoiseDmcOutput() const {
     // Sum other channels (need this in case of division by 0)
     float triangleNoiseDmcMixedSum = (_triangleChannel.getOutput() / 8227.0f) + (_noiseChannel.getOutput() / 12241.0f) + (_dmcChannel.getOutput() / 22638.0f);
     
     // Get triangle, noise and DMC mixed output
-    float triangleNoiseDmcOut = (triangleNoiseDmcMixedSum > 0) ? (159.79f / ((1.0f / triangleNoiseDmcMixedSum) + 100.0f)) : 0;
-    
+    return (triangleNoiseDmcMixedSum > 0) ? (159.79f / ((1.0f / triangleNoiseDmcMixedSum) + 100.0f)) : 0;
+}
+
+template <class TCpu, class TSoundManager>
+float Chip<TCpu, TSoundManager>::getMixedOutput() const {//TODO: voir si plus optimisé avec les approximations, TODO: plutot dans NES ?
     // Get mixed output
-    return pulseOut + triangleNoiseDmcOut;
+    return getPulsesOutput() + getTriangleNoiseDmcOutput();
     
     /*float pulseOut = 0.00752f * (_pulseChannel[0].getOutput() + _pulseChannel[1].getOutput());      // TODO: version avec approximation
     

@@ -21,8 +21,9 @@ namespace NESEmu { namespace Cartridge {
         MMC5,
         FFE,
         AxROM,
-        M008,
-        MMC2
+        M008,   // TODO: voir pour le nom
+        MMC2,
+        MMC4
         //TODO: a continuer
     };
     

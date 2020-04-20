@@ -21,7 +21,7 @@ namespace NESEmu { namespace Cartridge { namespace Mapper4 {
     template <class TCpuHardwareInterface, class TPpuHardwareInterface>
     struct Chip : Interface<TCpuHardwareInterface, TPpuHardwareInterface> {
         
-        Chip(std::vector<uint8_t> prgRom, std::size_t prgRamSize, std::vector<uint8_t> chrRom, MirroringType mirroringType);
+        Chip(std::vector<uint8_t> prgRom, std::size_t prgRamSize, std::vector<uint8_t> chrRom, std::size_t chrRamSize, MirroringType mirroringType);
         
         void clock(TCpuHardwareInterface &cpuHardwareInterface, TPpuHardwareInterface &ppuHardwareInterface) override;
         

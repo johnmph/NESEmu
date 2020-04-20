@@ -1,21 +1,25 @@
 //
-//  Mapper9_s.hpp
+//  Mapper10_s.hpp
 //  NESEmu
 //
-//  Created by Jonathan Baliko on 18/04/20.
+//  Created by Jonathan Baliko on 19/04/20.
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Cartridge_Mapper9_s_hpp
-#define NESEmu_Cartridge_Mapper9_s_hpp
+#ifndef NESEmu_Cartridge_Mapper10_s_hpp
+#define NESEmu_Cartridge_Mapper10_s_hpp
 
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-Chip<TCpuHardwareInterface, TPpuHardwareInterface>::Chip(std::vector<uint8_t> prgRom, std::size_t prgRamSize, std::vector<uint8_t> chrRom) : Interface<TCpuHardwareInterface, TPpuHardwareInterface>(std::move(prgRom), prgRamSize, std::move(chrRom), 0), _prgRomBankSelect(0) {
+Chip<TCpuHardwareInterface, TPpuHardwareInterface>::Chip(std::vector<uint8_t> prgRom, std::vector<uint8_t> chrRom) : Interface<TCpuHardwareInterface, TPpuHardwareInterface>(std::move(prgRom), 8 * 1024, std::move(chrRom), 0), _prgRomBankSelect(0) {//TODO: tjs 8192 de prg-ram ?
     // TODO: reseter aussi les _bankSelect ?
     
-    //_chrRomLatch[0] = true;
-    //_chrRomLatch[1] = true;
+    /*_chrRomLatch[0] = true;
+    _chrRomLatch[1] = true;
+    _chrRomBankSelect[0] = 0;
+    _chrRomBankSelect[1] = 0;
+    _chrRomBankSelect[2] = 0;
+    _chrRomBankSelect[3] = 0;*/
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
@@ -32,14 +36,14 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuReadPerformed(TCpuHa
         }
     }
     // Prg-Rom (first bank)
-    else if ((address >= 0x8000) && (address < 0xA000)) {
+    else if ((address >= 0x8000) && (address < 0xC000)) {
         // Read Prg-Rom selected bank
-        cpuHardwareInterface.setDataBus(this->_prgRom[((_prgRomBankSelect << 13) | (address & 0x1FFF)) & (this->_prgRomSize - 1)]);
+        cpuHardwareInterface.setDataBus(this->_prgRom[((_prgRomBankSelect << 14) | (address & 0x3FFF)) & (this->_prgRomSize - 1)]);
     }
-    // Prg-Rom (3 last banks)
-    else if (address >= 0xA000) {
-        // Read 3 last Prg-Rom banks
-        cpuHardwareInterface.setDataBus(this->_prgRom[(this->_prgRomSize - (24 * 1024)) + (address - 0xA000)]);
+    // Prg-Rom (last bank)
+    else if (address >= 0xC000) {
+        // Read last Prg-Rom bank
+        cpuHardwareInterface.setDataBus(this->_prgRom[(this->_prgRomSize - (16 * 1024)) | (address & 0x3FFF)]);
     }
 }
 
@@ -78,30 +82,20 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuReadPerformed(TPpuHa
     // Get address
     uint16_t address = ppuHardwareInterface.getAddressBus();
     
-    // Chr-Rom first bank
-    if (address < 0x1000) {
-        // Read Chr-Rom
-        ppuHardwareInterface.setDataBus(this->_chrRom[((_chrRomBankSelect[_chrRomLatch[0]] << 12) | address) & (this->_chrRomSize - 1)]);
+    // Chr-Rom
+    if (address < 0x2000) {
+        // Check for bank
+        bool isSecondBank = (address >> 12) != 0;
         
-        // Check for latch 0
-        if (address == 0xFD8) {
-            _chrRomLatch[0] = false;
-        }
-        else if (address == 0xFE8) {
-            _chrRomLatch[0] = true;
-        }
-    }
-    // Chr-Rom second bank
-    else if (address < 0x2000) {
         // Read Chr-Rom
-        ppuHardwareInterface.setDataBus(this->_chrRom[((_chrRomBankSelect[0x2 | _chrRomLatch[1]] << 12) | (address & 0xFFF)) & (this->_chrRomSize - 1)]);
+        ppuHardwareInterface.setDataBus(this->_chrRom[((_chrRomBankSelect[(isSecondBank << 1) | _chrRomLatch[isSecondBank]] << 12) | (address & 0xFFF)) & (this->_chrRomSize - 1)]);
         
-        // Check for latch 1
-        if ((address & 0x1FF8) == 0x1FD8) {
-            _chrRomLatch[1] = false;
+        // Check for latchs
+        if ((address & 0xFF8) == 0xFD8) {
+            _chrRomLatch[isSecondBank] = false;
         }
-        else if ((address & 0x1FF8) == 0x1FE8) {
-            _chrRomLatch[1] = true;
+        else if ((address & 0xFF8) == 0xFE8) {
+            _chrRomLatch[isSecondBank] = true;
         }
     }
     // Internal VRAM (PPU address is always < 0x4000)
@@ -137,4 +131,4 @@ uint16_t Chip<TCpuHardwareInterface, TPpuHardwareInterface>::getVramAddress(uint
     return getMirroredAddress<MirroringType::Vertical>(address);
 }
 
-#endif /* NESEmu_Cartridge_Mapper9_s_hpp */
+#endif /* NESEmu_Cartridge_Mapper10_s_hpp */

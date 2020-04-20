@@ -69,7 +69,7 @@ std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> Factory
         break;
         
         case Model::MMC3 : {
-            cartridge = std::make_unique<Mapper4::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), data.prgRamSize, std::move(data.chrRom), data.mirroringType);
+            cartridge = std::make_unique<Mapper4::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), data.prgRamSize, std::move(data.chrRom), data.chrRamSize, data.mirroringType);
         }
         break;
         /*
@@ -90,6 +90,11 @@ std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> Factory
         
         case Model::MMC2 : {
             cartridge = std::make_unique<Mapper9::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), data.prgRamSize, std::move(data.chrRom));
+        }
+        break;
+        
+        case Model::MMC4 : {
+            cartridge = std::make_unique<Mapper10::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), std::move(data.chrRom));
         }
         break;
         

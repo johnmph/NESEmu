@@ -11,7 +11,7 @@
 
 // TODO: avoir un enum version (comme le ppu, le cpu, ...) car il y a plusieurs versions du MMC3 avec une gestion differente de l'irq
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-Chip<TCpuHardwareInterface, TPpuHardwareInterface>::Chip(std::vector<uint8_t> prgRom, std::size_t prgRamSize, std::vector<uint8_t> chrRom, MirroringType mirroringType) : Interface<TCpuHardwareInterface, TPpuHardwareInterface>(std::move(prgRom), prgRamSize, std::move(chrRom), 0), _mirroringType(mirroringType), _bankRegisterSelect(0), _prgRomBankMode(false), _chrRomBankMode(false), _nametableMirroring(false), _prgRamWriteProtection(false), _prgRamChipEnable(false), _lastA12(0), _irqEnable(false), _irqReload(false), _irqLatch(0), _irqCounter(0) {
+Chip<TCpuHardwareInterface, TPpuHardwareInterface>::Chip(std::vector<uint8_t> prgRom, std::size_t prgRamSize, std::vector<uint8_t> chrRom, std::size_t chrRamSize, MirroringType mirroringType) : Interface<TCpuHardwareInterface, TPpuHardwareInterface>(std::move(prgRom), prgRamSize, std::move(chrRom), chrRamSize), _mirroringType(mirroringType), _bankRegisterSelect(0), _prgRomBankMode(false), _chrRomBankMode(false), _nametableMirroring(false), _prgRamWriteProtection(false), _prgRamChipEnable(false), _lastA12(0), _irqEnable(false), _irqReload(false), _irqLatch(0), _irqCounter(0) {
     // TODO: reseter aussi les _bankSelect ?
     //memset(_bankSelect, 0, sizeof(_bankSelect[0]) * 8);
 }
@@ -140,49 +140,53 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuReadPerformed(TPpuHa
     
     // Chr-Rom
     if (address < 0x2000) {
-        
-        uint16_t mask;
-        uint8_t bank;
-        
-        if (address < 0x800) {
-            if (_chrRomBankMode) {
-                bank = _bankSelect[2 + ((address >> 10) & 0x1)];
-                mask = 0x3FF;
-            } else {
-                bank = _bankSelect[0];
-                mask = 0x7FF;
+        if (this->_chrRamSize > 0) {
+            // Read Chr-Ram
+            ppuHardwareInterface.setDataBus(this->_chrRam[address & (this->_chrRamSize - 1)]);//TODO: voir si chr-ram est comme chr-rom (banked)
+        } else {
+            uint16_t mask;
+            uint8_t bank;
+            
+            if (address < 0x800) {
+                if (_chrRomBankMode) {
+                    bank = _bankSelect[2 + ((address >> 10) & 0x1)];
+                    mask = 0x3FF;
+                } else {
+                    bank = _bankSelect[0];
+                    mask = 0x7FF;
+                }
             }
-        }
-        else if (address < 0x1000) {
-            if (_chrRomBankMode) {
-                bank = _bankSelect[4 + ((address >> 10) & 0x1)];
-                mask = 0x3FF;
-            } else {
-                bank = _bankSelect[1];
-                mask = 0x7FF;
+            else if (address < 0x1000) {
+                if (_chrRomBankMode) {
+                    bank = _bankSelect[4 + ((address >> 10) & 0x1)];
+                    mask = 0x3FF;
+                } else {
+                    bank = _bankSelect[1];
+                    mask = 0x7FF;
+                }
             }
-        }
-        else if (address < 0x1800) {
-            if (_chrRomBankMode) {
-                bank = _bankSelect[0];
-                mask = 0x7FF;
-            } else {
-                bank = _bankSelect[2 + ((address >> 10) & 0x1)];
-                mask = 0x3FF;
+            else if (address < 0x1800) {
+                if (_chrRomBankMode) {
+                    bank = _bankSelect[0];
+                    mask = 0x7FF;
+                } else {
+                    bank = _bankSelect[2 + ((address >> 10) & 0x1)];
+                    mask = 0x3FF;
+                }
             }
-        }
-        else {
-            if (_chrRomBankMode) {
-                bank = _bankSelect[1];
-                mask = 0x7FF;
-            } else {
-                bank = _bankSelect[4 + ((address >> 10) & 0x1)];
-                mask = 0x3FF;
+            else {
+                if (_chrRomBankMode) {
+                    bank = _bankSelect[1];
+                    mask = 0x7FF;
+                } else {
+                    bank = _bankSelect[4 + ((address >> 10) & 0x1)];
+                    mask = 0x3FF;
+                }
             }
+            
+            // Read Chr-Rom
+            ppuHardwareInterface.setDataBus(this->_chrRom[((bank << 10) | (address & mask)) & (this->_chrRomSize - 1)]);
         }
-        
-        // Read Chr-Rom
-        ppuHardwareInterface.setDataBus(this->_chrRom[((bank << 10) | (address & mask)) & (this->_chrRomSize - 1)]);
     }
     // Internal VRAM (PPU address is always < 0x4000)
     else {
@@ -199,9 +203,15 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuWritePerformed(TPpuH
     // Get data
     uint8_t data = ppuHardwareInterface.getDataBus();
     
-    // Nothing for Chr-Rom (Can't write to a ROM)
+    // Chr-Ram
+    if (address < 0x2000) {
+        // Write Chr-Ram if exist
+        if (this->_chrRamSize > 0) {
+            this->_chrRam[address & (this->_chrRamSize - 1)] = data;
+        }
+    }
     // Internal VRAM (PPU address is always < 0x4000)
-    if (address >= 0x2000) {
+    else {
         // Write VRAM with mirrored address
         ppuHardwareInterface.getVram()[getVramAddress(address)] = data;
     }

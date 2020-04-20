@@ -22,7 +22,8 @@ namespace NESEmu { namespace Cartridge { namespace Loader {
         Model::FFE,
         Model::AxROM,
         Model::M008,
-        Model::MMC2
+        Model::MMC2,
+        Model::MMC4
         //TODO: continuer
     };
     

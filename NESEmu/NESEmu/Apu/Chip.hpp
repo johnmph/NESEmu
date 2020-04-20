@@ -49,8 +49,8 @@ namespace NESEmu { namespace Apu {
         void dmcSampleFetched(uint8_t data);
         
         // Channels output
-        uint8_t getPulsesOutput() const;
-        uint8_t getTriangleNoiseDmcOutput() const;
+        float getPulsesOutput() const;
+        float getTriangleNoiseDmcOutput() const;
         
     private:
         

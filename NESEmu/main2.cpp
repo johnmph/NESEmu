@@ -47,6 +47,7 @@ struct GraphicManager {
         // Read palette
         std::ifstream ifs("../UnitTestFiles/ntscpalette.pal", std::ios::binary);
         // TODO: par apres emuler aussi le signal NTSC : http://wiki.nesdev.com/w/index.php/NTSC_video
+        // TODO: possible par shader ?
         
         // Check that file exists
         assert(ifs.good());
@@ -554,7 +555,7 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Battletoads.nes", std::ios::binary);  // Mapper7, 256kb de prg-rom, single screen mirroring chr-ram
     //std::ifstream ifs("../UnitTestFiles/Paperboy.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/Huge Insect.nes", std::ios::binary);  // Mapper3, 32kb de prg-rom, 32kb de chr-rom, vertical mirroring
-    std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
+    //std::ifstream ifs("../UnitTestFiles/SMB3.nes", std::ios::binary);  // Mapper4, 256kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/SMB2.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Young Indiana Jones Chronicles.nes", std::ios::binary);  // Mapper4, 128kb de prg-rom, 128kb de chr-rom
     //std::ifstream ifs("../UnitTestFiles/Adventures of Lolo 2.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 32kb de chr-rom
@@ -585,8 +586,41 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Terminator 2 - Judgment Day.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Star Gate.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Punch Out.nes", std::ios::binary);
-    //std::ifstream ifs("../UnitTestFiles/Megaman 6.nes", std::ios::binary);//TODO: fait planter l'emu
+    //std::ifstream ifs("../UnitTestFiles/Famicom Wars Bonne Version.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Famicom Wars.nes", std::ios::binary);//TODO: Voir ci dessous
+    /*
+     Les roms sont corrompues, la taille ne correspond pas aux infos du header et ce ne sont pas des puissances de 2 :
+     
+     La vraie rom fait : 128ko de PRG-ROM + 64ko de CHR-ROM (+ 16 octets du header) = 192ko (196624 octets).
+     
+     Meme si le jeu n'a que 16 (0x10) banques de 4ko, il écrit bien les valeurs supérieures a 0x10 donc il faut que le masque fasse effet mais si la rom est corrompue, la taille est corrompue et le masque aussi et c'est pour ca que ca n'allait pas, maintenant il faut avoir la possiblité de corriger la rom en ayant dans data un flag isCorrupted et si oui avoir la possibilité de charger la rom en specifiant d'autres tailles.
+     */
+    //std::ifstream ifs("../UnitTestFiles/Fire Emblem Gaiden.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Fire Emblem - Ankoku Ryuu to Hikari no Tsurugi.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Megaman 6.nes", std::ios::binary);// Ok, MMC3 avec chr-ram !
     //std::ifstream ifs("../UnitTestFiles/Metal Gear.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Tom & Jerry.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Time Lord.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Tetris.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Marble Madness.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Pirates!.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Mickey's Safari in Letterland.nes", std::ios::binary);//TODO: probleme avec la barre de statut en bas (MMC3 IRQ ?) : ou peut etre le MMC3 alternatif ? dans nintaco il est marqué MMC3 submapper 3 (normalement oui car cette version lance un irq 4 pixels en retard par rapport au MMC3 normal) : http://forums.nesdev.com/viewtopic.php?f=3&t=15678
+    //std::ifstream ifs("../UnitTestFiles/Mickey Mouse.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Hook.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Hoops.nes", std::ios::binary);
+    
+    //std::ifstream ifs("../UnitTestFiles/Balloon Fight.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Bases Loaded II - Second Season.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Battletoads-Double Dragon.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Burai Fighter.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/G.I. Joe - A Real American Hero.nes", std::ios::binary);
+    std::ifstream ifs("../UnitTestFiles/Galaxian.nes", std::ios::binary);//TODO: ne va pas, voir le mapper : Mapper0 mais 8ko de PRG-ROM alors que le header specifie la prg rom en banque de 16ko !! : ne va tjs pas !!!
+    //std::ifstream ifs("../UnitTestFiles/Galaxian 8Ko PRG.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Low G Man - The Low Gravity Man.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/The Magic of Scheherazade.nes", std::ios::binary);//TODO: ne va pas, a cause du Disk Dude dans le header (MMC1 normalement mais lu comme 0x41), le jeu fonctionne bien si forcé en MMC1
+    //std::ifstream ifs("../UnitTestFiles/Slalom.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Star Trek - 25th Anniversary.nes", std::ios::binary);
+    
 
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/nestest.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/branch_timing_tests/1.Branch_Basics.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring
@@ -634,6 +668,7 @@ int main(int argc, const char * argv[]) {
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/Mapper/mmc3_test_2/rom_singles/5-MMC3.nes", std::ios::binary);  // Mapper4, 32kb de prg-rom, 8kb de chr-rom  // TODO: foire sur 6 (je peux faire passer 6 en changeant la facon de lancer l'irq mais ca fait foirer 5, c'est surement parce que 6 alt teste le mapper3 alternatif : oui)
     //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/bntest/bntest_h.nes", std::ios::binary);//TODO: ne va pas !!! : normal, c'est un test de mapper que je n'ai pas encore implémenté
+    //std::ifstream ifs("../UnitTestFiles/TestROM/Mapper/holydiverbatman-bin-0.01/testroms/M10_P128K_C64K_S8K.nes", std::ios::binary);
     
     //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/allpads.nes", std::ios::binary);  // Ok !
     //std::ifstream ifs("../UnitTestFiles/TestROM/Controller/zapper/zapper_flip.nes", std::ios::binary); // Ok !
