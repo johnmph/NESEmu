@@ -40,7 +40,7 @@ namespace NESEmu { namespace Cartridge { namespace Mapper1 {
         void ppuWritePerformed(TPpuHardwareInterface &ppuHardwareInterface) override;
         
     private:
-        std::size_t getChrRamAddress(uint16_t address);
+        std::size_t getChrMemoryAddress(uint16_t address);
         uint16_t getVramAddress(uint16_t address);
         
         uint8_t _shiftRegister;

@@ -22,15 +22,15 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuReadPerformed(TCpuHa
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
         // If has Prg-Ram
-        if (this->_prgRamSize > 0) {
+        if (this->hasPrgRam()) {
             // Read Prg-Ram with possible mirrored address
-            cpuHardwareInterface.setDataBus(this->_prgRam[address & (this->_prgRamSize - 1)]);
+            cpuHardwareInterface.setDataBus(this->readPrgRam(address));
         }
     }
     // Prg-Rom
     else if (address >= 0x8000) {
         // Read Prg-Rom with possible mirrored address
-        cpuHardwareInterface.setDataBus(this->_prgRom[address & (this->_prgRomSize - 1)]);
+        cpuHardwareInterface.setDataBus(this->readPrgRom(address));
     }
 }
 
@@ -45,16 +45,16 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuWritePerformed(TCpuH
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
         // If has Prg-Ram
-        if (this->_prgRamSize > 0) {
+        if (this->hasPrgRam()) {
             // Write Prg-Ram with possible mirrored address
-            this->_prgRam[address & (this->_prgRamSize - 1)] = data;
+            this->writePrgRam(address, data);
         }
     }
     // Writing to Prg-Rom select the Chr-rom bank
     else if (address >= 0x8000) {
         _chrRomBankSelect = data & 0x3;
         
-        // TODO: rajouter un assert pour etre sur que le bank select ne depasse pas IChrRomSizeInKb
+        // TODO: rajouter un assert pour etre sur que le bank select ne depasse pas IChrRomSizeInKb : non il faut faire le mask mais pas d'assert !!
     }
 }
 
@@ -66,7 +66,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuReadPerformed(TPpuHa
     // Chr-Rom
     if (address < 0x2000) {
         // Read Chr-Rom
-        ppuHardwareInterface.setDataBus(this->_chrRom[((_chrRomBankSelect << 13) | address) & (this->_chrRomSize - 1)]);
+        ppuHardwareInterface.setDataBus(this->readChrRom((_chrRomBankSelect << 13) | address));
     }
     // Internal VRAM (PPU address is always < 0x4000)
     else {

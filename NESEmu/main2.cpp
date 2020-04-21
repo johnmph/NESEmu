@@ -614,12 +614,14 @@ int main(int argc, const char * argv[]) {
     //std::ifstream ifs("../UnitTestFiles/Battletoads-Double Dragon.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Burai Fighter.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/G.I. Joe - A Real American Hero.nes", std::ios::binary);
-    std::ifstream ifs("../UnitTestFiles/Galaxian.nes", std::ios::binary);//TODO: ne va pas, voir le mapper : Mapper0 mais 8ko de PRG-ROM alors que le header specifie la prg rom en banque de 16ko !! : ne va tjs pas !!!
-    //std::ifstream ifs("../UnitTestFiles/Galaxian 8Ko PRG.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Galaxian.nes", std::ios::binary);// Ok car version avec 16kb de PRG
+    //std::ifstream ifs("../UnitTestFiles/Galaxian 8Ko PRG.nes", std::ios::binary);// Pour la version de 8kb, il faut la detecter via un CRC pour avoir la bonne taille car le format ines ne permet d'avoir que des banques de 16kb !!!
     //std::ifstream ifs("../UnitTestFiles/Low G Man - The Low Gravity Man.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/The Magic of Scheherazade.nes", std::ios::binary);//TODO: ne va pas, a cause du Disk Dude dans le header (MMC1 normalement mais lu comme 0x41), le jeu fonctionne bien si forcé en MMC1
     //std::ifstream ifs("../UnitTestFiles/Slalom.nes", std::ios::binary);
     //std::ifstream ifs("../UnitTestFiles/Star Trek - 25th Anniversary.nes", std::ios::binary);
+    //std::ifstream ifs("../UnitTestFiles/Castlevania 2.nes", std::ios::binary);
+    std::ifstream ifs("../UnitTestFiles/Castlevania 3.nes", std::ios::binary);
     
 
     //std::ifstream ifs("../UnitTestFiles/TestROM/CPU/nestest.nes", std::ios::binary);  // Mapper0, 16kb de prg-rom, horizontal mirroring

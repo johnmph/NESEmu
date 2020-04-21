@@ -72,12 +72,12 @@ std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> Factory
             cartridge = std::make_unique<Mapper4::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), data.prgRamSize, std::move(data.chrRom), data.chrRamSize, data.mirroringType);
         }
         break;
-        /*
+        
         case Model::MMC5 : {
-            
+            cartridge = std::make_unique<Mapper5::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), data.prgRamSize, std::move(data.chrRom), data.chrRamSize);
         }
         break;
-        
+        /*
         case Model::FFE : {
             
         }

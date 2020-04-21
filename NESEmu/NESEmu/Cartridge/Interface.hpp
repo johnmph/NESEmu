@@ -37,6 +37,24 @@ namespace NESEmu { namespace Cartridge {
         virtual void ppuWritePerformed(TPpuHardwareInterface &ppuHardwareInterface) = 0;
         
     protected:
+        
+        bool hasPrgRam() const;
+        bool hasChrRam() const;
+        
+        std::size_t getPrgRomSize() const;
+        std::size_t getPrgRamSize() const;
+        std::size_t getChrRomSize() const;
+        std::size_t getChrRamSize() const;
+        
+        uint8_t readPrgRom(uint16_t address) const;
+        uint8_t readPrgRam(uint16_t address) const;
+        void writePrgRam(uint16_t address, uint8_t data);
+        uint8_t readChrRom(uint16_t address) const;
+        uint8_t readChrRam(uint16_t address) const;
+        void writeChrRam(uint16_t address, uint8_t data);
+        
+    private:
+        
         std::vector<uint8_t> const _prgRom;
         std::vector<uint8_t> _prgRam;
         std::vector<uint8_t> const _chrRom;

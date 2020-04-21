@@ -18,6 +18,7 @@
 #include "Mapper2.hpp"
 #include "Mapper3.hpp"
 #include "Mapper4.hpp"
+#include "Mapper5.hpp"
 #include "Mapper7.hpp"
 #include "Mapper9.hpp"
 #include "Mapper10.hpp"

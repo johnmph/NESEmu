@@ -27,9 +27,9 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::cpuReadPerforme
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
         // If has Prg-Ram and enabled
-        if ((this->_prgRamSize > 0) && ((_internalRegisters[3] & 0x10) == 0x0)) {
+        if ((this->hasPrgRam()) && ((_internalRegisters[3] & 0x10) == 0x0)) {
             // Read Prg-Ram with possible mirrored address
-            cpuHardwareInterface.setDataBus(this->_prgRam[address & (this->_prgRamSize - 1)]);
+            cpuHardwareInterface.setDataBus(this->readPrgRam(address));
         }
     }
     // Prg-Rom
@@ -51,11 +51,11 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::cpuReadPerforme
         // First 16kb switch
         else {
             mask = 0x3FFF;
-            bank = (address < 0xC000) ? _internalRegisters[3] : ((this->_prgRomSize >> 14) - 1);
+            bank = (address < 0xC000) ? _internalRegisters[3] : ((this->getPrgRomSize() >> 14) - 1);
         }
         
         // Read Prg-Rom
-        cpuHardwareInterface.setDataBus(this->_prgRom[((bank << 14) | (address & mask)) & (this->_prgRomSize - 1)]);
+        cpuHardwareInterface.setDataBus(this->readPrgRom((bank << 14) | (address & mask)));
     }
     
     // A read is performed so we reset the _lastCycleWasWrite flag
@@ -73,9 +73,9 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::cpuWritePerform
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
         // If has Prg-Ram and enabled
-        if ((this->_prgRamSize > 0) && ((_internalRegisters[3] & 0x10) == 0x0)) {
+        if ((this->hasPrgRam()) && ((_internalRegisters[3] & 0x10) == 0x0)) {
             // Write Prg-Ram with possible mirrored address
-            this->_prgRam[address & (this->_prgRamSize - 1)] = data;
+            this->writePrgRam(address, data);
         }
     }
     // If we write to rom and if it's the first write of consecutives writes
@@ -116,7 +116,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::ppuReadPerforme
     // Chr-Rom / Ram
     if (address < 0x2000) {
         // Read Chr-Rom / Ram
-        ppuHardwareInterface.setDataBus((this->_chrRamSize > 0) ? this->_chrRam[getChrRamAddress(address) & (this->_chrRamSize - 1)] : this->_chrRom[getChrRamAddress(address) & (this->_chrRomSize - 1)]);
+        ppuHardwareInterface.setDataBus((this->hasChrRam()) ? this->readChrRam(getChrMemoryAddress(address)) : this->readChrRom(getChrMemoryAddress(address)));
     }
     // Internal VRAM (PPU address is always < 0x4000)
     else {
@@ -136,8 +136,8 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::ppuWritePerform
     // Chr-Ram
     if (address < 0x2000) {
         // Write Chr-Ram if exist
-        if (this->_chrRamSize > 0) {
-            this->_chrRam[getChrRamAddress(address) & (this->_chrRamSize - 1)] = data;
+        if (this->hasChrRam()) {
+            this->writeChrRam(getChrMemoryAddress(address), data);
         }
     }
     // Internal VRAM (PPU address is always < 0x4000)
@@ -148,7 +148,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::ppuWritePerform
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface, Model EModel>
-std::size_t Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::getChrRamAddress(uint16_t address) {
+std::size_t Chip<TCpuHardwareInterface, TPpuHardwareInterface, EModel>::getChrMemoryAddress(uint16_t address) {
     uint16_t mask;
     uint8_t bank;
     

@@ -22,7 +22,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuReadPerformed(TCpuHa
     // Prg-Rom
     if (address >= 0x8000) {
         // Read Prg-Rom selected bank
-        cpuHardwareInterface.setDataBus(this->_prgRom[((_prgRomBankSelect << 15) | (address & 0x7FFF)) & (this->_prgRomSize - 1)]);
+        cpuHardwareInterface.setDataBus(this->readPrgRom((_prgRomBankSelect << 15) | (address & 0x7FFF)));
     }
 }
 
@@ -49,7 +49,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuReadPerformed(TPpuHa
     // Chr-Ram
     if (address < 0x2000) {
         // Read Chr-Ram
-        ppuHardwareInterface.setDataBus(this->_chrRam[address & (this->_chrRamSize - 1)]);
+        ppuHardwareInterface.setDataBus(this->readChrRam(address));
     }
     // Internal VRAM (PPU address is always < 0x4000)
     else {
@@ -69,7 +69,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuWritePerformed(TPpuH
     // Chr-Ram
     if (address < 0x2000) {
         // Write Chr-Ram
-        this->_chrRam[address & (this->_chrRamSize - 1)] = data;
+        this->writeChrRam(address, data);
     }
     // Internal VRAM (PPU address is always < 0x4000)
     else {

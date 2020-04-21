@@ -26,20 +26,20 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuReadPerformed(TCpuHa
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
         // If has Prg-Ram
-        if (this->_prgRamSize > 0) {
+        if (this->hasPrgRam()) {
             // Read Prg-Ram with possible mirrored address
-            cpuHardwareInterface.setDataBus(this->_prgRam[address & (this->_prgRamSize - 1)]);
+            cpuHardwareInterface.setDataBus(this->readPrgRam(address));
         }
     }
     // Prg-Rom (first bank)
     else if ((address >= 0x8000) && (address < 0xA000)) {
         // Read Prg-Rom selected bank
-        cpuHardwareInterface.setDataBus(this->_prgRom[((_prgRomBankSelect << 13) | (address & 0x1FFF)) & (this->_prgRomSize - 1)]);
+        cpuHardwareInterface.setDataBus(this->readPrgRom((_prgRomBankSelect << 13) | (address & 0x1FFF)));
     }
     // Prg-Rom (3 last banks)
     else if (address >= 0xA000) {
         // Read 3 last Prg-Rom banks
-        cpuHardwareInterface.setDataBus(this->_prgRom[(this->_prgRomSize - (24 * 1024)) + (address - 0xA000)]);
+        cpuHardwareInterface.setDataBus(this->readPrgRom((this->getPrgRomSize() - (24 * 1024)) + (address - 0xA000)));
     }
 }
 
@@ -54,9 +54,9 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuWritePerformed(TCpuH
     // Prg-Ram
     if ((address >= 0x6000) && (address < 0x8000)) {
         // If has Prg-Ram
-        if (this->_prgRamSize > 0) {
+        if (this->hasPrgRam()) {
             // Write Prg-Ram with possible mirrored address
-            this->_prgRam[address & (this->_prgRamSize - 1)] = data;
+            this->writePrgRam(address, data);
         }
     }
     // Prg ROM Bank select
@@ -81,7 +81,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuReadPerformed(TPpuHa
     // Chr-Rom first bank
     if (address < 0x1000) {
         // Read Chr-Rom
-        ppuHardwareInterface.setDataBus(this->_chrRom[((_chrRomBankSelect[_chrRomLatch[0]] << 12) | address) & (this->_chrRomSize - 1)]);
+        ppuHardwareInterface.setDataBus(this->readChrRom((_chrRomBankSelect[_chrRomLatch[0]] << 12) | address));
         
         // Check for latch 0
         if (address == 0xFD8) {
@@ -94,7 +94,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuReadPerformed(TPpuHa
     // Chr-Rom second bank
     else if (address < 0x2000) {
         // Read Chr-Rom
-        ppuHardwareInterface.setDataBus(this->_chrRom[((_chrRomBankSelect[0x2 | _chrRomLatch[1]] << 12) | (address & 0xFFF)) & (this->_chrRomSize - 1)]);
+        ppuHardwareInterface.setDataBus(this->readChrRom((_chrRomBankSelect[0x2 | _chrRomLatch[1]] << 12) | (address & 0xFFF)));
         
         // Check for latch 1
         if ((address & 0x1FF8) == 0x1FD8) {
