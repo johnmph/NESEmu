@@ -46,12 +46,12 @@ namespace NESEmu { namespace Cartridge {
         std::size_t getChrRomSize() const;
         std::size_t getChrRamSize() const;
         
-        uint8_t readPrgRom(uint16_t address) const;
-        uint8_t readPrgRam(uint16_t address) const;
-        void writePrgRam(uint16_t address, uint8_t data);
-        uint8_t readChrRom(uint16_t address) const;
-        uint8_t readChrRam(uint16_t address) const;
-        void writeChrRam(uint16_t address, uint8_t data);
+        uint8_t readPrgRom(std::size_t address) const;
+        uint8_t readPrgRam(std::size_t address) const;
+        void writePrgRam(std::size_t address, uint8_t data);
+        uint8_t readChrRom(std::size_t address) const;
+        uint8_t readChrRam(std::size_t address) const;
+        void writeChrRam(std::size_t address, uint8_t data);
         
     private:
         

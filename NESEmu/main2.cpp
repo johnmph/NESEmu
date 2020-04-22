@@ -19,7 +19,7 @@
 #include "NESEmu/Controller/Standard.hpp"
 #include "NESEmu/Controller/Zapper.hpp"
 
-
+// TODO: voir pour l'optimisation, mesen tourne a 512 fps sur le MSI, NESEmu tourne a 205 (en x64) :(
 template <class TFrameListener>
 struct GraphicManager {
     

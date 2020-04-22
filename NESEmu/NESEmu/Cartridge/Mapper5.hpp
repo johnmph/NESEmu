@@ -20,7 +20,7 @@ namespace NESEmu { namespace Cartridge { namespace Mapper5 {
     template <class TCpuHardwareInterface, class TPpuHardwareInterface>
     struct Chip : Interface<TCpuHardwareInterface, TPpuHardwareInterface> {
         
-        Chip(std::vector<uint8_t> prgRom, std::size_t prgRamSize, std::vector<uint8_t> chrRom, std::size_t chrRamSize);
+        Chip(std::vector<uint8_t> prgRom, std::size_t prgRamSize, uint8_t prgRamChipCount, std::vector<uint8_t> chrRom, std::size_t chrRamSize);
         
         void clock(TCpuHardwareInterface &cpuHardwareInterface, TPpuHardwareInterface &ppuHardwareInterface) override;
         
@@ -34,10 +34,13 @@ namespace NESEmu { namespace Cartridge { namespace Mapper5 {
         
     private:
         
-        uint16_t getVramAddress(uint16_t address);
-        void processIrqCounter(TCpuHardwareInterface &cpuHardwareInterface, bool a12);
+        bool is8x16SpriteMode() const;
+        void processScanlineDetection(uint16_t address);
+        void checkPPUIsRendering();
+        void checkInterrupt(TCpuHardwareInterface &cpuHardwareInterface);
         
-        bool const _prgRamHasTwoChips;
+        std::size_t const _prgRamChipSize;
+        uint8_t const _prgRamChipCount;
         
         std::vector<uint8_t> _ram;
         uint8_t _prgMode;
@@ -57,13 +60,22 @@ namespace NESEmu { namespace Cartridge { namespace Mapper5 {
         uint8_t _verticalSplitScroll;
         uint8_t _verticalSplitBank;
         uint8_t _scanlineIrqCompareValue;
-        bool _scanlineIrqEnable;
+        bool _scanlineIrqEnabled;
         bool _scanlineIrqPending;
         bool _inFrame;
         uint8_t _8BitMultiplicand;
         uint8_t _8BitMultiplier;
+        bool _lastWrittenChrRegisterIsBackgroundSet;
+        
+        uint16_t _lastPPUReadAddress;
+        uint8_t _ppuReadAddressConsecutiveCounter;
+        uint8_t _scanlineCounter;
+        uint8_t _cpuWithoutPPUReadCycleCounter;
+        bool _ppuIsReading;
         
         // TODO: il reste le timer, la detection d'irq, ...
+        
+        // TODO: avoir un tableau constant de mask pour le PRG-RAM qui selon le nombre de chip et leur taille va determiner des masks pour les 8 valeurs des bits 0, 1 et 2 du registre courant. Si le mask == 0 alors open bus !
     };
     
     #include "Mapper5_s.hpp"

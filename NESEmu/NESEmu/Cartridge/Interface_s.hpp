@@ -63,32 +63,32 @@ std::size_t Interface<TCpuHardwareInterface, TPpuHardwareInterface>::getChrRamSi
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-uint8_t Interface<TCpuHardwareInterface, TPpuHardwareInterface>::readPrgRom(uint16_t address) const {
+uint8_t Interface<TCpuHardwareInterface, TPpuHardwareInterface>::readPrgRom(std::size_t address) const {
     return _prgRom[address & (_prgRomSize - 1)];
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-uint8_t Interface<TCpuHardwareInterface, TPpuHardwareInterface>::readPrgRam(uint16_t address) const {
+uint8_t Interface<TCpuHardwareInterface, TPpuHardwareInterface>::readPrgRam(std::size_t address) const {
     return _prgRam[address & (_prgRamSize - 1)];
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-void Interface<TCpuHardwareInterface, TPpuHardwareInterface>::writePrgRam(uint16_t address, uint8_t data) {
+void Interface<TCpuHardwareInterface, TPpuHardwareInterface>::writePrgRam(std::size_t address, uint8_t data) {
     _prgRam[address & (_prgRamSize - 1)] = data;
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-uint8_t Interface<TCpuHardwareInterface, TPpuHardwareInterface>::readChrRom(uint16_t address) const {
+uint8_t Interface<TCpuHardwareInterface, TPpuHardwareInterface>::readChrRom(std::size_t address) const {
     return _chrRom[address & (_chrRomSize - 1)];
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-uint8_t Interface<TCpuHardwareInterface, TPpuHardwareInterface>::readChrRam(uint16_t address) const {
+uint8_t Interface<TCpuHardwareInterface, TPpuHardwareInterface>::readChrRam(std::size_t address) const {
     return _chrRam[address & (_chrRamSize - 1)];
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-void Interface<TCpuHardwareInterface, TPpuHardwareInterface>::writeChrRam(uint16_t address, uint8_t data) {
+void Interface<TCpuHardwareInterface, TPpuHardwareInterface>::writeChrRam(std::size_t address, uint8_t data) {
     _chrRam[address & (_chrRamSize - 1)] = data;
 }
 

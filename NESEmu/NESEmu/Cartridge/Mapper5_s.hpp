@@ -11,13 +11,18 @@
 
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-Chip<TCpuHardwareInterface, TPpuHardwareInterface>::Chip(std::vector<uint8_t> prgRom, std::size_t prgRamSize, std::vector<uint8_t> chrRom, std::size_t chrRamSize) : Interface<TCpuHardwareInterface, TPpuHardwareInterface>(std::move(prgRom), prgRamSize, std::move(chrRom), chrRamSize), _prgRamHasTwoChips((prgRamSize == (16 * 1024)) || (prgRamSize == (64 * 1024))), _ram(1 * 1024), _prgMode(0x3), _prgRamProtect(0), _scanlineIrqPending(false), _inFrame(false), _8BitMultiplicand(0xFF), _8BitMultiplier(0xFF) {
+Chip<TCpuHardwareInterface, TPpuHardwareInterface>::Chip(std::vector<uint8_t> prgRom, std::size_t prgRamSize, uint8_t prgRamChipCount, std::vector<uint8_t> chrRom, std::size_t chrRamSize) : Interface<TCpuHardwareInterface, TPpuHardwareInterface>(std::move(prgRom), prgRamSize, std::move(chrRom), chrRamSize), _prgRamChipSize(prgRamSize / prgRamChipCount), _prgRamChipCount(prgRamChipCount), _ram(1 * 1024), _prgMode(0x3), _prgRamProtect(0), _scanlineIrqPending(false), _inFrame(false), _8BitMultiplicand(0xFF), _8BitMultiplier(0xFF) {
     _prgBankSwitch[4] = 0xFF;
     //TODO: voir pour le reste
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
 void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::clock(TCpuHardwareInterface &cpuHardwareInterface, TPpuHardwareInterface &ppuHardwareInterface) {
+    // Check if PPU is rendering
+    checkPPUIsRendering();
+    
+    // Check interrupt
+    checkInterrupt(cpuHardwareInterface);   // TODO: voir si ici, ou ici et aussi en processScanlineCounter
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
@@ -50,16 +55,21 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuReadPerformed(TCpuHa
         cpuHardwareInterface.setDataBus(result >> 8);
     }
     // Prg-Ram
-    else if ((address >= 0x6000) && (address < 0x8000)) {
-        // If has Prg-Ram
-        if (this->hasPrgRam()) {
+    else if ((address >= 0x6000) && (address < 0x8000)) {//TODO: voir pour le bit A15 et A16 !!!
+        // Get second chip bit
+        bool secondChip = ((_prgBankSwitch[0] >> 2) & 0x1) != 0;
+        
+        // If has Prg-Ram and not in second chip if it has less than two chips
+        if (this->hasPrgRam() && (!(secondChip && (_prgRamChipCount < 2)))) {
+            uint32_t chipMask = _prgRamChipSize - 1;
+            uint32_t chipAddress = (((_prgBankSwitch[0] & 0xF) << 13) | (address & 0x1FFF)) & chipMask;
+            
             // Read Prg-Ram
-            //TODO: a voir : _prgBankSwitch[0] & 0x7F
-            cpuHardwareInterface.setDataBus(this->readPrgRam(address));//TODO: a faire
+            cpuHardwareInterface.setDataBus(this->readPrgRam(chipAddress | (_prgRamChipSize * secondChip)));
         }
     }
     // Prg-Rom
-    else if (address >= 0x8000) {//TODO: il faut gerer le bit 7 (RAM/ROM) mais qu'est ce que c'est exactement ?
+    else if (address >= 0x8000) {//TODO: il faut gerer le bit 7 (RAM/ROM) mais qu'est ce que c'est exactement ? : c'est pour PRG-ROM <-> PRG-RAM !
         // Mode 0 (1 x 32kb bank)
         if (_prgMode == 0x0) {
             // Read Prg-Rom
@@ -67,13 +77,43 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuReadPerformed(TCpuHa
         }
         // Mode 1 (2 x 16kb banks) or Mode 2 (first 16kb bank)
         else if ((_prgMode == 0x1) || ((_prgMode == 0x2) && (address < 0xC000))) {
+            uint8_t bankRegisterNumber = 2 << ((address >> 14) & 0x1);
+            bool isPrgRam = (_prgBankSwitch[bankRegisterNumber] & 0x80) != 0;
+            
+            // Read Prg-Ram
+            if (isPrgRam) {
+                cpuHardwareInterface.setDataBus(this->readPrgRam(((_prgBankSwitch[bankRegisterNumber] & 0xC) << 13) | (address & 0x3FFF)));
+            }
             // Read Prg-Rom
-            cpuHardwareInterface.setDataBus(this->readPrgRom(((_prgBankSwitch[2 << ((address >> 14) & 0x1)] & 0x7C) << 13) | (address & 0x3FFF)));
+            else {
+                cpuHardwareInterface.setDataBus(this->readPrgRom(((_prgBankSwitch[bankRegisterNumber] & 0x7C) << 13) | (address & 0x3FFF)));
+            }
         }
         // Mode 2 (first and second 8kb banks) or Mode 3 (4 x 8kb banks)
         else if (((_prgMode == 0x2) && (address >= 0xC000)) || (_prgMode == 0x3)) {
+            uint8_t bankRegisterNumber = 1 + ((address >> 13) & 0x3);
+            bool isPrgRam = (_prgBankSwitch[bankRegisterNumber] & 0x80) != 0;
+            
+            // Read Prg-Ram
+            if (isPrgRam) {
+                cpuHardwareInterface.setDataBus(this->readPrgRam(((_prgBankSwitch[bankRegisterNumber] & 0xF) << 13) | (address & 0x1FFF)));
+            }
             // Read Prg-Rom
-            cpuHardwareInterface.setDataBus(this->readPrgRom((_prgBankSwitch[1 + ((address >> 13) & 0x3)] << 13) | (address & 0x1FFF)));
+            else {
+                cpuHardwareInterface.setDataBus(this->readPrgRom((_prgBankSwitch[bankRegisterNumber] << 13) | (address & 0x1FFF)));
+            }
+        }
+        
+        // If read for NMI vector
+        if ((address == 0xFFFA) || (address == 0xFFFB)) {//TODO: ca doit faire ca aussi quand le 241eme scanline est detecté mais comment ?
+            // Reset scanline counter
+            _scanlineCounter = 0;
+            
+            // Clear in frame flag
+            _inFrame = false;
+            
+            // Clear scanline IRQ pending flag
+            _scanlineIrqPending = false;    // TODO: ca doit etre fait aussi si le scanline 0 est detecté mais comment ?
         }
     }
 }
@@ -134,6 +174,8 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuWritePerformed(TCpuH
     // CHR Bankswitching
     else if ((address >= 0x5120) && (address < 0x512C)) {
         _chrBankSwitch[address - 0x5120] = data;
+        
+        _lastWrittenChrRegisterIsBackgroundSet = (address >= 0x5128);   // TODO: pour le chr bank quand PPU read/write 2007 mais comment on sait ca ici (que l'acces au chr bank est pour un read/write 2007) ??? via le last cpu read/write address ?
     }
     // Upper CHR Bank bits
     else if (address == 0x5130) {
@@ -157,7 +199,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuWritePerformed(TCpuH
     }
     // Scanline IRQ Enable
     else if (address == 0x5204) {
-        _scanlineIrqEnable = (data & 0x80) != 0;
+        _scanlineIrqEnabled = (data & 0x80) != 0;
     }
     // 8-bit Unsigned Multiplicand
     else if (address == 0x5205) {
@@ -175,128 +217,29 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuWritePerformed(TCpuH
             this->writePrgRam(address, data);
         }
     }
-    // Bank select / data
-    /*else if ((address >= 0x8000) && (address < 0xA000)) {
-        // Bank select
-        if ((address & 0x1) == 0x0) {
-            _bankRegisterSelect = data & 0x7;
-            _prgRomBankMode = (data & 0x40) != 0x0;
-            _chrRomBankMode = (data & 0x80) != 0x0;
-        }
-        // Bank data
-        else {
-            // Only upper 7 bits for R0/R1
-            if (_bankRegisterSelect < 2) {
-                data &= 0xFE;
-            }
-            // Only lower 6 bits for R6/R7
-            else if (_bankRegisterSelect >= 6) {
-                data &= 0x3F;
-            }
-            
-            // Set register
-            _bankSelect[_bankRegisterSelect] = data;
-        }
-    }
-    // Mirroring / Prg-Ram
-    else if ((address >= 0xA000) && (address < 0xC000)) {
-        // Nametable mirroring
-        if ((address & 0x1) == 0x0) {
-            _nametableMirroring = (data & 0x1) != 0x0;
-        }
-        // Prg-Ram protect
-        else {
-            _prgRamWriteProtection = (data & 0x40) != 0x0;
-            _prgRamChipEnable = (data & 0x80) != 0x0;
-        }
-    }
-    // IRQ latch / reload
-    else if ((address >= 0xC000) && (address < 0xE000)) {
-        // IRQ latch
-        if ((address & 0x1) == 0x0) {
-            _irqLatch = data;
-        }
-        // IRQ reload
-        else {
-            _irqReload = true;
-        }
-    }
-    // IRQ disable / enable
-    else if (address >= 0xE000) {
-        _irqEnable = (address & 0x1) != 0x0;
-        
-        // Put the irq line high if disabled
-        if (!_irqEnable) {
-            cpuHardwareInterface.irq(true);
-        }
-    }*/
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
 void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuReadPerformed(TPpuHardwareInterface &ppuHardwareInterface) {
-    /*// Get address
+    // Get address
     uint16_t address = ppuHardwareInterface.getAddressBus();
     
     // Chr-Rom
     if (address < 0x2000) {
-        if (this->_chrRamSize > 0) {
-            // Read Chr-Ram
-            ppuHardwareInterface.setDataBus(this->_chrRam[address & (this->_chrRamSize - 1)]);//TODO: voir si chr-ram est comme chr-rom (banked)
-        } else {
-            uint16_t mask;
-            uint8_t bank;
-            
-            if (address < 0x800) {
-                if (_chrRomBankMode) {
-                    bank = _bankSelect[2 + ((address >> 10) & 0x1)];
-                    mask = 0x3FF;
-                } else {
-                    bank = _bankSelect[0];
-                    mask = 0x7FF;
-                }
-            }
-            else if (address < 0x1000) {
-                if (_chrRomBankMode) {
-                    bank = _bankSelect[4 + ((address >> 10) & 0x1)];
-                    mask = 0x3FF;
-                } else {
-                    bank = _bankSelect[1];
-                    mask = 0x7FF;
-                }
-            }
-            else if (address < 0x1800) {
-                if (_chrRomBankMode) {
-                    bank = _bankSelect[0];
-                    mask = 0x7FF;
-                } else {
-                    bank = _bankSelect[2 + ((address >> 10) & 0x1)];
-                    mask = 0x3FF;
-                }
-            }
-            else {
-                if (_chrRomBankMode) {
-                    bank = _bankSelect[1];
-                    mask = 0x7FF;
-                } else {
-                    bank = _bankSelect[4 + ((address >> 10) & 0x1)];
-                    mask = 0x3FF;
-                }
-            }
-            
-            // Read Chr-Rom
-            ppuHardwareInterface.setDataBus(this->_chrRom[((bank << 10) | (address & mask)) & (this->_chrRomSize - 1)]);
-        }
     }
     // Internal VRAM (PPU address is always < 0x4000)
     else {
+        // Process scanline detection
+        processScanlineDetection(address);
+        
         // Read VRAM with mirrored address
         ppuHardwareInterface.setDataBus(ppuHardwareInterface.getVram()[getVramAddress(address)]);
-    }*/
+    }
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
 void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuWritePerformed(TPpuHardwareInterface &ppuHardwareInterface) {
-    /*// Get address
+    // Get address
     uint16_t address = ppuHardwareInterface.getAddressBus();
     
     // Get data
@@ -313,43 +256,97 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuWritePerformed(TPpuH
     else {
         // Write VRAM with mirrored address
         ppuHardwareInterface.getVram()[getVramAddress(address)] = data;
-    }*/
-}
-
-template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-uint16_t Chip<TCpuHardwareInterface, TPpuHardwareInterface>::getVramAddress(uint16_t address) {
-    /*// If hardwired four screen
-    if (_mirroringType == MirroringType::FourScreen) {
-        return getMirroredAddress<MirroringType::FourScreen>(address);
     }
-    
-    // Depend of mirroring register
-     return (_nametableMirroring) ? getMirroredAddress<MirroringType::Horizontal>(address) : getMirroredAddress<MirroringType::Vertical>(address);*/return 0;
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::processIrqCounter(TCpuHardwareInterface &cpuHardwareInterface, bool a12) {
-    /*// Save A12 and filter it (only clock if A12 is high and was low for at least 3 CPU cycles before)
-    bool savedLastA12 = _lastA12 != 0;
-    _lastA12 = (a12 << 3) | (_lastA12 >> 1);//TODO: j'ai du rajouter une etape au filtre pour que la rom de test passe !!!
+bool Chip<TCpuHardwareInterface, TPpuHardwareInterface>::is8x16SpriteMode() const {
+    return _ppu2000Bit5 && (_ppu2001Bit3 || _ppu2001Bit4);
+}
+
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::processScanlineDetection(uint16_t address) {
+    // Set PPU is reading flag
+    _ppuIsReading = true;
     
-    // Check if IRQ clocked
-    if (!(a12 && (!savedLastA12))) {
+    // Get last PPU read address
+    uint16_t lastAddress = _lastPPUReadAddress;
+    
+    // Save current address as last PPU read address
+    _lastPPUReadAddress = lastAddress;
+    
+    // If address doesn't match last read address or if it is not a PPU nametable fetch (Here the address can't be less than 0x2000, so we need to check only if greater than 0x2FFF)
+    if ((address != lastAddress) || (address >= 0x3000)) {
+        // Reset counter
+        _ppuReadAddressConsecutiveCounter = 0;
+        
+        // Exit
         return;
     }
     
-    // Decrement counter or reload it if zero or forced
-    if ((_irqCounter > 0) && (!_irqReload)) {
-        --_irqCounter;
-    } else {
-        _irqCounter = _irqLatch;
-        _irqReload = false;
+    // Increment counter
+    ++_ppuReadAddressConsecutiveCounter;
+    
+    // If three consecutive read on same address (counter equals 2 because we start to count after first read)
+    if (_ppuReadAddressConsecutiveCounter == 2) {
+        // Not the first scanline
+        if (_inFrame) {
+            // Increment scanline counter
+            ++_scanlineCounter;
+            
+            // If reached the compare value
+            if (_scanlineCounter == _scanlineIrqCompareValue) {
+                // Set scanline IRQ pending flag
+                _scanlineIrqPending = true;
+            }
+        }
+        // First scanline
+        else {
+            // Reset scanline counter
+            _scanlineCounter = 0;
+            
+            // Set in frame flag
+            _inFrame = true;
+        }
+    }
+}
+
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::checkPPUIsRendering() {
+    // If PPU read value
+    if (_ppuIsReading) {
+        // Reset CPU cycle counter
+        _cpuWithoutPPUReadCycleCounter = 0;
+        
+        // Clear PPU read flag
+        _ppuIsReading = false;
+        
+        // Exit
+        return;
     }
     
-    // Generate an IRQ if needed
-    if (_irqEnable && (_irqCounter == 0)) {
-        cpuHardwareInterface.irq(false);
-    }*/
+    // Increment CPU cycle counter
+    ++_cpuWithoutPPUReadCycleCounter;
+    
+    // If reached 3 CPU cycle without PPU read
+    if (_cpuWithoutPPUReadCycleCounter == 3) {  // TODO: il peut faire un overflow et refaire ca mais ce n'est pas grave vu qu'il va reset le inFrame qui doit etre deja a false (une fois qu'il est a true, _ppuIsReading sera a true aussi et on ne sera pas ici) mais a voir quand meme
+        // Clear in frame flag
+        _inFrame = false;
+        
+        // TODO: reset le irq ici aussi ??? mais alors faire attention au commentaire ci dessus
+    }
+}
+
+template <class TCpuHardwareInterface, class TPpuHardwareInterface>
+void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::checkInterrupt(TCpuHardwareInterface &cpuHardwareInterface) {
+    // Check scanline IRQ
+    bool scanlineIrq = _scanlineIrqPending && _scanlineIrqEnabled;
+    
+    // Check timer IRQ
+    bool timerIrq = false;//TODO: a terminer
+    
+    // Set IRQ signal on CPU (inverted signal)
+    cpuHardwareInterface.irq(!(scanlineIrq || timerIrq));
 }
 
 #endif /* NESEmu_Cartridge_Mapper5_s_hpp */

@@ -55,7 +55,7 @@ namespace NESEmu { namespace Cartridge { namespace Loader {
         data.mapperModel = mapperModels[(flags[7] & 0xF0) | (flags[6] >> 4)];//TODO: gerer si le mapper n'est pas dans l'array ! : pas besoin si on les mets tous dans l'array (256)
         
         // Exit header and trainer if present
-        istream.seekg(16 + ((hasTrainer) ? 512 : 0), std::ios::seekdir::beg);
+        istream.seekg(16 + ((hasTrainer) ? 512 : 0), std::ios::beg);
         
         // Read prg-rom
         unsigned int prgRomSize = flags[4] * 16 * 1024;
