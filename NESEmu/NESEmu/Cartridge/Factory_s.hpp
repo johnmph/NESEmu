@@ -74,7 +74,7 @@ std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> Factory
         break;
         
         case Model::MMC5 : {
-            cartridge = std::make_unique<Mapper5::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), data.prgRamSize, std::move(data.chrRom), data.chrRamSize);
+            cartridge = std::make_unique<Mapper5::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), /*data.prgRamSize*/64*1024, 1, std::move(data.chrRom), data.chrRamSize);//TODO: a changer mais comment savoir la taille dans ines (mais ce n'est pas a gerer ici (il suffit de mettre un member prgRamChipCount en + dans data et de setter ces informations dans INes))
         }
         break;
         /*

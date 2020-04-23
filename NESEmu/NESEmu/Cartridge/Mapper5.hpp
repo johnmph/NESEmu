@@ -22,6 +22,7 @@ namespace NESEmu { namespace Cartridge { namespace Mapper5 {
         
         Chip(std::vector<uint8_t> prgRom, std::size_t prgRamSize, uint8_t prgRamChipCount, std::vector<uint8_t> chrRom, std::size_t chrRamSize);
         
+        // TODO: il faudra rajouter une methode virtual dans Interface reset et ici l'overrider (il n'est pas vraiment au courant du reset via un signal envoyé mais par une absence de signal M2 pendant un certain temps mais bon ici on le fera comme ca
         void clock(TCpuHardwareInterface &cpuHardwareInterface, TPpuHardwareInterface &ppuHardwareInterface) override;
         
         // Cpu memory bus
@@ -35,6 +36,7 @@ namespace NESEmu { namespace Cartridge { namespace Mapper5 {
     private:
         
         bool is8x16SpriteMode() const;
+        bool isPPUFetchSpriteData() const;
         void processScanlineDetection(uint16_t address);
         void checkPPUIsRendering();
         void checkInterrupt(TCpuHardwareInterface &cpuHardwareInterface);
@@ -72,6 +74,8 @@ namespace NESEmu { namespace Cartridge { namespace Mapper5 {
         uint8_t _scanlineCounter;
         uint8_t _cpuWithoutPPUReadCycleCounter;
         bool _ppuIsReading;
+        
+        uint8_t _ppuFetchCounter;  // TODO : voir si uint8_t est suffisant : normalement oui car normalement 170 fetch du ppu par scanline
         
         // TODO: il reste le timer, la detection d'irq, ...
         
