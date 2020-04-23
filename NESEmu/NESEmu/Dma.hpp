@@ -10,6 +10,7 @@
 #define NESEmu_Dma_hpp
 
 #include <cstdint>
+#include <cassert>
 
 
 namespace NESEmu { namespace Cpu {

@@ -11,6 +11,7 @@
 
 #include <memory>
 #include <vector>
+#include <cassert>
 #include "Loader/Interface.hpp"
 #include "Nothing.hpp"
 #include "Mapper0.hpp"

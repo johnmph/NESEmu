@@ -13,6 +13,7 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
+#include <cassert>
 #include "Cpu.hpp"
 #include "Ppu.hpp"
 #include "Cartridge/Nothing.hpp"
