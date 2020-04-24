@@ -45,5 +45,16 @@ NESEmu is a NES emulator written in C++ with these goals in mind (and in order) 
 
 3) Try to be with the less bug possible :
 
-- It has unit test cases to cover the majority of the CPU, PPU and DMA code
+- It has unit test cases to cover the majority of the CPU, PPU and DMA code by using the visual tools log files
 - It uses the modern C++ tools to reduce errors like memory leak, double free or pointer dangling (uses smart pointer)
+
+
+But NESEmu is in early development :
+
+- It has only a few mapper
+- It emulates only the NTSC NES (2A03 + 2C02)
+- It has only two controllers types (standard and zapper)
+- It doesn't emulate the NTSC signal, it uses palette data to provide colors
+- It doesn't emulate the Famicom Disk System
+- Except the main.cpp example provided, there is no code to manage the outside of the emulator (save state, options like graphic / audio / controllers, cheat code, debugger, ...)
+- And many more ... but all of this will be fixed on future development
