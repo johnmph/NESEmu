@@ -53,6 +53,7 @@ NESEmu is a NES emulator written in C++ with these goals in mind (and in order) 
 
 But NESEmu is in early development :
 
+- It is not very optmized (only run at +-205 FPS on my computer when other emulator run at +500FPS)
 - It has only a few mapper
 - It emulates only the NTSC NES (2A03 + 2C02)
 - It has only two controllers types (standard and zapper)
