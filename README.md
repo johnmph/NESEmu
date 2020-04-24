@@ -60,3 +60,14 @@ But NESEmu is in early development :
 - It doesn't emulate the Famicom Disk System
 - Except the main.cpp example provided, there is no code to manage the outside of the emulator (save state, options like graphic / audio / controllers, cheat code, debugger, ...)
 - And many more ... but all of this will be fixed on future development
+
+## Try it
+
+Here is some informations to try the emulator :
+
+- You can use your favorite C++ compiler and IDE, I personnaly use XCode on OSX and VisualC++ on Windows
+- Don't forget to setup SDL2 before : https://www.libsdl.org/download-2.0.php
+- Once started, drag a rom file on the window app to run this rom
+- Use these keys : Directional = Arrows, Button B = C, Button A = V, Select = Space and Start = Enter
+- Use R key to perform a reset
+- Use the Command+Q (OSX) / Alt+F4 (Windows) to exit app like any other app
