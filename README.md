@@ -1,6 +1,8 @@
 # NESEmu
 Portable NES Emulator, cycle accurate for CPU, PPU and APU.
 
+![](NESEmu.png)
+
 NESEmu is a NES emulator written in C++ with these goals in mind (and in order) :
 
 1) Try to be the most accurate possible :
