@@ -88,7 +88,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuReadPerformed(TCpuHa
         // Mode 0 (1 x 32kb bank)
         if (_prgMode == 0x0) {
             // Read Prg-Rom
-            cpuHardwareInterface.setDataBus(this->readPrgRom(((_prgBankSwitch[4] & 0x78) << 13) | (address & 0x7FFF)));
+            cpuHardwareInterface.setDataBus(this->readPrgRom(((_prgBankSwitch[4] & 0x7C) << 13) | (address & 0x7FFF)));
         }
         // Mode 1 (2 x 16kb banks) or Mode 2 (first 16kb bank)
         else if ((_prgMode == 0x1) || ((_prgMode == 0x2) && (address < 0xC000))) {
@@ -97,11 +97,13 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuReadPerformed(TCpuHa
             
             // Read Prg-Ram
             if (isPrgRam) {
-                cpuHardwareInterface.setDataBus(this->readPrgRam(((_prgBankSwitch[bankRegisterNumber] & 0xC) << 13) | (address & 0x3FFF)));
+                if (this->hasPrgRam()) {
+                    cpuHardwareInterface.setDataBus(this->readPrgRam(((_prgBankSwitch[bankRegisterNumber] & 0xC) << 13) | (address & 0x3FFF)));
+                }
             }
             // Read Prg-Rom
             else {
-                cpuHardwareInterface.setDataBus(this->readPrgRom(((_prgBankSwitch[bankRegisterNumber] & 0x7C) << 13) | (address & 0x3FFF)));
+                cpuHardwareInterface.setDataBus(this->readPrgRom(((_prgBankSwitch[bankRegisterNumber] & 0x7E) << 13) | (address & 0x3FFF)));
             }
         }
         // Mode 2 (first and second 8kb banks) or Mode 3 (4 x 8kb banks)
@@ -111,7 +113,9 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuReadPerformed(TCpuHa
             
             // Read Prg-Ram
             if (isPrgRam) {
-                cpuHardwareInterface.setDataBus(this->readPrgRam(((_prgBankSwitch[bankRegisterNumber] & 0xF) << 13) | (address & 0x1FFF)));
+                if (this->hasPrgRam()) {
+                    cpuHardwareInterface.setDataBus(this->readPrgRam(((_prgBankSwitch[bankRegisterNumber] & 0xF) << 13) | (address & 0x1FFF)));
+                }
             }
             // Read Prg-Rom
             else {
@@ -273,7 +277,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuWritePerformed(TCpuH
             bool isPrgRam = ((_prgBankSwitch[bankRegisterNumber] & 0x80) == 0) && (address < 0xC000);
             
             // Write Prg-Ram
-            if (isPrgRam) {
+            if (this->hasPrgRam() && (_prgRamProtect == 0x6) && isPrgRam) {//TODO: vraiment pas sur que ce soit comme ca la prgRamProtect !!!!
                 this->writePrgRam(((_prgBankSwitch[bankRegisterNumber] & 0xC) << 13) | (address & 0x3FFF), data);
             }
         }
@@ -283,7 +287,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::cpuWritePerformed(TCpuH
             bool isPrgRam = ((_prgBankSwitch[bankRegisterNumber] & 0x80) == 0) && (address < 0xE000);
             
             // Write Prg-Ram
-            if (isPrgRam) {
+            if (this->hasPrgRam() && (_prgRamProtect == 0x6) && isPrgRam) {//TODO: vraiment pas sur que ce soit comme ca la prgRamProtect !!!!
                 this->writePrgRam(((_prgBankSwitch[bankRegisterNumber] & 0xF) << 13) | (address & 0x1FFF), data);
             }
         }
@@ -294,6 +298,12 @@ template <class TCpuHardwareInterface, class TPpuHardwareInterface>
 void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuReadPerformed(TPpuHardwareInterface &ppuHardwareInterface) {
     // Get address
     uint16_t address = ppuHardwareInterface.getAddressBus();
+    
+    // Process scanline detection
+    processScanlineDetection(address);
+    
+    // Increment PPU fetch counter TODO: voir si incremente sur toutes les address ou sur seulement >= 0x2000 (nametable / attribute table)
+    ++_ppuFetchCounter;//TODO: probleme : si c'est le CPU qui fetche via un read 2007 ???   TODO: bien faire attention a la precision, quand processScanlineDetection detecte un scanline, il reset le ppuFetchCounter a 0 puis on l'incremente ici donc on est a 1 en debut de scanline ce qui est bon car le scanline est detecté apres le 1er nametable fetch du scanline courant mais si je modifie ca comme indiqué dans les comments de processScanlineDetection pour etre detecté au 1er attribute fetch, alors il faudra le reseter a 1 dans processScanlineDetection pour qu'il soit a 2 apres l'incrementation ici
     
     // Chr-Rom
     if (address < 0x2000) {
@@ -313,29 +323,33 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuReadPerformed(TPpuHa
     }
     // Internal VRAM (PPU address is always < 0x4000)
     else {
-        // Process scanline detection
-        processScanlineDetection(address);
+        // Attribute fetch in extended RAM mode 1
+        if ((_extendedRamMode == 0x1) && ((address & 0x3C0) == 0x3C0)) {//TODO: voir si ainsi
+            uint8_t attribute = _ram[(address & 0xFF) - 0xC0] & 0xC0;//TODO: trouver le bon index : C'est impossible de le retrouver via l'address car le ppu perd des infos de l'adresse quand il converti l'adresse nametable en adresse attribute table, le seul moyen de l'avoir est de sauver le dernier tile number fetché mais est ce ainsi que fait le MMC5 ???
+            attribute = attribute | (attribute >> 2) | (attribute >> 4) | (attribute >> 6);//TODO: on fill l'attribute byte pour etre sur d'avoir la bonne partie
+            
+            ppuHardwareInterface.setDataBus(attribute);
+        } else {
         
         // Get mapping mode
         uint8_t mappingMode = (_nametableMapping >> ((address >> 9) & 0x6)) & 0x3;
         
         // On-board VRAM
         if (mappingMode < 2) {
-            ppuHardwareInterface.setDataBus(ppuHardwareInterface.getVram()[(mappingMode << 12) | (address & 0xFFF)]);
+            ppuHardwareInterface.setDataBus(ppuHardwareInterface.getVram()[(mappingMode << 10) | (address & 0x3FF)]);
         }
         // Internal Expansion RAM
         else if (mappingMode == 2) {
             // Only read in expansion RAM if mode allows it, else read 0
-            ppuHardwareInterface.setDataBus((_extendedRamMode < 2) ? _ram[address & 0x3FF] : 0);//TODO: pas sur car il y a peut etre une difference entre le mode nametable et le mode attribute data
+            ppuHardwareInterface.setDataBus((_extendedRamMode < 2) ? _ram[address & 0x3FF] : 0x0);//TODO: pas sur car il y a peut etre une difference entre le mode nametable et le mode attribute data
         }
         // Fill-mode
         else {
             ppuHardwareInterface.setDataBus(((address & 0x3C0) != 0x3C0) ? _fillModeTile : _fillModeColor);//TODO: voir si ok la condition
         }
+        
+        }
     }
-    
-    // Increment PPU fetch counter TODO: voir si incremente sur toutes les address ou sur seulement >= 0x2000 (nametable / attribute table)
-    ++_ppuFetchCounter;//TODO: probleme : si c'est le CPU qui fetche via un read 2007 ???
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
@@ -354,7 +368,7 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::ppuWritePerformed(TPpuH
         
         // On-board VRAM
         if (mappingMode < 2) {
-            ppuHardwareInterface.getVram()[(mappingMode << 12) | (address & 0xFFF)] = data;
+            ppuHardwareInterface.getVram()[(mappingMode << 10) | (address & 0x3FF)] = data;
         }
         // Internal Expansion RAM
         else if (mappingMode == 2) {
@@ -373,7 +387,7 @@ bool Chip<TCpuHardwareInterface, TPpuHardwareInterface>::is8x16SpriteMode() cons
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
 bool Chip<TCpuHardwareInterface, TPpuHardwareInterface>::isPPUFetchSpriteData() const {
-    return (_ppuFetchCounter > 128) && (_ppuFetchCounter <= 160);//TODO: voir les valeurs
+    return (_ppuFetchCounter > 128) && (_ppuFetchCounter <= 160);//TODO: voir les valeurs : ca a l'air ok d'apres les tests
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
@@ -385,10 +399,10 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::processScanlineDetectio
     uint16_t lastAddress = _lastPPUReadAddress;
     
     // Save current address as last PPU read address
-    _lastPPUReadAddress = lastAddress;
+    _lastPPUReadAddress = address;
     
     // If address doesn't match last read address or if it is not a PPU nametable fetch (Here the address can't be less than 0x2000, so we need to check only if greater than 0x2FFF)
-    if ((address != lastAddress) || (address >= 0x3000)) {
+    if ((address != lastAddress) || (address < 0x2000) || (address >= 0x3000)) {
         // Reset counter
         _ppuReadAddressConsecutiveCounter = 0;
         
@@ -400,11 +414,15 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::processScanlineDetectio
     ++_ppuReadAddressConsecutiveCounter;
     
     // If three consecutive read on same address (counter equals 2 because we start to count after first read)
-    if (_ppuReadAddressConsecutiveCounter == 2) {
+    if (_ppuReadAddressConsecutiveCounter == 2) {//TODO: le scanline est bien detecté mais dans la doc il est dit qu'il est detecté apres avoir vu 3 read consecutifs et que c'est au AT fetch (et donc une autre address) qu'il est detecté, si c'est vraiment le cas il faut mettre ce code dans le if ci-dessus (qui check les address) et avant le reset du counter pour le tester correctement
         // Not the first scanline
         if (_inFrame) {
             // Increment scanline counter
             ++_scanlineCounter;
+            
+            /*if (_scanlineCounter == 241) {//TODO: ca n'arrive jamais
+                int x = 0;
+            }*/
             
             // If reached the compare value
             if (_scanlineCounter == _scanlineIrqCompareValue) {
@@ -417,12 +435,12 @@ void Chip<TCpuHardwareInterface, TPpuHardwareInterface>::processScanlineDetectio
             // Reset scanline counter
             _scanlineCounter = 0;
             
-            // Reset PPU fetch counter
-            _ppuFetchCounter = 0;
-            
             // Set in frame flag
             _inFrame = true;
         }
+        
+        // Reset PPU fetch counter
+        _ppuFetchCounter = 0;
     }
 }
 

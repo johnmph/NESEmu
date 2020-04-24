@@ -46,19 +46,22 @@ struct GraphicManager {
         _palette = (uint32_t *) malloc(sizeof(uint32_t) * 64);
         _pixels = (uint32_t *) malloc(sizeof(uint32_t) * 256 * 240);
         
-        // Read palette
-        std::ifstream ifs("../UnitTestFiles/ntscpalette.pal", std::ios::binary);
         // TODO: par apres emuler aussi le signal NTSC : http://wiki.nesdev.com/w/index.php/NTSC_video
         // TODO: possible par shader ?
         
-        // Check that file exists
-        assert(ifs.good());
+        // Copy default palette
+        memcpy(_palette, _defaultPalette, sizeof(uint32_t) * 64);
         
-        for (int i = 0; i < 64; ++i) {
-            uint8_t rgb[3];
-            ifs.read(reinterpret_cast<char *>(&rgb), 3);
-            
-            _palette[i] = (rgb[0] << 16) | (rgb[1] << 8) | rgb[2];
+        // Read palette file if exists
+        std::ifstream ifs("../UnitTestFiles/ntscpalette.pal", std::ios::binary);
+        
+        if (ifs.good()) {
+            for (int i = 0; i < 64; ++i) {
+                uint8_t rgb[3];
+                ifs.read(reinterpret_cast<char *>(&rgb), 3);
+                
+                _palette[i] = (rgb[0] << 16) | (rgb[1] << 8) | rgb[2];
+            }
         }
     }
     
@@ -144,6 +147,18 @@ struct GraphicManager {
     }
     
 private:
+    
+    static constexpr uint32_t _defaultPalette[] = {
+        0x525252, 0x011A51, 0x0F0F65, 0x230663, 0x36034B, 0x400426, 0x3F0904, 0x321300,
+        0x1F2000, 0x0B2A00, 0x002F00, 0x002E0A, 0x00262D, 0x000000, 0x000000, 0x000000,
+        0xA0A0A0, 0x1E4A9D, 0x3837BC, 0x5828B8, 0x752194, 0x84235C, 0x822E24, 0x6F3F00,
+        0x515200, 0x316300, 0x1A6B05, 0x0E692E, 0x105C68, 0x000000, 0x000000, 0x000000,
+        0xFEFFFF, 0x699EFC, 0x8987FF, 0xAE76FF, 0xCE6DF1, 0xE070B2, 0xDE7C70, 0xC8913E,
+        0xA6A725, 0x81BA28, 0x63C446, 0x54C17D, 0x56B3C0, 0x3C3C3C, 0x000000, 0x000000,
+        0xFEFFFF, 0xBED6FD, 0xCCCCFF, 0xDDC4FF, 0xEAC0F9, 0xF2C1DF, 0xF1C7C2, 0xE8D0AA,
+        0xD9DA9D, 0xC9E29E, 0xBCE6AE, 0xB4E5C7, 0xB5DFE4, 0xA9A9A9, 0x000000, 0x000000
+    };
+    
     SDL_Event &_event;
     SDL_Window *_window;
     SDL_Renderer *_renderer;
@@ -721,27 +736,29 @@ int main(int argc, char *argv[]) {
         // Open ROM
         std::ifstream ifs(romFilename, std::ios::binary);
         
-        // Check that file exists
-        assert(ifs.good());
+        decltype(cartridgeFactory.createCartridgeFromStream(ifs)) cartridge;
         
-        // Create cartridge
-        auto cartridge = cartridgeFactory.createCartridgeFromStream(ifs);
-        
-        // Read persistent memory if necessary
-        if (cartridge->hasPersistentMemory()) {
-            std::ifstream ifs(romFilename + ".sram", std::ios::binary);
+        // Check if file exists
+        if (ifs.good()) {
+            // Create cartridge
+            cartridge = cartridgeFactory.createCartridgeFromStream(ifs);
             
-            if (ifs.good()) {
-                // Get persitent memory
-                auto &persistentMemory = cartridge->getPersistentMemory();
+            // Read persistent memory if necessary
+            if (cartridge->hasPersistentMemory()) {
+                std::ifstream ifs(romFilename + ".sram", std::ios::binary);
                 
-                // Read from file
-                ifs.read(reinterpret_cast<char *>(persistentMemory.data()), persistentMemory.size());
+                if (ifs.good()) {
+                    // Get persitent memory
+                    auto &persistentMemory = cartridge->getPersistentMemory();
+                    
+                    // Read from file
+                    ifs.read(reinterpret_cast<char *>(persistentMemory.data()), persistentMemory.size());
+                }
             }
+            
+            // Insert cartridge
+            nes.insertCartridge(std::move(cartridge));
         }
-        
-        // Insert cartridge
-        nes.insertCartridge(std::move(cartridge));
         
         // Power up NES
         nes.powerUp();
@@ -755,19 +772,22 @@ int main(int argc, char *argv[]) {
         //nes.run(std::bind(&LoopManager::needToStop<Nes>, loopManager, std::placeholders::_1)); // With method (via bind)
         runNes(nes, event);                                                                    // Custom loop
         
-        // Remove cartridge
-        cartridge = nes.removeCartridge();
-        
-        // Save persistent memory if necessary
-        if (cartridge->hasPersistentMemory()) {
-            std::ofstream ofs(romFilename + ".sram", std::ios::binary);
+        // Check if file exists
+        if (ifs.good()) {
+            // Remove cartridge
+            cartridge = nes.removeCartridge();
             
-            if (ofs.good()) {
-                // Get persistent memory
-                auto const &persistentMemory = cartridge->getPersistentMemory();
+            // Save persistent memory if necessary
+            if (cartridge->hasPersistentMemory()) {
+                std::ofstream ofs(romFilename + ".sram", std::ios::binary);
                 
-                // Write to file
-                ofs.write(reinterpret_cast<char const *>(persistentMemory.data()), persistentMemory.size());
+                if (ofs.good()) {
+                    // Get persistent memory
+                    auto const &persistentMemory = cartridge->getPersistentMemory();
+                    
+                    // Write to file
+                    ofs.write(reinterpret_cast<char const *>(persistentMemory.data()), persistentMemory.size());
+                }
             }
         }
         

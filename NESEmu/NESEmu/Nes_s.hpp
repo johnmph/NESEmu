@@ -248,6 +248,9 @@ uint8_t Nes<EModel, TGraphicManager, TSoundManager>::ControllerHardware::readCon
 
 template <Model EModel, class TGraphicManager, class TSoundManager>
 Nes<EModel, TGraphicManager, TSoundManager>::Nes(TGraphicManager &graphicManager, TSoundManager &soundManager) : _cpuHardwareInterface(*this), _ppuHardwareInterface(*this), _cpu(_cpuHardwareInterface, _controllerHardware, soundManager), _ppu(_ppuHardwareInterface, _ppuHardwareInterface, graphicManager), _ram(2 * 1024), _vram(2 * 1024), _currentClockForCpu(0), _currentClockForPpu(0), _isCpuPhi2(false) {
+    // Begin with no cartridge
+    _cartridge = std::make_unique<Cartridge::Nothing<CpuHardwareInterface, PpuHardwareInterface>>();
+    
     // Begin with no controller
     disconnectController(0);
     disconnectController(1);
