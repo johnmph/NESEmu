@@ -116,8 +116,9 @@ namespace NESEmu {
     public:
         
         // Keep Hardware interface classes private but allow external code to get their types for Cartridge::Interface type
-        using CpuHardwareInterface = CpuHardwareInterface;//TODO: voir si ok ce genre de code
-        using PpuHardwareInterface = PpuHardwareInterface;
+        // Can't have the same name : https://stackoverflow.com/questions/61391927/type-alias-with-same-name-as-type
+        using CpuHardwareInterfaceType = CpuHardwareInterface;
+        using PpuHardwareInterfaceType = PpuHardwareInterface;
         
         
         Nes(TGraphicManager &graphicManager, TSoundManager &soundManager);
