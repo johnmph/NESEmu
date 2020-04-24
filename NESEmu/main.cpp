@@ -175,6 +175,12 @@ private:
     uint32_t _pollEventPixelCounter;
 };
 
+// Needed by C++14 because it is constexpr and we take defaultPalette by pointer so it is not evaluated
+// It is not needed in C++17 because it is implicitly inlined
+// See https://stackoverflow.com/questions/8452952/c-linker-error-with-class-static-constexpr
+template <class TFrameListener>
+constexpr uint32_t GraphicManager<TFrameListener>::_defaultPalette[];
+
 struct SoundManager {
     /*
      Rajouter des methodes pour choisir le volume des canaux dans le soundmanager ou bien carrement laisser le soundmanager faire le mixing en ayant la possibilité d’utiliser la méthode de mixing de l’apu (qui deviendra une static method)
