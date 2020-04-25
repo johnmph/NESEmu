@@ -27,16 +27,16 @@ namespace NESEmu { namespace Ppu {
     };
     
     template <Model EModel>
-    struct ModelConstants;
+    struct Constants;
     
     template <Model EModel>
-    struct Constants {
-        static constexpr unsigned int visiblePixelsPerScanlineCount = ModelConstants<EModel>::visiblePixelsPerScanlineCount;
-        static constexpr unsigned int hBlankLengthInPixel = ModelConstants<EModel>::hBlankLengthInPixel;
-        static constexpr unsigned int visibleScanlinePerFrameCount = ModelConstants<EModel>::visibleScanlinePerFrameCount;
-        static constexpr unsigned int postRenderLengthInScanline = ModelConstants<EModel>::postRenderLengthInScanline;
-        static constexpr unsigned int vBlankLengthInScanline = ModelConstants<EModel>::vBlankLengthInScanline;
-        static constexpr unsigned int preRenderLengthInScanline = ModelConstants<EModel>::preRenderLengthInScanline;
+    struct CalculatedConstants {
+        static constexpr unsigned int visiblePixelsPerScanlineCount = Constants<EModel>::visiblePixelsPerScanlineCount;
+        static constexpr unsigned int hBlankLengthInPixel = Constants<EModel>::hBlankLengthInPixel;
+        static constexpr unsigned int visibleScanlinePerFrameCount = Constants<EModel>::visibleScanlinePerFrameCount;
+        static constexpr unsigned int postRenderLengthInScanline = Constants<EModel>::postRenderLengthInScanline;
+        static constexpr unsigned int vBlankLengthInScanline = Constants<EModel>::vBlankLengthInScanline;
+        static constexpr unsigned int preRenderLengthInScanline = Constants<EModel>::preRenderLengthInScanline;
         
         static constexpr unsigned int firstRenderPeriodScanline = 0;
         static constexpr unsigned int lastRenderPeriodScanline = visibleScanlinePerFrameCount - 1;
@@ -137,7 +137,7 @@ namespace NESEmu { namespace Ppu {
     private:
         
         // Constants
-        using Constants = Constants<EModel>;
+        using ModelConstants = CalculatedConstants<EModel>;
         
         
         // Helper

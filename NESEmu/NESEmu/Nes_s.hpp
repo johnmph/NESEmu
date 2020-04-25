@@ -256,7 +256,7 @@ Nes<EModel, TGraphicManager, TSoundManager>::Nes(TGraphicManager &graphicManager
     disconnectController(1);
     
     // Set sound manager sampler frequency to cpu frequency (because apu is clocked each time cpu is clocked)
-    soundManager.setSamplerFrequency(Constants::masterClockSpeedInHz / Constants::cpuMasterClockDivider);
+    soundManager.setSamplerFrequency(ModelConstants::masterClockSpeedInHz / ModelConstants::cpuMasterClockDivider);
 }
 
 template <Model EModel, class TGraphicManager, class TSoundManager>
@@ -371,7 +371,7 @@ void Nes<EModel, TGraphicManager, TSoundManager>::clock() {
         }
         
         // Update state
-        _currentClockForCpu = Constants::cpuMasterClockDivider / 2;//TODO: mettre ca dans une constante cpuMasterHalfClockDivider dans Nes
+        _currentClockForCpu = ModelConstants::cpuMasterClockDivider / 2;//TODO: mettre ca dans une constante cpuMasterHalfClockDivider dans Nes
         _isCpuPhi2 = !_isCpuPhi2;
     }
     
@@ -381,7 +381,7 @@ void Nes<EModel, TGraphicManager, TSoundManager>::clock() {
         _ppu.clock();
         
         // Update state
-        _currentClockForPpu = Constants::ppuMasterClockDivider;
+        _currentClockForPpu = ModelConstants::ppuMasterClockDivider;
     }
     
     // Decrement clock counters

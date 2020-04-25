@@ -141,7 +141,7 @@ namespace NESEmu {
         
     private:
         
-        using Constants = Constants<EModel>;
+        using ModelConstants = Constants<EModel>;
         
         
         // PPU memory bus
@@ -155,8 +155,8 @@ namespace NESEmu {
         void cartridgeInterrupt(bool high);
         
         // Chips
-        Cpu::Chip<Constants::cpuModel, CpuHardwareInterface, ControllerHardware, TSoundManager> _cpu;
-        Ppu::Chip<Constants::ppuModel, PpuHardwareInterface, PpuHardwareInterface, TGraphicManager> _ppu;
+        Cpu::Chip<ModelConstants::cpuModel, CpuHardwareInterface, ControllerHardware, TSoundManager> _cpu;
+        Ppu::Chip<ModelConstants::ppuModel, PpuHardwareInterface, PpuHardwareInterface, TGraphicManager> _ppu;
         
         // 2kb of RAM
         std::vector<uint8_t> _ram;

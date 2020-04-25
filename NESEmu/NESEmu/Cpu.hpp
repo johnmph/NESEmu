@@ -60,7 +60,7 @@ namespace NESEmu { namespace Cpu {
     //private:
     protected:  // TODO: needed protected for unit test, else we can set it private
         
-        using Constants = Constants<EModel>;
+        using ModelConstants = Constants<EModel>;
         using InternalCpu = Cpu6502::Chip<Cpu6502::ConfigurationPerformance<Chip, false>>;
         
         // Set Cpu as friend to keep data bus methods private

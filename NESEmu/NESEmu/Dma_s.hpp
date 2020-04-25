@@ -30,7 +30,9 @@ void Dma<TChip>::clock() {
     _writeCycle = !_writeCycle;
     
     // Copy read write signal
-    _chip._readWrite = _chip.InternalCpu::_readWrite;//TODO: a voir
+    // Used _chip.TChip::InternalCpu:: instead _chip.InternalCpu:: because GCC doesn't compile it
+    // See https://stackoverflow.com/questions/61419735/different-compiler-behaviour-when-using-alias-as-scope-to-get-parent-member
+    _chip._readWrite = _chip.TChip::InternalCpu::_readWrite;//TODO: a voir
     
     // Process
     process();
@@ -102,7 +104,7 @@ bool Dma<TChip>::processDmc() {
     }
     
     // Wait for CPU ending with possible writes
-    if (_chip.InternalCpu::_readWrite == Cpu6502::ReadWrite::Write) {
+    if (_chip.TChip::InternalCpu::_readWrite == Cpu6502::ReadWrite::Write) {
         return true;
     }
     

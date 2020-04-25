@@ -11,7 +11,7 @@
 
 
 template <>
-struct Constants<Model::Ricoh2A03> {//TODO: taper ca dans apu et voir a quoi ca correspond
+struct Constants<Model::Ricoh2A03> {//TODO: taper ca dans apu mais voir si necessaire
     // APU
     static constexpr int apuFrameCounterRateInHz = 60;
 };
