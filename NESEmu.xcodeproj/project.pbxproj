@@ -104,6 +104,8 @@
 		4D70474B2402A2BF005A56B1 /* Standard_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Standard_s.hpp; sourceTree = "<group>"; };
 		4D70474C2402FA9D005A56B1 /* Nothing.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Nothing.hpp; sourceTree = "<group>"; };
 		4D70474D2402FAF1005A56B1 /* Nothing.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Nothing.cpp; sourceTree = "<group>"; };
+		4D836B1A24545DCC000017C7 /* NESEmu.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = NESEmu.png; sourceTree = "<group>"; };
+		4D836B1B24545DCC000017C7 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		4D90B21A243BEE73008C8190 /* Attribute.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Attribute.hpp; sourceTree = "<group>"; };
 		4D90B21B243BEFEC008C8190 /* Attribute_s.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Attribute_s.hpp; sourceTree = "<group>"; };
 		4D90B21C243BF028008C8190 /* Analyzer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Analyzer.cpp; sourceTree = "<group>"; };
@@ -384,6 +386,8 @@
 		4DE643E823BAE2EC00CFFE4E = {
 			isa = PBXGroup;
 			children = (
+				4D836B1B24545DCC000017C7 /* README.md */,
+				4D836B1A24545DCC000017C7 /* NESEmu.png */,
 				4DE643F323BAE2EC00CFFE4E /* NESEmu */,
 				4D1137F123CD3EEC0056AAAD /* NESEmuUnitTest */,
 				4DE643F223BAE2EC00CFFE4E /* Products */,

@@ -59,6 +59,15 @@ namespace NESEmu { namespace Apu {
         bool _needToReset;
     };
     
+    // Needed by C++14 because it is constexpr and we use it like pointer so it is not evaluated
+    // It is not needed in C++17 because it is implicitly inlined
+    // See https://stackoverflow.com/questions/8452952/c-linker-error-with-class-static-constexpr
+    template <class TChip>
+    constexpr uint16_t FrameCounter<TChip>::sequence4StepClocks[];
+    
+    template <class TChip>
+    constexpr uint16_t FrameCounter<TChip>::sequence5StepClocks[];
+    
     #include "FrameCounter_s.hpp"
     
 } }
