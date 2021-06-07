@@ -1,3 +1,6 @@
+
+https://user-images.githubusercontent.com/767599/120933065-bec98900-c6f8-11eb-93a7-dbee897467e1.mp4
+
 # NESEmu
 Portable NES Emulator, cycle accurate for CPU, PPU and APU.
 
