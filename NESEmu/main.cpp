@@ -13,6 +13,7 @@
 //#include <cmath>//TODO: pour le filtre audio
 #include <random>
 #include <cassert>
+#include <thread>
 #include <SDL.h>
 #include "NESEmu/Cartridge/Loader/INes.hpp"
 #include "NESEmu/Cartridge/Factory.hpp"
@@ -44,7 +45,8 @@ struct GraphicManager {
         
         // Allocate memory
         _palette = (uint32_t *) malloc(sizeof(uint32_t) * 64);
-        _pixels = (uint32_t *) malloc(sizeof(uint32_t) * 256 * 240);
+        _pixelsBuffers = (uint32_t *) malloc(sizeof(uint32_t) * 256 * 240 * /*2*/1);
+        _pixelBufferIndex = 0;
         
         // TODO: par apres emuler aussi le signal NTSC : http://wiki.nesdev.com/w/index.php/NTSC_video
         // TODO: possible par shader ?
@@ -66,8 +68,13 @@ struct GraphicManager {
     }
     
     ~GraphicManager() {
+        // Possible wait for old thread
+        /*if (_pixelCopyThread.joinable()) {
+            _pixelCopyThread.join();
+        }*/
+        
         // Free allocated memory
-        free(_pixels);
+        free(_pixelsBuffers);
         free(_palette);
         
         // Release texture
@@ -83,12 +90,16 @@ struct GraphicManager {
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
     }
     
+    uint32_t getPixelIndexInCurrentBuffer(unsigned int x, unsigned int y) const {
+        return (256 * 240 * _pixelBufferIndex) + (y * 256) + x;
+    }
+    
     uint32_t getPixelAtScreenPosition(unsigned int x, unsigned int y) const {
         // Convert screen position to real position (window is 2x the real size)
         x >>= 1;
         y >>= 1;
         
-        return _pixels[(y * 256) + x];
+        return _pixelsBuffers[getPixelIndexInCurrentBuffer(x, y)];
     }
     
     void plotPixel(unsigned int x, unsigned int y, uint8_t color, bool emphasizeRed, bool emphasizeGreen, bool emphasizeBlue) {
@@ -102,7 +113,7 @@ struct GraphicManager {
         //paletteColor = (((paletteColor & 0xFF0000) << emphasizeRed) & 0xFF0000) | (((paletteColor & 0xFF00) << emphasizeGreen) & 0xFF00) | (((paletteColor & 0xFF) << emphasizeBlue) & 0xFF);//TODO: voir apres http://wiki.nesdev.com/w/index.php/Colour-emphasis_games
         
         // Set pixel on video buffer
-        _pixels[(y * 256) + x] = paletteColor;
+        _pixelsBuffers[getPixelIndexInCurrentBuffer(x, y)] = paletteColor;
         
         // TODO: pour passer telling lys et avoir les input qui se rafraichissent n'importe quand et pas tout le temps au debut du vblank
         // TODO: avec cette technique il update n'importe quand sauf en hblank et vblank
@@ -122,12 +133,32 @@ struct GraphicManager {
     }
     
     void notifyVBlankStarted() {
+        // Possible wait for old thread
+        /*if (_pixelCopyThread.joinable()) {
+            _pixelCopyThread.join();
+        }
+        
+        // Create pixel copy thread
+        _pixelCopyThread = std::thread(&GraphicManager::renderPixelBuffer, this, _pixelBufferIndex);*/
+        renderPixelBuffer(0);
+        
+        // Swap buffer index
+        //_pixelBufferIndex = (_pixelBufferIndex + 1) & 0x1;
+        
+        // Calculate next time for polling event
+        _pollEventPixelCounter = _distribution(_generator);
+        
+        // Notify that a frame has been generated
+        _frameListener.notifyFrameGenerated();
+    }
+    
+    void renderPixelBuffer(uint32_t pixelBufferIndex) {
         int texturePitch;
         void *texturePixels;
         
         // Update texture
         SDL_LockTexture(_texture, NULL, &texturePixels, &texturePitch);
-        memcpy(texturePixels, _pixels, sizeof(uint32_t) * 256 * 240);
+        memcpy(texturePixels, &_pixelsBuffers[256 * 240 * pixelBufferIndex], sizeof(uint32_t) * 256 * 240);
         SDL_UnlockTexture(_texture);
         
         // Update renderer
@@ -137,13 +168,7 @@ struct GraphicManager {
         
         // Reset pixels memory to simulate CRT monitors (needed by zapper)
         // Simulate the electron gun drawing pixel by pixel, without this, the pixels stays lighted between frames)
-        memset(_pixels, 0, sizeof(uint32_t) * 256 * 240);
-        
-        // Calculate next time for polling event
-        _pollEventPixelCounter = _distribution(_generator);
-        
-        // Notify that a frame has been generated
-        _frameListener.notifyFrameGenerated();
+        memset(&_pixelsBuffers[256 * 240 * pixelBufferIndex], 0, sizeof(uint32_t) * 256 * 240);
     }
     
 private:
@@ -165,7 +190,10 @@ private:
     SDL_Texture *_texture;
     
     uint32_t *_palette;
-    uint32_t *_pixels;
+    uint32_t *_pixelsBuffers;
+    uint32_t _pixelBufferIndex;
+    
+    std::thread _pixelCopyThread;
     
     TFrameListener &_frameListener;
     
@@ -327,46 +355,107 @@ private:
     float _frequencyRatio;
 };
 
-struct StandardControllerManager {
+struct KeyboardStandardControllerManager {
     
     void update() {
         _keyStates = SDL_GetKeyboardState(NULL);
     }
     
     bool getButtonA() const {
-        return (_keyStates[SDL_SCANCODE_V] != 0);
+        return _keyStates[SDL_SCANCODE_V] != 0;
     }
     
     bool getButtonB() const {
-        return (_keyStates[SDL_SCANCODE_C] != 0);
+        return _keyStates[SDL_SCANCODE_C] != 0;
     }
     
     bool getButtonSelect() const {
-        return (_keyStates[SDL_SCANCODE_SPACE] != 0);
+        return _keyStates[SDL_SCANCODE_SPACE] != 0;
     }
     
     bool getButtonStart() const {
-        return (_keyStates[SDL_SCANCODE_RETURN] != 0);
+        return _keyStates[SDL_SCANCODE_RETURN] != 0;
     }
     
     bool getDirectionalUp() const {
-        return (_keyStates[SDL_SCANCODE_UP] != 0);
+        return _keyStates[SDL_SCANCODE_UP] != 0;
     }
     
     bool getDirectionalDown() const {
-        return (_keyStates[SDL_SCANCODE_DOWN] != 0);
+        return _keyStates[SDL_SCANCODE_DOWN] != 0;
     }
     
     bool getDirectionalLeft() const {
-        return (_keyStates[SDL_SCANCODE_LEFT] != 0);
+        return _keyStates[SDL_SCANCODE_LEFT] != 0;
     }
     
     bool getDirectionalRight() const {
-        return (_keyStates[SDL_SCANCODE_RIGHT] != 0);
+        return _keyStates[SDL_SCANCODE_RIGHT] != 0;
     }
     
 private:
     uint8_t const *_keyStates;
+};
+
+struct JoystickStandardControllerManager {
+    
+    JoystickStandardControllerManager() : _joystick(nullptr) {
+        // Initialize joystick
+        SDL_Init(SDL_INIT_JOYSTICK);
+        
+        // Open joystick
+        if (SDL_NumJoysticks() > 0) {
+            _joystick = SDL_JoystickOpen(0);
+        }
+    }
+    
+    ~JoystickStandardControllerManager() {
+        // Close joystick
+        if (_joystick != nullptr) {
+            SDL_JoystickClose(_joystick);
+        }
+        
+        // Uninitialize joystick
+        SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+    }
+    
+    void update() {
+    }
+    
+    bool getButtonA() const {
+        return SDL_JoystickGetButton(_joystick, 0) != 0;    // Button 0 = cross
+    }
+    
+    bool getButtonB() const {
+        return SDL_JoystickGetButton(_joystick, 2) != 0;    // Button 2 = Square
+    }
+    
+    bool getButtonSelect() const {
+        return SDL_JoystickGetButton(_joystick, 3) != 0;    // Button 3 = Triangle
+    }
+    
+    bool getButtonStart() const {
+        return SDL_JoystickGetButton(_joystick, 6) != 0;    // Button 6 = Option
+    }
+    
+    bool getDirectionalUp() const {
+        return SDL_JoystickGetButton(_joystick, 11) != 0;   // Button 11 = Up
+    }
+    
+    bool getDirectionalDown() const {
+        return SDL_JoystickGetButton(_joystick, 12) != 0;   // Button 12 = Down
+    }
+    
+    bool getDirectionalLeft() const {
+        return SDL_JoystickGetButton(_joystick, 13) != 0;   // Button 13 = Left
+    }
+    
+    bool getDirectionalRight() const {
+        return SDL_JoystickGetButton(_joystick, 14) != 0;   // Button 14 = Right
+    }
+    
+private:
+    SDL_Joystick *_joystick;
 };
 
 template <class TGraphicManager>
@@ -564,14 +653,14 @@ int main(int argc, char *argv[]) {
     SoundManager soundManager(44100, 2048);
     
     // Create time manager for 60FPS and audio continuous sync
-    TimeManager timeManager(soundManager, 60, true);
+    TimeManager timeManager(soundManager, 60/*1000*/, true);
     
     // Create graphic manager
     GraphicManager<TimeManager> graphicManager(event, timeManager);
     
     // Create standard controller
-    StandardControllerManager standardControllerManager;
-    auto standardController = std::make_unique<NESEmu::Controller::Standard<StandardControllerManager>>(standardControllerManager);
+    KeyboardStandardControllerManager standardControllerManager;
+    auto standardController = std::make_unique<NESEmu::Controller::Standard<KeyboardStandardControllerManager>>(standardControllerManager);
     
     // Create zapper controller
     ZapperControllerManager<GraphicManager<TimeManager>> zapperControllerManager(graphicManager);
@@ -654,6 +743,9 @@ int main(int argc, char *argv[]) {
     //"../UnitTestFiles/Castlevania 2.nes"                                          // Ok
     //"../UnitTestFiles/Castlevania 3.nes"                                          // Ok
     //"../UnitTestFiles/Difference (Unl).nes"                                       // Ok
+    //"../UnitTestFiles/Alien Syndrome (J).nes"                                     // TODO : voir http://forums.nesdev.com/viewtopic.php?f=2&t=19957&p=248991&hilit=alien#p248991
+    //"../UnitTestFiles/Kirby's Adventure.nes"                                      // Ok
+    //"../UnitTestFiles/Gun Nac.nes"                                                // Ok
     
     //"../UnitTestFiles/TestROM/CPU/oc-r1a/oc.nes"                                  // Ok
     //"../UnitTestFiles/TestROM/CPU/NEStress/NEStress.nes"                          // Ok
@@ -718,6 +810,9 @@ int main(int argc, char *argv[]) {
     //"../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_badrol.nes"            // Ok, doit devenir blanc mais le probleme est que cette rom de test n'attend pas correctement le PPU warmup et donc je dois le desactiver pour voir le resultat sinon ca reste gris car la couleur de background est ecrite trop tot
     //"../UnitTestFiles/TestRom/DMA/dma_sync_test_loop_delay_goodrol.nes"           // Ok, doit etre noir et devenir blanc si pad right press mais pareil qu'au dessus pour le ppu warm up !
     //"../UnitTestFiles/TestROM/DMA/dma_sync_test_v2/dma_sync_test.nes"             // Ok, Ecran noir puis blanc si pad right
+    //"../UnitTestFiles/TestROM/DMA/dmc_dma_start_test/dmc_dma_start_test.nes"      // Ok ? http://forums.nesdev.com/viewtopic.php?f=3&t=19915
+    //"../UnitTestFiles/TestROM/DMA/oam_flicker_test_reenable.nes"                  // Ok ? http://forums.nesdev.com/viewtopic.php?f=3&t=19915
+    //"../UnitTestFiles/TestROM/DMA/oam_flicker_test/oam_flicker_test.nes"          // Ok ? http://forums.nesdev.com/viewtopic.php?f=3&t=19915
     
     //"../UnitTestFiles/Demo/19.nes"                                                // TODO: qq roms ne fonctionnent pas a cause du PPU warm up mais la 19 ne va pas du tout meme sans le PPU warm up alors qu'elle fonctionne bien dans nintaco !!! la 4 non plus mais c'est a cause du prg-ram size qui est mal detecté dans le header, a voir, pour la 19 je n'arrive pas a la faire aller mais elle ne va pas non plus dans openemu, voir si ca va dans mesen ! : ne fonctionne pas non plus dans mesen, il faut changer l'instruction cli par nop a l'adresse 0x8007 pour qu'elle fonctionne : ok quand fait ca
     

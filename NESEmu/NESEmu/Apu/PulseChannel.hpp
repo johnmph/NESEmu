@@ -20,7 +20,7 @@ namespace NESEmu { namespace Apu {
     
     struct PulseChannel {
         
-        PulseChannel(bool sweepOneComplementMode);
+        explicit PulseChannel(bool sweepOneComplementMode);
         
         // Power up
         void powerUp();

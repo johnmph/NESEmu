@@ -19,7 +19,7 @@ namespace NESEmu { namespace Apu {
     template <class TChip>
     struct DmcChannel {
         
-        DmcChannel(TChip &chip);
+        explicit DmcChannel(TChip &chip);
         
         void powerUp();
         

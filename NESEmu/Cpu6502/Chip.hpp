@@ -130,7 +130,7 @@ namespace Cpu6502 {
         using Flag = _Detail::FlagsHelper::Flag;
         
         
-        Chip(Bus &bus);
+        explicit Chip(Bus &bus);
         
         void powerUp(uint16_t programCounter = 0x00FF, uint8_t stackPointer = 0x0, uint8_t accumulator = 0xAA, uint8_t xIndex = 0x0, uint8_t yIndex = 0x0, uint8_t statusFlags = 0x22);
         

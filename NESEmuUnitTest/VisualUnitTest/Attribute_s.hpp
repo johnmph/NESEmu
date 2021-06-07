@@ -15,10 +15,6 @@ Attribute<TCpu>::Attribute(std::string const &name) : _name(name), _enableCheck(
 }
 
 template <class TCpu>
-Attribute<TCpu>::~Attribute() {
-}
-
-template <class TCpu>
 std::string const &Attribute<TCpu>::getName() {
     return _name;
 }

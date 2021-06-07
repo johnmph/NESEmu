@@ -19,7 +19,7 @@ namespace NESEmu { namespace Apu {
     template <class TChip>
     struct FrameCounter {
         
-        FrameCounter(TChip &chip);
+        explicit FrameCounter(TChip &chip);
         
         // Power up
         void powerUp();

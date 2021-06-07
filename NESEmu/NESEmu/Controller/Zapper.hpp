@@ -19,7 +19,7 @@ namespace NESEmu { namespace Controller {
     template <class TControllerManager>
     struct Zapper : Interface {
         
-        Zapper(TControllerManager &controllerManager);
+        explicit Zapper(TControllerManager &controllerManager);
         
         void clock(uint8_t &data) override;
         void out(bool high) override;

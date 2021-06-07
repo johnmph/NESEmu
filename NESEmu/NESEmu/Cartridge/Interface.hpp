@@ -19,7 +19,7 @@ namespace NESEmu { namespace Cartridge {
     struct Interface {
         
         Interface(std::vector<uint8_t> prgRom, std::size_t prgRamSize, std::vector<uint8_t> chrRom, std::size_t chrRamSize);
-        virtual ~Interface() = 0;
+        virtual ~Interface() = default;
         
         // Persistent memory
         bool hasPersistentMemory() const;

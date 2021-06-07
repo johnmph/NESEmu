@@ -19,7 +19,7 @@ namespace VisualUnitTest {
     template <class TCpu>
     struct Attribute {
         Attribute(std::string const &name);
-        virtual ~Attribute();
+        virtual ~Attribute() = default;
         
         std::string const &getName();
         

@@ -40,7 +40,7 @@ namespace NESEmu {
     private:
         
         struct CpuHardwareInterface {
-            CpuHardwareInterface(Nes &nes);
+            explicit CpuHardwareInterface(Nes &nes);
             
             uint16_t getAddressBus() const;
             void setAddressBus(uint16_t address);
@@ -62,7 +62,7 @@ namespace NESEmu {
         };
         
         struct PpuHardwareInterface {
-            PpuHardwareInterface(Nes &nes);
+            explicit PpuHardwareInterface(Nes &nes);
             
             uint16_t getAddressBus() const;
             void setAddressBus(uint16_t address);
@@ -143,10 +143,6 @@ namespace NESEmu {
         
         using ModelConstants = Constants<EModel>;
         
-        
-        // PPU memory bus
-        uint8_t ppuRead(uint16_t address);
-        void ppuWrite(uint16_t address, uint8_t data);
         
         // PPU interrupt hardware
         void ppuInterrupt(bool high);

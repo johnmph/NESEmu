@@ -15,10 +15,6 @@ Interface<TCpuHardwareInterface, TPpuHardwareInterface>::Interface(std::vector<u
 }
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
-Interface<TCpuHardwareInterface, TPpuHardwareInterface>::~Interface() {
-}
-
-template <class TCpuHardwareInterface, class TPpuHardwareInterface>
 bool Interface<TCpuHardwareInterface, TPpuHardwareInterface>::hasPersistentMemory() const {
     return _prgRam.size() > 0;
 }

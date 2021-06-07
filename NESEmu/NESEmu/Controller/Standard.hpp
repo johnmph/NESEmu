@@ -19,7 +19,7 @@ namespace NESEmu { namespace Controller {
     template <class TControllerManager>
     struct Standard : Interface {
         
-        Standard(TControllerManager &controllerManager);
+        explicit Standard(TControllerManager &controllerManager);
         
         void clock(uint8_t &data) override;
         void out(bool high) override;

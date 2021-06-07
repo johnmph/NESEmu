@@ -11,7 +11,7 @@
 
 
 template <class TCpu, class TSoundManager>
-Chip<TCpu, TSoundManager>::Chip(TCpu &cpu, TSoundManager &soundManager) : _cpu(cpu), _soundManager(soundManager), _frameCounter(*this), _pulseChannel{ true, false }, _dmcChannel(*this) {
+Chip<TCpu, TSoundManager>::Chip(TCpu &cpu, TSoundManager &soundManager) : _cpu(cpu), _soundManager(soundManager), _frameCounter(*this), _pulseChannel{ PulseChannel { true }, PulseChannel { false } }, _dmcChannel(*this) {
 }
 
 template <class TCpu, class TSoundManager>

@@ -17,7 +17,7 @@ namespace NESEmu { namespace Cartridge { namespace Loader {
     
     struct Interface {
         
-        virtual ~Interface() = 0;
+        virtual ~Interface() = default;
         
         virtual bool isCartridgeSupported(std::istream &istream) = 0;
         virtual Data getCartridgeDataFromStream(std::istream &istream) = 0;

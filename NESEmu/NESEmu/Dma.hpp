@@ -18,7 +18,7 @@ namespace NESEmu { namespace Cpu {
     template <class TChip>
     struct Dma {
         
-        Dma(TChip &chip);
+        explicit Dma(TChip &chip);
         
         // Power up
         void powerUp();
