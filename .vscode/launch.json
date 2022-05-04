@@ -1,0 +1,34 @@
+{
+    "configurations": [
+    {
+        "name": "(GDB) Lancer",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${command:cmake.launchTargetPath}",
+        "args": [],
+        "stopAtEntry": false,
+        "cwd": "${workspaceFolder}",
+        "environment": [
+            {
+                "name": "PATH",
+                "value": "${env:PATH}:${command:cmake.getLaunchTargetDirectory}"
+            }
+        ],
+        "externalConsole": false,
+        "MIMode": "gdb",
+        "miDebuggerPath": "gdb",
+        "setupCommands": [
+            {
+                "description": "Activer l'impression en mode Pretty pour gdb",
+                "text": "-enable-pretty-printing",
+                "ignoreFailures": true
+            },
+            {
+                "description":  "Définir la version désassemblage sur Intel",
+                "text": "-gdb-set disassembly-flavor intel",
+                "ignoreFailures": true
+            }
+        ]
+    }
+    ]
+}
