@@ -6,8 +6,8 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef SOURCE_NESEMU_CARTRIDGE_MAPPER72_S_HPP
-#define SOURCE_NESEMU_CARTRIDGE_MAPPER72_S_HPP
+#ifndef NESEmu_Cartridge_Mapper72_s_hpp
+#define NESEmu_Cartridge_Mapper72_s_hpp
 
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
@@ -104,4 +104,4 @@ uint16_t Chip<TCpuHardwareInterface, TPpuHardwareInterface>::getVramAddress(uint
     return getMirroredAddress<MirroringType::Vertical>(address);
 }
 
-#endif /* SOURCE_NESEMU_CARTRIDGE_MAPPER72_S_HPP */
+#endif /* NESEmu_Cartridge_Mapper72_s_hpp */
