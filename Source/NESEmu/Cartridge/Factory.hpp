@@ -23,6 +23,8 @@
 #include "Mapper7.hpp"
 #include "Mapper9.hpp"
 #include "Mapper10.hpp"
+#include "Mapper72.hpp"
+#include "Mapper92.hpp"
 // TODO: les mettre tous
 
 

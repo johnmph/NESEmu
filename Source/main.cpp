@@ -451,7 +451,7 @@ struct JoystickStandardControllerManager {
     }
     
     bool getButtonA() const {
-        return SDL_JoystickGetButton(_joystick, 0) != 0;    // Button 0 = cross
+        return SDL_JoystickGetButton(_joystick, 0) != 0;    // Button 0 = Cross
     }
     
     bool getButtonB() const {
@@ -459,27 +459,27 @@ struct JoystickStandardControllerManager {
     }
     
     bool getButtonSelect() const {
-        return SDL_JoystickGetButton(_joystick, 3) != 0;    // Button 3 = Triangle
+        return SDL_JoystickGetButton(_joystick, 6) != 0;    // Button 6 = Share
     }
     
     bool getButtonStart() const {
-        return SDL_JoystickGetButton(_joystick, 6) != 0;    // Button 6 = Option
+        return SDL_JoystickGetButton(_joystick, 7) != 0;    // Button 6 = Option
     }
     
     bool getDirectionalUp() const {
-        return SDL_JoystickGetButton(_joystick, 11) != 0;   // Button 11 = Up
+        return SDL_JoystickGetHat(_joystick, 0) == SDL_HAT_UP;
     }
     
     bool getDirectionalDown() const {
-        return SDL_JoystickGetButton(_joystick, 12) != 0;   // Button 12 = Down
+        return SDL_JoystickGetHat(_joystick, 0) == SDL_HAT_DOWN;
     }
     
     bool getDirectionalLeft() const {
-        return SDL_JoystickGetButton(_joystick, 13) != 0;   // Button 13 = Left
+        return SDL_JoystickGetHat(_joystick, 0) == SDL_HAT_LEFT;
     }
     
     bool getDirectionalRight() const {
-        return SDL_JoystickGetButton(_joystick, 14) != 0;   // Button 14 = Right
+        return SDL_JoystickGetHat(_joystick, 0) == SDL_HAT_RIGHT;
     }
     
 private:
@@ -689,6 +689,8 @@ int main(int argc, char *argv[]) {
     // Create standard controller
     KeyboardStandardControllerManager standardControllerManager;
     auto standardController = std::make_unique<NESEmu::Controller::Standard<KeyboardStandardControllerManager>>(standardControllerManager);
+    //JoystickStandardControllerManager standardControllerManager;
+    //auto standardController = std::make_unique<NESEmu::Controller::Standard<JoystickStandardControllerManager>>(standardControllerManager);
     
     // Create zapper controller
     ZapperControllerManager<GraphicManager<TimeManager>> zapperControllerManager(graphicManager);

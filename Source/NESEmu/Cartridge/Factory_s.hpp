@@ -6,8 +6,8 @@
 //  Copyright © 2020 Jonathan Baliko. All rights reserved.
 //
 
-#ifndef NESEmu_Cartridge_Factory_s_hpp
-#define NESEmu_Cartridge_Factory_s_hpp
+#ifndef SOURCE_NESEMU_CARTRIDGE_FACTORY_S_HPP
+#define SOURCE_NESEMU_CARTRIDGE_FACTORY_S_HPP
 
 
 template <class TCpuHardwareInterface, class TPpuHardwareInterface>
@@ -97,6 +97,16 @@ std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> Factory
             cartridge = std::make_unique<Mapper10::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), std::move(data.chrRom));
         }
         break;
+
+        case Model::M072 : {
+            cartridge = std::make_unique<Mapper72::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), std::move(data.chrRom), data.mirroringType);
+        }
+        break;
+        
+        case Model::M092 : {
+            cartridge = std::make_unique<Mapper92::Chip<TCpuHardwareInterface, TPpuHardwareInterface>>(std::move(data.prgRom), std::move(data.chrRom), data.mirroringType);
+        }
+        break;
         
         default: {
             // Mapper not supported
@@ -108,4 +118,4 @@ std::unique_ptr<Interface<TCpuHardwareInterface, TPpuHardwareInterface>> Factory
     return cartridge;
 }
 
-#endif /* NESEmu_Cartridge_Factory_s_hpp */
+#endif /* SOURCE_NESEMU_CARTRIDGE_FACTORY_S_HPP */

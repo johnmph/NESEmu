@@ -23,7 +23,9 @@ namespace NESEmu { namespace Cartridge {
         AxROM,
         M008,   // TODO: voir pour le nom
         MMC2,
-        MMC4
+        MMC4,
+        M072 = 72,
+        M092 = 92,
         //TODO: a continuer
     };
     

@@ -3,7 +3,7 @@
 //  NESEmu
 //
 //  Created by Jonathan Baliko on 11/03/20.
-//  Copyright © 2020 Jonathan Baliko. All rights reserved.
+//  Copyright ï¿½ 2020 Jonathan Baliko. All rights reserved.
 //
 
 #include <cstring>
@@ -11,21 +11,6 @@
 
 
 namespace NESEmu { namespace Cartridge { namespace Loader {
-    
-    Model INes2::mapperModels[] = {
-        Model::NROM,
-        Model::MMC1,
-        Model::UxROM,
-        Model::CNROM,
-        Model::MMC3,
-        Model::MMC5,
-        Model::FFE,
-        Model::AxROM,
-        Model::M008,
-        Model::MMC2,
-        Model::MMC4
-        //TODO: continuer
-    };
     
     bool INes2::isCartridgeSupported(std::istream &istream) {
         // INes format start by "NES\x1A" and byte 7 has bit 2 == 0 and bit 3 == 1
@@ -52,7 +37,7 @@ namespace NESEmu { namespace Cartridge { namespace Loader {
         data.mirroringType = ((flags[6] & 0x8) != 0) ? MirroringType::FourScreen : (((flags[6] & 0x1) != 0) ? MirroringType::Vertical : MirroringType::Horizontal);
         
         // Get mapper model
-        data.mapperModel = mapperModels[((flags[8] & 0xF) << 8) | (flags[7] & 0xF0) | (flags[6] >> 4)];//TODO: gerer si le mapper n'est pas dans l'array ! : pas besoin si on les mets tous dans l'array (4096)
+        data.mapperModel = static_cast<Model>(((flags[8] & 0xF) << 8) | (flags[7] & 0xF0) | (flags[6] >> 4));
 
         // TODO: le submapper number
         data.submapperNumber = flags[8] >> 4;

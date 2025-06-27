@@ -12,21 +12,6 @@
 
 namespace NESEmu { namespace Cartridge { namespace Loader {
     
-    Model INes::mapperModels[] = {
-        Model::NROM,
-        Model::MMC1,
-        Model::UxROM,
-        Model::CNROM,
-        Model::MMC3,
-        Model::MMC5,
-        Model::FFE,
-        Model::AxROM,
-        Model::M008,
-        Model::MMC2,
-        Model::MMC4
-        //TODO: continuer
-    };
-    
     bool INes::isCartridgeSupported(std::istream &istream) {
         // INes format start by "NES\x1A"
         uint8_t flags[16];
@@ -52,7 +37,7 @@ namespace NESEmu { namespace Cartridge { namespace Loader {
         data.mirroringType = ((flags[6] & 0x8) != 0) ? MirroringType::FourScreen : (((flags[6] & 0x1) != 0) ? MirroringType::Vertical : MirroringType::Horizontal);
         
         // Get mapper model
-        data.mapperModel = mapperModels[(flags[7] & 0xF0) | (flags[6] >> 4)];//TODO: gerer si le mapper n'est pas dans l'array ! : pas besoin si on les mets tous dans l'array (256)
+        data.mapperModel = static_cast<Model>((flags[7] & 0xF0) | (flags[6] >> 4));
 
         // No submapper number
         data.submapperNumber = 0;
